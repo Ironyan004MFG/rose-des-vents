@@ -115,6 +115,38 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 .modal label{display:flex;flex-direction:column;gap:4px;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
 @media (prefers-reduced-motion:reduce){.mk .mk-in{transition:none}}
 
+/* renommée */
+.rn{display:inline-block;font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.06em;border-radius:999px;padding:4px 10px;white-space:nowrap;border:1px solid transparent}
+.rn0{background:#e2d6b6;color:#4d4030}
+.rnp1{background:#efe2bb;color:#4a3a14}.rnp2{background:#ead39a;color:#3f300d}.rnp3{background:#e3c172;color:#33270a}
+.rnp4{background:#d8ab4c;color:#2a1f06}.rnp5{background:#c99327;color:#1c1404}.rnp6{background:#f6ecd0;color:#7a4f00;border-color:#c99327;box-shadow:0 0 0 2px #c99327 inset}
+.rnm1{background:#ead0c3;color:#5e2a1c}.rnm2{background:#d9927d;color:#3f130a}.rnm3{background:#9b2c22;color:#fff3ee}
+.reg,.rep{display:flex;flex-direction:column;gap:12px}
+.reg h2,.rep h2{font-family:var(--display);font-size:20px;letter-spacing:.08em;color:var(--gold);margin:0}
+.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--board-2)}
+.tablebox table{border-collapse:collapse;width:100%;min-width:560px}
+.tablebox th,.tablebox td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle;font-size:15.5px}
+.tablebox thead th{font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--on-board-muted);white-space:nowrap}
+.tablebox td.num{font-family:var(--display);font-variant-numeric:tabular-nums;color:var(--on-board-muted);width:60px}
+.roster th[scope=row]{font-family:var(--display);font-size:15px;white-space:nowrap}
+.roster .pl{display:block;font-family:var(--body);font-style:italic;font-size:13px;color:var(--on-board-muted)}
+.roster select{width:auto;min-width:130px;font-size:14px;padding:6px 8px}
+.muted{color:var(--on-board-muted);font-style:italic;font-size:14px}
+.replist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.replist li{display:grid;grid-template-columns:minmax(120px,auto) auto 1fr;gap:6px 14px;align-items:center;background:var(--board-2);border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+.replist .who{font-family:var(--display)} .replist .who em{font-family:var(--body);color:var(--on-board-muted);font-size:14px}
+.replist .eff{color:var(--on-board-muted);font-size:15px;min-width:0}
+@media (max-width:620px){.replist li{grid-template-columns:1fr}}
+.rep a,.reg a{color:var(--gold)}
+.office.regl{border-color:var(--gold)}
+.scaleform{display:flex;flex-direction:column;gap:10px}
+.srow{display:grid;grid-template-columns:56px minmax(140px,1fr) minmax(0,3fr);gap:10px;align-items:end}
+.srow label{display:flex;flex-direction:column;gap:4px;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--on-board-muted)}
+.srow .rn{text-align:center;align-self:center}
+@media (max-width:620px){.srow{grid-template-columns:1fr}}
+.inline.dark label{color:var(--on-board-muted)}
+.btn.sm{min-height:34px;padding:6px 10px;font-size:12px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* firebase additions */
 header .pill{margin-left:auto}
 .pill{font-family:var(--body);font-size:14px;color:var(--on-board-muted);border:1px solid var(--line);border-radius:999px;padding:6px 12px;white-space:normal;max-width:100%}
@@ -145,7 +177,7 @@ header .pill{margin-left:auto}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInAnonymously, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, connectAuthEmulator, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, connectFirestoreEmulator, collection, doc, onSnapshot, setDoc, deleteDoc, getDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, connectFirestoreEmulator, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, getDoc, writeBatch, serverTimestamp, FieldPath } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBd6DdnvzkmPxGB_aAjAgTc1P9jHAztI30",
@@ -169,19 +201,31 @@ if (new URLSearchParams(location.search).has("emu")) {
 }
 
 /* ---------- constants ---------- */
-const RANKS = {cuivre:{label:"Cuivre",c:"var(--r-cuivre)"},fer:{label:"Fer",c:"var(--r-fer)"},argent:{label:"Argent",c:"var(--r-argent)"},or:{label:"Or",c:"var(--r-or)"},mithral:{label:"Mithral",c:"var(--r-mithral)"},inconnu:{label:"Rang inconnu",c:"#3a3128"}};
+const RANKS = {cuivre:{label:"Cuivre",c:"var(--r-cuivre)"},fer:{label:"Fer",c:"var(--r-fer)"},argent:{label:"Argent",c:"var(--r-argent)"},or:{label:"Or",c:"var(--r-or)"},mithral:{label:"Mithril",c:"var(--r-mithral)"},inconnu:{label:"Rang inconnu",c:"#3a3128"}};
 const STATUS = {ouverte:"Ouverte",encours:"En cours",terminee:"Terminée",archivee:"Archivée"};
 const TYPES = ["Contrat","Recherche","Exploration","Prime","Escorte","Rumeur"];
 const QUEST_KEYS = ["bureau","titre","type","rang","statut","lieu","recompense","niveau","joueurs","joueursMin","joueursMax","supercharged","date","description"];
 const SEED = JSON.parse(document.getElementById("bb-seed").textContent);
+const DEFAULT_SCALE = [
+  {n:-3,titre:"Recherché",effet:"Prime sur leur tête. Les gardes les arrêtent à vue, on refuse de les servir, et la Guilde les tient à l'écart."},
+  {n:-2,titre:"Craint",effet:"Les gens s'écartent sur leur passage, les portes se ferment, les prix doublent."},
+  {n:-1,titre:"Suspect",effet:"Méfiance, gardes qui les suivent, questions insistantes, prix un peu majorés."},
+  {n:0,titre:"Inconnu",effet:"Indifférence, prix normaux, la méfiance ordinaire envers les étrangers."},
+  {n:1,titre:"Remarqué",effet:"On a entendu parler d'eux. Curiosité polie."},
+  {n:2,titre:"Reconnu",effet:"On les salue, les aubergistes se souviennent de leur nom."},
+  {n:3,titre:"Respecté",effet:"Petites faveurs, rabais modestes, les PNJ sont plus bavards."},
+  {n:4,titre:"Héros local",effet:"On leur offre à boire, les autorités les écoutent, des quêtes spéciales leur sont proposées."},
+  {n:5,titre:"Champion de la région",effet:"Audience avec les dirigeants, accès à des lieux fermés au public."},
+  {n:6,titre:"Légende",effet:"On chante leurs exploits, les foules les reconnaissent… et des ennemis puissants les remarquent."}
+];
 
 /* ---------- state ---------- */
-let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [];
-const loaded = {b:false, q:false, i:false};
+let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null;
+const loaded = {b:false, q:false, i:false, a:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
 let save = {state:"idle", msg:""};
-const ui = {office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
+const ui = {advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
 
 /* ---------- helpers ---------- */
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -244,6 +288,10 @@ function listen(){
   onSnapshot(collection(db,"inscriptions"),snap=>{
     inscriptions=snap.docs.map(d=>{const x=d.data();return Object.assign({id:d.id},x,{creeMs:x.creeLe&&x.creeLe.toMillis?x.creeLe.toMillis():Date.now()});});loaded.i=true;render();
   },onErr);
+  onSnapshot(collection(db,"aventuriers"),snap=>{
+    aventuriers=snap.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>String(a.nom).localeCompare(String(b.nom),"fr"));loaded.a=true;render();
+  },onErr);
+  onSnapshot(doc(db,"config","renommee"),snap=>{scaleDoc=snap.exists()?snap.data():null;render();},onErr);
 }
 window.addEventListener("offline",()=>{net={state:"hors-ligne",msg:""};render();});
 window.addEventListener("online",()=>{net={state:"ok",msg:""};render();});
@@ -317,6 +365,7 @@ function mapView(){
   h+='<nav class="offices" aria-label="Comptoirs"><h2>Comptoirs de la Guilde</h2>';
   bureaux.forEach(b=>{const n=openCount(b.id);
     h+='<a class="office" href="#'+esc(b.id)+'"><span class="nm">'+esc(b.nom)+(b.siege?'<span class="tag">Siège de la Guilde</span>':'')+'</span><span class="count'+(n?'':' zero')+'">'+n+' quête'+(n>1?'s':'')+'</span></a>';});
+  h+='<a class="office regl" href="#renommee"><span class="nm">Registre de renommée<span class="tag">Qui est connu, respecté… ou recherché</span></span><span aria-hidden="true">→</span></a>';
   h+='<p class="hint">'+(loaded.q?total+' quête'+(total>1?'s':'')+' ouverte'+(total>1?'s':'')+' sur la côte. Choisis un comptoir pour voir son babillard.':'Chargement des quêtes…')+'</p></nav></div>';
   return h;
 }
@@ -399,6 +448,46 @@ function boardView(){
   return h;
 }
 
+/* ---------- renommée ---------- */
+function scaleList(){const l=scaleDoc&&Array.isArray(scaleDoc.niveaux)&&scaleDoc.niveaux.length?scaleDoc.niveaux:DEFAULT_SCALE;return l.slice().sort((a,b)=>a.n-b.n);}
+function lvl(n){return scaleList().find(s=>s.n===n)||{n,titre:String(n),effet:""};}
+function rnClass(n){return "rn rn"+(n<0?"m"+(-n):n>0?"p"+n:"0");}
+function chip(n){return '<span class="'+rnClass(n)+'">'+esc(lvl(n).titre)+'</span>';}
+function renown(a,bid){const v=a.renommee&&a.renommee[bid];return typeof v==="number"?v:0;}
+function reputationSection(bid,nom){
+  const list=aventuriers.filter(a=>renown(a,bid)!==0).sort((x,y)=>renown(y,bid)-renown(x,bid));
+  let h='<section class="rep" aria-label="Réputation"><h2>Réputation à '+esc(nom)+'</h2>';
+  if(!list.length)return h+'<p class="hint">Aucun aventurier ne s\'est encore fait un nom ici. <a href="#renommee">Voir le registre de renommée</a></p></section>';
+  h+='<ul class="replist">'+list.map(a=>{const n=renown(a,bid);return '<li><span class="who">'+esc(a.nom)+(a.joueur?' <em>('+esc(a.joueur)+')</em>':'')+'</span>'+chip(n)+'<span class="eff">'+esc(lvl(n).effet)+'</span></li>';}).join("")+'</ul>';
+  return h+'<p class="hint"><a href="#renommee">Voir le registre de renommée complet</a></p></section>';
+}
+function renownView(){
+  const sc=scaleList();
+  let h='<section class="reg"><h2>L\'échelle de renommée</h2><p class="hint">La renommée se compte par région : un héros à Daggerford peut être un parfait inconnu à Luskan.</p>';
+  if(ui.dm&&ui.scaleEdit){
+    h+='<form id="scaleform" class="scaleform">'+sc.map(s=>'<div class="srow"><span class="'+rnClass(s.n)+'">'+(s.n>0?'+':'')+s.n+'</span><label for="sc-t'+s.n+'">Titre<input id="sc-t'+s.n+'" maxlength="40" value="'+esc(s.titre)+'"></label><label for="sc-e'+s.n+'">Comment les gens réagissent<input id="sc-e'+s.n+'" maxlength="300" value="'+esc(s.effet)+'"></label></div>').join("")+
+      '<div class="actions"><button class="btn gold" type="submit">Enregistrer l\'échelle</button><button class="btn board" type="button" data-a="scale-cancel">Annuler</button></div></form>';
+  } else {
+    h+='<div class="tablebox"><table class="scale"><thead><tr><th scope="col">Niveau</th><th scope="col">Titre</th><th scope="col">Comment les gens réagissent</th></tr></thead><tbody>'+
+      sc.slice().reverse().map(s=>'<tr><td class="num">'+(s.n>0?'+':'')+s.n+'</td><td>'+chip(s.n)+'</td><td>'+esc(s.effet)+'</td></tr>').join("")+'</tbody></table></div>';
+    if(ui.dm)h+='<div class="actions"><button class="btn board" data-a="scale-edit">Modifier l\'échelle</button></div>';
+  }
+  h+='</section><section class="reg"><h2>Les aventuriers</h2>';
+  if(ui.dm){
+    h+=ui.advForm?'<form class="inline dark" id="advform"><label for="f-advnom">Nom du personnage<input id="f-advnom" required maxlength="60"></label><label for="f-advjoueur">Joueur<input id="f-advjoueur" maxlength="60"></label><button class="btn gold" type="submit">Ajouter au registre</button><button class="btn board" type="button" data-a="adv-cancel">Annuler</button></form>'
+      :'<div class="actions"><button class="btn gold" data-a="adv-new">Ajouter un aventurier</button></div>';
+  }
+  if(!loaded.a)return h+'<p class="hint">Chargement…</p></section>';
+  if(!aventuriers.length)return h+'<p class="hint">Aucun aventurier n\'est encore inscrit au registre.</p></section>';
+  const opts=n=>sc.map(s=>'<option value="'+s.n+'"'+(s.n===n?' selected':'')+'>'+(s.n>0?'+':'')+s.n+' '+esc(s.titre)+'</option>').join("");
+  h+='<div class="tablebox"><table class="roster"><thead><tr><th scope="col">Aventurier</th>'+bureaux.map(b=>'<th scope="col">'+esc(b.nom)+'</th>').join("")+(ui.dm?'<th scope="col"><span class="sr">Actions</span></th>':'')+'</tr></thead><tbody>'+
+    aventuriers.map(a=>'<tr><th scope="row">'+esc(a.nom)+(a.joueur?'<span class="pl">'+esc(a.joueur)+'</span>':'')+'</th>'+
+      bureaux.map(b=>{const n=renown(a,b.id);return '<td>'+(ui.dm?'<label class="sr" for="rn-'+esc(a.id)+'-'+esc(b.id)+'">Renommée de '+esc(a.nom)+' à '+esc(b.nom)+'</label><select class="rnsel" id="rn-'+esc(a.id)+'-'+esc(b.id)+'" data-adv="'+esc(a.id)+'" data-b="'+esc(b.id)+'">'+opts(n)+'</select>':(n?chip(n):'<span class="muted">Inconnu</span>'))+'</td>';}).join("")+
+      (ui.dm?'<td>'+(ui.confirmAdv===a.id?'<button class="btn danger sm" data-a="adv-del-yes" data-id="'+esc(a.id)+'">Confirmer</button> <button class="btn board sm" data-a="adv-del-no">Annuler</button>':'<button class="btn board sm" data-a="adv-del" data-id="'+esc(a.id)+'">Retirer</button>')+'</td>':'')+'</tr>').join("")+
+    '</tbody></table></div></section>';
+  return h;
+}
+
 /* ---------- DM panel ---------- */
 function seedMissing(){
   const bIds=new Set(fsBureaux.map(b=>b.id)), qIds=new Set(quetes.map(q=>q.id));
@@ -432,15 +521,16 @@ function statusPill(){
   return '<span class="pill good" role="status">● En direct</span>';
 }
 function render(){
-  if(ui.office&&loaded.b&&!office(ui.office))ui.office=null;
-  const b=ui.office?office(ui.office):null;
+  if(ui.office&&ui.office!=="renommee"&&loaded.b&&!office(ui.office))ui.office=null;
+  const reg=ui.office==="renommee";
+  const b=ui.office&&!reg?office(ui.office):null;
   let h='<div class="wrap">';
   h+='<header><svg width="72" height="72" viewBox="-110 -110 220 220" aria-hidden="true"><circle r="80" fill="none" stroke="#d8b45e" stroke-width="3" opacity=".6"></circle>'+rose(104,'#0e1b20')+'</svg>';
-  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+statusPill()+'</header>';
-  if(b)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
+  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+statusPill()+'</header>';
+  if(b||reg)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
   if(ui.authMsg)h+='<div class="dmbar"><span class="msg">'+esc(ui.authMsg)+'</span><button class="btn board" data-a="auth-ok">OK</button>'+(user&&!user.isAnonymous&&!isAdmin?'<button class="btn board" data-a="logout">Déconnexion</button>':'')+'</div>';
   if(ui.dm)h+=dmPanel(b);
-  h+=b?boardView():mapView();
+  h+=reg?renownView():b?boardView()+reputationSection(b.id,b.nom):mapView();
   h+='<footer><span>Pour partir en mission : choisis une quête, appuie sur « Je veux y aller » et entre ton nom. Le DM confirme les inscriptions.</span>'+
     '<button class="linkbtn" data-a="dm">'+(ui.dm?"Quitter le mode DM":"Mode DM")+'</button></footer>';
   if(ui.signup){const sq=questById(ui.signup);
@@ -450,8 +540,8 @@ function render(){
       '<div class="actions"><button class="btn" type="submit"'+(ui.busy?" disabled":"")+'>'+(ui.busy?"Envoi…":"M\'inscrire")+'</button><button class="btn ghost" type="button" data-a="sign-cancel">Annuler</button></div></form></div>';}
   const focusId=document.activeElement&&document.activeElement.id;
   const app=document.getElementById("app");
-  const formKey=ui.editing+"|"+ui.signup+"|"+ui.addName;
-  const keep={}; if(render.lastForm===formKey)["f-titre","f-bureau","f-type","f-rang","f-statut","f-lieu","f-recompense","f-niveau","f-jmin","f-jmax","f-date","f-desc","f-name","f-addname"].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.type==="checkbox"?el.checked:el.value;});
+  const formKey=ui.editing+"|"+ui.signup+"|"+ui.addName+"|"+ui.advForm+"|"+ui.scaleEdit;
+  const keep={}; if(render.lastForm===formKey)["f-titre","f-bureau","f-type","f-rang","f-statut","f-lieu","f-recompense","f-niveau","f-jmin","f-jmax","f-date","f-desc","f-name","f-addname","f-advnom","f-advjoueur"].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.type==="checkbox"?el.checked:el.value;});
   const sup=document.getElementById("f-super");if(sup&&render.lastForm===formKey)keep["f-super"]=sup.checked;
   render.lastForm=formKey;
   app.innerHTML=h+'</div>';
@@ -550,10 +640,21 @@ document.addEventListener("click",async e=>{
   else if(a==="import-cancel"){ui.importPreview=null;}
   else if(a==="import-apply"){await applyImport();return;}
   else if(a==="migrate"){await migrate();return;}
+  else if(a==="adv-new"){ui.advForm=true;render();const f=document.getElementById("f-advnom");if(f)f.focus();return;}
+  else if(a==="adv-cancel"){ui.advForm=false;}
+  else if(a==="adv-del"){ui.confirmAdv=id;}
+  else if(a==="adv-del-no"){ui.confirmAdv=null;}
+  else if(a==="adv-del-yes"){ui.confirmAdv=null;await run("Retrait",()=>deleteDoc(doc(db,"aventuriers",id)));return;}
+  else if(a==="scale-edit"){ui.scaleEdit=true;}
+  else if(a==="scale-cancel"){ui.scaleEdit=false;}
   render();
   if(a==="new"||a==="edit"){const f=document.getElementById("f-titre");if(f){f.focus();f.scrollIntoView({block:"center"});}}
 });
 document.addEventListener("change",e=>{
+  if(e.target.classList&&e.target.classList.contains("rnsel")){
+    const aid=e.target.getAttribute("data-adv"),bid=e.target.getAttribute("data-b"),n=parseInt(e.target.value,10);
+    run("Renommée",()=>updateDoc(doc(db,"aventuriers",aid),new FieldPath("renommee",bid),n,"majLe",serverTimestamp()));return;
+  }
   if(e.target.id==="f-rank"){ui.rank=e.target.value;render();}
   else if(e.target.id==="f-import"){
     const file=e.target.files&&e.target.files[0];if(!file)return;
@@ -577,6 +678,17 @@ document.addEventListener("submit",async e=>{
       ui.signupMsg={id:qid,err:true,text:err.code==="already"?"Tu es déjà inscrit à cette quête.":(String(err.code||"").indexOf("permission-denied")>=0?"Inscription refusée : la quête n'est peut-être plus ouverte, ou tu as déjà une demande.":errText(err))};
     }
     ui.busy=false;ui.signup=null;render();return;
+  }
+  if(e.target.id==="advform"){
+    const nom=v("f-advnom").slice(0,60),joueur=v("f-advjoueur").slice(0,60);if(!nom)return;
+    const id=(nom.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"aventurier").slice(0,40)+"-"+Date.now().toString(36).slice(-4);
+    ui.advForm=false;
+    await run("Ajout",()=>setDoc(doc(db,"aventuriers",id),{nom,joueur,renommee:{},creeLe:serverTimestamp(),majLe:serverTimestamp()}));return;
+  }
+  if(e.target.id==="scaleform"){
+    const niveaux=scaleList().map(s=>({n:s.n,titre:v("sc-t"+s.n).slice(0,40)||s.titre,effet:v("sc-e"+s.n).slice(0,300)}));
+    ui.scaleEdit=false;
+    await run("Échelle",()=>setDoc(doc(db,"config","renommee"),{niveaux,majLe:serverTimestamp()}));return;
   }
   if(e.target.id==="nameform"){
     const qid=e.target.getAttribute("data-id"),name=v("f-addname").slice(0,40);if(!name)return;
