@@ -103,6 +103,16 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 .linkbtn{background:none;border:none;color:var(--on-board-muted);text-decoration:underline;cursor:pointer;font:inherit;font-size:14px;padding:6px 0;min-height:32px}
 .linkbtn:hover{color:var(--on-board)}
 @media (max-width:520px){.note{transform:none!important}.facts{grid-template-columns:1fr}.facts dt{padding-top:6px}}
+.names{display:flex;flex-wrap:wrap;gap:4px 10px}
+.name{display:inline-flex;align-items:center;gap:4px}
+.name em{color:var(--ink-soft);font-size:14px}
+.rm{border:1px solid #b9a982;background:transparent;color:var(--danger);border-radius:50%;width:26px;height:26px;line-height:1;font-size:16px;cursor:pointer;padding:0}
+.rm:hover{background:rgba(155,44,34,.1)}
+.modal-bg{position:fixed;inset:0;background:rgba(5,10,12,.72);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal{background:var(--parch);color:var(--ink);border-radius:6px;padding:24px;max-width:440px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+.modal h2{font-family:var(--display);font-size:20px;margin:0;text-wrap:balance}
+.modal p{margin:0;font-size:15.5px;color:var(--ink-soft)}
+.modal label{display:flex;flex-direction:column;gap:4px;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
 @media (prefers-reduced-motion:reduce){.mk .mk-in{transition:none}}
 </style>
 </head>
@@ -116,14 +126,17 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
   var TYPES = ["Contrat","Recherche","Exploration","Prime","Escorte","Rumeur"];
   var saved = JSON.parse(document.getElementById("bb-state").textContent);
   var data = JSON.parse(JSON.stringify(saved));
-  var ui = {auth:null, authErr:"", office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, copied:null, copyFallback:null, msg:"", dirty:false, saving:false};
+  var ui = {signup:null, auth:null, authErr:"", office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, copied:null, copyFallback:null, msg:"", dirty:false, saving:false};
 
   function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
   function pwHash(pw){var h=2166136261>>>0,str="rose-des-vents:"+pw;for(var r=0;r<500;r++){for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}str=h.toString(16)+pw;}return h.toString(16);}
+  function store(k,v){try{if(v===undefined){return JSON.parse(localStorage.getItem(k)||"null");}localStorage.setItem(k,JSON.stringify(v));}catch(e){return null;}}
+  function pending(id){var p=store("rdv-pending")||{};return p[id]||[];}
+  function addPending(id,name){var p=store("rdv-pending")||{};p[id]=(p[id]||[]).filter(function(n){return n!==name;});p[id].push(name);store("rdv-pending",p);}
   function office(id){return data.bureaux.filter(function(b){return b.id===id;})[0];}
   function openCount(id){return data.quetes.filter(function(q){return q.bureau===id&&q.statut==="ouverte";}).length;}
   function rankSeal(r){var k=RANKS[r]||RANKS.inconnu;return '<span class="seal"><i style="background:'+k.c+'"></i>'+esc(k.label)+'</span>';}
-  function msgFor(q){var b=office(q.bureau);return "Je veux partir sur la quête « "+q.titre+" » ("+((RANKS[q.rang]||RANKS.inconnu).label)+(b?", comptoir de "+b.nom:"")+"). Qui embarque ?";}
+  function msgFor(q,name){var b=office(q.bureau);return (name?name+" veut":"Je veux")+" partir sur la quête « "+q.titre+" » ("+((RANKS[q.rang]||RANKS.inconnu).label)+(b?", comptoir de "+b.nom:"")+"). Qui embarque ?";}
   function rose(size,center){
     var s=size/104, h='<g transform="scale('+s+')">';
     [45,135,225,315].forEach(function(a){h+='<polygon transform="rotate('+a+')" points="0,-62 -9,-9 0,0 9,-9" fill="#d8b45e" opacity=".75"></polygon>';});
@@ -200,7 +213,10 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 
   /* ---------- board ---------- */
   function card(q){
-    var inscr = (q.inscrits||[]).length ? esc(q.inscrits.join(", ")) : "<em>Personne encore</em>";
+    var names=q.inscrits||[], pend=pending(q.id).filter(function(n){return names.indexOf(n)<0;});
+    var parts=names.map(function(n,i){return '<span class="name">'+esc(n)+(ui.dm?'<button class="rm" data-a="rm-name" data-id="'+esc(q.id)+'" data-i="'+i+'" aria-label="Retirer '+esc(n)+'">×</button>':'')+'</span>';})
+      .concat(pend.map(function(n){return '<span class="name">'+esc(n)+' <em>(en attente)</em></span>';}));
+    var inscr = parts.length ? '<span class="names">'+parts.join("")+'</span>' : "<em>Personne encore</em>";
     var h = '<article class="note'+(q.statut==="terminee"?" done":"")+'">';
     h += '<div class="note-top"><div style="display:flex;flex-direction:column;gap:4px">'+rankSeal(q.rang)+'<span class="kind">'+esc(q.type)+'</span></div><span class="stamp st-'+esc(q.statut)+'">'+esc(STATUS[q.statut]||q.statut)+'</span></div>';
     h += '<h2>'+esc(q.titre)+'</h2><p class="desc">'+esc(q.description)+'</p>';
@@ -213,8 +229,8 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
       else {h += '<button class="btn ghost" data-a="edit" data-id="'+esc(q.id)+'">Modifier</button><button class="btn ghost" data-a="del" data-id="'+esc(q.id)+'">Retirer</button>';}
     }
     h += '</div>';
-    if(ui.copied===q.id) h += '<p class="toast" role="status">Message copié. Colle-le dans le groupe Facebook.</p>';
-    if(ui.copyFallback===q.id) h += '<p class="copybox">'+esc(msgFor(q))+'</p>';
+    if(ui.copied===q.id) h += '<p class="toast" role="status">Demande notée ! Le message est copié : colle-le dans le groupe Facebook pour que le DM confirme ton inscription.</p>';
+    if(ui.copyFallback===q.id) h += '<p class="toast" role="status">Demande notée ! Copie ce message dans le groupe Facebook :</p><p class="copybox">'+esc(msgFor(q,store("rdv-name")))+'</p>';
     return h+'</article>';
   }
   function form(){
@@ -272,6 +288,11 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
     h += b ? boardView() : mapView();
     h += '<footer><span>Pour partir en mission : choisis une quête, appuie sur « Je veux y aller » et colle le message dans le groupe. Le DM inscrit l\'équipe.</span>'+
       '<button class="linkbtn" data-a="dm">'+(ui.dm?"Quitter le mode DM":"Mode DM")+'</button></footer>';
+    if(ui.signup){var sq=data.quetes.filter(function(x){return x.id===ui.signup;})[0];
+      if(sq) h += '<div class="modal-bg" data-a="sign-cancel"><form class="modal" id="signform" role="dialog" aria-modal="true" aria-labelledby="sg-t"><h2 id="sg-t">S\'inscrire à « '+esc(sq.titre)+' »</h2>'+
+        '<label for="f-name">Ton nom ou celui de ton personnage<input id="f-name" required maxlength="40" autocomplete="nickname" value="'+esc(store("rdv-name")||"")+'"></label>'+
+        '<p>Ton nom apparaîtra « en attente » sur ton écran, et un message sera copié pour le groupe Facebook. Le DM confirme ensuite ton inscription.</p>'+
+        '<div class="actions"><button class="btn" type="submit">M\'inscrire</button><button class="btn ghost" type="button" data-a="sign-cancel">Annuler</button></div></form></div>';}
     document.getElementById("app").innerHTML = h + '</div>';
   }
 
@@ -281,6 +302,7 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
     if(next!==ui.office){ui.office=next;ui.editing=null;ui.confirmDel=null;ui.copied=null;ui.copyFallback=null;ui.filter="ouverte";ui.rank="all";render();try{window.scrollTo(0,0);}catch(e){}}
   }
   window.addEventListener("hashchange", route);
+  document.addEventListener("keydown", function(e){if(e.key==="Escape"&&ui.signup){ui.signup=null;render();}});
 
   function buildDoc(state){
     var json = JSON.stringify(state).replace(/</g,"\\u003c");
@@ -298,12 +320,9 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
     var b = e.target.closest("[data-a]"); if(!b) return;
     var a = b.getAttribute("data-a"), id = b.getAttribute("data-id");
     if(a==="filter"){ui.filter=b.getAttribute("data-v");}
-    else if(a==="copy"){
-      var q = data.quetes.filter(function(x){return x.id===id;})[0]; if(!q) return;
-      ui.copied=null; ui.copyFallback=null;
-      try{navigator.clipboard.writeText(msgFor(q)).then(function(){ui.copied=id;render();},function(){ui.copyFallback=id;render();});}
-      catch(err){ui.copyFallback=id;}
-    }
+    else if(a==="copy"){ui.signup=id;ui.copied=null;ui.copyFallback=null;render();var f=document.getElementById("f-name");if(f){f.focus();f.select();}return;}
+    else if(a==="sign-cancel"){if(e.target!==b)return;ui.signup=null;}
+    else if(a==="rm-name"){var i=+b.getAttribute("data-i");data.quetes=data.quetes.map(function(x){if(x.id!==id)return x;var c=JSON.parse(JSON.stringify(x));c.inscrits.splice(i,1);return c;});markDirty();}
     else if(a==="dm"){if(ui.dm){ui.dm=false;}else{ui.auth=data.dmHash?"login":"create";ui.authErr="";}ui.editing=null;ui.confirmDel=null;render();var p=document.getElementById("f-pw");if(p)p.focus();return;}
     else if(a==="auth-cancel"){ui.auth=null;}
     else if(a==="new"){ui.editing="new";ui.confirmDel=null;}
@@ -321,6 +340,16 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
     if(e.target.id==="f-rank"){ui.rank=e.target.value;render();}
   });
   document.addEventListener("submit", function(e){
+    if(e.target.id==="signform"){
+      e.preventDefault();
+      var name=document.getElementById("f-name").value.trim(), qid=ui.signup;
+      var q=data.quetes.filter(function(x){return x.id===qid;})[0];
+      if(!name||!q){return;}
+      store("rdv-name",name); addPending(qid,name); ui.signup=null;
+      try{navigator.clipboard.writeText(msgFor(q,name)).then(function(){ui.copied=qid;render();},function(){ui.copyFallback=qid;render();});}
+      catch(err){ui.copyFallback=qid;}
+      render(); return;
+    }
     if(e.target.id==="authform"){
       e.preventDefault();
       var pw=document.getElementById("f-pw").value;
