@@ -1,0 +1,106 @@
+rules_version = '2';
+
+// Grande Guilde de la Rose des Vents - règles Firestore
+// - Tout le monde peut lire les comptoirs, les quêtes et les inscriptions.
+// - Seuls les comptes listés dans /admins peuvent modifier les quêtes et gérer les inscriptions.
+// - Un joueur (connexion anonyme) peut créer UNE demande par quête, à son nom, et retirer la sienne.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    function str(v, minLen, maxLen) {
+      return v is string && v.size() >= minLen && v.size() <= maxLen;
+    }
+    function optStr(d, k, maxLen) {
+      return !(k in d) || str(d[k], 0, maxLen);
+    }
+    function optCount(d, k) {
+      return !(k in d) || d[k] == null || (d[k] is int && d[k] >= 0 && d[k] <= 99);
+    }
+
+    // ---------- Administrateurs (gérés seulement depuis la console Firebase) ----------
+    match /admins/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // ---------- Comptoirs ----------
+    match /bureaux/{id} {
+      allow read: if true;
+      allow write: if isAdmin()
+        && request.resource.data.keys().hasOnly(['nom', 'x', 'y', 'siege', 'ordre'])
+        && str(request.resource.data.nom, 1, 60)
+        && request.resource.data.x is number && request.resource.data.y is number;
+    }
+
+    // ---------- Quêtes ----------
+    function validQuest(d) {
+      return d.keys().hasOnly(['bureau', 'titre', 'type', 'rang', 'statut', 'lieu', 'recompense', 'niveau',
+                               'joueurs', 'joueursMin', 'joueursMax', 'supercharged', 'date', 'description',
+                               'creeLe', 'majLe'])
+        && d.keys().hasAll(['bureau', 'titre', 'rang', 'statut'])
+        && exists(/databases/$(database)/documents/bureaux/$(d.bureau))
+        && str(d.titre, 1, 120)
+        && d.rang in ['cuivre', 'fer', 'argent', 'or', 'mithral', 'inconnu']
+        && d.statut in ['ouverte', 'encours', 'terminee', 'archivee']
+        && optStr(d, 'type', 40) && optStr(d, 'lieu', 200) && optStr(d, 'recompense', 200)
+        && optStr(d, 'niveau', 40) && optStr(d, 'joueurs', 40) && optStr(d, 'date', 80)
+        && optStr(d, 'description', 4000)
+        && optCount(d, 'joueursMin') && optCount(d, 'joueursMax')
+        && (!('supercharged' in d) || d.supercharged is bool);
+    }
+    match /quetes/{id} {
+      allow read: if true;
+      allow create, update: if isAdmin() && validQuest(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // ---------- Inscriptions (séparées des quêtes) ----------
+    // ID d'une demande de joueur : <idQuête>__<uid>  => une seule demande par joueur et par quête.
+    // ID d'un participant ajouté par le DM : <idQuête>__dm-<aléatoire>
+    function validSignup(d) {
+      return d.keys().hasOnly(['quete', 'uid', 'nom', 'statut', 'creeLe', 'majLe'])
+        && d.keys().hasAll(['quete', 'uid', 'nom', 'statut'])
+        && str(d.quete, 1, 60) && str(d.uid, 1, 128) && str(d.nom, 1, 40)
+        && d.statut in ['attente', 'confirmee', 'refusee'];
+    }
+    match /inscriptions/{id} {
+      allow read: if true;
+
+      // Joueur : sa propre demande, en attente, sur une quête ouverte, horodatée par le serveur.
+      allow create: if signedIn()
+        && validSignup(request.resource.data)
+        && id == request.resource.data.quete + '__' + request.auth.uid
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.statut == 'attente'
+        && request.resource.data.creeLe == request.time
+        && exists(/databases/$(database)/documents/quetes/$(request.resource.data.quete))
+        && get(/databases/$(database)/documents/quetes/$(request.resource.data.quete)).data.statut == 'ouverte';
+
+      // Admin : peut ajouter un participant, confirmer, refuser, corriger un nom.
+      allow create: if isAdmin() && validSignup(request.resource.data);
+      allow update: if isAdmin() && validSignup(request.resource.data)
+        && request.resource.data.quete == resource.data.quete
+        && request.resource.data.uid == resource.data.uid;
+
+      // Le joueur peut retirer sa propre demande (pas une demande refusée) ; l'admin peut tout retirer.
+      allow delete: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid && resource.data.statut != 'refusee');
+    }
+
+    // ---------- Phase 2 : renommée (lecture publique, écriture admin) ----------
+    match /aventuriers/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /config/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
