@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Babillard de la Rose des Vents</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,500&display=swap">
+<style id="bb-style">
+/* Layout: a parchment map of the Sword Coast on a dark guild board; each office opens its own notice board of pinned parchment quests. */
+:root{
+  --board:#0e1b20; --board-2:#14272d; --line:#2a434a;
+  --parch:#ece3cb; --parch-2:#e2d6b6; --parch-3:#d9c9a0; --ink:#2a2219; --ink-soft:#5a4d3c;
+  --sea:#c9c3a6; --land:#eadfbf;
+  --gold:#d8b45e; --on-board:#f1e9d2; --on-board-muted:#a9bcb6;
+  --open:#2f6d43; --progress:#8a5b12; --done:#5f564b;
+  --r-cuivre:#b8733a; --r-fer:#7b8a93; --r-argent:#c3ccd2; --r-or:#d8b45e; --r-mithral:#86cfcb;
+  --danger:#9b2c22;
+  --display:'Cinzel', 'Trajan Pro', Georgia, serif;
+  --body:'EB Garamond', Garamond, Georgia, serif;
+  color-scheme:dark;
+}
+body{background:var(--board);color:var(--on-board);font-family:var(--body);font-size:17px;line-height:1.45}
+.wrap{max-width:1180px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));display:flex;flex-direction:column;gap:26px}
+header{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+header svg{flex:none}
+.head-txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.eyebrow{font-family:var(--display);font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold)}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,5vw,44px);line-height:1.05;margin:0;letter-spacing:.04em;text-wrap:balance}
+.sub{font-style:italic;color:var(--on-board-muted);font-size:18px}
+.back{align-self:flex-start;font-family:var(--display);font-size:13px;letter-spacing:.1em;color:var(--gold);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:9px 16px;min-height:40px;box-sizing:border-box;display:inline-flex;align-items:center;gap:8px}
+.back:hover{border-color:var(--gold)}
+.bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding-block:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-family:var(--display);font-size:13px;letter-spacing:.08em;background:transparent;color:var(--on-board-muted);border:1px solid var(--line);border-radius:999px;padding:8px 14px;min-height:38px;cursor:pointer}
+.chip:hover{color:var(--on-board);border-color:var(--on-board-muted)}
+.chip[aria-pressed="true"]{background:var(--gold);color:#1b1408;border-color:var(--gold)}
+.chip .n{font-variant-numeric:tabular-nums;opacity:.75;margin-left:6px}
+select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;letter-spacing:normal;font-size:16px;color:var(--ink);background:#f7f1e1;border:1px solid #b9a982;border-radius:6px;padding:8px 10px;width:100%;box-sizing:border-box}
+.bar select{background:var(--board-2);color:var(--on-board);border-color:var(--line);width:auto;font-family:var(--display);font-size:13px;letter-spacing:.06em;min-height:38px}
+
+/* map */
+.mapwrap{display:grid;grid-template-columns:minmax(0,2fr) minmax(250px,1fr);gap:24px;align-items:start}
+.map{background:var(--parch-3);border-radius:6px;padding:10px;box-shadow:0 14px 30px rgba(0,0,0,.5);min-width:0}
+.map svg{display:block;width:100%;height:auto}
+.mk{cursor:pointer;outline:none}
+.mk .mk-in{transition:transform .18s ease;transform-box:fill-box;transform-origin:center}
+.mk:hover .mk-in,.mk:focus-visible .mk-in{transform:scale(1.14)}
+.mk:focus-visible .ring{stroke:#1b1408;stroke-width:5}
+.mk.zero{opacity:.72}
+.offices{display:flex;flex-direction:column;gap:10px;min-width:0}
+.offices h2{font-family:var(--display);font-size:16px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin:0 0 4px}
+.office{display:flex;align-items:center;justify-content:space-between;gap:12px;text-decoration:none;color:var(--on-board);background:var(--board-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-height:48px;box-sizing:border-box}
+.office:hover,.office:focus-visible{border-color:var(--gold);outline:none}
+.office .nm{font-family:var(--display);font-size:15px;letter-spacing:.04em}
+.office .tag{display:block;font-family:var(--body);font-style:italic;font-size:14px;color:var(--on-board-muted);letter-spacing:0}
+.count{font-family:var(--display);font-weight:700;font-variant-numeric:tabular-nums;background:var(--parch);color:var(--ink);border-radius:4px;padding:4px 10px;font-size:14px;white-space:nowrap}
+.count.zero{background:transparent;color:var(--on-board-muted);border:1px solid var(--line)}
+.hint{color:var(--on-board-muted);font-size:15px;font-style:italic;margin:4px 0 0}
+@media (max-width:860px){.mapwrap{grid-template-columns:1fr}}
+
+/* board */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:26px 22px;align-items:start}
+.note{position:relative;background:var(--parch);color:var(--ink);border-radius:3px;padding:26px 22px 20px;box-shadow:0 10px 24px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:12px;min-width:0}
+.note:nth-child(3n+1){transform:rotate(-.6deg)} .note:nth-child(3n+2){transform:rotate(.5deg)}
+.note::before{content:"";position:absolute;top:-7px;left:50%;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#f0d58c,#9b7424 70%);box-shadow:0 2px 3px rgba(0,0,0,.5)}
+.note.done{background:var(--parch-2);opacity:.82}
+.note-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.seal{display:inline-flex;align-items:center;gap:7px;font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+.seal i{width:16px;height:16px;border-radius:50%;display:inline-block;box-shadow:inset 0 0 0 2px rgba(0,0,0,.25)}
+.kind{font-family:var(--display);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
+.note h2{font-family:var(--display);font-size:21px;line-height:1.2;margin:0;text-wrap:balance}
+.desc{margin:0;white-space:pre-line}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:0;font-size:15.5px;border-top:1px dashed #b9a982;padding-top:10px}
+.facts dt{font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);padding-top:3px}
+.facts dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.stamp{font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;border:2px solid currentColor;border-radius:4px;padding:3px 7px;transform:rotate(3deg);white-space:nowrap}
+.st-ouverte{color:var(--open)} .st-encours{color:var(--progress)} .st-terminee{color:var(--done)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.btn{font-family:var(--display);font-size:13px;letter-spacing:.08em;border-radius:6px;padding:9px 14px;min-height:40px;cursor:pointer;border:1px solid var(--ink);background:var(--ink);color:var(--parch)}
+.btn:hover{background:#000}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.ghost:hover{background:rgba(0,0,0,.06)}
+.btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#1b1408}
+.btn.gold:hover{background:#e6c675}
+.btn.board{background:transparent;color:var(--on-board);border-color:var(--line)}
+.btn.board:hover{border-color:var(--on-board-muted)}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.copybox{background:#f7f1e1;border:1px dashed #b9a982;border-radius:6px;padding:10px;font-size:15px;user-select:all}
+.toast{font-size:15px;color:var(--open);font-style:italic}
+.empty{grid-column:1/-1;text-align:center;color:var(--on-board-muted);font-style:italic;padding:40px 0}
+.dmbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--board-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.dmbar .msg{flex:1 1 220px;color:var(--on-board-muted);font-size:15px;min-width:0}
+.form{grid-column:1/-1;background:var(--parch);color:var(--ink);border-radius:4px;padding:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.form h2{grid-column:1/-1;font-family:var(--display);margin:0;font-size:20px}
+.form label{display:flex;flex-direction:column;gap:4px;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+.form .wide{grid-column:1/-1}
+.form textarea{min-height:110px;resize:vertical}
+.legend{display:flex;flex-wrap:wrap;gap:8px 20px;color:var(--on-board-muted);font-size:15px}
+.legend .seal{color:var(--on-board-muted)}
+footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
+.linkbtn{background:none;border:none;color:var(--on-board-muted);text-decoration:underline;cursor:pointer;font:inherit;font-size:14px;padding:6px 0;min-height:32px}
+.linkbtn:hover{color:var(--on-board)}
+@media (max-width:520px){.note{transform:none!important}.facts{grid-template-columns:1fr}.facts dt{padding-top:6px}}
+@media (prefers-reduced-motion:reduce){.mk .mk-in{transition:none}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="application/json" id="bb-state">{"bureaux": [{"id": "luskan", "nom": "Luskan", "x": 205, "y": 175}, {"id": "mirabar", "nom": "Mirabar", "x": 455, "y": 105}, {"id": "neverwinter", "nom": "Neverwinter", "x": 262, "y": 335}, {"id": "silverymoon", "nom": "Silverymoon", "x": 860, "y": 205}, {"id": "triboar", "nom": "Triboar", "x": 545, "y": 410}, {"id": "waterdeep", "nom": "Waterdeep", "x": 300, "y": 645, "siege": true}, {"id": "daggerford", "nom": "Daggerford", "x": 420, "y": 775}, {"id": "baldurs-gate", "nom": "Baldur's Gate", "x": 565, "y": 985}], "quetes": [{"id": "q1", "bureau": "daggerford", "titre": "Des loups trop bien organisés", "type": "Contrat", "rang": "cuivre", "statut": "ouverte", "lieu": "Vergers de Brumeval, une demi-journée à l'est", "recompense": "25 po + repas chaud à volonté", "niveau": "1–2", "joueurs": "2 à 5", "date": "", "inscrits": [], "description": "Les fermiers de Brumeval perdent des moutons chaque nuit. Rien d'inhabituel… sauf que les loups semblent attaquer en formation et éviter tous les pièges. Le vieux Tobin jure qu'il a vu une silhouette debout parmi eux."}, {"id": "q2", "bureau": "daggerford", "titre": "Le courrier qui n'est jamais arrivé", "type": "Recherche", "rang": "cuivre", "statut": "ouverte", "lieu": "Route de l'Ouest, entre deux relais", "recompense": "30 po + 1 potion de soins", "niveau": "1–2", "joueurs": "2 à 4", "date": "", "inscrits": [], "description": "Un messager de la Guilde n'a jamais atteint le relais du Gué. Retrouvez-le, ou au minimum sa sacoche scellée. La Guilde insiste : le sceau ne doit pas être brisé."}, {"id": "q3", "bureau": "daggerford", "titre": "Cartographier la Tour Noyée", "type": "Exploration", "rang": "fer", "statut": "ouverte", "lieu": "Marais à deux jours à l'ouest", "recompense": "10 po par salle cartographiée", "niveau": "2–3", "joueurs": "3 à 5", "date": "", "inscrits": [], "description": "Une tour à demi engloutie émerge des marais depuis la dernière crue. La Guilde paie chaque salle rapportée sur une carte lisible. Ce que vous trouvez à l'intérieur vous appartient, sauf les documents écrits."}, {"id": "q4", "bureau": "daggerford", "titre": "Prime : Grinsk le Chapardeur", "type": "Prime", "rang": "fer", "statut": "ouverte", "lieu": "Collines de la Route Marchande", "recompense": "75 po (preuve exigée)", "niveau": "2–4", "joueurs": "3 à 5", "date": "", "inscrits": [], "description": "Un chef gobelin pille les caravanes depuis un mois. Ses hommes portent tous la même écharpe rouge. Mort ou vif : la Guilde paie le même prix, mais le marchand Halvric paierait le double pour récupérer sa cargaison intacte."}, {"id": "q5", "bureau": "daggerford", "titre": "Rumeur : le voyageur aux étranges paroles", "type": "Rumeur", "rang": "inconnu", "statut": "ouverte", "lieu": "Auberge du Gué", "recompense": "Inconnue", "niveau": "?", "joueurs": "?", "date": "", "inscrits": [], "description": "Un homme en vêtements bizarres a passé trois nuits à l'auberge du Gué. Il demandait sans cesse si quelqu'un avait vu son « téléphone ». Il est reparti vers les marais sans payer sa note."}, {"id": "lu1", "bureau": "luskan", "titre": "Escorte jusqu'à Port Llast", "type": "Escorte", "rang": "cuivre", "statut": "ouverte", "lieu": "Route côtière, deux jours au sud", "recompense": "40 po", "niveau": "1–3", "joueurs": "2 à 4", "date": "", "inscrits": [], "description": "Un scribe nerveux doit livrer trois coffres de registres à Port Llast. Il refuse de dire ce qu'ils contiennent, mais il vérifie les serrures toutes les heures."}, {"id": "lu2", "bureau": "luskan", "titre": "Le navire sans équipage", "type": "Contrat", "rang": "argent", "statut": "ouverte", "lieu": "Port de Luskan, quai des Naufragés", "recompense": "200 po", "niveau": "5–7", "joueurs": "3 à 5", "date": "", "inscrits": [], "description": "La Mouette Grise est rentrée au port hier, voiles en ordre, cale pleine. Personne à bord. Le capitaine du port veut savoir ce qui est arrivé avant que quiconque touche à la cargaison."}, {"id": "mi1", "bureau": "mirabar", "titre": "On creuse sous la mine", "type": "Recherche", "rang": "fer", "statut": "ouverte", "lieu": "Puits n° 7, au nord de la ville", "recompense": "80 po", "niveau": "3–4", "joueurs": "3 à 5", "date": "", "inscrits": [], "description": "Six mineurs sont pris derrière un éboulement. Les sauveteurs entendent des coups de pioche venant d'en dessous. Le problème : aucun des mineurs n'avait de pioche."}, {"id": "mi2", "bureau": "mirabar", "titre": "Minerai pour Longsaddle", "type": "Escorte", "rang": "cuivre", "statut": "ouverte", "lieu": "Route de Longsaddle", "recompense": "35 po + une dague naine", "niveau": "1–2", "joueurs": "2 à 5", "date": "", "inscrits": [], "description": "Une caravane de minerai doit partir avant les premières neiges. Les loups sont nombreux cette année, et le cocher a peur de son ombre."}, {"id": "ne1", "bureau": "neverwinter", "titre": "Les failles de la vieille ville", "type": "Exploration", "rang": "fer", "statut": "ouverte", "lieu": "Quartier des Cendres", "recompense": "100 po", "niveau": "3–5", "joueurs": "3 à 5", "date": "", "inscrits": [], "description": "Le mont Hotenow gronde de nouveau. De nouvelles failles se sont ouvertes dans la vieille ville, et de la fumée en sort la nuit. La Guilde paie pour une carte des failles, et pour savoir ce qui en sort."}, {"id": "ne2", "bureau": "neverwinter", "titre": "Stirges dans la serre", "type": "Contrat", "rang": "cuivre", "statut": "ouverte", "lieu": "Jardins du Château Never", "recompense": "25 po", "niveau": "1–2", "joueurs": "2 à 4", "date": "", "inscrits": [], "description": "Le jardinier en chef jure que ses tomates sont « mordues de l'intérieur ». Une colonie de stirges s'est installée dans la grande serre. Évitez d'abîmer les rosiers du Seigneur Protecteur."}, {"id": "ne3", "bureau": "neverwinter", "titre": "Rumeur : la machine à deux roues", "type": "Rumeur", "rang": "inconnu", "statut": "ouverte", "lieu": "Marché du Pont des Dragons", "recompense": "Inconnue", "niveau": "?", "joueurs": "?", "date": "", "inscrits": [], "description": "Une jeune femme a été vue traversant le marché sur une étrange machine à deux roues qu'elle faisait avancer avec ses pieds. Elle criait « Attention, pas de freins ! » dans une langue que personne ne connaît."}, {"id": "si1", "bureau": "silverymoon", "titre": "Les livres envolés", "type": "Contrat", "rang": "cuivre", "statut": "ouverte", "lieu": "Voûte des Sages", "recompense": "30 po", "niveau": "1–2", "joueurs": "2 à 4", "date": "", "inscrits": [], "description": "Une douzaine de grimoires animés se sont échappés de la Voûte des Sages et nichent dans les toits de la ville. Les bibliothécaires veulent les récupérer vivants. Les livres mordent."}, {"id": "si2", "bureau": "silverymoon", "titre": "Trolls sur la route de la Lune", "type": "Prime", "rang": "argent", "statut": "ouverte", "lieu": "Route de la Lune, vers Everlund", "recompense": "150 po par tête de troll", "niveau": "5–7", "joueurs": "4 à 5", "date": "", "inscrits": [], "description": "Trois trolls bloquent la route commerciale depuis une semaine. Apportez de l'huile et des torches : la Guilde ne paie pas pour les têtes qui repoussent."}, {"id": "tr1", "bureau": "triboar", "titre": "Chevaux volés à la foire", "type": "Recherche", "rang": "cuivre", "statut": "ouverte", "lieu": "Foire aux chevaux de Triboar", "recompense": "40 po", "niveau": "1–2", "joueurs": "2 à 4", "date": "", "inscrits": [], "description": "Sept chevaux de prix ont disparu la nuit dernière, sans traces de sabots. Le marchand Darvin offre une récompense, et accuse déjà tout le monde."}, {"id": "tr2", "bureau": "triboar", "titre": "Des géants dans les collines", "type": "Exploration", "rang": "or", "statut": "ouverte", "lieu": "Collines à l'est de Triboar", "recompense": "500 po", "niveau": "8+", "joueurs": "4 à 5", "date": "", "inscrits": [], "description": "Des bergers rapportent des empreintes de deux mètres de long. Reconnaissance seulement : repérez les géants, comptez-les, et revenez. Ne les affrontez pas."}, {"id": "wa1", "bureau": "waterdeep", "titre": "La machine du Maître", "type": "Contrat", "rang": "cuivre", "statut": "ouverte", "lieu": "Siège de la Guilde, puis Dock Ward", "recompense": "20 po + un espresso servi par le Maître de la Guilde", "niveau": "1", "joueurs": "1 à 2", "date": "", "inscrits": [], "description": "La machine à café personnelle du Maître de la Guilde fait un bruit inquiétant. Les ingénieurs gnomes sont à Baldur's Gate. Trouvez la pièce de rechange chez un marchand de Dock Ward et rapportez-la. Ne touchez à rien d'autre. Vraiment rien."}, {"id": "wa2", "bureau": "waterdeep", "titre": "Les glyphes des égouts", "type": "Exploration", "rang": "fer", "statut": "ouverte", "lieu": "Égouts sous Dock Ward", "recompense": "90 po", "niveau": "3–4", "joueurs": "3 à 5", "date": "", "inscrits": [], "description": "Des égoutiers ont trouvé des glyphes lumineux sur des murs qui n'existaient pas le mois dernier. Cartographiez le nouveau tunnel et copiez les glyphes sans les toucher."}, {"id": "wa3", "bureau": "waterdeep", "titre": "Bal masqué chez les Brandath", "type": "Escorte", "rang": "argent", "statut": "ouverte", "lieu": "Quartier Nord, villa Brandath", "recompense": "250 po + tenue de soirée fournie", "niveau": "4–6", "joueurs": "3 à 4", "date": "", "inscrits": [], "description": "Dame Brandath a reçu une lettre anonyme : quelqu'un compte l'empoisonner pendant son bal masqué. Gardes du corps discrets demandés. Les bonnes manières sont obligatoires."}, {"id": "bg1", "bureau": "baldurs-gate", "titre": "Contrebande dans la Basse-Ville", "type": "Recherche", "rang": "fer", "statut": "ouverte", "lieu": "Basse-Ville, entrepôts du port", "recompense": "100 po", "niveau": "3–4", "joueurs": "3 à 5", "date": "", "inscrits": [], "description": "Des caisses marquées « poisson salé » sortent du port bien trop lourdes. Le Poing Enflammé veut savoir ce qu'il y a dedans, mais ne veut pas être vu en train de demander."}, {"id": "bg2", "bureau": "baldurs-gate", "titre": "Le culte sous la ville", "type": "Prime", "rang": "argent", "statut": "ouverte", "lieu": "Sous la Haute-Ville", "recompense": "300 po", "niveau": "5–7", "joueurs": "4 à 5", "date": "", "inscrits": [], "description": "Des gens disparaissent près du temple abandonné de la rue des Lanternes. Un culte se réunirait dans les caves en dessous. La Guilde paie pour son chef, et pour les disparus ramenés vivants."}, {"id": "bg3", "bureau": "baldurs-gate", "titre": "Rumeur : le marchand d'objets impossibles", "type": "Rumeur", "rang": "inconnu", "statut": "ouverte", "lieu": "Marché de Wide", "recompense": "Inconnue", "niveau": "?", "joueurs": "?", "date": "", "inscrits": [], "description": "Un marchand ambulant vend des curiosités introuvables : des lunettes aux verres noirs, une petite boîte plate en verre qui ne s'allume plus, une carte de plastique au nom d'un certain « Kevin ». Il refuse de dire où il les a trouvées."}]}</script>
+<script id="bb-script">
+(function(){
+  var RANKS = {cuivre:{label:"Cuivre",c:"var(--r-cuivre)"},fer:{label:"Fer",c:"var(--r-fer)"},argent:{label:"Argent",c:"var(--r-argent)"},or:{label:"Or",c:"var(--r-or)"},mithral:{label:"Mithral",c:"var(--r-mithral)"},inconnu:{label:"Rang inconnu",c:"#3a3128"}};
+  var STATUS = {ouverte:"Ouverte",encours:"En cours",terminee:"Terminée"};
+  var TYPES = ["Contrat","Recherche","Exploration","Prime","Escorte","Rumeur"];
+  var saved = JSON.parse(document.getElementById("bb-state").textContent);
+  var data = JSON.parse(JSON.stringify(saved));
+  var ui = {auth:null, authErr:"", office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, copied:null, copyFallback:null, msg:"", dirty:false, saving:false};
+
+  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+  function pwHash(pw){var h=2166136261>>>0,str="rose-des-vents:"+pw;for(var r=0;r<500;r++){for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}str=h.toString(16)+pw;}return h.toString(16);}
+  function office(id){return data.bureaux.filter(function(b){return b.id===id;})[0];}
+  function openCount(id){return data.quetes.filter(function(q){return q.bureau===id&&q.statut==="ouverte";}).length;}
+  function rankSeal(r){var k=RANKS[r]||RANKS.inconnu;return '<span class="seal"><i style="background:'+k.c+'"></i>'+esc(k.label)+'</span>';}
+  function msgFor(q){var b=office(q.bureau);return "Je veux partir sur la quête « "+q.titre+" » ("+((RANKS[q.rang]||RANKS.inconnu).label)+(b?", comptoir de "+b.nom:"")+"). Qui embarque ?";}
+  function rose(size,center){
+    var s=size/104, h='<g transform="scale('+s+')">';
+    [45,135,225,315].forEach(function(a){h+='<polygon transform="rotate('+a+')" points="0,-62 -9,-9 0,0 9,-9" fill="#d8b45e" opacity=".75"></polygon>';});
+    [0,90,180,270].forEach(function(a){h+='<g transform="rotate('+a+')"><polygon points="0,-104 -15,-15 0,0" fill="#d8b45e"></polygon><polygon points="0,-104 15,-15 0,0" fill="#f6ecd0"></polygon></g>';});
+    return h+'<circle r="9" fill="'+center+'" stroke="#d8b45e" stroke-width="4"></circle></g>';
+  }
+
+  /* ---------- map ---------- */
+  var COAST = "M268,0 L250,60 L228,110 L196,150 L182,190 L200,232 L232,270 L246,312 L236,356 L258,398 L250,440 L270,478 L262,520 L286,566 L282,610 L300,652 L318,700 L340,742 L372,792 L404,836 L438,872 L478,912 L512,948 L530,985 L548,1020 L600,1060 L640,1100";
+  function mapBase(){
+    var h='';
+    h+='<defs><pattern id="waves" width="60" height="26" patternUnits="userSpaceOnUse"><path d="M4,14 q7,-7 14,0 t14,0" fill="none" stroke="#9c9478" stroke-width="1.6" opacity=".55"></path></pattern>'+
+       '<pattern id="marsh" width="22" height="16" patternUnits="userSpaceOnUse"><path d="M3,12 h8 M14,6 h6 M6,4 v4 M9,3 v5" stroke="#6f7a58" stroke-width="1.6" fill="none"></path></pattern></defs>';
+    h+='<rect width="1000" height="1100" fill="var(--sea)"></rect><rect width="1000" height="1100" fill="url(#waves)"></rect>';
+    h+='<path d="'+COAST+' L1000,1100 L1000,0 Z" fill="var(--land)"></path>';
+    h+='<path d="'+COAST+'" fill="none" stroke="#8b7d5a" stroke-width="10" opacity=".25" transform="translate(-9,4)"></path>';
+    h+='<path d="'+COAST+'" fill="none" stroke="#3f3424" stroke-width="3.2" stroke-linejoin="round"></path>';
+    /* rivers */
+    h+='<g fill="none" stroke="#7d8f8a" stroke-width="3" stroke-linecap="round" opacity=".85">'+
+       '<path d="M246,335 C300,330 330,300 380,290"></path>'+
+       '<path d="M298,650 C360,600 420,560 470,500 C510,455 530,420 545,410"></path>'+
+       '<path d="M410,800 C470,760 560,720 650,700 C720,688 790,660 860,640"></path>'+
+       '<path d="M520,990 C600,985 680,975 760,960 C830,948 900,930 980,920"></path></g>';
+    /* mere of dead men */
+    h+='<path d="M268,470 C320,455 380,470 390,520 C398,565 340,590 296,580 C276,560 272,520 268,470 Z" fill="url(#marsh)" stroke="#6f7a58" stroke-width="1.5" stroke-dasharray="4 4"></path>';
+    /* mountains */
+    function mtn(x,y,s){return '<path d="M'+(x-14*s)+','+y+' L'+x+','+(y-22*s)+' L'+(x+14*s)+','+y+'" fill="#d2c39b" stroke="#4d4030" stroke-width="2.2" stroke-linejoin="round"></path><path d="M'+x+','+(y-22*s)+' L'+(x+5*s)+','+y+'" stroke="#4d4030" stroke-width="1.4"></path>';}
+    var m='';
+    [[330,60],[370,48],[410,62],[520,40],[565,55],[610,42],[660,58],[700,46],[745,60],[790,44]].forEach(function(p){m+=mtn(p[0],p[1],1.1);});
+    [[330,430],[358,418],[388,436],[346,454]].forEach(function(p){m+=mtn(p[0],p[1],1);});
+    [[760,320],[795,305],[828,322],[780,345]].forEach(function(p){m+=mtn(p[0],p[1],1);});
+    h+=m;
+    /* forests */
+    function trees(cx,cy,n,r){var t='';for(var i=0;i<n;i++){var a=i*2.39996,d=Math.sqrt(i/n)*r;var x=cx+Math.cos(a)*d,y=cy+Math.sin(a)*d*0.7;t+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="7" fill="#b5b98a" stroke="#56603d" stroke-width="1.6"></circle>';}return t;}
+    h+=trees(380,255,14,46)+trees(690,530,34,105)+trees(560,820,14,48);
+    /* labels */
+    function lab(x,y,t,size,style){return '<text x="'+x+'" y="'+y+'" text-anchor="middle" font-family="EB Garamond, Georgia, serif" font-style="italic" font-size="'+size+'" fill="#5a4d3c" stroke="#eadfbf" stroke-width="4" paint-order="stroke" '+(style||'')+'>'+t+'</text>';}
+    h+=lab(110,560,'Sea of Swords',34,'letter-spacing="3" transform="rotate(-80 110 560)"');
+    h+=lab(700,100,'Spine of the World',20);
+    h+=lab(440,448,'Sword Mountains',16);
+    h+=lab(330,530,'Mere of Dead Men',16);
+    h+=lab(690,560,'High Forest',22);
+    h+=lab(380,215,'Neverwinter Wood',15);
+    h+=lab(560,868,'Misty Forest',15);
+    h+=lab(795,370,'Graypeak Mountains',15);
+    h+=lab(800,905,'Chionthar',15);
+    h+='<text x="980" y="1080" text-anchor="end" font-family="Cinzel, Georgia, serif" font-size="22" letter-spacing="4" fill="#5a4d3c">THE SWORD COAST</text>';
+    /* compass in sea */
+    h+='<g transform="translate(110,980)" opacity=".7"><circle r="58" fill="none" stroke="#5a4d3c" stroke-width="1.5"></circle>'+rose(64,'#ece3cb')+'<text y="-74" text-anchor="middle" font-family="Cinzel, Georgia, serif" font-size="18" fill="#5a4d3c">N</text></g>';
+    return h;
+  }
+  function marker(b){
+    var n=openCount(b.id), big=b.siege, R=big?28:22;
+    var h='<a class="mk'+(n?'':' zero')+'" href="#'+esc(b.id)+'" aria-label="Comptoir de '+esc(b.nom)+', '+n+' quête'+(n>1?'s':'')+' ouverte'+(n>1?'s':'')+'">';
+    h+='<g transform="translate('+b.x+','+b.y+')"><g class="mk-in">';
+    h+='<circle class="ring" r="'+(R+8)+'" fill="#1b1408" stroke="#d8b45e" stroke-width="3"></circle>'+rose(R*1.55,'#1b1408');
+    /* parchment badge */
+    h+='<g transform="translate('+(R+4)+','+(-R-22)+')"><path d="M0,4 Q0,0 6,0 L44,0 Q50,0 50,4 L50,26 Q50,30 44,30 L6,30 Q0,30 0,26 Z" fill="#f4ecd6" stroke="#5a4d3c" stroke-width="2"></path>'+
+       '<circle cx="3" cy="15" r="4" fill="#d9c9a0" stroke="#5a4d3c" stroke-width="1.5"></circle><circle cx="47" cy="15" r="4" fill="#d9c9a0" stroke="#5a4d3c" stroke-width="1.5"></circle>'+
+       '<text x="25" y="22" text-anchor="middle" font-family="Cinzel, Georgia, serif" font-weight="700" font-size="18" fill="#2a2219">'+n+'</text></g>';
+    h+='<text y="'+(R+30)+'" text-anchor="middle" font-family="Cinzel, Georgia, serif" font-weight="700" font-size="'+(big?21:18)+'" fill="#2a2219" stroke="#eadfbf" stroke-width="5" paint-order="stroke">'+esc(b.nom)+'</text>';
+    if(big) h+='<text y="'+(R+50)+'" text-anchor="middle" font-family="EB Garamond, Georgia, serif" font-style="italic" font-size="16" fill="#5a4d3c" stroke="#eadfbf" stroke-width="4" paint-order="stroke">Siège de la Guilde</text>';
+    return h+'</g></g></a>';
+  }
+  function mapView(){
+    var total=data.quetes.filter(function(q){return q.statut==="ouverte";}).length;
+    var h='<div class="mapwrap"><div class="map"><svg viewBox="0 0 1000 1100" role="group" aria-label="Carte de la Sword Coast et comptoirs de la Guilde">'+mapBase()+data.bureaux.map(marker).join("")+'</svg></div>';
+    h+='<nav class="offices" aria-label="Comptoirs"><h2>Comptoirs de la Guilde</h2>';
+    data.bureaux.forEach(function(b){var n=openCount(b.id);
+      h+='<a class="office" href="#'+esc(b.id)+'"><span class="nm">'+esc(b.nom)+(b.siege?'<span class="tag">Siège de la Guilde</span>':'')+'</span><span class="count'+(n?'':' zero')+'">'+n+' quête'+(n>1?'s':'')+'</span></a>';});
+    h+='<p class="hint">'+total+' quête'+(total>1?'s':'')+' ouverte'+(total>1?'s':'')+' sur la côte. Choisis un comptoir pour voir son babillard.</p></nav></div>';
+    return h;
+  }
+
+  /* ---------- board ---------- */
+  function card(q){
+    var inscr = (q.inscrits||[]).length ? esc(q.inscrits.join(", ")) : "<em>Personne encore</em>";
+    var h = '<article class="note'+(q.statut==="terminee"?" done":"")+'">';
+    h += '<div class="note-top"><div style="display:flex;flex-direction:column;gap:4px">'+rankSeal(q.rang)+'<span class="kind">'+esc(q.type)+'</span></div><span class="stamp st-'+esc(q.statut)+'">'+esc(STATUS[q.statut]||q.statut)+'</span></div>';
+    h += '<h2>'+esc(q.titre)+'</h2><p class="desc">'+esc(q.description)+'</p>';
+    h += '<dl class="facts"><dt>Lieu</dt><dd>'+esc(q.lieu||"—")+'</dd><dt>Récompense</dt><dd>'+esc(q.recompense||"—")+'</dd><dt>Niveau</dt><dd>'+esc(q.niveau||"—")+'</dd><dt>Joueurs</dt><dd>'+esc(q.joueurs||"—")+'</dd>';
+    if(q.date) h += '<dt>Date</dt><dd>'+esc(q.date)+'</dd>';
+    h += '<dt>Inscrits</dt><dd>'+inscr+'</dd></dl><div class="actions">';
+    if(q.statut==="ouverte") h += '<button class="btn" data-a="copy" data-id="'+esc(q.id)+'">Je veux y aller</button>';
+    if(ui.dm){
+      if(ui.confirmDel===q.id){h += '<button class="btn danger" data-a="del-yes" data-id="'+esc(q.id)+'">Confirmer la suppression</button><button class="btn ghost" data-a="del-no">Annuler</button>';}
+      else {h += '<button class="btn ghost" data-a="edit" data-id="'+esc(q.id)+'">Modifier</button><button class="btn ghost" data-a="del" data-id="'+esc(q.id)+'">Retirer</button>';}
+    }
+    h += '</div>';
+    if(ui.copied===q.id) h += '<p class="toast" role="status">Message copié. Colle-le dans le groupe Facebook.</p>';
+    if(ui.copyFallback===q.id) h += '<p class="copybox">'+esc(msgFor(q))+'</p>';
+    return h+'</article>';
+  }
+  function form(){
+    var q = ui.editing==="new" ? {bureau:ui.office,titre:"",type:"Contrat",rang:"cuivre",statut:"ouverte",lieu:"",recompense:"",niveau:"",joueurs:"",date:"",inscrits:[],description:""} : data.quetes.filter(function(x){return x.id===ui.editing;})[0];
+    if(!q) return "";
+    function opts(keys,cur,label){return keys.map(function(k){return '<option value="'+esc(k)+'"'+(k===cur?" selected":"")+'>'+esc(label(k))+'</option>';}).join("");}
+    return '<form class="form" id="qform"><h2>'+(ui.editing==="new"?"Nouvelle quête":"Modifier la quête")+'</h2>'+
+      '<label class="wide" for="f-titre">Titre<input id="f-titre" required value="'+esc(q.titre)+'"></label>'+
+      '<label for="f-bureau">Comptoir<select id="f-bureau">'+opts(data.bureaux.map(function(b){return b.id;}),q.bureau,function(k){return office(k).nom;})+'</select></label>'+
+      '<label for="f-type">Type<select id="f-type">'+opts(TYPES,q.type,function(k){return k;})+'</select></label>'+
+      '<label for="f-rang">Rang<select id="f-rang">'+opts(Object.keys(RANKS),q.rang,function(k){return RANKS[k].label;})+'</select></label>'+
+      '<label for="f-statut">Statut<select id="f-statut">'+opts(Object.keys(STATUS),q.statut,function(k){return STATUS[k];})+'</select></label>'+
+      '<label for="f-lieu">Lieu<input id="f-lieu" value="'+esc(q.lieu)+'"></label>'+
+      '<label for="f-recompense">Récompense<input id="f-recompense" value="'+esc(q.recompense)+'"></label>'+
+      '<label for="f-niveau">Niveau suggéré<input id="f-niveau" value="'+esc(q.niveau)+'"></label>'+
+      '<label for="f-joueurs">Joueurs<input id="f-joueurs" value="'+esc(q.joueurs)+'"></label>'+
+      '<label for="f-date">Date prévue<input id="f-date" placeholder="ex. sam. 22 nov., 19 h" value="'+esc(q.date)+'"></label>'+
+      '<label class="wide" for="f-inscrits">Inscrits (séparés par des virgules)<input id="f-inscrits" value="'+esc((q.inscrits||[]).join(", "))+'"></label>'+
+      '<label class="wide" for="f-desc">Description<textarea id="f-desc">'+esc(q.description)+'</textarea></label>'+
+      '<div class="actions wide"><button class="btn" type="submit">Enregistrer la quête</button><button class="btn ghost" type="button" data-a="cancel">Annuler</button></div></form>';
+  }
+  function boardView(){
+    var mine = data.quetes.filter(function(q){return q.bureau===ui.office;});
+    var c={ouverte:0,encours:0,terminee:0,all:mine.length}; mine.forEach(function(q){c[q.statut]=(c[q.statut]||0)+1;});
+    var list = mine.filter(function(q){return (ui.filter==="all"||q.statut===ui.filter)&&(ui.rank==="all"||q.rang===ui.rank);});
+    var h = '<div class="bar"><div class="chips" role="group" aria-label="Filtrer par statut">'+
+      [["ouverte","Ouvertes"],["encours","En cours"],["terminee","Terminées"],["all","Toutes"]].map(function(f){return '<button class="chip" data-a="filter" data-v="'+f[0]+'" aria-pressed="'+(ui.filter===f[0])+'">'+f[1]+'<span class="n">'+(c[f[0]]||0)+'</span></button>';}).join("")+
+      '</div><label for="f-rank" style="display:flex;gap:8px;align-items:center;font-family:var(--display);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--on-board-muted)">Rang<select id="f-rank"><option value="all">Tous</option>'+
+      Object.keys(RANKS).map(function(k){return '<option value="'+k+'"'+(ui.rank===k?" selected":"")+'>'+esc(RANKS[k].label)+'</option>';}).join("")+'</select></label></div>';
+    h += '<section class="grid" aria-label="Quêtes">';
+    if(ui.dm && ui.editing) h += form();
+    h += list.length ? list.map(card).join("") : '<p class="empty">Aucune quête affichée à ce comptoir pour le moment. Repasse bientôt.</p>';
+    h += '</section><div class="legend"><span>Rangs de la Guilde :</span>'+["cuivre","fer","argent","or","mithral"].map(rankSeal).join("")+'</div>';
+    return h;
+  }
+
+  function render(){
+    var b = ui.office ? office(ui.office) : null;
+    var h = '<div class="wrap">';
+    h += '<header><svg width="72" height="72" viewBox="-110 -110 220 220" aria-hidden="true"><circle r="80" fill="none" stroke="#d8b45e" stroke-width="3" opacity=".6"></circle>'+rose(104,'#0e1b20')+'</svg>';
+    h += '<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div></header>';
+    if(b) h += '<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
+    if(ui.auth){
+      var creating = ui.auth==="create";
+      h += '<form class="dmbar" id="authform"><span class="msg">'+(creating?'Premier accès DM : choisis un mot de passe. Il sera inclus dans le prochain site que tu télécharges.':'Mot de passe du DM')+(ui.authErr?' <strong style="color:#e7a39b">'+esc(ui.authErr)+'</strong>':'')+'</span>'+
+        '<label for="f-pw" style="display:flex;gap:8px;align-items:center;color:var(--on-board-muted);font-size:14px">Mot de passe<input id="f-pw" type="password" autocomplete="current-password" style="width:200px"></label>'+
+        '<button class="btn gold" type="submit">'+(creating?'Créer et entrer':'Entrer')+'</button><button class="btn board" type="button" data-a="auth-cancel">Annuler</button></form>';
+    }
+    if(ui.dm){
+      h += '<div class="dmbar"><span class="msg" role="status">'+(ui.msg?esc(ui.msg):(ui.dirty?"Changements faits ici seulement. Télécharge le site mis à jour et dépose-le sur ton hébergeur pour que les joueurs les voient.":(b?"Mode DM : ajoute, modifie ou retire des quêtes de ce comptoir, puis publie.":"Mode DM : choisis un comptoir pour gérer ses quêtes.")))+'</span>'+
+        (b?'<button class="btn gold" data-a="new">Nouvelle quête</button>':'')+
+        '<button class="btn gold" data-a="publish"'+(ui.dirty&&!ui.saving?"":" disabled")+'>'+(ui.saving?"Publication…":"Télécharger le site mis à jour")+'</button>'+
+        (ui.dirty?'<button class="btn board" data-a="revert">Annuler les changements</button>':'')+'</div>';
+    }
+    h += b ? boardView() : mapView();
+    h += '<footer><span>Pour partir en mission : choisis une quête, appuie sur « Je veux y aller » et colle le message dans le groupe. Le DM inscrit l\'équipe.</span>'+
+      '<button class="linkbtn" data-a="dm">'+(ui.dm?"Quitter le mode DM":"Mode DM")+'</button></footer>';
+    document.getElementById("app").innerHTML = h + '</div>';
+  }
+
+  function route(){
+    var id = (location.hash||"").slice(1);
+    var next = office(id) ? id : null;
+    if(next!==ui.office){ui.office=next;ui.editing=null;ui.confirmDel=null;ui.copied=null;ui.copyFallback=null;ui.filter="ouverte";ui.rank="all";render();try{window.scrollTo(0,0);}catch(e){}}
+  }
+  window.addEventListener("hashchange", route);
+
+  function buildDoc(state){
+    var json = JSON.stringify(state).replace(/</g,"\\u003c");
+    var S = "script";
+    return '<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'+
+      '<title>Babillard de la Rose des Vents</title>\n'+
+      '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,500&display=swap">\n'+
+      '<style id="bb-style">'+document.getElementById("bb-style").textContent+'</style>\n</head>\n<body>\n<div id="app"></div>\n'+
+      '<'+S+' type="application/json" id="bb-state">'+json+'</'+S+'>\n'+
+      '<'+S+' id="bb-script">'+document.getElementById("bb-script").textContent+'</'+S+'>\n</body>\n</html>\n';
+  }
+  function markDirty(){ui.dirty=true;ui.msg="";}
+
+  document.addEventListener("click", function(e){
+    var b = e.target.closest("[data-a]"); if(!b) return;
+    var a = b.getAttribute("data-a"), id = b.getAttribute("data-id");
+    if(a==="filter"){ui.filter=b.getAttribute("data-v");}
+    else if(a==="copy"){
+      var q = data.quetes.filter(function(x){return x.id===id;})[0]; if(!q) return;
+      ui.copied=null; ui.copyFallback=null;
+      try{navigator.clipboard.writeText(msgFor(q)).then(function(){ui.copied=id;render();},function(){ui.copyFallback=id;render();});}
+      catch(err){ui.copyFallback=id;}
+    }
+    else if(a==="dm"){if(ui.dm){ui.dm=false;}else{ui.auth=data.dmHash?"login":"create";ui.authErr="";}ui.editing=null;ui.confirmDel=null;render();var p=document.getElementById("f-pw");if(p)p.focus();return;}
+    else if(a==="auth-cancel"){ui.auth=null;}
+    else if(a==="new"){ui.editing="new";ui.confirmDel=null;}
+    else if(a==="edit"){ui.editing=id;ui.confirmDel=null;}
+    else if(a==="cancel"){ui.editing=null;}
+    else if(a==="del"){ui.confirmDel=id;}
+    else if(a==="del-no"){ui.confirmDel=null;}
+    else if(a==="del-yes"){data.quetes=data.quetes.filter(function(x){return x.id!==id;});ui.confirmDel=null;markDirty();}
+    else if(a==="revert"){data=JSON.parse(JSON.stringify(saved));ui.dirty=false;ui.editing=null;ui.msg="Changements annulés.";}
+    else if(a==="publish"){publish();return;}
+    render();
+    if(a==="new"||a==="edit"){var f=document.getElementById("f-titre");if(f){f.focus();f.scrollIntoView({block:"center"});}}
+  });
+  document.addEventListener("change", function(e){
+    if(e.target.id==="f-rank"){ui.rank=e.target.value;render();}
+  });
+  document.addEventListener("submit", function(e){
+    if(e.target.id==="authform"){
+      e.preventDefault();
+      var pw=document.getElementById("f-pw").value;
+      if(!pw){ui.authErr="Entre un mot de passe.";render();return;}
+      if(ui.auth==="create"){data.dmHash=pwHash(pw);markDirty();ui.auth=null;ui.dm=true;ui.msg="Mot de passe créé. Télécharge le site mis à jour pour l'activer en ligne.";}
+      else if(pwHash(pw)===data.dmHash){ui.auth=null;ui.dm=true;}
+      else {ui.authErr="Mot de passe incorrect.";}
+      render(); var p=document.getElementById("f-pw"); if(p)p.focus(); return;
+    }
+    if(e.target.id!=="qform") return;
+    e.preventDefault();
+    function v(id){return document.getElementById(id).value.trim();}
+    var q = {
+      id: ui.editing==="new" ? "q"+Date.now().toString(36) : ui.editing,
+      bureau:v("f-bureau"), titre:v("f-titre")||"Quête sans titre", type:v("f-type"), rang:v("f-rang"), statut:v("f-statut"),
+      lieu:v("f-lieu"), recompense:v("f-recompense"), niveau:v("f-niveau"), joueurs:v("f-joueurs"), date:v("f-date"),
+      inscrits:v("f-inscrits").split(",").map(function(s){return s.trim();}).filter(Boolean), description:v("f-desc")
+    };
+    if(ui.editing==="new") data.quetes.unshift(q);
+    else data.quetes = data.quetes.map(function(x){return x.id===q.id?q:x;});
+    ui.editing=null; markDirty(); render();
+  });
+
+  function publish(){
+    try{
+      var blob = new Blob([buildDoc(data)], {type:"text/html"});
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = "index.html";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){URL.revokeObjectURL(a.href);}, 4000);
+      saved=JSON.parse(JSON.stringify(data)); ui.dirty=false;
+      ui.msg="Fichier index.html téléchargé. Dépose-le sur ton hébergeur pour mettre le site à jour.";
+    }catch(err){ ui.msg="Le téléchargement a échoué. Réessaie dans un autre navigateur."; }
+    render();
+  }
+
+  var start=(location.hash||"").slice(1); ui.office=office(start)?start:null;
+  render();
+})();
+</script>
+</body>
+</html>
