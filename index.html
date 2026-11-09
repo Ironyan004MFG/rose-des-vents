@@ -565,7 +565,7 @@ function card(q){
   if(q.statut==="ouverte"&&!already)h+='<button class="btn" data-a="join" data-id="'+esc(q.id)+'">Je veux y aller</button>';
   if(ui.dm){
     if(ui.confirmDel===q.id)h+='<button class="btn danger" data-a="del-yes" data-id="'+esc(q.id)+'">Supprimer la quête et ses inscriptions</button><button class="btn ghost" data-a="del-no">Annuler</button>';
-    else h+=(q.statut==="ouverte"&&signupsFor(q.id).some(x=>x.statut!=="refusee")?'<button class="btn" data-a="group" data-id="'+esc(q.id)+'">Confirmer le groupe</button>':'')+(q.statut==="encours"?'<button class="btn" data-a="complete" data-id="'+esc(q.id)+'">Terminer la quête</button>':'')+'<button class="btn ghost" data-a="edit" data-id="'+esc(q.id)+'">Modifier</button><button class="btn ghost" data-a="add-name" data-id="'+esc(q.id)+'">Ajouter un participant</button><button class="btn ghost" data-a="del" data-id="'+esc(q.id)+'">Supprimer</button>';
+    else h+=(q.statut==="ouverte"&&signupsFor(q.id).some(x=>x.statut!=="refusee")?'<button class="btn" data-a="group" data-id="'+esc(q.id)+'">Confirmer le groupe</button>':'')+(q.statut==="encours"?'<button class="btn" data-a="complete" data-id="'+esc(q.id)+'">Terminer la quête</button>':'')+(q.statut==="terminee"?'<button class="btn" data-a="archive" data-id="'+esc(q.id)+'">Archiver</button>':'')+(q.statut==="archivee"?'<button class="btn" data-a="unarchive" data-id="'+esc(q.id)+'">Désarchiver</button>':'')+'<button class="btn ghost" data-a="edit" data-id="'+esc(q.id)+'">Modifier</button><button class="btn ghost" data-a="add-name" data-id="'+esc(q.id)+'">Ajouter un participant</button><button class="btn ghost" data-a="del" data-id="'+esc(q.id)+'">Supprimer</button>';
   }
   h+='</div>';
   if(ui.dm&&ui.addName===q.id)h+='<form class="inline" id="nameform" data-id="'+esc(q.id)+'"><label for="f-addname">Nom du participant (confirmé)<input id="f-addname" maxlength="40" required></label><button class="btn" type="submit">Ajouter</button><button class="btn ghost" type="button" data-a="add-cancel">Annuler</button></form>';
@@ -740,7 +740,7 @@ function resizeImage(file){
 
 /* ---------- chroniques ---------- */
 function chroniclesView(){
-  const done=quetes.filter(q=>q.rapport&&(q.statut==="terminee"||q.statut==="archivee")).sort((a,b)=>{const t=x=>x.rapport.termineLe&&x.rapport.termineLe.toMillis?x.rapport.termineLe.toMillis():0;return t(b)-t(a);});
+  const done=quetes.filter(q=>q.rapport&&q.statut==="terminee").sort((a,b)=>{const t=x=>x.rapport.termineLe&&x.rapport.termineLe.toMillis?x.rapport.termineLe.toMillis():0;return t(b)-t(a);});
   if(!loaded.q)return '<p class="hint">Chargement…</p>';
   if(!done.length)return '<p class="empty">Aucune mission n\'a encore été accomplie. Les premières pages des Chroniques restent à écrire…</p>';
   return '<div class="chron">'+done.map(q=>{const r=q.rapport,b=office(q.bureau);
@@ -1024,6 +1024,7 @@ document.addEventListener("click",async e=>{
   else if(a==="ask-writer"){const uid=v0("c-writer"),q=questById(ui.complete.id),w=ui.complete.parts.find(x=>x.uid===uid);if(!q||!w)return;readStep();
     await run("Rapport demandé",()=>setDoc(doc(db,"quetes",q.id),{redacteur:uid,majLe:serverTimestamp()},{merge:true}));
     ui.complete=null;save={state:"saved",msg:""};ui.signupMsg={id:q.id,text:"Rapport demandé à "+w.nom+". Un bouton « Écrire le rapport de mission » apparaît sur la quête pour ce joueur."};render();return;}
+  else if(a==="archive"||a==="unarchive"){await run(a==="archive"?"Archivage":"Désarchivage",()=>setDoc(doc(db,"quetes",id),{statut:a==="archive"?"archivee":"terminee",majLe:serverTimestamp()},{merge:true}));return;}
   else if(a==="group"){ui.confirmGroup=id;}
   else if(a==="group-cancel"){if(e.target!==b)return;ui.confirmGroup=null;}
   else if(a==="report-write"){ui.reportWrite=id;}
