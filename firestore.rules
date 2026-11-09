@@ -110,6 +110,96 @@ service cloud.firestore {
             && get(/databases/$(database)/documents/quetes/$(resource.data.quete)).data.statut == 'ouverte');
     }
 
+    // ---------- Compendium public ----------
+    // Tout joueur connecté propose une entrée ou une modification ; elle est publiée quand
+    // deux AUTRES joueurs l'ont approuvée (ou par le DM). Le DM peut masquer, rejeter ou supprimer.
+    function compFieldsOk(d) {
+      return str(d.titre, 1, 100) && str(d.categorie, 1, 40) && str(d.region, 1, 40)
+        && d.get('contenu', '') is string && d.get('contenu', '').size() <= 20000
+        && d.get('image', '') is string && d.get('image', '').size() <= 400000;
+    }
+    function byMe(m) {
+      return m is map && m.keys().hasOnly(['uid', 'nom']) && m.uid == request.auth.uid && str(m.nom, 1, 60);
+    }
+    function validProp(p) {
+      return p is map && p.keys().hasOnly(['titre', 'categorie', 'region', 'contenu', 'image', 'par', 'approbations', 'date'])
+        && compFieldsOk(p) && p.approbations is map && p.par is map;
+    }
+    function validComp(d) {
+      return d.keys().hasOnly(['titre', 'categorie', 'region', 'contenu', 'image', 'masque', 'publiee', 'proposition',
+                               'creePar', 'modifiePar', 'creeLe', 'majLe'])
+        && compFieldsOk(d) && d.masque is bool && d.publiee is bool
+        && (d.get('proposition', null) == null || validProp(d.proposition));
+    }
+    function sameAsProp(n, p) {
+      return n.titre == p.titre && n.categorie == p.categorie && n.region == p.region
+        && n.get('contenu', '') == p.get('contenu', '') && n.get('image', '') == p.get('image', '');
+    }
+    match /compendium/{id} {
+      allow read: if resource.data.masque == false || isAdmin();
+      allow create, update: if isAdmin() && validComp(request.resource.data);
+      allow delete: if isAdmin();
+
+      // Nouvelle entrée proposée par un joueur (non publiée, zéro approbation).
+      allow create: if realAccount() && validComp(request.resource.data)
+        && request.resource.data.masque == false && request.resource.data.publiee == false
+        && byMe(request.resource.data.creePar)
+        && validProp(request.resource.data.proposition)
+        && byMe(request.resource.data.proposition.par)
+        && request.resource.data.proposition.approbations.size() == 0
+        && sameAsProp(request.resource.data, request.resource.data.proposition);
+
+      // Proposer (ou remplacer) une modification : les approbations repartent à zéro.
+      allow update: if realAccount() && resource.data.masque == false && validComp(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['proposition'])
+        && validProp(request.resource.data.proposition)
+        && byMe(request.resource.data.proposition.par)
+        && request.resource.data.proposition.approbations.size() == 0;
+
+      // Approuver (1re approbation) : on ajoute seulement son propre nom.
+      allow update: if realAccount() && resource.data.masque == false
+        && resource.data.get('proposition', null) != null
+        && resource.data.proposition.par.uid != request.auth.uid
+        && !(request.auth.uid in resource.data.proposition.approbations)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['proposition'])
+        && request.resource.data.proposition.diff(resource.data.proposition).affectedKeys().hasOnly(['approbations'])
+        && request.resource.data.proposition.approbations.diff(resource.data.proposition.approbations).affectedKeys().hasOnly([request.auth.uid])
+        && request.resource.data.proposition.approbations[request.auth.uid] is string
+        && request.resource.data.proposition.approbations.size() == 1;
+
+      // 2e approbation : publie exactement le contenu proposé.
+      allow update: if realAccount() && resource.data.masque == false && validComp(request.resource.data)
+        && resource.data.get('proposition', null) != null
+        && resource.data.proposition.par.uid != request.auth.uid
+        && !(request.auth.uid in resource.data.proposition.approbations)
+        && resource.data.proposition.approbations.size() == 1
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['titre', 'categorie', 'region', 'contenu', 'image', 'publiee', 'proposition', 'modifiePar', 'majLe'])
+        && sameAsProp(request.resource.data, resource.data.proposition)
+        && request.resource.data.publiee == true
+        && request.resource.data.proposition == null
+        && request.resource.data.modifiePar == resource.data.proposition.par;
+
+      // Historique : chaque version publiée note son auteur et ses approbateurs. Jamais modifié.
+      match /versions/{vid} {
+        allow read: if isAdmin() || get(/databases/$(database)/documents/compendium/$(id)).data.masque == false;
+        allow create: if isAdmin()
+          || (realAccount()
+            && request.resource.data.keys().hasOnly(['titre', 'categorie', 'region', 'contenu', 'image', 'par', 'approbateurs', 'date'])
+            && compFieldsOk(request.resource.data)
+            && request.resource.data.approbateurs is map
+            && request.resource.data.approbateurs.size() == 2
+            && request.auth.uid in request.resource.data.approbateurs
+            && getAfter(/databases/$(database)/documents/compendium/$(id)).data.publiee == true
+            && getAfter(/databases/$(database)/documents/compendium/$(id)).data.get('proposition', null) == null
+            && get(/databases/$(database)/documents/compendium/$(id)).data.proposition.approbations.size() == 1
+            && request.resource.data.approbateurs.keys().hasAll(get(/databases/$(database)/documents/compendium/$(id)).data.proposition.approbations.keys())
+            && request.resource.data.par == get(/databases/$(database)/documents/compendium/$(id)).data.proposition.par
+            && sameAsProp(request.resource.data, get(/databases/$(database)/documents/compendium/$(id)).data.proposition));
+        allow delete: if isAdmin();
+      }
+    }
+
     // ---------- Wiki des règles maison (lecture publique, écriture admin) ----------
     match /wiki/{id} {
       allow read: if true;

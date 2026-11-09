@@ -123,6 +123,30 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 .stamp.sm{font-size:9px;padding:2px 5px;margin-left:6px;vertical-align:middle}
 .chr-h{font-family:var(--display);font-size:20px;letter-spacing:.08em;color:var(--gold);margin:28px 0 12px}
 .note.flash{outline:4px solid var(--gold);outline-offset:4px;transition:outline-color 1.4s ease}
+/* compendium */
+.compbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.compbar input[type=search]{flex:1 1 240px;background:var(--board-2);color:var(--on-board);border-color:var(--line);width:auto}
+.compbar select{width:auto;background:var(--board-2);color:var(--on-board);border-color:var(--line);min-height:40px}
+.compgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.ccard{display:flex;flex-direction:column;background:var(--parch);color:var(--ink);border-radius:6px;overflow:hidden;text-decoration:none;box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.ccard:hover,.ccard:focus-visible{outline:3px solid var(--gold);outline-offset:0}
+.ccard.hidden-entry{opacity:.6}
+.cimg{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;max-width:100%}
+.cbody{display:flex;flex-direction:column;gap:6px;padding:12px 14px 14px}
+.cbody strong{font-family:var(--display);font-size:18px}
+.cex{font-size:15px;color:var(--ink-soft)}
+.ctags{display:flex;flex-wrap:wrap;gap:6px}
+.ccat{font-family:var(--display);font-size:11px;letter-spacing:.1em;text-transform:uppercase;background:#2a2219;color:var(--parch);border-radius:999px;padding:3px 9px}
+.ccat.masq{background:var(--danger)}
+.ccat.rev{background:var(--gold);color:#2a2219}
+.revue{border:2px dashed var(--gold);border-radius:8px;padding:12px 14px;margin:6px 0 18px}
+.revue h2{margin:0 0 10px;font-size:20px}
+.revbox{background:#fff4d6;border:2px solid var(--gold);border-radius:6px;padding:10px 14px;margin-bottom:14px}
+.creg{font-family:var(--display);font-size:11px;letter-spacing:.1em;text-transform:uppercase;border:1px solid #b9a982;color:var(--ink-soft);border-radius:999px;padding:2px 9px}
+.journal.light li{border-bottom-color:#d9c9a0}
+.journal.light .jd{color:var(--ink-soft)}
+.verbody{display:block!important;background:#f7f1e1;border:1px dashed #c9b88f;border-radius:6px;padding:8px 12px}
+.sheet .mini{color:var(--ink)}
 /* galerie */
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px}
 .gcard{display:flex;flex-direction:column;background:var(--parch);color:var(--ink);border-radius:6px;overflow:hidden;text-decoration:none;box-shadow:0 10px 24px rgba(0,0,0,.45);transition:transform .15s ease}
@@ -328,7 +352,7 @@ header .pill{margin-left:auto}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, connectAuthEmulator, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, connectFirestoreEmulator, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, getDoc, writeBatch, serverTimestamp, FieldPath, increment, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, connectFirestoreEmulator, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, getDoc, writeBatch, serverTimestamp, FieldPath, increment, query, orderBy, limit, where, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBd6DdnvzkmPxGB_aAjAgTc1P9jHAztI30",
@@ -357,6 +381,7 @@ const STATUS = {ouverte:"Ouverte",encours:"En cours",terminee:"Terminée",archiv
 const TYPES = ["Contrat","Recherche","Exploration","Prime","Escorte","Rumeur"];
 const QUEST_KEYS = ["bureau","titre","type","rang","statut","lieu","recompense","niveau","joueurs","joueursMin","joueursMax","supercharged","date","description"];
 const DEFAULT_RANK_PTS = {cuivre:1,fer:5,argent:10,or:25,mithral:50,inconnu:0};
+const BASE_CATS = ["PNJ","Créatures","Lieux","Indices & rumeurs","Objets","Factions"];
 const DEFAULT_MEFAITS = {mineur:1,moyen:3,grave:10};
 const MEFAIT_LABELS = {mineur:"Mineur",moyen:"Moyen",grave:"Grave"};
 const MEFAIT_AIDE = {
@@ -380,12 +405,12 @@ const DEFAULT_SCALE = [
 ];
 
 /* ---------- state ---------- */
-let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, priv = null, privUnsubs = [];
-const loaded = {b:false, q:false, i:false, a:false, w:false};
+let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, priv = null, privUnsubs = [], compPublic = [], compAll = [];
+const loaded = {b:false, q:false, i:false, a:false, w:false, c:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
 let save = {state:"idle", msg:""};
-const ui = {confirmGroup:null, reportWrite:null, sheetEdit:null, sheetImg:undefined, promptSheet:false, needLogin:null, loginIntent:null, complete:null, adjust:false, wikiEdit:null, wikiPreview:false, confirmWiki:null, advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
+const ui = {compEdit:null, compImg:undefined, compPreview:false, compHist:null, compVer:null, compQ:"", compCat:"", compReg:"", confirmComp:null, confirmGroup:null, reportWrite:null, sheetEdit:null, sheetImg:undefined, promptSheet:false, needLogin:null, loginIntent:null, complete:null, adjust:false, wikiEdit:null, wikiPreview:false, confirmWiki:null, advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
 
 /* ---------- helpers ---------- */
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -455,18 +480,20 @@ function listen(){
   onSnapshot(query(collection(db,"rangs"),orderBy("date","desc"),limit(60)),snap=>{
     rangs=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();
   },onErr);
+  onSnapshot(query(collection(db,"compendium"),where("masque","==",false)),snap=>{compPublic=snap.docs.map(d=>Object.assign({id:d.id},d.data()));loaded.c=true;render();},onErr);
   onSnapshot(collection(db,"wiki"),snap=>{
     wikiPages=snap.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>((a.ordre==null?999:a.ordre)-(b.ordre==null?999:b.ordre))||String(a.titre).localeCompare(String(b.titre),"fr"));loaded.w=true;render();
   },onErr);
 }
 // Données réservées au DM (points, journal, seuils) : lues seulement par un compte admin.
 function listenPrivate(on){
-  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};journal=[];priv=null;
+  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};journal=[];priv=null;compAll=[];
   if(!on)return;
   const err=e=>console.error(e);
   privUnsubs.push(onSnapshot(collection(db,"points"),snap=>{const m={};snap.docs.forEach(d=>{m[d.id]=(d.data().parRegion)||{};});pointsMap=m;render();},err));
   privUnsubs.push(onSnapshot(query(collection(db,"journal"),orderBy("date","desc"),limit(60)),snap=>{journal=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","renommee"),snap=>{priv=snap.exists()?snap.data():null;render();},err));
+  privUnsubs.push(onSnapshot(collection(db,"compendium"),snap=>{compAll=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
 }
 window.addEventListener("offline",()=>{net={state:"hors-ligne",msg:""};render();});
 window.addEventListener("online",()=>{net={state:"ok",msg:""};render();});
@@ -554,6 +581,7 @@ function mapView(){
   h+='<nav class="offices" aria-label="Comptoirs"><h2>Comptoirs de la Guilde</h2>';
   bureaux.forEach(b=>{const n=openCount(b.id);
     h+='<a class="office" href="#'+esc(b.id)+'"><span class="nm">'+esc(b.nom)+(b.siege?'<span class="tag">Siège de la Guilde</span>':'')+'</span><span class="count'+(n?'':' zero')+'">'+n+' quête'+(n>1?'s':'')+'</span></a>';});
+  h+='<a class="office regl" href="#compendium"><span class="nm">Compendium<span class="tag">PNJ, créatures, lieux, indices…</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#aventuriers"><span class="nm">Les aventuriers de la Guilde<span class="tag">La galerie des personnages</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#personnages"><span class="nm">Mes personnages<span class="tag">Ta fiche d\'aventurier</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#chroniques"><span class="nm">Chroniques de la Guilde<span class="tag">Les missions en cours et accomplies</span></span><span aria-hidden="true">→</span></a>';
@@ -773,6 +801,76 @@ function resizeImage(file){
   });
 }
 
+/* ---------- compendium ---------- */
+function compAllRaw(){return (isAdmin&&compAll.length?compAll:compPublic);}
+function compEntries(){return compAllRaw().filter(e=>e.publiee!==false).sort((a,b)=>String(a.titre).localeCompare(String(b.titre),"fr"));}
+function compPending(){return compAllRaw().filter(e=>e.proposition);}
+function compFind(id){return compAllRaw().find(x=>x.id===id);}
+function compCats(){const set=new Set(BASE_CATS);compAllRaw().forEach(e=>{if(e.categorie)set.add(e.categorie);});return Array.from(set);}
+function regionName(r){if(!r||r==="cote")return "Sword Coast";const b=office(r);return b?b.nom:r;}
+function fmtDate(t){return t&&t.toDate?t.toDate().toLocaleDateString("fr-CA",{day:"numeric",month:"short",year:"numeric"}):"";}
+function plainExcerpt(t){return String(t||"").replace(/[#*_>`|\[\]()-]/g," ").replace(/\s+/g," ").trim().slice(0,140);}
+function apprNames(m){return Object.keys(m||{}).map(k=>m[k]).filter(Boolean);}
+function canApprove(e){const p=e&&e.proposition;return !!(p&&user&&!user.isAnonymous&&p.par&&p.par.uid!==user.uid&&!(p.approbations&&p.approbations[user.uid]));}
+function compForm(e){
+  const src=e?(e.proposition||e):{titre:"",categorie:"",region:ui.compReg||"cote",contenu:"",image:""};
+  const img=ui.compImg!==undefined?ui.compImg:(src.image||"");const live=document.getElementById("c2-contenu");
+  const warn=!ui.dm&&e&&e.proposition?'<p class="hint wide">Une proposition est déjà en revue pour cette entrée : en l\'enregistrant, tu la remplaces et les approbations repartent à zéro.</p>':!ui.dm?'<p class="hint wide">Ta contribution sera publiée quand deux autres aventuriers l\'auront approuvée.</p>':'';
+  return '<form class="form sheetform" id="compform"><h2>'+(ui.compEdit==="new"?"Nouvelle entrée":"Proposer une modification")+'</h2>'+warn+
+    '<label class="wide" for="c2-titre">Titre<input id="c2-titre" required maxlength="100" value="'+esc(src.titre)+'"></label>'+
+    '<label for="c2-cat">Catégorie (choisis ou crée-en une)<input id="c2-cat" list="c2-cats" required maxlength="40" value="'+esc(src.categorie)+'"><datalist id="c2-cats">'+compCats().map(c=>'<option value="'+esc(c)+'">').join("")+'</datalist></label>'+
+    '<label for="c2-reg">Région<select id="c2-reg"><option value="cote">Sword Coast (toute la côte)</option>'+bureaux.map(b=>'<option value="'+esc(b.id)+'"'+(b.id===src.region?' selected':'')+'>'+esc(b.nom)+'</option>').join("")+'</select></label>'+
+    '<div class="wide imgrow">'+(img?'<img class="portrait sm" src="'+esc(img)+'" alt="Image actuelle">':'<span class="portrait sm ph" aria-hidden="true">?</span>')+'<label for="c2-img">Image (facultatif)<input id="c2-img" type="file" accept="image/*"></label>'+(img?'<button class="btn ghost" type="button" data-a="cimg-clear">Retirer l\'image</button>':'')+'</div>'+
+    '<label class="wide" for="c2-contenu">Ce que la Guilde sait <span class="tip">Mise en forme : ## Titre, **gras**, *italique*, - liste</span><textarea id="c2-contenu" maxlength="20000" rows="10">'+esc(src.contenu)+'</textarea></label>'+
+    (ui.compPreview?'<div class="wide preview"><div class="wikibody">'+md(live?live.value:src.contenu)+'</div></div>':'')+
+    '<div class="actions wide"><button class="btn" type="submit">'+(ui.dm?'Publier':'Soumettre à la revue')+'</button><button class="btn ghost" type="button" data-a="comp-preview">'+(ui.compPreview?"Masquer l\'aperçu":"Aperçu")+'</button><button class="btn ghost" type="button" data-a="comp-cancel">Annuler</button></div></form>';
+}
+function compCard(e,pend){const d=pend?e.proposition:e;const n=pend?Object.keys(d.approbations||{}).length:0;
+  return '<a class="ccard'+(e.masque?' hidden-entry':'')+'" href="#compendium-'+esc(e.id)+'">'+(d.image&&!pend?'<img class="cimg" src="'+esc(d.image)+'" alt="">':'')+
+    '<span class="cbody"><span class="ctags">'+(pend?'<span class="ccat rev">'+(e.publiee===false?'Nouvelle entrée':'Modification')+' · '+n+'/2</span>':'')+'<span class="ccat">'+esc(d.categorie)+'</span><span class="creg">'+esc(regionName(d.region))+'</span>'+(e.masque?'<span class="ccat masq">Masquée</span>':'')+'</span><strong>'+esc(d.titre)+'</strong><span class="cex">'+(pend?'Proposée par '+esc((d.par&&d.par.nom)||"?")+(canApprove(e)?' · <b>attend ton avis</b>':''):esc(plainExcerpt(d.contenu)))+'</span></span></a>';}
+function compendiumView(){
+  const signed=user&&!user.isAnonymous;
+  if(ui.compEdit==="new")return '<div class="sheetwrap">'+compForm(null)+'</div>';
+  const all=compEntries(),pend=compPending(),q=ui.compQ.trim().toLowerCase();
+  const list=all.filter(e=>(!ui.compCat||e.categorie===ui.compCat)&&(!ui.compReg||e.region===ui.compReg)&&(!q||(e.titre+" "+e.contenu+" "+e.categorie).toLowerCase().indexOf(q)>=0));
+  const counts={};all.forEach(e=>{counts[e.categorie]=(counts[e.categorie]||0)+1;});
+  let h='<p class="hint">Tout ce que les aventuriers ont appris sur la Sword Coast. Chacun peut proposer une entrée ou une correction ; elle est publiée quand deux autres aventuriers l\'ont approuvée. Attention : c\'est ce que vous <em>croyez</em> savoir.</p>';
+  if(loaded.c&&pend.length)h+='<section class="revue"><h2>En attente de revue <span class="n">'+pend.length+'</span></h2><div class="compgrid">'+pend.map(e=>compCard(e,true)).join("")+'</div></section>';
+  h+='<div class="bar"><div class="chips" role="group" aria-label="Catégories"><button class="chip" data-a="ccat" data-v="" aria-pressed="'+(!ui.compCat)+'">Tout<span class="n">'+all.length+'</span></button>'+
+    compCats().filter(c=>counts[c]||BASE_CATS.indexOf(c)>=0).map(c=>'<button class="chip" data-a="ccat" data-v="'+esc(c)+'" aria-pressed="'+(ui.compCat===c)+'">'+esc(c)+'<span class="n">'+(counts[c]||0)+'</span></button>').join("")+'</div></div>';
+  h+='<div class="compbar"><label for="c-search" class="sr">Rechercher</label><input id="c-search" type="search" placeholder="Rechercher un nom, un indice…" value="'+esc(ui.compQ)+'">'+
+    '<label for="c-reg" class="sr">Région</label><select id="c-reg"><option value="">Toutes les régions</option><option value="cote"'+(ui.compReg==="cote"?' selected':'')+'>Sword Coast</option>'+bureaux.map(b=>'<option value="'+esc(b.id)+'"'+(ui.compReg===b.id?' selected':'')+'>'+esc(b.nom)+'</option>').join("")+'</select>'+
+    (signed?'<button class="btn gold" data-a="comp-new">Nouvelle entrée</button>':'<button class="btn board" data-a="login">Se connecter pour contribuer</button>')+'</div>';
+  if(!loaded.c)return h+'<p class="hint">Chargement…</p>';
+  if(!list.length)return h+'<p class="empty">'+(all.length?'Aucune entrée ne correspond.':'Le compendium est vide. Soyez les premiers à consigner ce que vous avez découvert !')+'</p>';
+  return h+'<div class="compgrid">'+list.map(e=>compCard(e,false)).join("")+'</div>';
+}
+function compEntryView(id){
+  const e=compFind(id);const signed=user&&!user.isAnonymous;
+  if(!loaded.c)return '<p class="hint">Chargement…</p>';
+  if(!e)return '<p class="empty">Cette entrée n\'existe pas (ou plus). <a href="#compendium">Retour au compendium</a></p>';
+  if(ui.compEdit===id)return '<div class="sheetwrap">'+compForm(e)+'</div>';
+  const p=e.proposition,isNew=e.publiee===false,d=isNew?p:e;
+  let h='<article class="sheet">';
+  if(p){const names=apprNames(p.approbations);
+    h+='<div class="revbox"><strong>'+(isNew?'Nouvelle entrée en attente de revue':'Modification proposée')+'</strong> par '+esc((p.par&&p.par.nom)||"?")+' · '+names.length+'/2 approbations'+(names.length?' ('+names.map(esc).join(", ")+')':'')+
+      (isNew?'':'<div class="actions"><button class="btn ghost" data-a="comp-showprop">'+(ui.compVer==="prop"?'Masquer la proposition':'Voir la proposition')+'</button></div>'+(ui.compVer==="prop"?'<div class="verbody"><h3>'+esc(p.titre)+'</h3><p class="desc">'+esc(p.categorie)+' · '+esc(regionName(p.region))+'</p>'+(p.image?'<img class="portrait sm" src="'+esc(p.image)+'" alt="">':'')+'<div class="wikibody">'+md(p.contenu)+'</div></div>':''))+
+      '<div class="actions">'+(ui.dm?'':canApprove(e)?'<button class="btn gold" data-a="comp-approve" data-id="'+esc(e.id)+'">Approuver</button>':signed&&p.par&&p.par.uid===user.uid?'<span class="desc">Tu ne peux pas approuver ta propre proposition.</span>':signed?'<span class="desc">Tu as déjà approuvé.</span>':'<button class="btn ghost" data-a="login">Se connecter pour approuver</button>')+
+      (ui.dm?'<button class="btn gold" data-a="comp-force" data-id="'+esc(e.id)+'">Approuver (DM)</button><button class="btn danger" data-a="comp-reject" data-id="'+esc(e.id)+'">Refuser</button><span class="desc">Ton approbation suffit à publier.</span>':'')+'</div></div>';}
+  h+='<div class="ctags"><span class="ccat">'+esc(d.categorie)+'</span><span class="creg">'+esc(regionName(d.region))+'</span>'+(e.masque?'<span class="ccat masq">Masquée par le DM</span>':'')+'</div>';
+  h+='<div class="sheet-top">'+(d.image?'<img class="portrait" src="'+esc(d.image)+'" alt="">':'')+'<div class="sheet-id"><h2>'+esc(d.titre)+'</h2><p class="sheet-pl">Consignée par '+esc((e.creePar&&e.creePar.nom)||"un aventurier")+(!isNew&&e.modifiePar&&e.modifiePar.nom?' · dernière version de '+esc(e.modifiePar.nom)+' le '+esc(fmtDate(e.majLe)):'')+'</p></div></div>';
+  h+='<div class="wikibody">'+md(d.contenu)+'</div>';
+  h+='<div class="actions">'+(signed?'<button class="btn" data-a="comp-edit" data-id="'+esc(e.id)+'">'+(ui.dm?'Modifier':'Proposer une modification')+'</button>':'<button class="btn ghost" data-a="login">Se connecter pour contribuer</button>')+(isNew?'':'<button class="btn ghost" data-a="comp-hist" data-id="'+esc(e.id)+'">Historique</button>');
+  if(ui.dm)h+='<button class="btn ghost" data-a="comp-mask" data-id="'+esc(e.id)+'">'+(e.masque?'Afficher aux joueurs':'Masquer aux joueurs')+'</button>'+(ui.confirmComp===e.id?'<button class="btn danger" data-a="comp-del-yes" data-id="'+esc(e.id)+'">Supprimer définitivement</button><button class="btn ghost" data-a="comp-del-no">Annuler</button>':'<button class="btn ghost" data-a="comp-del" data-id="'+esc(e.id)+'">Supprimer</button>');
+  h+='</div>';
+  if(ui.compHist&&ui.compHist.id===e.id){
+    const vs=ui.compHist.versions;
+    h+='<h3>Historique des versions</h3>'+(vs===null?'<p class="desc">Chargement…</p>':!vs.length?'<p class="desc">Aucune version enregistrée.</p>':
+      '<ul class="journal light">'+vs.map(v=>{const ap=apprNames(v.approbateurs);return '<li><span class="jd">'+esc(fmtDate(v.date))+'</span><span>Rédigée par <b>'+esc((v.par&&v.par.nom)||"?")+'</b> · '+(ap.length?'approuvée par '+ap.map(esc).join(" et "):'')+(v.parDM||!ap.length?(ap.length?' · ':'')+'publiée par le DM':'')+' <button class="mini" data-a="comp-ver" data-id="'+esc(v.id)+'">'+(ui.compVer===v.id?'Masquer':'Voir')+'</button>'+(signed?'<button class="mini" data-a="comp-restore" data-id="'+esc(v.id)+'">'+(ui.dm?'Restaurer':'Proposer de restaurer')+'</button>':'')+'</span></li>'+(ui.compVer===v.id?'<li class="verbody"><div class="wikibody">'+md(v.contenu)+'</div></li>':'');}).join("")+'</ul>');
+  }
+  return h+'</article>';
+}
+
 /* ---------- galerie ---------- */
 function galleryView(){
   if(!loaded.a)return '<p class="hint">Chargement…</p>';
@@ -871,21 +969,23 @@ function statusPill(){
 }
 function render(){
   const wk=!!ui.office&&(ui.office==="wiki"||ui.office.indexOf("wiki-")===0);
-  if(ui.office&&ui.office!=="renommee"&&ui.office!=="chroniques"&&ui.office!=="personnages"&&ui.office!=="aventuriers"&&ui.office.indexOf("perso-")!==0&&!wk&&loaded.b&&!office(ui.office))ui.office=null;
+  if(ui.office&&ui.office!=="renommee"&&ui.office!=="chroniques"&&ui.office!=="personnages"&&ui.office!=="aventuriers"&&ui.office!=="compendium"&&ui.office.indexOf("compendium-")!==0&&ui.office.indexOf("perso-")!==0&&!wk&&loaded.b&&!office(ui.office))ui.office=null;
   const reg=ui.office==="renommee";
   const chr=ui.office==="chroniques";
   const perso=!!ui.office&&ui.office.indexOf("perso-")===0;
   const mes=ui.office==="personnages";
   const gal=ui.office==="aventuriers";
+  const comp=ui.office==="compendium",compE=!!ui.office&&ui.office.indexOf("compendium-")===0;
   const b=ui.office&&!reg?office(ui.office):null;
   let h='<div class="wrap">';
   h+='<header><svg width="72" height="72" viewBox="-110 -110 220 220" aria-hidden="true"><circle r="80" fill="none" stroke="#d8b45e" stroke-width="3" opacity=".6"></circle>'+rose(104,'#0e1b20')+'</svg>';
-  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions en cours et accomplies par les aventuriers':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+statusPill()+'</header>';
-  if(perso)h+='<a class="back" href="#renommee"><span aria-hidden="true">←</span> Registre de renommée</a>';
-  else if(b||reg||wk||chr||mes||gal)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
+  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(comp||compE?'Compendium de la Guilde':gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(comp||compE?'Le savoir partagé des aventuriers':gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions en cours et accomplies par les aventuriers':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+statusPill()+'</header>';
+  if(compE)h+='<a class="back" href="#compendium"><span aria-hidden="true">←</span> Compendium</a>';
+  else if(perso)h+='<a class="back" href="#renommee"><span aria-hidden="true">←</span> Registre de renommée</a>';
+  else if(b||reg||wk||chr||mes||gal||comp)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
   if(ui.authMsg)h+='<div class="dmbar"><span class="msg">'+esc(ui.authMsg)+'</span><button class="btn board" data-a="auth-ok">OK</button>'+(user&&!user.isAnonymous&&!isAdmin?'<button class="btn board" data-a="logout">Déconnexion</button>':'')+'</div>';
   if(ui.dm)h+=dmPanel(b);
-  h+=gal?galleryView():mes?myCharsView():perso?sheetView(ui.office.slice(6)):chr?chroniclesView():wk?wikiView():reg?renownView():b?boardView()+reputationSection(b.id,b.nom):mapView();
+  h+=comp?compendiumView():compE?compEntryView(ui.office.slice(11)):gal?galleryView():mes?myCharsView():perso?sheetView(ui.office.slice(6)):chr?chroniclesView():wk?wikiView():reg?renownView():b?boardView()+reputationSection(b.id,b.nom):mapView();
   const signed=user&&!user.isAnonymous;
   h+='<footer><span>Pour partir en mission : choisis une quête, appuie sur « Je veux y aller » et choisis ton personnage. Le DM confirme les inscriptions.</span>'+
     '<span class="who">'+(signed?'Connecté : '+esc(user.displayName||user.email||"aventurier")+' · <a href="#personnages">Mes personnages</a> · <button class="linkbtn" data-a="logout">Déconnexion</button>':'<button class="linkbtn" data-a="login">Se connecter</button>')+
@@ -948,8 +1048,8 @@ function render(){
       h+='</form></div>';}}
   const focusId=document.activeElement&&document.activeElement.id;
   const app=document.getElementById("app");
-  const formKey=ui.editing+"|"+ui.signup+"|"+ui.addName+"|"+ui.advForm+"|"+ui.scaleEdit+"|"+ui.wikiEdit+"|"+(ui.complete?ui.complete.id+ui.complete.step:"")+"|"+ui.confirmGroup+"|"+ui.reportWrite+"|"+ui.adjust+"|"+ui.sheetEdit;
-  const keep={}; if(render.lastForm===formKey)["f-titre","f-bureau","f-type","f-rang","f-statut","f-lieu","f-recompense","f-niveau","f-jmin","f-jmax","f-date","f-desc","f-name","f-addname","f-advnom","f-advjoueur","w-titre","w-ordre","w-contenu","f-pts","c-date","c-res","c-resume","g-date","r-texte","p-nom","p-espece","p-classe","p-desc","p-bg","p-don"].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.type==="checkbox"?el.checked:el.value;});
+  const formKey=ui.editing+"|"+ui.signup+"|"+ui.addName+"|"+ui.advForm+"|"+ui.scaleEdit+"|"+ui.wikiEdit+"|"+(ui.complete?ui.complete.id+ui.complete.step:"")+"|"+ui.confirmGroup+"|"+ui.reportWrite+"|"+ui.adjust+"|"+ui.sheetEdit+"|"+ui.compEdit;
+  const keep={}; if(render.lastForm===formKey)["f-titre","f-bureau","f-type","f-rang","f-statut","f-lieu","f-recompense","f-niveau","f-jmin","f-jmax","f-date","f-desc","f-name","f-addname","f-advnom","f-advjoueur","w-titre","w-ordre","w-contenu","f-pts","c-date","c-res","c-resume","g-date","r-texte","c2-titre","c2-cat","c2-reg","c2-contenu","c-search","p-nom","p-espece","p-classe","p-desc","p-bg","p-don"].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.type==="checkbox"?el.checked:el.value;});
   const sup=document.getElementById("f-super");if(sup&&render.lastForm===formKey)keep["f-super"]=sup.checked;
   render.lastForm=formKey;
   app.innerHTML=h+'</div>';
@@ -961,7 +1061,7 @@ function render(){
 function route(){
   const id=(location.hash||"").slice(1);
   const next=id&&id!=="carte"?id:null;
-  if(next!==ui.office){ui.office=next;if(!(next==="personnages"&&ui.sheetEdit==="new"))ui.sheetEdit=null;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter=ui.pendingFilter||"ouverte";ui.rank="all";const focusQ=ui.pendingQuest;ui.pendingFilter=null;ui.pendingQuest=null;render();
+  if(next!==ui.office){ui.office=next;if(!(next==="personnages"&&ui.sheetEdit==="new"))ui.sheetEdit=null;if(!(next==="compendium"&&ui.compEdit==="new"))ui.compEdit=null;ui.compHist=null;ui.compVer=null;ui.confirmComp=null;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter=ui.pendingFilter||"ouverte";ui.rank="all";const focusQ=ui.pendingQuest;ui.pendingFilter=null;ui.pendingQuest=null;render();
     try{const el=focusQ&&document.getElementById("q-"+focusQ);if(el){el.scrollIntoView({block:"center"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1600);}else window.scrollTo(0,0);}catch(e){}}
 }
 window.addEventListener("hashchange",route);
@@ -1083,6 +1183,27 @@ document.addEventListener("click",async e=>{
     await run("Rapport demandé",()=>setDoc(doc(db,"quetes",q.id),{redacteur:uid,majLe:serverTimestamp()},{merge:true}));
     ui.complete=null;save={state:"saved",msg:""};ui.signupMsg={id:q.id,text:"Rapport demandé à "+w.nom+". Un bouton « Écrire le rapport de mission » apparaît sur la quête pour ce joueur."};render();return;}
   else if(a==="archive"||a==="unarchive"){await run(a==="archive"?"Archivage":"Désarchivage",()=>setDoc(doc(db,"quetes",id),{statut:a==="archive"?"archivee":"terminee",majLe:serverTimestamp()},{merge:true}));return;}
+  else if(a==="ccat"){ui.compCat=b.getAttribute("data-v")||"";}
+  else if(a==="comp-new"){ui.compEdit="new";ui.compImg=undefined;ui.compPreview=false;}
+  else if(a==="comp-edit"){ui.compEdit=id;ui.compVer=null;ui.compImg=undefined;ui.compPreview=false;}
+  else if(a==="comp-cancel"){ui.compEdit=null;ui.compImg=undefined;}
+  else if(a==="comp-preview"){ui.compPreview=!ui.compPreview;}
+  else if(a==="cimg-clear"){ui.compImg="";}
+  else if(a==="comp-hist"){if(ui.compHist&&ui.compHist.id===id){ui.compHist=null;}else{ui.compHist={id,versions:null};render();
+    try{const snap=await getDocs(query(collection(db,"compendium",id,"versions"),orderBy("date","desc"),limit(30)));ui.compHist={id,versions:snap.docs.map(d=>Object.assign({id:d.id},d.data()))};}catch(err){ui.compHist={id,versions:[]};save={state:"error",msg:errText(err)};}}}
+  else if(a==="comp-ver"){ui.compVer=ui.compVer===id?null:id;}
+  else if(a==="comp-restore"){const eid=ui.compHist&&ui.compHist.id,v=ui.compHist&&ui.compHist.versions.find(x=>x.id===id),e=compFind(eid);if(!v||!e)return;
+    await saveComp(eid,{titre:v.titre,categorie:v.categorie,region:v.region,contenu:v.contenu,image:v.image||""},false);ui.compHist=null;ui.compVer=null;render();return;}
+  else if(a==="comp-showprop"){ui.compVer=ui.compVer==="prop"?null:"prop";}
+  else if(a==="comp-approve"){const e=compFind(id);if(!e||!canApprove(e))return;await approveComp(e,false);return;}
+  else if(a==="comp-force"){const e=compFind(id);if(!e||!e.proposition)return;await approveComp(e,true);return;}
+  else if(a==="comp-reject"){const e=compFind(id);if(!e)return;
+    if(e.publiee===false){await run("Refus",()=>deleteDoc(doc(db,"compendium",id)));location.hash="#compendium";return;}
+    await run("Refus",()=>updateDoc(doc(db,"compendium",id),{proposition:null}));return;}
+  else if(a==="comp-mask"){const e=compEntries().find(x=>x.id===id);if(!e)return;await run("Visibilité",()=>setDoc(doc(db,"compendium",id),{masque:!e.masque},{merge:true}));return;}
+  else if(a==="comp-del"){ui.confirmComp=id;}
+  else if(a==="comp-del-no"){ui.confirmComp=null;}
+  else if(a==="comp-del-yes"){ui.confirmComp=null;await run("Suppression",()=>deleteDoc(doc(db,"compendium",id)));location.hash="#compendium";return;}
   else if(a==="goto-quest"){ui.pendingFilter="encours";ui.pendingQuest=id;return;}
   else if(a==="group"){ui.confirmGroup=id;}
   else if(a==="group-cancel"){if(e.target!==b)return;ui.confirmGroup=null;}
@@ -1106,6 +1227,9 @@ document.addEventListener("change",e=>{
     const aid=e.target.getAttribute("data-adv"),bid=e.target.getAttribute("data-b"),n=parseInt(e.target.value,10);
     run("Renommée",()=>updateDoc(doc(db,"aventuriers",aid),new FieldPath("renommee",bid),n,"majLe",serverTimestamp()));return;
   }
+  if(e.target.id==="c-reg"){ui.compReg=e.target.value;render();return;}
+  if(e.target.id==="c2-img"){const f=e.target.files&&e.target.files[0];if(!f)return;
+    resizeImage(f).then(url=>{if(url.length>380000)save={state:"error",msg:"Image trop lourde."};else ui.compImg=url;render();}).catch(err=>{save={state:"error",msg:err.message};render();});return;}
   if(e.target.id==="p-img"){const f=e.target.files&&e.target.files[0];if(!f)return;
     resizeImage(f).then(url=>{if(url.length>380000){save={state:"error",msg:"Image trop lourde, essaie une image plus simple."};}else ui.sheetImg=url;render();}).catch(err=>{save={state:"error",msg:err.message};render();});return;}
   if(e.target.id==="f-rank"){ui.rank=e.target.value;render();}
@@ -1114,6 +1238,38 @@ document.addEventListener("change",e=>{
     file.text().then(t=>{try{ui.importPreview=previewImport(JSON.parse(t));}catch(err){save={state:"error",msg:"Import impossible : "+err.message};}render();});
   }
 });
+document.addEventListener("input",e=>{if(e.target.id==="c-search"){ui.compQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("c-search");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}}});
+function compBy(){return {uid:user.uid,nom:String(user.displayName||user.email||"Aventurier").slice(0,60)};}
+function compFields(d){return {titre:d.titre,categorie:d.categorie,region:d.region,contenu:d.contenu||"",image:d.image||""};}
+// Joueur : la sauvegarde devient une proposition en revue. DM : publication directe.
+async function saveComp(id,data,isNew){
+  const by=compBy(),ref=doc(db,"compendium",id),f=compFields(data);
+  return run("Compendium",async()=>{
+    if(ui.dm){
+      const bt=writeBatch(db);
+      if(isNew)bt.set(ref,Object.assign({},f,{publiee:true,masque:false,proposition:null,creePar:by,modifiePar:by,creeLe:serverTimestamp(),majLe:serverTimestamp()}));
+      else bt.set(ref,Object.assign({},f,{publiee:true,proposition:null,modifiePar:by,majLe:serverTimestamp()}),{merge:true});
+      bt.set(doc(collection(db,"compendium",id,"versions")),Object.assign({},f,{par:by,approbateurs:{},date:serverTimestamp()}));
+      await bt.commit();return;
+    }
+    const prop=Object.assign({},f,{par:by,approbations:{},date:serverTimestamp()});
+    if(isNew)await setDoc(ref,Object.assign({},f,{publiee:false,masque:false,proposition:prop,creePar:by,creeLe:serverTimestamp()}));
+    else await updateDoc(ref,{proposition:prop});
+  });
+}
+// Approbation : la 2e approbation (ou le DM) publie la proposition et l'inscrit dans l'historique.
+async function approveComp(e,force){
+  const by=compBy(),p=e.proposition,ref=doc(db,"compendium",e.id);
+  const appr=Object.assign({},p.approbations||{});if(!force)appr[by.uid]=by.nom;
+  const done=force||Object.keys(appr).length>=2;
+  return run(done?"Publication":"Approbation",async()=>{
+    if(!done){await updateDoc(ref,{["proposition.approbations."+by.uid]:by.nom});return;}
+    const f=compFields(p),bt=writeBatch(db);
+    bt.update(ref,Object.assign({},f,{publiee:true,proposition:null,modifiePar:p.par,majLe:serverTimestamp()}));
+    bt.set(doc(collection(db,"compendium",e.id,"versions")),Object.assign({},f,{par:p.par,approbateurs:appr,date:serverTimestamp()},force?{parDM:true}:{}));
+    await bt.commit();
+  });
+}
 document.addEventListener("submit",async e=>{
   e.preventDefault();
   const v=id=>{const el=document.getElementById(id);return el?el.value.trim():"";};
@@ -1131,6 +1287,14 @@ document.addEventListener("submit",async e=>{
       ui.signupMsg={id:qid,err:true,text:err.code==="already"?"Tu es déjà inscrit à cette quête.":(String(err.code||"").indexOf("permission-denied")>=0?"Inscription refusée : la quête n'est peut-être plus ouverte, ou tu as déjà une demande.":errText(err))};
     }
     ui.busy=false;ui.signup=null;render();return;
+  }
+  if(e.target.id==="compform"){
+    const titre=v("c2-titre").slice(0,100),categorie=v("c2-cat").slice(0,40);if(!titre||!categorie)return;
+    const isNew=ui.compEdit==="new",cur=isNew?null:compFind(ui.compEdit);
+    const data={titre,categorie,region:v("c2-reg")||"cote",contenu:((document.getElementById("c2-contenu")||{}).value||"").slice(0,20000),image:ui.compImg!==undefined?ui.compImg:((cur&&(cur.proposition||cur).image)||"")};
+    const id=cur?cur.id:(titre.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"entree").slice(0,40)+"-"+Date.now().toString(36).slice(-4);
+    ui.compEdit=null;ui.compImg=undefined;ui.compPreview=false;
+    const ok=await saveComp(id,data,isNew);if(ok)location.hash="#compendium-"+id;return;
   }
   if(e.target.id==="sheetform"){
     const isNew=ui.sheetEdit==="new",cur=isNew?null:aventuriers.find(a=>a.id===ui.sheetEdit);
