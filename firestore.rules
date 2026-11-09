@@ -110,14 +110,29 @@ service cloud.firestore {
     match /aventuriers/{id} {
       allow read: if true;
       allow write: if isAdmin()
-        && request.resource.data.keys().hasOnly(['nom', 'joueur', 'points', 'renommee', 'creeLe', 'majLe'])
+        && request.resource.data.keys().hasOnly(['nom', 'joueur', 'niveaux', 'creeLe', 'majLe'])
         && str(request.resource.data.nom, 1, 60)
-        && (!('points' in request.resource.data) || request.resource.data.points is map);
+        && (!('niveaux' in request.resource.data) || request.resource.data.niveaux is map);
       allow delete: if isAdmin();
     }
-    // Journal de renommée : chaque gain ou perte de points
-    match /journal/{id} {
+    // Points de renommée : réservés au DM (les joueurs ne voient que les rangs)
+    match /points/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /prive/{id} {
+      allow read, write: if isAdmin();
+    }
+    // Historique public des changements de rang
+    match /rangs/{id} {
       allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['aventurier', 'nom', 'bureau', 'ancien', 'nouveau', 'date'])
+        && request.resource.data.ancien is int && request.resource.data.nouveau is int;
+      allow delete: if isAdmin();
+    }
+    // Journal des points : réservé au DM
+    match /journal/{id} {
+      allow read: if isAdmin();
       allow create, update: if isAdmin()
         && request.resource.data.keys().hasOnly(['aventurier', 'nom', 'bureau', 'points', 'raison', 'quete', 'date'])
         && request.resource.data.points is int

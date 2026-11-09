@@ -258,7 +258,7 @@ if (new URLSearchParams(location.search).has("emu")) {
 const RANKS = {cuivre:{label:"Cuivre",c:"var(--r-cuivre)"},fer:{label:"Fer",c:"var(--r-fer)"},argent:{label:"Argent",c:"var(--r-argent)"},or:{label:"Or",c:"var(--r-or)"},mithral:{label:"Mithril",c:"var(--r-mithral)"},inconnu:{label:"Rang inconnu",c:"#3a3128"}};
 const STATUS = {ouverte:"Ouverte",encours:"En cours",terminee:"Terminée",archivee:"Archivée"};
 const TYPES = ["Contrat","Recherche","Exploration","Prime","Escorte","Rumeur"];
-const QUEST_KEYS = ["bureau","titre","type","rang","statut","lieu","recompense","niveau","joueurs","joueursMin","joueursMax","supercharged","date","description","pointsRenommee"];
+const QUEST_KEYS = ["bureau","titre","type","rang","statut","lieu","recompense","niveau","joueurs","joueursMin","joueursMax","supercharged","date","description"];
 const DEFAULT_RANK_PTS = {cuivre:1,fer:5,argent:10,or:25,mithral:50,inconnu:0};
 const RESULTS = {reussite:"Réussite",partielle:"Réussite partielle",echec:"Échec"};
 const SEED = JSON.parse(document.getElementById("bb-seed").textContent);
@@ -276,7 +276,7 @@ const DEFAULT_SCALE = [
 ];
 
 /* ---------- state ---------- */
-let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [];
+let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, priv = null, privUnsubs = [];
 const loaded = {b:false, q:false, i:false, a:false, w:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
@@ -293,7 +293,6 @@ function normQuest(q){
   if(out.joueursMin===undefined||out.joueursMax===undefined){const p=parsePlayers(out.joueurs);if(out.joueursMin===undefined)out.joueursMin=p.min;if(out.joueursMax===undefined)out.joueursMax=p.max;}
   ["joueursMin","joueursMax"].forEach(k=>{const v=out[k];out[k]=(v===""||v==null||isNaN(+v))?null:Math.max(0,Math.min(99,Math.round(+v)));});
   out.supercharged=!!out.supercharged;
-  out.pointsRenommee=(out.pointsRenommee===""||out.pointsRenommee==null||isNaN(+out.pointsRenommee))?null:Math.round(+out.pointsRenommee);
   if(!RANKS[out.rang])out.rang="inconnu";
   if(!STATUS[out.statut])out.statut="ouverte";
   return out;
@@ -349,12 +348,21 @@ function listen(){
     aventuriers=snap.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>String(a.nom).localeCompare(String(b.nom),"fr"));loaded.a=true;render();
   },onErr);
   onSnapshot(doc(db,"config","renommee"),snap=>{scaleDoc=snap.exists()?snap.data():null;render();},onErr);
-  onSnapshot(query(collection(db,"journal"),orderBy("date","desc"),limit(60)),snap=>{
-    journal=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();
+  onSnapshot(query(collection(db,"rangs"),orderBy("date","desc"),limit(60)),snap=>{
+    rangs=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();
   },onErr);
   onSnapshot(collection(db,"wiki"),snap=>{
     wikiPages=snap.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>((a.ordre==null?999:a.ordre)-(b.ordre==null?999:b.ordre))||String(a.titre).localeCompare(String(b.titre),"fr"));loaded.w=true;render();
   },onErr);
+}
+// Données réservées au DM (points, journal, seuils) : lues seulement par un compte admin.
+function listenPrivate(on){
+  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};journal=[];priv=null;
+  if(!on)return;
+  const err=e=>console.error(e);
+  privUnsubs.push(onSnapshot(collection(db,"points"),snap=>{const m={};snap.docs.forEach(d=>{m[d.id]=(d.data().parRegion)||{};});pointsMap=m;render();},err));
+  privUnsubs.push(onSnapshot(query(collection(db,"journal"),orderBy("date","desc"),limit(60)),snap=>{journal=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
+  privUnsubs.push(onSnapshot(doc(db,"prive","renommee"),snap=>{priv=snap.exists()?snap.data():null;render();},err));
 }
 window.addEventListener("offline",()=>{net={state:"hors-ligne",msg:""};render();});
 window.addEventListener("online",()=>{net={state:"ok",msg:""};render();});
@@ -365,10 +373,11 @@ onAuthStateChanged(auth, async u=>{
   if(u&&!u.isAnonymous){
     try{const a=await getDoc(doc(db,"admins",u.uid));isAdmin=a.exists();}catch(e){isAdmin=false;}
     adminChecked=true;
+    listenPrivate(isAdmin);
     if(isAdmin){ui.dm=true;ui.authMsg="";}
     else ui.authMsg='Ce compte Google n\'est pas administrateur. Pour l\'ajouter, crée dans Firestore le document admins/'+u.uid+'.';
   }
-  if(!isAdmin)ui.dm=false;
+  if(!isAdmin){ui.dm=false;listenPrivate(false);}
   render();
 });
 getRedirectResult(auth).catch(e=>{ui.authMsg=errText(e);render();});
@@ -463,7 +472,7 @@ function card(q){
   if(ch.level==="risque")h+='<p class="riskline">Risque de Supercharged : '+(ch.conf+ch.pend)+' demandes pour '+ch.max+' places recommandées.</p>';
   h+='<dl class="facts"><dt>Lieu</dt><dd>'+esc(q.lieu||"—")+'</dd><dt>Récompense</dt><dd>'+esc(q.recompense||"—")+'</dd><dt>Niveau</dt><dd>'+esc(q.niveau||"—")+'</dd><dt>Joueurs</dt><dd>'+esc(q.joueurs||"—")+'</dd>';
   if(q.date)h+='<dt>Date</dt><dd>'+esc(q.date)+'</dd>';
-  h+='<dt>Renommée</dt><dd>'+questPts(q)+' pt'+(questPts(q)>1?'s':'')+' par participant</dd>';
+  if(ui.dm)h+='<dt>Renommée</dt><dd>'+questPts(q)+' pt'+(questPts(q)>1?'s':'')+' par participant <em>(DM)</em></dd>';
   if(q.rapport&&q.statut!=="ouverte"){const r=q.rapport;h+='<dt>Rapport</dt><dd><strong>'+esc(RESULTS[r.resultat]||"")+'</strong>'+(r.date?' · '+esc(r.date):'')+(r.resume?'<br>'+esc(r.resume):'')+'</dd>';}
   h+='<dt>Inscrits</dt><dd>'+signupList(q)+'</dd></dl><div class="actions">';
   const already=user&&signupsFor(q.id).some(s=>s.uid===user.uid);
@@ -494,7 +503,7 @@ function form(){
     '<label for="f-jmin">Joueurs recommandés : min<input id="f-jmin" type="number" min="0" max="99" value="'+(q.joueursMin==null?"":q.joueursMin)+'"></label>'+
     '<label for="f-jmax">Joueurs recommandés : max<input id="f-jmax" type="number" min="0" max="99" value="'+(q.joueursMax==null?"":q.joueursMax)+'"></label>'+
     '<label for="f-date">Date prévue<input id="f-date" maxlength="80" placeholder="ex. sam. 22 nov., 19 h" value="'+esc(q.date)+'"></label>'+
-    '<label for="f-pts">Points de renommée (vide = selon le rang)<input id="f-pts" type="number" step="1" value="'+(q.pointsRenommee==null?"":q.pointsRenommee)+'"></label>'+
+    '<label for="f-pts">Points de renommée (vide = selon le rang)<input id="f-pts" type="number" step="1" value="'+(priv&&priv.quetes&&typeof priv.quetes[q.id]==="number"?priv.quetes[q.id]:"")+'"></label>'+
     '<label class="check" for="f-super"><input id="f-super" type="checkbox"'+(q.supercharged?" checked":"")+'> Forcer « Supercharged »</label>'+
     '<label class="wide" for="f-desc">Description<textarea id="f-desc" maxlength="4000">'+esc(q.description)+'</textarea></label>'+
     '<div class="actions wide"><button class="btn" type="submit">Enregistrer la quête</button><button class="btn ghost" type="button" data-a="cancel">Annuler</button></div></form>';
@@ -521,30 +530,29 @@ function scaleList(){const l=scaleDoc&&Array.isArray(scaleDoc.niveaux)&&scaleDoc
 function lvl(n){return scaleList().find(s=>s.n===n)||{n,titre:String(n),effet:""};}
 function rnClass(n){return "rn rn"+(n<0?"m"+(-n):n>0?"p"+n:"0");}
 function chip(n){return '<span class="'+rnClass(n)+'">'+esc(lvl(n).titre)+'</span>';}
-function seuilOf(s){return typeof s.seuil==="number"?s.seuil:((DEFAULT_SCALE.find(d=>d.n===s.n)||{seuil:0}).seuil);}
-function rankPts(){return Object.assign({},DEFAULT_RANK_PTS,(scaleDoc&&scaleDoc.pointsParRang)||{});}
-function questPts(q){return q.pointsRenommee!=null?q.pointsRenommee:(rankPts()[q.rang]||0);}
-function hasPts(a,bid){return !!(a.points&&typeof a.points[bid]==="number");}
-function pts(a,bid){
-  if(hasPts(a,bid))return a.points[bid];
-  const lv=a.renommee&&a.renommee[bid];
-  if(typeof lv==="number"&&lv!==0){const s=scaleList().find(x=>x.n===lv);return s?seuilOf(s):0;}
-  return 0;
-}
+function seuilOf(s){const v=priv&&priv.seuils&&priv.seuils[String(s.n)];return typeof v==="number"?v:((DEFAULT_SCALE.find(d=>d.n===s.n)||{seuil:0}).seuil);}
+function rankPts(){return Object.assign({},DEFAULT_RANK_PTS,(priv&&priv.pointsParRang)||{});}
+function questPts(q){const o=priv&&priv.quetes&&priv.quetes[q.id];return typeof o==="number"?o:(rankPts()[q.rang]||0);}
+function pts(a,bid){const m=pointsMap[a.id];return m&&typeof m[bid]==="number"?m[bid]:0;}
 function levelOf(p){let n=0;scaleList().forEach(s=>{const t=seuilOf(s);if(s.n>0&&p>=t&&s.n>n)n=s.n;if(s.n<0&&p<=t&&s.n<n)n=s.n;});return n;}
-function renown(a,bid){return levelOf(pts(a,bid));}
+// Le rang public est enregistré sur la fiche (niveaux) ; seul le DM voit les points.
+function renown(a,bid){const v=a.niveaux&&a.niveaux[bid];return typeof v==="number"?v:0;}
 function nextInfo(p){const lv=levelOf(p);const nx=scaleList().filter(s=>s.n>Math.max(lv,0)).sort((a,b)=>a.n-b.n)[0];return nx?{need:seuilOf(nx)-p,titre:nx.titre}:null;}
 function ptsLabel(p){return (p>0?"+":"")+p+" pt"+(Math.abs(p)>1?"s":"");}
 function addPoints(bt,a,bid,delta){
-  const ref=doc(db,"aventuriers",a.id);
-  if(hasPts(a,bid)||!(a.renommee&&a.renommee[bid]))bt.update(ref,new FieldPath("points",bid),increment(delta),"majLe",serverTimestamp());
-  else bt.update(ref,new FieldPath("points",bid),pts(a,bid)+delta,"majLe",serverTimestamp());
+  const before=pts(a,bid),after=before+delta,oldLv=renown(a,bid),newLv=levelOf(after);
+  bt.set(doc(db,"points",a.id),{parRegion:{[bid]:after}},{merge:true});
+  pointsMap[a.id]=Object.assign({},pointsMap[a.id]||{},{[bid]:after});
+  if(newLv!==oldLv){
+    bt.update(doc(db,"aventuriers",a.id),new FieldPath("niveaux",bid),newLv,"majLe",serverTimestamp());
+    bt.set(doc(collection(db,"rangs")),{aventurier:a.id,nom:a.nom,bureau:bid,ancien:oldLv,nouveau:newLv,date:serverTimestamp()});
+  }
 }
 function reputationSection(bid,nom){
-  const list=aventuriers.filter(a=>pts(a,bid)!==0).sort((x,y)=>pts(y,bid)-pts(x,bid));
+  const list=aventuriers.filter(a=>renown(a,bid)!==0||(ui.dm&&pts(a,bid)!==0)).sort((x,y)=>(renown(y,bid)-renown(x,bid))||(pts(y,bid)-pts(x,bid)));
   let h='<section class="rep" aria-label="Réputation"><h2>Réputation à '+esc(nom)+'</h2>';
   if(!list.length)return h+'<p class="hint">Aucun aventurier ne s\'est encore fait un nom ici. <a href="#renommee">Voir le registre de renommée</a></p></section>';
-  h+='<ul class="replist">'+list.map(a=>{const n=renown(a,bid),p=pts(a,bid);return '<li><span class="who">'+esc(a.nom)+(a.joueur?' <em>('+esc(a.joueur)+')</em>':'')+'<span class="pts">'+ptsLabel(p)+'</span></span>'+chip(n)+'<span class="eff">'+esc(lvl(n).effet)+'</span></li>';}).join("")+'</ul>';
+  h+='<ul class="replist">'+list.map(a=>{const n=renown(a,bid),p=pts(a,bid);return '<li><span class="who">'+esc(a.nom)+(a.joueur?' <em>('+esc(a.joueur)+')</em>':'')+(ui.dm?'<span class="pts">'+ptsLabel(p)+'</span>':'')+'</span>'+chip(n)+'<span class="eff">'+esc(lvl(n).effet)+'</span></li>';}).join("")+'</ul>';
   return h+'<p class="hint"><a href="#renommee">Voir le registre de renommée complet</a></p></section>';
 }
 function renownView(){
@@ -554,10 +562,10 @@ function renownView(){
     h+='<form id="scaleform" class="scaleform">'+sc.map(s=>'<div class="srow"><span class="'+rnClass(s.n)+'">'+(s.n>0?'+':'')+s.n+'</span><label for="sc-t'+s.n+'">Titre<input id="sc-t'+s.n+'" maxlength="40" value="'+esc(s.titre)+'"></label><label for="sc-s'+s.n+'">Points (total)<input id="sc-s'+s.n+'" type="number" value="'+seuilOf(s)+'"'+(s.n===0?' disabled':'')+'></label><label for="sc-e'+s.n+'">Comment les gens réagissent<input id="sc-e'+s.n+'" maxlength="300" value="'+esc(s.effet)+'"></label></div>').join("")+
       '<div class="actions"><button class="btn gold" type="submit">Enregistrer l\'échelle</button><button class="btn board" type="button" data-a="scale-cancel">Annuler</button></div></form>';
   } else {
-    h+='<div class="tablebox"><table class="scale"><thead><tr><th scope="col">Niveau</th><th scope="col">Titre</th><th scope="col">Points</th><th scope="col">Comment les gens réagissent</th></tr></thead><tbody>'+
-      sc.slice().reverse().map(s=>'<tr><td class="num">'+(s.n>0?'+':'')+s.n+'</td><td>'+chip(s.n)+'</td><td class="num">'+(s.n===0?'0':(s.n>0?seuilOf(s)+' et +':seuilOf(s)+' et −'))+'</td><td>'+esc(s.effet)+'</td></tr>').join("")+'</tbody></table></div>';
+    h+='<div class="tablebox"><table class="scale"><thead><tr><th scope="col">Niveau</th><th scope="col">Titre</th>'+(ui.dm?'<th scope="col">Points</th>':'')+'<th scope="col">Comment les gens réagissent</th></tr></thead><tbody>'+
+      sc.slice().reverse().map(s=>'<tr><td class="num">'+(s.n>0?'+':'')+s.n+'</td><td>'+chip(s.n)+'</td>'+(ui.dm?'<td class="num">'+(s.n===0?'0':(s.n>0?seuilOf(s)+' et +':seuilOf(s)+' et −'))+'</td>':'')+'<td>'+esc(s.effet)+'</td></tr>').join("")+'</tbody></table></div>';
     const rp=rankPts();
-    h+='<p class="hint">Points gagnés par participant pour une quête terminée, dans la région du comptoir : '+["cuivre","fer","argent","or","mithral"].map(r=>'<strong>'+esc(RANKS[r].label)+'</strong> '+rp[r]).join(" · ")+'. Le DM peut ajuster selon le déroulement.</p>';
+    if(ui.dm)h+='<p class="hint">Visible par le DM seulement. Points gagnés par participant pour une quête terminée, dans la région du comptoir : '+["cuivre","fer","argent","or","mithral"].map(r=>'<strong>'+esc(RANKS[r].label)+'</strong> '+rp[r]).join(" · ")+'. Le DM peut ajuster selon le déroulement.</p>';
     if(ui.dm)h+='<div class="actions"><button class="btn board" data-a="scale-edit">Modifier l\'échelle</button></div>';
   }
   h+='</section><section class="reg"><h2>Les aventuriers</h2>';
@@ -576,10 +584,14 @@ function renownView(){
   }
   h+='<div class="tablebox"><table class="roster"><thead><tr><th scope="col">Aventurier</th>'+bureaux.map(b=>'<th scope="col">'+esc(b.nom)+'</th>').join("")+(ui.dm?'<th scope="col"><span class="sr">Actions</span></th>':'')+'</tr></thead><tbody>'+
     aventuriers.map(a=>'<tr><th scope="row">'+esc(a.nom)+(a.joueur?'<span class="pl">'+esc(a.joueur)+'</span>':'')+'</th>'+
-      bureaux.map(b=>{const p=pts(a,b.id),n=levelOf(p),nx=nextInfo(p);return '<td>'+(p?chip(n)+'<span class="ptsline">'+ptsLabel(p)+(nx&&p>0?' · encore '+nx.need+' pour '+esc(nx.titre):'')+'</span>':'<span class="muted">Inconnu</span>')+'</td>';}).join("")+
+      bureaux.map(b=>{const n=renown(a,b.id),p=pts(a,b.id),nx=nextInfo(p);
+        if(!ui.dm)return '<td>'+(n?chip(n):'<span class="muted">Inconnu</span>')+'</td>';
+        return '<td>'+(n||p?chip(n):'<span class="muted">Inconnu</span>')+'<span class="ptsline">'+ptsLabel(p)+(nx&&p>=0?' · encore '+nx.need+' pour '+esc(nx.titre):'')+'</span></td>';}).join("")+
       (ui.dm?'<td>'+(ui.confirmAdv===a.id?'<button class="btn danger sm" data-a="adv-del-yes" data-id="'+esc(a.id)+'">Confirmer</button> <button class="btn board sm" data-a="adv-del-no">Annuler</button>':'<button class="btn board sm" data-a="adv-del" data-id="'+esc(a.id)+'">Retirer</button>')+'</td>':'')+'</tr>').join("")+
     '</tbody></table></div>';
-  if(journal.length)h+='<h3 class="subh">Journal de renommée</h3><ul class="journal">'+journal.slice(0,30).map(j=>{const b=office(j.bureau);const d=j.date&&j.date.toDate?j.date.toDate().toLocaleDateString("fr-CA",{day:"numeric",month:"short",year:"numeric"}):"";
+  if(rangs.length)h+='<h3 class="subh">Historique des rangs</h3><ul class="journal">'+rangs.slice(0,30).map(r=>{const b=office(r.bureau);const d=r.date&&r.date.toDate?r.date.toDate().toLocaleDateString("fr-CA",{day:"numeric",month:"short",year:"numeric"}):"";
+      return '<li><span class="jd">'+esc(d)+'</span><span><strong>'+esc(r.nom||"")+'</strong> '+(r.nouveau>r.ancien?'devient':'descend à')+' '+chip(r.nouveau)+(b?' à '+esc(b.nom):'')+'</span></li>';}).join("")+'</ul>';
+  if(ui.dm&&journal.length)h+='<h3 class="subh">Journal des points (DM seulement)</h3><ul class="journal">'+journal.slice(0,30).map(j=>{const b=office(j.bureau);const d=j.date&&j.date.toDate?j.date.toDate().toLocaleDateString("fr-CA",{day:"numeric",month:"short",year:"numeric"}):"";
       return '<li><span class="jd">'+esc(d)+'</span><span><strong>'+esc(j.nom||"")+'</strong> '+(j.points>=0?'gagne':'perd')+' '+Math.abs(j.points)+' pt'+(Math.abs(j.points)>1?'s':'')+(b?' à '+esc(b.nom):'')+(j.raison?' · '+esc(j.raison):'')+'</span></li>';}).join("")+'</ul>';
   return h+'</section>';
 }
@@ -592,7 +604,7 @@ function chroniclesView(){
   return '<div class="chron">'+done.map(q=>{const r=q.rapport,b=office(q.bureau);
     return '<article class="chr"><div class="chr-top">'+rankSeal(q.rang)+'<span class="kind">'+esc(b?b.nom:"")+(r.date?' · '+esc(r.date):'')+'</span><span class="stamp res-'+esc(r.resultat)+'">'+esc(RESULTS[r.resultat]||"")+'</span></div>'+
       '<h2>'+esc(q.titre)+'</h2>'+(r.resume?'<p class="desc">'+esc(r.resume)+'</p>':'')+
-      ((r.participants||[]).length?'<p class="chr-parts"><strong>Participants :</strong> '+r.participants.map(x=>esc(x.nom)+(x.points?' <em>('+ptsLabel(x.points)+')</em>':'')).join(", ")+'</p>':'')+'</article>';}).join("")+'</div>';
+      ((r.participants||[]).length?'<p class="chr-parts"><strong>Participants :</strong> '+r.participants.map(x=>esc(x.nom)).join(", ")+'</p>':'')+'</article>';}).join("")+'</div>';
 }
 
 /* ---------- wiki ---------- */
@@ -798,7 +810,7 @@ document.addEventListener("click",async e=>{
   else if(a==="adv-cancel"){ui.advForm=false;}
   else if(a==="adv-del"){ui.confirmAdv=id;}
   else if(a==="adv-del-no"){ui.confirmAdv=null;}
-  else if(a==="adv-del-yes"){ui.confirmAdv=null;await run("Retrait",()=>deleteDoc(doc(db,"aventuriers",id)));return;}
+  else if(a==="adv-del-yes"){ui.confirmAdv=null;await run("Retrait",async()=>{const bt=writeBatch(db);bt.delete(doc(db,"aventuriers",id));bt.delete(doc(db,"points",id));await bt.commit();});return;}
   else if(a==="scale-edit"){ui.scaleEdit=true;}
   else if(a==="complete"){ui.complete=id;}
   else if(a==="complete-cancel"){if(e.target!==b)return;ui.complete=null;}
@@ -848,12 +860,12 @@ document.addEventListener("submit",async e=>{
     const nom=v("f-advnom").slice(0,60),joueur=v("f-advjoueur").slice(0,60);if(!nom)return;
     const id=(nom.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"aventurier").slice(0,40)+"-"+Date.now().toString(36).slice(-4);
     ui.advForm=false;
-    await run("Ajout",()=>setDoc(doc(db,"aventuriers",id),{nom,joueur,points:{},creeLe:serverTimestamp(),majLe:serverTimestamp()}));return;
+    await run("Ajout",()=>setDoc(doc(db,"aventuriers",id),{nom,joueur,niveaux:{},creeLe:serverTimestamp(),majLe:serverTimestamp()}));return;
   }
   if(e.target.id==="completeform"){
     const q=questById(ui.complete);if(!q)return;
     const parts=[];document.querySelectorAll("#completeform .prow").forEach((row,i)=>{const sel=document.getElementById("c-adv"+i),pt=document.getElementById("c-pts"+i);parts.push({nom:sel.getAttribute("data-nom"),aventurier:sel.value||null,points:Math.round(+pt.value||0)});});
-    const rapport={date:v("c-date").slice(0,80),resultat:v("c-res"),resume:((document.getElementById("c-resume")||{}).value||"").slice(0,4000),participants:parts,termineLe:serverTimestamp()};
+    const rapport={date:v("c-date").slice(0,80),resultat:v("c-res"),resume:((document.getElementById("c-resume")||{}).value||"").slice(0,4000),participants:parts.map(x=>({nom:x.nom,aventurier:x.aventurier})),termineLe:serverTimestamp()};
     ui.complete=null;
     await run("Fin de quête",async()=>{
       const bt=writeBatch(db);
@@ -883,7 +895,10 @@ document.addEventListener("submit",async e=>{
   if(e.target.id==="scaleform"){
     const niveaux=scaleList().map(s=>{const raw=v("sc-s"+s.n);return {n:s.n,seuil:s.n===0?0:(raw===""||isNaN(+raw)?seuilOf(s):Math.round(+raw)),titre:v("sc-t"+s.n).slice(0,40)||s.titre,effet:v("sc-e"+s.n).slice(0,300)};});
     ui.scaleEdit=false;
-    await run("Échelle",()=>setDoc(doc(db,"config","renommee"),{niveaux,majLe:serverTimestamp()},{merge:true}));return;
+    const seuils={};niveaux.forEach(n=>{seuils[String(n.n)]=n.seuil;});
+    await run("Échelle",async()=>{const bt=writeBatch(db);bt.set(doc(db,"config","renommee"),{niveaux:niveaux.map(n=>({n:n.n,titre:n.titre,effet:n.effet})),majLe:serverTimestamp()},{merge:true});bt.set(doc(db,"prive","renommee"),{seuils},{merge:true});await bt.commit();
+      // recalcul des rangs publics avec les nouveaux seuils
+      const bt2=writeBatch(db);let k=0;aventuriers.forEach(a=>bureaux.forEach(b=>{const nl=levelOf(pts(a,b.id));if(nl!==renown(a,b.id)){k++;bt2.update(doc(db,"aventuriers",a.id),new FieldPath("niveaux",b.id),nl);}}));if(k)await bt2.commit();});return;
   }
   if(e.target.id==="nameform"){
     const qid=e.target.getAttribute("data-id"),name=v("f-addname").slice(0,40);if(!name)return;
@@ -897,11 +912,13 @@ document.addEventListener("submit",async e=>{
     const sup=document.getElementById("f-super");
     const jmin=v("f-jmin"),jmax=v("f-jmax");
     const q=normQuest({bureau:v("f-bureau"),titre:v("f-titre")||"Quête sans titre",type:v("f-type"),rang:v("f-rang"),statut:v("f-statut"),lieu:v("f-lieu"),recompense:v("f-recompense"),niveau:v("f-niveau"),
-      joueursMin:jmin===""?null:+jmin,joueursMax:jmax===""?null:+jmax,supercharged:!!(sup&&sup.checked),date:v("f-date"),description:v("f-desc"),pointsRenommee:v("f-pts")===""?null:+v("f-pts")});
+      joueursMin:jmin===""?null:+jmin,joueursMax:jmax===""?null:+jmax,supercharged:!!(sup&&sup.checked),date:v("f-date"),description:v("f-desc")});
+    const ptsOverride=v("f-pts");
     if(q.joueursMin!=null&&q.joueursMax!=null&&q.joueursMin>q.joueursMax)q.joueursMin=q.joueursMax;
     q.joueurs=q.joueursMin!=null&&q.joueursMax!=null?(q.joueursMin===q.joueursMax?String(q.joueursMin):q.joueursMin+" à "+q.joueursMax):(q.joueursMin!=null?q.joueursMin+" et +":"?");
     const cur=isNew?null:questById(id);
     ui.editing=null;
+    await run("Points",()=>setDoc(doc(db,"prive","renommee"),{quetes:{[id]:ptsOverride===""?null:Math.round(+ptsOverride)}},{merge:true}));
     await run("Enregistrement",()=>cur?setDoc(doc(db,"quetes",id),Object.assign(q,{majLe:serverTimestamp()}),{merge:true}):setDoc(doc(db,"quetes",id),Object.assign(q,{creeLe:serverTimestamp(),majLe:serverTimestamp()})));
   }
 });
