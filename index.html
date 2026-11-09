@@ -42,6 +42,10 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 
 /* map */
 .mapwrap{display:grid;grid-template-columns:minmax(0,2fr) minmax(250px,1fr);gap:24px;align-items:start}
+.mapwrap{grid-template-areas:"map nav" "gaz nav";grid-template-rows:auto 1fr}
+.mapwrap>.map{grid-area:map}
+.mapwrap>.offices{grid-area:nav}
+.mapwrap>.gazette{grid-area:gaz;margin-top:0}
 .map{background:var(--parch-3);border-radius:6px;padding:10px;box-shadow:0 14px 30px rgba(0,0,0,.5);min-width:0}
 .map svg{display:block;width:100%;height:auto}
 .mk{cursor:pointer;outline:none}
@@ -58,7 +62,7 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .count{font-family:var(--display);font-weight:700;font-variant-numeric:tabular-nums;background:var(--parch);color:var(--ink);border-radius:4px;padding:4px 10px;font-size:14px;white-space:nowrap}
 .count.zero{background:transparent;color:var(--on-board-muted);border:1px solid var(--line)}
 .hint{color:var(--on-board-muted);font-size:15px;font-style:italic;margin:4px 0 0}
-@media (max-width:860px){.mapwrap{grid-template-columns:1fr}}
+@media (max-width:860px){.mapwrap{grid-template-columns:1fr;grid-template-areas:"map" "nav" "gaz";grid-template-rows:auto}}
 
 /* board */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:26px 22px;align-items:start}
@@ -129,7 +133,7 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 .gzkick{display:block;font-family:var(--display);font-size:13px;letter-spacing:.3em;text-transform:uppercase;color:#8a2d1f}
 .gzhead h2{font-family:var(--display);font-size:clamp(26px,5vw,42px);letter-spacing:.04em;margin:4px 0;color:#2a2219}
 .gzsub{font-style:italic;color:var(--ink-soft)}
-.gzcols{columns:3 280px;column-gap:28px;column-rule:1px solid #c9b88f}
+.gzcols{columns:2 260px;column-gap:28px;column-rule:1px solid #c9b88f}
 .gzart{break-inside:avoid;margin:0 0 18px}
 .gzart h3{font-family:var(--display);font-size:20px;margin:4px 0 6px;line-height:1.2}
 .gzart.lead h3{font-size:26px}
@@ -149,6 +153,12 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 .majline{background:#fff1cc;border-left:4px solid var(--gold);padding:6px 10px;margin:0 0 10px;font-size:15px}
 /* espace DM */
 .dmtabs{margin-bottom:16px}
+.dmbar.slim{padding:8px 14px}
+.dmpill+.pill{margin-left:8px}
+header a.pill.dmpill{color:#2a2219;font-weight:600}
+.dmpill{margin-left:auto;text-decoration:none;background:var(--gold);color:#2a2219;border-color:var(--gold);font-family:var(--display);letter-spacing:.08em}
+.dmpill .n{background:#2a2219;color:var(--gold);border-radius:999px;padding:0 7px;margin-left:4px}
+.dmspace .filebtn input{position:absolute;width:1px;height:1px;opacity:0}
 .chip .n.warn{background:var(--danger);color:#fff}
 .dmspace{background:var(--parch);color:var(--ink);border-radius:8px;padding:18px 20px;box-shadow:0 10px 24px rgba(0,0,0,.4)}
 .dmsec{margin:0 0 20px}
@@ -681,8 +691,8 @@ function mapView(){
   h+='<a class="office regl" href="#chroniques"><span class="nm">Chroniques de la Guilde<span class="tag">Les missions en cours et accomplies</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#wiki"><span class="nm">Wiki des règles maison<span class="tag">Outerworlders, Supercharged, renommée…</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#renommee"><span class="nm">Registre de renommée<span class="tag">Qui est connu, respecté… ou recherché</span></span><span aria-hidden="true">→</span></a>';
-  h+='<p class="hint">'+(loaded.q?total+' quête'+(total>1?'s':'')+' ouverte'+(total>1?'s':'')+' sur la côte. Choisis un comptoir pour voir son babillard.':'Chargement des quêtes…')+'</p></nav></div>';
-  return h+gazette();
+  h+='<p class="hint">'+(loaded.q?total+' quête'+(total>1?'s':'')+' ouverte'+(total>1?'s':'')+' sur la côte. Choisis un comptoir pour voir son babillard.':'Chargement des quêtes…')+'</p></nav>'+gazette()+'</div>';
+  return h;
 }
 
 /* ---------- board ---------- */
@@ -1133,9 +1143,9 @@ function dmStats(){
 function dmSpaceView(){
   if(!isAdmin)return '<p class="empty">L\'Espace DM est réservé au Maître de la Guilde.</p>'+(user&&!user.isAnonymous?'':'<p><button class="btn board" data-a="dm">Mode DM</button></p>');
   const n=todoItems().length;
-  const tabs=[["todo","À traiter"+(n?' <span class="n">'+n+'</span>':'')],["evol","Évolution du monde"+(dueRegions().length?' <span class="n warn">!</span>':'')],["notes","Notes secrètes"],["stats","Vue d'ensemble"]];
+  const tabs=[["todo","À traiter"+(n?' <span class="n">'+n+'</span>':'')],["evol","Évolution du monde"+(dueRegions().length?' <span class="n warn">!</span>':'')],["notes","Notes secrètes"],["stats","Vue d'ensemble"],["outils","Outils"]];
   let h='<div class="chips dmtabs" role="tablist" aria-label="Espace DM">'+tabs.map(t=>'<button class="chip" role="tab" data-a="dmtab" data-v="'+t[0]+'" aria-selected="'+(ui.dmTab===t[0])+'" aria-pressed="'+(ui.dmTab===t[0])+'">'+t[1]+'</button>').join("")+'</div>';
-  h+='<div class="dmspace" role="tabpanel">'+(ui.dmTab==="evol"?dmEvol():ui.dmTab==="notes"?dmNotes():ui.dmTab==="stats"?dmStats():dmTodo())+'</div>';
+  h+='<div class="dmspace" role="tabpanel">'+(ui.dmTab==="evol"?dmEvol():ui.dmTab==="notes"?dmNotes():ui.dmTab==="stats"?dmStats():ui.dmTab==="outils"?dmTools():dmTodo())+'</div>';
   return h;
 }
 
@@ -1208,21 +1218,24 @@ function seedMissing(){
   const bIds=new Set(fsBureaux.map(b=>b.id)), qIds=new Set(quetes.map(q=>q.id));
   return {b:SEED.bureaux.filter(b=>!bIds.has(b.id)),q:SEED.quetes.filter(q=>!qIds.has(q.id))};
 }
+// Barre DM : seulement sur un babillard (pour créer une quête). Le reste est dans l'Espace DM, onglet Outils.
 function dmPanel(b){
+  if(!b)return "";
+  return '<div class="dmbar slim"><span class="msg">Mode DM</span><button class="btn gold" data-a="new">Nouvelle quête</button></div>';
+}
+function dmPill(){if(!ui.dm||!isAdmin)return "";const n=todoItems().length;
+  return '<a class="pill dmpill" href="#dm">Espace DM'+(n?' <span class="n">'+n+'</span>':'')+'</a>';}
+function dmTools(){
   const miss=seedMissing();
-  let h='<div class="dmbar"><span class="msg">Mode DM : chaque changement est enregistré tout de suite et visible par tous.</span>';
-  if(b)h+='<button class="btn gold" data-a="new">Nouvelle quête</button>';
-  {const n=todoItems().length;h+='<a class="btn gold" href="#dm">Espace DM'+(n?' ('+n+')':'')+'</a>';}
-  h+='<button class="btn board" data-a="export">Exporter en JSON</button>';
-  h+='<label class="btn board filebtn" for="f-import">Importer un JSON<input id="f-import" type="file" accept="application/json,.json"></label>';
-  if(loaded.b&&loaded.q&&(miss.b.length||miss.q.length))h+='<button class="btn gold" data-a="migrate">Migrer les données intégrées ('+miss.b.length+' comptoirs, '+miss.q.length+' quêtes)</button>';
-  h+='<button class="btn board" data-a="logout">Déconnexion</button></div>';
-  if(ui.importPreview){
-    const p=ui.importPreview;
-    h+='<div class="dmbar import"><span class="msg"><strong>Aperçu de l\'import :</strong> '+p.add.length+' quête(s) ajoutée(s), '+p.upd.length+' modifiée(s), '+p.same+' inchangée(s), '+p.del.length+' supprimée(s)'+(p.bad.length?', '+p.bad.length+' ignorée(s) (comptoir inconnu ou titre manquant)':'')+'. Les inscriptions ne sont pas touchées.'+
-      (p.del.length?'<br>À supprimer : '+p.del.map(id=>esc((questById(id)||{}).titre||id)).join(", "):'')+'</span>'+
-      '<button class="btn gold" data-a="import-apply"'+(p.add.length+p.upd.length+p.del.length?'':' disabled')+'>Appliquer</button><button class="btn board" data-a="import-cancel">Annuler</button></div>';
-  }
+  let h='<section class="dmsec"><h2>Sauvegarde des quêtes</h2><p class="desc">Exporte toutes les quêtes en JSON, ou importe un fichier pour en ajouter ou en modifier. Un aperçu s\'affiche avant d\'appliquer quoi que ce soit, et les inscriptions ne sont jamais touchées.</p>'+
+    '<div class="actions"><button class="btn" data-a="export">Exporter en JSON</button><label class="btn ghost filebtn" for="f-import">Importer un JSON<input id="f-import" type="file" accept="application/json,.json"></label></div>';
+  if(ui.importPreview){const p=ui.importPreview;
+    h+='<div class="revbox"><strong>Aperçu de l\'import :</strong> '+p.add.length+' quête(s) ajoutée(s), '+p.upd.length+' modifiée(s), '+p.same+' inchangée(s), '+p.del.length+' supprimée(s)'+(p.bad.length?', '+p.bad.length+' ignorée(s) (comptoir inconnu ou titre manquant)':'')+'.'+
+      (p.del.length?'<br>À supprimer : '+p.del.map(id=>esc((questById(id)||{}).titre||id)).join(", "):'')+
+      '<div class="actions"><button class="btn gold" data-a="import-apply"'+(p.add.length+p.upd.length+p.del.length?'':' disabled')+'>Appliquer</button><button class="btn ghost" data-a="import-cancel">Annuler</button></div></div>';}
+  h+='</section>';
+  if(loaded.b&&loaded.q&&(miss.b.length||miss.q.length))h+='<section class="dmsec"><h2>Données intégrées</h2><p class="desc">Le site contient des comptoirs et des quêtes d\'exemple qui ne sont pas encore dans la base.</p><div class="actions"><button class="btn ghost" data-a="migrate">Migrer les données intégrées ('+miss.b.length+' comptoirs, '+miss.q.length+' quêtes)</button></div></section>';
+  h+='<section class="dmsec"><h2>Session</h2><p class="desc">Connecté : '+esc(user&&(user.displayName||user.email)||"")+'</p><div class="actions"><button class="btn ghost" data-a="dm">Quitter le mode DM</button><button class="btn ghost" data-a="logout">Déconnexion</button></div></section>';
   return h;
 }
 
@@ -1249,7 +1262,7 @@ function render(){
   const b=ui.office&&!reg?office(ui.office):null;
   let h='<div class="wrap">';
   h+='<header><svg width="72" height="72" viewBox="-110 -110 220 220" aria-hidden="true"><circle r="80" fill="none" stroke="#d8b45e" stroke-width="3" opacity=".6"></circle>'+rose(104,'#0e1b20')+'</svg>';
-  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(dms?'Espace DM':comp||compE?'Compendium de la Guilde':gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(dms?'Le bureau secret du Maître de la Guilde':comp||compE?'Le savoir partagé des aventuriers':gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions en cours et accomplies par les aventuriers':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+statusPill()+'</header>';
+  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(dms?'Espace DM':comp||compE?'Compendium de la Guilde':gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(dms?'Le bureau secret du Maître de la Guilde':comp||compE?'Le savoir partagé des aventuriers':gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions en cours et accomplies par les aventuriers':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+dmPill()+statusPill()+'</header>';
   if(compE)h+='<a class="back" href="#compendium"><span aria-hidden="true">←</span> Compendium</a>';
   else if(perso)h+='<a class="back" href="#renommee"><span aria-hidden="true">←</span> Registre de renommée</a>';
   else if(b||reg||wk||chr||mes||gal||comp||dms)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
@@ -1530,7 +1543,7 @@ document.addEventListener("change",e=>{
   if(e.target.id==="f-rank"){ui.rank=e.target.value;render();}
   else if(e.target.id==="f-import"){
     const file=e.target.files&&e.target.files[0];if(!file)return;
-    file.text().then(t=>{try{ui.importPreview=previewImport(JSON.parse(t));}catch(err){save={state:"error",msg:"Import impossible : "+err.message};}render();});
+    file.text().then(t=>{try{ui.importPreview=previewImport(JSON.parse(t));ui.dmTab="outils";}catch(err){save={state:"error",msg:"Import impossible : "+err.message};}render();});
   }
 });
 document.addEventListener("input",e=>{if(e.target.id==="n-search"){ui.noteQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("n-search");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}return;}if(e.target.id==="c-search"){ui.compQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("c-search");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}}});
