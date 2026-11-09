@@ -123,6 +123,25 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 .stamp.sm{font-size:9px;padding:2px 5px;margin-left:6px;vertical-align:middle}
 .chr-h{font-family:var(--display);font-size:20px;letter-spacing:.08em;color:var(--gold);margin:28px 0 12px}
 .note.flash{outline:4px solid var(--gold);outline-offset:4px;transition:outline-color 1.4s ease}
+/* planification */
+.planline{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 10px;font-size:15px}
+.mini.plan{font-size:13px}
+.tablewrap{overflow-x:auto;max-width:100%}
+.plantable{border-collapse:collapse;min-width:100%;font-size:15px}
+.plantable th,.plantable td{border:1px solid #d9c9a0;padding:6px 8px;text-align:center;vertical-align:middle}
+.plantable th[scope=row]{text-align:left;white-space:nowrap;position:sticky;left:0;background:var(--parch)}
+.plantable thead th{font-family:var(--display);font-size:13px;letter-spacing:.04em;white-space:nowrap}
+.plantable thead th .tag{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft)}
+.plantable thead th.best{background:#f3e3b0}
+.plantable thead th.dmno{opacity:.55}
+.plantable thead th .rm{margin-left:6px}
+.plantable .dmrow th,.plantable .dmrow td{background:#efe6cf}
+.plantable .merow th,.plantable .merow td{background:#fbf3dc}
+.plantable .tot td,.plantable .tot th{font-weight:600}
+.pc.v-oui{color:#2f6b2f}.pc.v-peut{color:#8a6a10}.pc.v-non{color:var(--danger)}.pc.v-none{color:#a89a78}
+.pbtn{min-width:40px;min-height:36px;border:2px solid currentColor;border-radius:6px;background:#fffaf0;color:inherit;font-size:17px;font-weight:700;cursor:pointer}
+.pbtn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.planadd{margin-top:14px}
 /* compendium */
 .compbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .compbar input[type=search]{flex:1 1 240px;background:var(--board-2);color:var(--on-board);border-color:var(--line);width:auto}
@@ -354,7 +373,7 @@ header .pill{margin-left:auto}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, connectAuthEmulator, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, connectFirestoreEmulator, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, getDoc, writeBatch, serverTimestamp, FieldPath, increment, query, orderBy, limit, where, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, connectFirestoreEmulator, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, getDoc, writeBatch, serverTimestamp, FieldPath, increment, query, orderBy, limit, where, getDocs, deleteField } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBd6DdnvzkmPxGB_aAjAgTc1P9jHAztI30",
@@ -407,12 +426,12 @@ const DEFAULT_SCALE = [
 ];
 
 /* ---------- state ---------- */
-let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, priv = null, privUnsubs = [], compPublic = [], compAll = [];
+let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [];
 const loaded = {b:false, q:false, i:false, a:false, w:false, c:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
 let save = {state:"idle", msg:""};
-const ui = {compEdit:null, compImg:undefined, compPreview:false, compHist:null, compVer:null, compQ:"", compCat:"", compReg:"", confirmComp:null, confirmGroup:null, reportWrite:null, sheetEdit:null, sheetImg:undefined, promptSheet:false, needLogin:null, loginIntent:null, complete:null, adjust:false, wikiEdit:null, wikiPreview:false, confirmWiki:null, advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
+const ui = {plan:null, compEdit:null, compImg:undefined, compPreview:false, compHist:null, compVer:null, compQ:"", compCat:"", compReg:"", confirmComp:null, confirmGroup:null, reportWrite:null, sheetEdit:null, sheetImg:undefined, promptSheet:false, needLogin:null, loginIntent:null, complete:null, adjust:false, wikiEdit:null, wikiPreview:false, confirmWiki:null, advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
 
 /* ---------- helpers ---------- */
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -483,6 +502,7 @@ function listen(){
     rangs=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();
   },onErr);
   onSnapshot(query(collection(db,"compendium"),where("masque","==",false)),snap=>{compPublic=snap.docs.map(d=>Object.assign({id:d.id},d.data()));loaded.c=true;render();},onErr);
+  onSnapshot(collection(db,"planif"),snap=>{planifs=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},onErr);
   onSnapshot(collection(db,"wiki"),snap=>{
     wikiPages=snap.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>((a.ordre==null?999:a.ordre)-(b.ordre==null?999:b.ordre))||String(a.titre).localeCompare(String(b.titre),"fr"));loaded.w=true;render();
   },onErr);
@@ -612,6 +632,41 @@ function signupList(q){
     return h+'</span>';
   }).join("")+'</span>';
 }
+/* ---------- planification (outil facultatif) ---------- */
+const DISPO=["oui","peut","non"],DISPO_SYM={oui:"✓",peut:"?",non:"✗"},DISPO_LBL={oui:"Disponible",peut:"Peut-être",non:"Pas disponible"};
+function todayIso(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function planDates(qid){const t=todayIso();return planifs.filter(p=>p.quete===qid&&p.date>=t).sort((a,b)=>(a.date+(a.heure||"")).localeCompare(b.date+(b.heure||"")));}
+function fmtPlan(p){const d=new Date(p.date+"T12:00:00");return d.toLocaleDateString("fr-CA",{weekday:"short",day:"numeric",month:"short"})+(p.heure?", "+p.heure:"");}
+function planRows(q){const seen={};return signupsFor(q.id).filter(s=>s.statut!=="refusee"&&s.uid&&s.uid.indexOf("dm-")!==0&&!seen[s.uid]&&(seen[s.uid]=1));}
+function planScore(p,rows){let n=0;rows.forEach(r=>{const v=(p.dispo||{})[r.uid];if(v==="oui")n+=1;else if(v==="peut")n+=0.5;});return n;}
+function planBest(q){const rows=planRows(q);let best=null,bs=0;planDates(q.id).forEach(p=>{if(p.dm==="non")return;const sc=planScore(p,rows);if(sc>bs){bs=sc;best=p;}});return best;}
+function canPlan(q){return q.statut==="ouverte"&&(ui.dm||!!(user&&!user.isAnonymous&&signupsFor(q.id).some(s=>s.uid===user.uid&&s.statut!=="refusee")));}
+function planLine(q){
+  if(q.statut!=="ouverte")return "";const ds=planDates(q.id);if(!ds.length&&!canPlan(q))return "";
+  const best=planBest(q),rows=planRows(q);
+  const yes=best?rows.filter(r=>(best.dispo||{})[r.uid]==="oui").length:0;
+  return '<p class="planline"><button class="mini plan" data-a="plan" data-id="'+esc(q.id)+'">📅 Planification</button>'+
+    (best?'<span>Meilleure date : <strong>'+esc(fmtPlan(best))+'</strong> ('+yes+'/'+rows.length+')</span>':ds.length?'<span>'+ds.length+' date'+(ds.length>1?'s':'')+' proposée'+(ds.length>1?'s':'')+'</span>':'<span class="muted">Facultatif : proposez des dates</span>')+'</p>';
+}
+function planModal(q){
+  const ds=planDates(q.id),rows=planRows(q),best=planBest(q),me=user&&user.uid,open=canPlan(q);
+  const cell=(p,uid,isDm)=>{const v=isDm?p.dm:(p.dispo||{})[uid];const mine=open&&(isDm?ui.dm:uid===me);
+    const sym=v?DISPO_SYM[v]:"·",lbl=v?DISPO_LBL[v]:"Pas de réponse";
+    return '<td class="pc '+(v?'v-'+v:'v-none')+'">'+(mine?'<button class="pbtn" data-a="plan-set" data-id="'+esc(p.id)+'" data-dm="'+(isDm?1:0)+'" aria-label="'+esc(fmtPlan(p))+' : '+lbl+'. Changer" title="'+lbl+'">'+sym+'</button>':'<span title="'+lbl+'" aria-label="'+lbl+'">'+sym+'</span>')+'</td>';};
+  let h='<div class="modal-bg" data-a="plan-close"><div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="pl-t"><h2 id="pl-t">Planification : « '+esc(q.titre)+' »</h2>'+
+    '<p class="desc">Outil facultatif. Proposez des dates, puis chacun touche ses cases : ✓ disponible, ? peut-être, ✗ pas disponible. Vous pouvez aussi vous organiser sur Facebook.</p>';
+  if(!ds.length)h+='<p class="empty">Aucune date proposée pour l\'instant.</p>';
+  else{
+    h+='<div class="tablewrap"><table class="plantable"><thead><tr><th scope="col">Aventurier</th>'+ds.map(p=>{const del=open&&(ui.dm||(p.par&&p.par.uid===me));
+      return '<th scope="col" class="'+(best&&best.id===p.id?'best':'')+(p.dm==="non"?' dmno':'')+'">'+esc(fmtPlan(p))+(best&&best.id===p.id?'<span class="tag">Meilleure</span>':'')+(p.dm==="non"?'<span class="tag">DM pas libre</span>':'')+(del?'<button class="rm" data-a="plan-del" data-id="'+esc(p.id)+'" aria-label="Retirer la date '+esc(fmtPlan(p))+'" title="Retirer cette date">✕</button>':'')+'</th>';}).join("")+'</tr></thead><tbody>';
+    h+='<tr class="dmrow"><th scope="row">Le DM</th>'+ds.map(p=>cell(p,null,true)).join("")+'</tr>';
+    h+=rows.slice().sort((x,y)=>(y.uid===me)-(x.uid===me)).map(r=>'<tr'+(r.uid===me?' class="merow"':'')+'><th scope="row">'+esc(r.nom)+(r.uid===me?' <em>(toi)</em>':'')+'</th>'+ds.map(p=>cell(p,r.uid,false)).join("")+'</tr>').join("");
+    h+='<tr class="tot"><th scope="row">Total</th>'+ds.map(p=>{const y=rows.filter(r=>(p.dispo||{})[r.uid]==="oui").length,m=rows.filter(r=>(p.dispo||{})[r.uid]==="peut").length;return '<td>'+y+' ✓'+(m?' · '+m+' ?':'')+'</td>';}).join("")+'</tr></tbody></table></div>';
+  }
+  if(open&&ds.length<6)h+='<form class="inline planadd" id="planform"><label for="pl-date">Proposer une date<input id="pl-date" type="date" required min="'+todayIso()+'"></label><label for="pl-heure">Heure (facultatif)<input id="pl-heure" maxlength="30" placeholder="ex. 19 h"></label><button class="btn" type="submit">Proposer</button></form>';
+  else if(!open)h+='<p class="hint">'+(user&&!user.isAnonymous?'Inscris-toi à la quête pour proposer des dates et répondre.':'Connecte-toi et inscris-toi à la quête pour participer.')+'</p>';
+  return h+'<div class="actions"><button class="btn ghost" type="button" data-a="plan-close">Fermer</button></div></div></div>';
+}
 function card(q){
   const ch=charge(q);
   let h='<article id="q-'+esc(q.id)+'" class="note'+(q.statut==="terminee"||q.statut==="archivee"?" done":"")+(ch.level==="super"?" super":"")+'">';
@@ -624,7 +679,7 @@ function card(q){
   if(ui.dm)h+='<dt>Renommée</dt><dd>'+questPts(q)+' pt'+(questPts(q)>1?'s':'')+' par participant <em>(DM)</em></dd>';
   if(q.rapport&&q.statut!=="ouverte"){const r=q.rapport;h+='<dt>Rapport</dt><dd><strong>'+esc(RESULTS[r.resultat]||"")+'</strong>'+(r.date?' · '+esc(r.date):'')+(r.resume?'<br>'+esc(r.resume):'')+'</dd>';}
   if(ui.dm&&q.statut==="encours"&&(q.redacteur||q.rapportBrouillon)){const rs=signupsFor(q.id).find(x=>x.uid===q.redacteur);h+='<dt>Rapport</dt><dd>'+(q.rapportBrouillon&&q.rapportBrouillon.resume?'Proposé par '+esc(q.rapportBrouillon.auteur||"un joueur")+' ✓':'Demandé à '+esc(rs?rs.nom:"un joueur")+', en attente')+'</dd>';}
-  h+='<dt>Inscrits</dt><dd>'+signupList(q)+'</dd></dl><div class="actions">';
+  h+='<dt>Inscrits</dt><dd>'+signupList(q)+'</dd></dl>'+planLine(q)+'<div class="actions">';
   if(user&&q.redacteur===user.uid&&q.statut==="encours")h+='<button class="btn gold" data-a="report-write" data-id="'+esc(q.id)+'">'+(q.rapportBrouillon&&q.rapportBrouillon.resume?'Modifier mon rapport de mission':'Écrire le rapport de mission')+'</button>';
   const already=user&&signupsFor(q.id).some(s=>s.uid===user.uid);
   if(q.statut==="ouverte"&&!already)h+='<button class="btn" data-a="join" data-id="'+esc(q.id)+'">Je veux y aller</button>';
@@ -1012,12 +1067,13 @@ function render(){
     h+='<div class="modal-bg"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="ps-t"><h2 id="ps-t">Bienvenue à la Guilde, aventurier !</h2><p>Avant de partir en mission, crée la fiche de ton personnage : son nom, son portrait, sa classe et son espèce. C\'est elle que tu choisiras pour t\'inscrire aux quêtes.</p>'+
       '<div class="actions"><a class="btn" href="#personnages" data-a="prompt-go">Créer ma fiche</a><button class="btn ghost" type="button" data-a="prompt-later">Plus tard</button></div></div></div>';}
   if(ui.confirmGroup&&ui.dm){const gq=questById(ui.confirmGroup);
-    if(gq){const list=signupsFor(gq.id).filter(x=>x.statut!=="refusee");
+    if(gq){const list=signupsFor(gq.id).filter(x=>x.statut!=="refusee"),pb=planBest(gq);
       h+='<div class="modal-bg" data-a="group-cancel"><form class="modal wide" id="groupform" role="dialog" aria-modal="true" aria-labelledby="gp-t"><h2 id="gp-t">Confirmer le groupe : « '+esc(gq.titre)+' »</h2>'+
         '<p>Coche les aventuriers qui partent. La quête passe « En cours » et les autres demandes sont marquées « non retenue ».</p>'+
-        '<fieldset class="pick"><legend>Le groupe</legend>'+list.map((x,i)=>'<label class="pickrow" for="g-'+i+'"><input type="checkbox" id="g-'+i+'" data-sid="'+esc(x.id)+'" checked><span><strong>'+esc(x.nom)+'</strong>'+(x.statut==="attente"?' <em>(en attente)</em>':'')+'</span></label>').join("")+'</fieldset>'+
-        '<label for="g-date">Date de la session<input id="g-date" maxlength="80" placeholder="ex. samedi 22 novembre, 19 h" value="'+esc(gq.date||"")+'"></label>'+
+        '<fieldset class="pick"><legend>Le groupe</legend>'+list.map((x,i)=>'<label class="pickrow" for="g-'+i+'"><input type="checkbox" id="g-'+i+'" data-sid="'+esc(x.id)+'"'+(pb&&(pb.dispo||{})[x.uid]==="non"?'':' checked')+'><span><strong>'+esc(x.nom)+'</strong>'+(x.statut==="attente"?' <em>(en attente)</em>':'')+'</span></label>').join("")+'</fieldset>'+
+        '<label for="g-date">Date de la session<input id="g-date" maxlength="80" placeholder="ex. samedi 22 novembre, 19 h" value="'+esc(gq.date||(pb?fmtPlan(pb):""))+'"></label>'+(pb?'<p class="hint">Date et groupe pré-remplis selon la planification. Ceux qui ne sont pas libres ce jour-là sont décochés.</p>':'')+
         '<div class="actions"><button class="btn" type="submit">Confirmer et lancer la quête</button><button class="btn ghost" type="button" data-a="group-cancel">Annuler</button></div></form></div>';}}
+  if(ui.plan){const pq=questById(ui.plan);if(pq)h+=planModal(pq);}
   if(ui.reportWrite){const rq=questById(ui.reportWrite);
     if(rq)h+='<div class="modal-bg" data-a="report-cancel"><form class="modal wide" id="reportform" role="dialog" aria-modal="true" aria-labelledby="rp-t"><h2 id="rp-t">Rapport de mission : « '+esc(rq.titre)+' »</h2>'+
       '<p>Raconte ce que le groupe a vécu. Le DM le relira avant de le publier dans les Chroniques de la Guilde.</p>'+
@@ -1059,8 +1115,8 @@ function render(){
       h+='</form></div>';}}
   const focusId=document.activeElement&&document.activeElement.id;
   const app=document.getElementById("app");
-  const formKey=ui.editing+"|"+ui.signup+"|"+ui.addName+"|"+ui.advForm+"|"+ui.scaleEdit+"|"+ui.wikiEdit+"|"+(ui.complete?ui.complete.id+ui.complete.step:"")+"|"+ui.confirmGroup+"|"+ui.reportWrite+"|"+ui.adjust+"|"+ui.sheetEdit+"|"+ui.compEdit;
-  const keep={}; if(render.lastForm===formKey)["f-titre","f-bureau","f-type","f-rang","f-statut","f-lieu","f-recompense","f-niveau","f-jmin","f-jmax","f-date","f-desc","f-name","f-addname","f-advnom","f-advjoueur","w-titre","w-ordre","w-contenu","f-pts","c-date","c-res","c-resume","g-date","r-texte","c2-titre","c2-cat","c2-reg","c2-quete","c2-contenu","c-search","p-nom","p-espece","p-classe","p-desc","p-bg","p-don"].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.type==="checkbox"?el.checked:el.value;});
+  const formKey=ui.editing+"|"+ui.signup+"|"+ui.addName+"|"+ui.advForm+"|"+ui.scaleEdit+"|"+ui.wikiEdit+"|"+(ui.complete?ui.complete.id+ui.complete.step:"")+"|"+ui.confirmGroup+"|"+ui.plan+"|"+ui.reportWrite+"|"+ui.adjust+"|"+ui.sheetEdit+"|"+ui.compEdit;
+  const keep={}; if(render.lastForm===formKey)["f-titre","f-bureau","f-type","f-rang","f-statut","f-lieu","f-recompense","f-niveau","f-jmin","f-jmax","f-date","f-desc","f-name","f-addname","f-advnom","f-advjoueur","w-titre","w-ordre","w-contenu","f-pts","c-date","c-res","c-resume","g-date","r-texte","pl-date","pl-heure","c2-titre","c2-cat","c2-reg","c2-quete","c2-contenu","c-search","p-nom","p-espece","p-classe","p-desc","p-bg","p-don"].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.type==="checkbox"?el.checked:el.value;});
   const sup=document.getElementById("f-super");if(sup&&render.lastForm===formKey)keep["f-super"]=sup.checked;
   render.lastForm=formKey;
   app.innerHTML=h+'</div>';
@@ -1076,7 +1132,7 @@ function route(){
     try{const el=focusQ&&document.getElementById("q-"+focusQ);if(el){el.scrollIntoView({block:"center"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1600);}else window.scrollTo(0,0);}catch(e){}}
 }
 window.addEventListener("hashchange",route);
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&(ui.signup||ui.complete||ui.confirmGroup||ui.reportWrite)){ui.signup=null;ui.complete=null;ui.confirmGroup=null;ui.reportWrite=null;render();}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&(ui.signup||ui.complete||ui.confirmGroup||ui.reportWrite||ui.plan)){ui.plan=null;ui.signup=null;ui.complete=null;ui.confirmGroup=null;ui.reportWrite=null;render();}});
 
 /* ---------- actions ---------- */
 function download(name,text){
@@ -1218,6 +1274,12 @@ document.addEventListener("click",async e=>{
   else if(a==="goto-quest"){const gq=quetes.find(x=>x.id===id);ui.pendingFilter=gq&&gq.statut!=="ouverte"?gq.statut:"encours";ui.pendingQuest=id;return;}
   else if(a==="group"){ui.confirmGroup=id;}
   else if(a==="group-cancel"){if(e.target!==b)return;ui.confirmGroup=null;}
+  else if(a==="plan"){ui.plan=id;}
+  else if(a==="plan-close"){if(e.target!==b)return;ui.plan=null;}
+  else if(a==="plan-set"){const p=planifs.find(x=>x.id===id);if(!p)return;const isDm=b.getAttribute("data-dm")==="1";
+    const cur=isDm?p.dm:(p.dispo||{})[user.uid];const nx=DISPO[(DISPO.indexOf(cur)+1)];const key=isDm?"dm":"dispo."+user.uid;
+    await run("Disponibilité",()=>updateDoc(doc(db,"planif",id),{[key]:nx?nx:deleteField()}));return;}
+  else if(a==="plan-del"){await run("Date retirée",()=>deleteDoc(doc(db,"planif",id)));return;}
   else if(a==="report-write"){ui.reportWrite=id;}
   else if(a==="report-cancel"){if(e.target!==b)return;ui.reportWrite=null;}
   else if(a==="adj-open"){ui.adjust=true;}
@@ -1345,6 +1407,16 @@ document.addEventListener("submit",async e=>{
       Object.keys(seen).forEach(id=>{if(seen[id])addPoints(bt,aventuriers.find(y=>y.id===id),q.bureau,seen[id]);});
       await bt.commit();
     });return;
+  }
+  if(e.target.id==="planform"){
+    const q=questById(ui.plan);if(!q)return;const date=v("pl-date"),heure=v("pl-heure").slice(0,30);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date<todayIso())return;
+    if(planDates(q.id).some(p=>p.date===date&&(p.heure||"")===heure)){save={state:"error",msg:"Cette date est déjà proposée."};render();return;}
+    const by={uid:user.uid,nom:String(ui.dm?"Le DM":((signupsFor(q.id).find(x=>x.uid===user.uid)||{}).nom||user.displayName||"Aventurier")).slice(0,60)};
+    const ref=doc(collection(db,"planif"));const d={quete:q.id,date,heure,par:by,dispo:{},creeLe:serverTimestamp()};
+    if(ui.dm)d.dm="oui";else d.dispo[user.uid]="oui";
+    const f1=document.getElementById("pl-date");if(f1)f1.value="";const f2=document.getElementById("pl-heure");if(f2)f2.value="";
+    await run("Date proposée",()=>setDoc(ref,d));return;
   }
   if(e.target.id==="groupform"){
     const q=questById(ui.confirmGroup);if(!q)return;
