@@ -533,7 +533,7 @@ function signupList(q){
   const list=signupsFor(q.id).filter(s=>ui.dm||s.statut!=="refusee");
   if(!list.length)return "<em>Personne encore</em>";
   return '<span class="names">'+list.map(s=>{
-    const mine=user&&s.uid===user.uid&&s.statut!=="refusee";
+    const mine=user&&s.uid===user.uid&&s.statut!=="refusee"&&q.statut==="ouverte";
     let h='<span class="name st-'+esc(s.statut)+'">'+(s.aventurier&&aventuriers.some(a=>a.id===s.aventurier)?'<a class="plink" href="#perso-'+esc(s.aventurier)+'">'+esc(s.nom)+'</a>':esc(s.nom));
     if(s.statut==="attente")h+=' <em>(en attente)</em>';
     if(s.statut==="refusee")h+=' <em>(non retenue)</em>';

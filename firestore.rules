@@ -103,9 +103,11 @@ service cloud.firestore {
         && request.resource.data.quete == resource.data.quete
         && request.resource.data.uid == resource.data.uid;
 
-      // Le joueur peut retirer sa propre demande (pas une demande refusée) ; l'admin peut tout retirer.
+      // Le joueur peut retirer sa propre demande tant que la quête est ouverte (pas une demande non retenue) ;
+      // une fois le groupe confirmé, seul le DM peut retirer quelqu'un.
       allow delete: if isAdmin()
-        || (signedIn() && resource.data.uid == request.auth.uid && resource.data.statut != 'refusee');
+        || (signedIn() && resource.data.uid == request.auth.uid && resource.data.statut != 'refusee'
+            && get(/databases/$(database)/documents/quetes/$(resource.data.quete)).data.statut == 'ouverte');
     }
 
     // ---------- Wiki des règles maison (lecture publique, écriture admin) ----------
