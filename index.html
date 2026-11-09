@@ -117,6 +117,12 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 .modal label{display:flex;flex-direction:column;gap:4px;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
 @media (prefers-reduced-motion:reduce){.mk .mk-in{transition:none}}
 
+/* missions en cours */
+.encours th[scope=row] a{color:var(--gold);font-family:var(--display);font-size:15px}
+.encours .seal{color:var(--on-board)}
+.stamp.sm{font-size:9px;padding:2px 5px;margin-left:6px;vertical-align:middle}
+.chr-h{font-family:var(--display);font-size:20px;letter-spacing:.08em;color:var(--gold);margin:28px 0 12px}
+.note.flash{outline:4px solid var(--gold);outline-offset:4px;transition:outline-color 1.4s ease}
 /* galerie */
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px}
 .gcard{display:flex;flex-direction:column;background:var(--parch);color:var(--ink);border-radius:6px;overflow:hidden;text-decoration:none;box-shadow:0 10px 24px rgba(0,0,0,.45);transition:transform .15s ease}
@@ -550,7 +556,7 @@ function mapView(){
     h+='<a class="office" href="#'+esc(b.id)+'"><span class="nm">'+esc(b.nom)+(b.siege?'<span class="tag">Siège de la Guilde</span>':'')+'</span><span class="count'+(n?'':' zero')+'">'+n+' quête'+(n>1?'s':'')+'</span></a>';});
   h+='<a class="office regl" href="#aventuriers"><span class="nm">Les aventuriers de la Guilde<span class="tag">La galerie des personnages</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#personnages"><span class="nm">Mes personnages<span class="tag">Ta fiche d\'aventurier</span></span><span aria-hidden="true">→</span></a>';
-  h+='<a class="office regl" href="#chroniques"><span class="nm">Chroniques de la Guilde<span class="tag">Les missions accomplies</span></span><span aria-hidden="true">→</span></a>';
+  h+='<a class="office regl" href="#chroniques"><span class="nm">Chroniques de la Guilde<span class="tag">Les missions en cours et accomplies</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#wiki"><span class="nm">Wiki des règles maison<span class="tag">Outerworlders, Supercharged, renommée…</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#renommee"><span class="nm">Registre de renommée<span class="tag">Qui est connu, respecté… ou recherché</span></span><span aria-hidden="true">→</span></a>';
   h+='<p class="hint">'+(loaded.q?total+' quête'+(total>1?'s':'')+' ouverte'+(total>1?'s':'')+' sur la côte. Choisis un comptoir pour voir son babillard.':'Chargement des quêtes…')+'</p></nav></div>';
@@ -578,7 +584,7 @@ function signupList(q){
 }
 function card(q){
   const ch=charge(q);
-  let h='<article class="note'+(q.statut==="terminee"||q.statut==="archivee"?" done":"")+(ch.level==="super"?" super":"")+'">';
+  let h='<article id="q-'+esc(q.id)+'" class="note'+(q.statut==="terminee"||q.statut==="archivee"?" done":"")+(ch.level==="super"?" super":"")+'">';
   h+='<div class="note-top"><div style="display:flex;flex-direction:column;gap:4px">'+rankSeal(q.rang)+'<span class="kind">'+esc(q.type)+'</span></div><div class="stamps"><span class="stamp st-'+esc(q.statut)+'">'+esc(STATUS[q.statut]||q.statut)+'</span>'+(ch.level==="super"?'<span class="stamp st-super">Supercharged</span>':'')+'</div></div>';
   h+='<h2>'+esc(q.titre)+'</h2><p class="desc">'+esc(q.description)+'</p>';
   if(ch.level==="super")h+='<p class="superline">Plus d\'aventuriers que prévu : la mission sera plus dangereuse… et plus glorieuse.</p>';
@@ -785,8 +791,15 @@ function galleryView(){
 function chroniclesView(){
   const done=quetes.filter(q=>q.rapport&&q.statut==="terminee").sort((a,b)=>{const t=x=>x.rapport.termineLe&&x.rapport.termineLe.toMillis?x.rapport.termineLe.toMillis():0;return t(b)-t(a);});
   if(!loaded.q)return '<p class="hint">Chargement…</p>';
-  if(!done.length)return '<p class="empty">Aucune mission n\'a encore été accomplie. Les premières pages des Chroniques restent à écrire…</p>';
-  return '<div class="chron">'+done.map(q=>{const r=q.rapport,b=office(q.bureau);
+  const cur=quetes.filter(q=>q.statut==="encours").sort((a,b)=>String((office(a.bureau)||{}).nom).localeCompare(String((office(b.bureau)||{}).nom),"fr")||String(a.titre).localeCompare(String(b.titre),"fr"));
+  let top='<section class="reg"><h2>Missions en cours</h2>';
+  top+=cur.length?'<div class="tablebox"><table class="encours"><thead><tr><th scope="col">Mission</th><th scope="col">Rang</th><th scope="col">Comptoir</th><th scope="col">Date</th><th scope="col">Groupe</th></tr></thead><tbody>'+
+    cur.map(q=>{const b=office(q.bureau),grp=signupsFor(q.id).filter(x=>x.statut==="confirmee").map(x=>esc(x.nom)).join(", ");
+      return '<tr><th scope="row"><a href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">'+esc(q.titre)+'</a>'+(charge(q).level==="super"?' <span class="stamp st-super sm">Supercharged</span>':'')+'</th><td>'+rankSeal(q.rang)+'</td><td>'+esc(b?b.nom:"")+'</td><td>'+esc(q.date||"—")+'</td><td>'+(grp||'<span class="muted">—</span>')+'</td></tr>';}).join("")+'</tbody></table></div>'
+    :'<p class="hint">Aucune mission en cours pour le moment.</p>';
+  top+='</section><h2 class="chr-h">Missions accomplies</h2>';
+  if(!done.length)return top+'<p class="empty">Aucune mission n\'a encore été accomplie. Les premières pages des Chroniques restent à écrire…</p>';
+  return top+'<div class="chron">'+done.map(q=>{const r=q.rapport,b=office(q.bureau);
     return '<article class="chr"><div class="chr-top">'+rankSeal(q.rang)+'<span class="kind">'+esc(b?b.nom:"")+(r.date?' · '+esc(r.date):'')+'</span><span class="stamp res-'+esc(r.resultat)+'">'+esc(RESULTS[r.resultat]||"")+'</span></div>'+
       '<h2>'+esc(q.titre)+'</h2>'+(r.resume?'<p class="desc">'+esc(r.resume)+'</p>':'')+
       ((r.participants||[]).length?'<p class="chr-parts"><strong>Participants :</strong> '+r.participants.map(x=>esc(x.nom)).join(", ")+'</p>':'')+'</article>';}).join("")+'</div>';
@@ -867,7 +880,7 @@ function render(){
   const b=ui.office&&!reg?office(ui.office):null;
   let h='<div class="wrap">';
   h+='<header><svg width="72" height="72" viewBox="-110 -110 220 220" aria-hidden="true"><circle r="80" fill="none" stroke="#d8b45e" stroke-width="3" opacity=".6"></circle>'+rose(104,'#0e1b20')+'</svg>';
-  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions accomplies par les aventuriers':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+statusPill()+'</header>';
+  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions en cours et accomplies par les aventuriers':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+statusPill()+'</header>';
   if(perso)h+='<a class="back" href="#renommee"><span aria-hidden="true">←</span> Registre de renommée</a>';
   else if(b||reg||wk||chr||mes||gal)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
   if(ui.authMsg)h+='<div class="dmbar"><span class="msg">'+esc(ui.authMsg)+'</span><button class="btn board" data-a="auth-ok">OK</button>'+(user&&!user.isAnonymous&&!isAdmin?'<button class="btn board" data-a="logout">Déconnexion</button>':'')+'</div>';
@@ -948,7 +961,8 @@ function render(){
 function route(){
   const id=(location.hash||"").slice(1);
   const next=id&&id!=="carte"?id:null;
-  if(next!==ui.office){ui.office=next;if(!(next==="personnages"&&ui.sheetEdit==="new"))ui.sheetEdit=null;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter="ouverte";ui.rank="all";render();try{window.scrollTo(0,0);}catch(e){}}
+  if(next!==ui.office){ui.office=next;if(!(next==="personnages"&&ui.sheetEdit==="new"))ui.sheetEdit=null;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter=ui.pendingFilter||"ouverte";ui.rank="all";const focusQ=ui.pendingQuest;ui.pendingFilter=null;ui.pendingQuest=null;render();
+    try{const el=focusQ&&document.getElementById("q-"+focusQ);if(el){el.scrollIntoView({block:"center"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1600);}else window.scrollTo(0,0);}catch(e){}}
 }
 window.addEventListener("hashchange",route);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&(ui.signup||ui.complete||ui.confirmGroup||ui.reportWrite)){ui.signup=null;ui.complete=null;ui.confirmGroup=null;ui.reportWrite=null;render();}});
@@ -1069,6 +1083,7 @@ document.addEventListener("click",async e=>{
     await run("Rapport demandé",()=>setDoc(doc(db,"quetes",q.id),{redacteur:uid,majLe:serverTimestamp()},{merge:true}));
     ui.complete=null;save={state:"saved",msg:""};ui.signupMsg={id:q.id,text:"Rapport demandé à "+w.nom+". Un bouton « Écrire le rapport de mission » apparaît sur la quête pour ce joueur."};render();return;}
   else if(a==="archive"||a==="unarchive"){await run(a==="archive"?"Archivage":"Désarchivage",()=>setDoc(doc(db,"quetes",id),{statut:a==="archive"?"archivee":"terminee",majLe:serverTimestamp()},{merge:true}));return;}
+  else if(a==="goto-quest"){ui.pendingFilter="encours";ui.pendingQuest=id;return;}
   else if(a==="group"){ui.confirmGroup=id;}
   else if(a==="group-cancel"){if(e.target!==b)return;ui.confirmGroup=null;}
   else if(a==="report-write"){ui.reportWrite=id;}
