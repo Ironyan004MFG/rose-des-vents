@@ -93,6 +93,17 @@ service cloud.firestore {
         || (signedIn() && resource.data.uid == request.auth.uid && resource.data.statut != 'refusee');
     }
 
+    // ---------- Wiki des règles maison (lecture publique, écriture admin) ----------
+    match /wiki/{id} {
+      allow read: if true;
+      allow write: if isAdmin()
+        && request.resource.data.keys().hasOnly(['titre', 'contenu', 'ordre', 'creeLe', 'majLe'])
+        && str(request.resource.data.titre, 1, 100)
+        && str(request.resource.data.contenu, 0, 50000)
+        && (!('ordre' in request.resource.data) || request.resource.data.ordre is number);
+      allow delete: if isAdmin();
+    }
+
     // ---------- Phase 2 : renommée (lecture publique, écriture admin) ----------
     match /aventuriers/{id} {
       allow read: if true;
