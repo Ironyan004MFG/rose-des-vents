@@ -11,11 +11,13 @@ Site : https://ironyan004mfg.github.io/rose-des-vents/
   - `quetes/{id}` : les quêtes (statuts : ouverte, encours, terminee, archivee)
   - `inscriptions/{idQuête}__{uid}` : les demandes des joueurs, séparées des quêtes
   - `admins/{uid}` : les comptes administrateurs (modifiables seulement dans la console Firebase)
-  - `aventuriers/{id}` : personnages et points de renommée par région (`points: {idComptoir: n}`)
-  - `journal/{id}` : chaque gain ou perte de points de renommée
+  - `aventuriers/{id}` : fiches de personnage (nom, image, espèce, classe, description, background, Don, propriétaire) et rang public par région (`niveaux`)
+  - `points/{id}`, `prive/renommee` : points de renommée, seuils et points par rang (lisibles par le DM seulement)
+  - `rangs/{id}` : historique public des changements de rang
+  - `journal/{id}` : chaque gain ou perte de points (DM seulement)
   - `config/renommee` : l'échelle (titres, seuils, effets) et les points par rang
   - `wiki/{id}` : les pages de règles maison (Markdown)
-- **Firebase Authentication** : connexion anonyme (joueurs), Google (DM), courriel/mot de passe (robot de Claude).
+- **Firebase Authentication** : Google (joueurs et DM), courriel/mot de passe (robot de Claude). La connexion anonyme n'est plus utilisée.
 - **`firestore.rules`** : toutes les autorisations sont vérifiées côté serveur. À copier dans la console Firebase → Firestore → Règles.
 
 ## Supercharged

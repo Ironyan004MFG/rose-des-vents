@@ -117,6 +117,43 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 .modal label{display:flex;flex-direction:column;gap:4px;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
 @media (prefers-reduced-motion:reduce){.mk .mk-in{transition:none}}
 
+/* fiches de personnage */
+footer .who{display:inline-flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+footer .who a{color:var(--gold)}
+.plink{color:inherit;text-decoration:underline;text-decoration-color:rgba(0,0,0,.25);text-underline-offset:3px}
+.plink.row{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--on-board)}
+.plink.row:hover span{text-decoration:underline}
+.av{width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none;border:2px solid var(--gold);background:var(--board)}
+.av.ph,.portrait.ph{display:inline-flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;color:var(--gold);background:var(--board)}
+.portrait{width:150px;height:150px;border-radius:8px;object-fit:cover;border:3px solid var(--gold);flex:none;font-size:48px;max-width:100%}
+.portrait.sm{width:72px;height:72px;font-size:26px;border-width:2px}
+.sheet{background:var(--parch);color:var(--ink);border-radius:4px;padding:24px clamp(18px,4vw,36px);box-shadow:0 10px 24px rgba(0,0,0,.45);max-width:820px;display:flex;flex-direction:column;gap:10px}
+.sheet-top{display:flex;flex-wrap:wrap;gap:20px;align-items:center}
+.sheet-id h2{font-family:var(--display);font-size:clamp(26px,4vw,36px);margin:0;line-height:1.1}
+.sheet-sub{display:block;font-style:italic;color:var(--ink-soft);margin:4px 0 0}
+.sheet-pl{margin:2px 0 0;font-size:15px;color:var(--ink-soft)}
+.sheet h3{font-family:var(--display);font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);margin:14px 0 0;border-top:1px dashed #b9a982;padding-top:12px}
+.sheet .desc{margin:0}
+.sheet a{color:#7a4f00}
+.don{background:#2a2219;color:var(--parch);border-radius:6px;padding:12px 16px}
+.don .kind{color:var(--gold)} .don p{margin:4px 0 0}
+.sheetrep,.sheetq{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.sheetrep li{display:flex;justify-content:space-between;gap:10px;align-items:center;max-width:420px}
+.sheetwrap{max-width:820px;display:flex;flex-direction:column;gap:12px}
+.sheetform .imgrow{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.sheetform textarea{min-height:100px}
+.mychars{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.charcard{display:flex;gap:14px;align-items:center;background:var(--board-2);border:1px solid var(--line);border-radius:8px;padding:12px;color:var(--on-board);text-decoration:none;font:inherit;text-align:left;cursor:pointer;min-height:96px}
+.charcard:hover,.charcard:focus-visible{border-color:var(--gold);outline:none}
+.charcard .sheet-sub{color:var(--on-board-muted)}
+.charcard.add{border-style:dashed}
+.pick{border:1px solid #c9b88f;border-radius:6px;padding:8px 10px;margin:0;display:flex;flex-direction:column;gap:6px}
+.pick legend{font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);padding:0 6px}
+.pickrow{display:flex;gap:10px;align-items:center;padding:6px;border-radius:6px;cursor:pointer;min-height:44px}
+.pickrow:hover{background:rgba(0,0,0,.05)}
+.pickrow input{width:auto}
+.pickrow em{color:var(--ink-soft);font-size:14px}
+a.btn{text-decoration:none;display:inline-flex;align-items:center}
 /* points, fin de quête, chroniques */
 .ptsline{display:block;font-size:12.5px;color:var(--on-board-muted);margin-top:4px;white-space:nowrap}
 .replist .pts{display:block;font-family:var(--body);font-size:13px;color:var(--on-board-muted)}
@@ -230,7 +267,7 @@ header .pill{margin-left:auto}
 <script type="application/json" id="bb-seed">{"bureaux": [{"id": "luskan", "nom": "Luskan", "x": 205, "y": 175}, {"id": "mirabar", "nom": "Mirabar", "x": 455, "y": 105}, {"id": "neverwinter", "nom": "Neverwinter", "x": 262, "y": 335}, {"id": "silverymoon", "nom": "Silverymoon", "x": 860, "y": 205}, {"id": "triboar", "nom": "Triboar", "x": 545, "y": 410}, {"id": "waterdeep", "nom": "Waterdeep", "x": 300, "y": 645, "siege": true}, {"id": "daggerford", "nom": "Daggerford", "x": 420, "y": 775}, {"id": "baldurs-gate", "nom": "Baldur's Gate", "x": 565, "y": 985}], "quetes": [{"id": "q1", "bureau": "daggerford", "titre": "Des loups trop bien organisés", "type": "Contrat", "rang": "cuivre", "statut": "ouverte", "lieu": "Vergers de Brumeval, une demi-journée à l'est", "recompense": "25 po + repas chaud à volonté", "niveau": "1–2", "joueurs": "2 à 5", "date": "", "inscrits": [], "description": "Les fermiers de Brumeval perdent des moutons chaque nuit. Rien d'inhabituel… sauf que les loups semblent attaquer en formation et éviter tous les pièges. Le vieux Tobin jure qu'il a vu une silhouette debout parmi eux."}, {"id": "q2", "bureau": "daggerford", "titre": "Le courrier qui n'est jamais arrivé", "type": "Recherche", "rang": "cuivre", "statut": "ouverte", "lieu": "Route de l'Ouest, entre deux relais", "recompense": "30 po + 1 potion de soins", "niveau": "1–2", "joueurs": "2 à 4", "date": "", "inscrits": [], "description": "Un messager de la Guilde n'a jamais atteint le relais du Gué. Retrouvez-le, ou au minimum sa sacoche scellée. La Guilde insiste : le sceau ne doit pas être brisé."}, {"id": "q3", "bureau": "daggerford", "titre": "Cartographier la Tour Noyée", "type": "Exploration", "rang": "fer", "statut": "ouverte", "lieu": "Marais à deux jours à l'ouest", "recompense": "10 po par salle cartographiée", "niveau": "2–3", "joueurs": "3 à 5", "date": "", "inscrits": [], "description": "Une tour à demi engloutie émerge des marais depuis la dernière crue. La Guilde paie chaque salle rapportée sur une carte lisible. Ce que vous trouvez à l'intérieur vous appartient, sauf les documents écrits."}, {"id": "q4", "bureau": "daggerford", "titre": "Prime : Grinsk le Chapardeur", "type": "Prime", "rang": "fer", "statut": "ouverte", "lieu": "Collines de la Route Marchande", "recompense": "75 po (preuve exigée)", "niveau": "2–4", "joueurs": "3 à 5", "date": "", "inscrits": [], "description": "Un chef gobelin pille les caravanes depuis un mois. Ses hommes portent tous la même écharpe rouge. Mort ou vif : la Guilde paie le même prix, mais le marchand Halvric paierait le double pour récupérer sa cargaison intacte."}, {"id": "q5", "bureau": "daggerford", "titre": "Rumeur : le voyageur aux étranges paroles", "type": "Rumeur", "rang": "inconnu", "statut": "ouverte", "lieu": "Auberge du Gué", "recompense": "Inconnue", "niveau": "?", "joueurs": "?", "date": "", "inscrits": [], "description": "Un homme en vêtements bizarres a passé trois nuits à l'auberge du Gué. Il demandait sans cesse si quelqu'un avait vu son « téléphone ». Il est reparti vers les marais sans payer sa note."}, {"id": "lu1", "bureau": "luskan", "titre": "Escorte jusqu'à Port Llast", "type": "Escorte", "rang": "cuivre", "statut": "ouverte", "lieu": "Route côtière, deux jours au sud", "recompense": "40 po", "niveau": "1–3", "joueurs": "2 à 4", "date": "", "inscrits": [], "description": "Un scribe nerveux doit livrer trois coffres de registres à Port Llast. Il refuse de dire ce qu'ils contiennent, mais il vérifie les serrures toutes les heures."}, {"id": "lu2", "bureau": "luskan", "titre": "Le navire sans équipage", "type": "Contrat", "rang": "argent", "statut": "ouverte", "lieu": "Port de Luskan, quai des Naufragés", "recompense": "200 po", "niveau": "5–7", "joueurs": "3 à 5", "date": "", "inscrits": [], "description": "La Mouette Grise est rentrée au port hier, voiles en ordre, cale pleine. Personne à bord. Le capitaine du port veut savoir ce qui est arrivé avant que quiconque touche à la cargaison."}, {"id": "mi1", "bureau": "mirabar", "titre": "On creuse sous la mine", "type": "Recherche", "rang": "fer", "statut": "ouverte", "lieu": "Puits n° 7, au nord de la ville", "recompense": "80 po", "niveau": "3–4", "joueurs": "3 à 5", "date": "", "inscrits": [], "description": "Six mineurs sont pris derrière un éboulement. Les sauveteurs entendent des coups de pioche venant d'en dessous. Le problème : aucun des mineurs n'avait de pioche."}, {"id": "mi2", "bureau": "mirabar", "titre": "Minerai pour Longsaddle", "type": "Escorte", "rang": "cuivre", "statut": "ouverte", "lieu": "Route de Longsaddle", "recompense": "35 po + une dague naine", "niveau": "1–2", "joueurs": "2 à 5", "date": "", "inscrits": [], "description": "Une caravane de minerai doit partir avant les premières neiges. Les loups sont nombreux cette année, et le cocher a peur de son ombre."}, {"id": "ne1", "bureau": "neverwinter", "titre": "Les failles de la vieille ville", "type": "Exploration", "rang": "fer", "statut": "ouverte", "lieu": "Quartier des Cendres", "recompense": "100 po", "niveau": "3–5", "joueurs": "3 à 5", "date": "", "inscrits": [], "description": "Le mont Hotenow gronde de nouveau. De nouvelles failles se sont ouvertes dans la vieille ville, et de la fumée en sort la nuit. La Guilde paie pour une carte des failles, et pour savoir ce qui en sort."}, {"id": "ne2", "bureau": "neverwinter", "titre": "Stirges dans la serre", "type": "Contrat", "rang": "cuivre", "statut": "ouverte", "lieu": "Jardins du Château Never", "recompense": "25 po", "niveau": "1–2", "joueurs": "2 à 4", "date": "", "inscrits": [], "description": "Le jardinier en chef jure que ses tomates sont « mordues de l'intérieur ». Une colonie de stirges s'est installée dans la grande serre. Évitez d'abîmer les rosiers du Seigneur Protecteur."}, {"id": "ne3", "bureau": "neverwinter", "titre": "Rumeur : la machine à deux roues", "type": "Rumeur", "rang": "inconnu", "statut": "ouverte", "lieu": "Marché du Pont des Dragons", "recompense": "Inconnue", "niveau": "?", "joueurs": "?", "date": "", "inscrits": [], "description": "Une jeune femme a été vue traversant le marché sur une étrange machine à deux roues qu'elle faisait avancer avec ses pieds. Elle criait « Attention, pas de freins ! » dans une langue que personne ne connaît."}, {"id": "si1", "bureau": "silverymoon", "titre": "Les livres envolés", "type": "Contrat", "rang": "cuivre", "statut": "ouverte", "lieu": "Voûte des Sages", "recompense": "30 po", "niveau": "1–2", "joueurs": "2 à 4", "date": "", "inscrits": [], "description": "Une douzaine de grimoires animés se sont échappés de la Voûte des Sages et nichent dans les toits de la ville. Les bibliothécaires veulent les récupérer vivants. Les livres mordent."}, {"id": "si2", "bureau": "silverymoon", "titre": "Trolls sur la route de la Lune", "type": "Prime", "rang": "argent", "statut": "ouverte", "lieu": "Route de la Lune, vers Everlund", "recompense": "150 po par tête de troll", "niveau": "5–7", "joueurs": "4 à 5", "date": "", "inscrits": [], "description": "Trois trolls bloquent la route commerciale depuis une semaine. Apportez de l'huile et des torches : la Guilde ne paie pas pour les têtes qui repoussent."}, {"id": "tr1", "bureau": "triboar", "titre": "Chevaux volés à la foire", "type": "Recherche", "rang": "cuivre", "statut": "ouverte", "lieu": "Foire aux chevaux de Triboar", "recompense": "40 po", "niveau": "1–2", "joueurs": "2 à 4", "date": "", "inscrits": [], "description": "Sept chevaux de prix ont disparu la nuit dernière, sans traces de sabots. Le marchand Darvin offre une récompense, et accuse déjà tout le monde."}, {"id": "tr2", "bureau": "triboar", "titre": "Des géants dans les collines", "type": "Exploration", "rang": "or", "statut": "ouverte", "lieu": "Collines à l'est de Triboar", "recompense": "500 po", "niveau": "8+", "joueurs": "4 à 5", "date": "", "inscrits": [], "description": "Des bergers rapportent des empreintes de deux mètres de long. Reconnaissance seulement : repérez les géants, comptez-les, et revenez. Ne les affrontez pas."}, {"id": "wa1", "bureau": "waterdeep", "titre": "La machine du Maître", "type": "Contrat", "rang": "cuivre", "statut": "ouverte", "lieu": "Siège de la Guilde, puis Dock Ward", "recompense": "20 po + un espresso servi par le Maître de la Guilde", "niveau": "1", "joueurs": "1 à 2", "date": "", "inscrits": [], "description": "La machine à café personnelle du Maître de la Guilde fait un bruit inquiétant. Les ingénieurs gnomes sont à Baldur's Gate. Trouvez la pièce de rechange chez un marchand de Dock Ward et rapportez-la. Ne touchez à rien d'autre. Vraiment rien."}, {"id": "wa2", "bureau": "waterdeep", "titre": "Les glyphes des égouts", "type": "Exploration", "rang": "fer", "statut": "ouverte", "lieu": "Égouts sous Dock Ward", "recompense": "90 po", "niveau": "3–4", "joueurs": "3 à 5", "date": "", "inscrits": [], "description": "Des égoutiers ont trouvé des glyphes lumineux sur des murs qui n'existaient pas le mois dernier. Cartographiez le nouveau tunnel et copiez les glyphes sans les toucher."}, {"id": "wa3", "bureau": "waterdeep", "titre": "Bal masqué chez les Brandath", "type": "Escorte", "rang": "argent", "statut": "ouverte", "lieu": "Quartier Nord, villa Brandath", "recompense": "250 po + tenue de soirée fournie", "niveau": "4–6", "joueurs": "3 à 4", "date": "", "inscrits": [], "description": "Dame Brandath a reçu une lettre anonyme : quelqu'un compte l'empoisonner pendant son bal masqué. Gardes du corps discrets demandés. Les bonnes manières sont obligatoires."}, {"id": "bg1", "bureau": "baldurs-gate", "titre": "Contrebande dans la Basse-Ville", "type": "Recherche", "rang": "fer", "statut": "ouverte", "lieu": "Basse-Ville, entrepôts du port", "recompense": "100 po", "niveau": "3–4", "joueurs": "3 à 5", "date": "", "inscrits": [], "description": "Des caisses marquées « poisson salé » sortent du port bien trop lourdes. Le Poing Enflammé veut savoir ce qu'il y a dedans, mais ne veut pas être vu en train de demander."}, {"id": "bg2", "bureau": "baldurs-gate", "titre": "Le culte sous la ville", "type": "Prime", "rang": "argent", "statut": "ouverte", "lieu": "Sous la Haute-Ville", "recompense": "300 po", "niveau": "5–7", "joueurs": "4 à 5", "date": "", "inscrits": [], "description": "Des gens disparaissent près du temple abandonné de la rue des Lanternes. Un culte se réunirait dans les caves en dessous. La Guilde paie pour son chef, et pour les disparus ramenés vivants."}, {"id": "bg3", "bureau": "baldurs-gate", "titre": "Rumeur : le marchand d'objets impossibles", "type": "Rumeur", "rang": "inconnu", "statut": "ouverte", "lieu": "Marché de Wide", "recompense": "Inconnue", "niveau": "?", "joueurs": "?", "date": "", "inscrits": [], "description": "Un marchand ambulant vend des curiosités introuvables : des lunettes aux verres noirs, une petite boîte plate en verre qui ne s'allume plus, une carte de plastique au nom d'un certain « Kevin ». Il refuse de dire où il les a trouvées."}]}</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInAnonymously, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, connectAuthEmulator, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, connectAuthEmulator, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, connectFirestoreEmulator, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, getDoc, writeBatch, serverTimestamp, FieldPath, increment, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -281,7 +318,7 @@ const loaded = {b:false, q:false, i:false, a:false, w:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
 let save = {state:"idle", msg:""};
-const ui = {complete:null, adjust:false, wikiEdit:null, wikiPreview:false, confirmWiki:null, advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
+const ui = {sheetEdit:null, sheetImg:undefined, promptSheet:false, needLogin:null, loginIntent:null, complete:null, adjust:false, wikiEdit:null, wikiPreview:false, confirmWiki:null, advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
 
 /* ---------- helpers ---------- */
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -375,14 +412,27 @@ onAuthStateChanged(auth, async u=>{
     adminChecked=true;
     listenPrivate(isAdmin);
     if(isAdmin){ui.dm=true;ui.authMsg="";}
-    else ui.authMsg='Ce compte Google n\'est pas administrateur. Pour l\'ajouter, crée dans Firestore le document admins/'+u.uid+'.';
+    else if(ui.loginIntent==="dm")ui.authMsg='Ce compte Google n\'est pas administrateur. Pour l\'ajouter, crée dans Firestore le document admins/'+u.uid+'.';
+    if(!isAdmin){let asked=false;try{asked=sessionStorage.getItem("rdv-prompt-"+u.uid)==="1";}catch(e){}if(!asked)ui.promptSheet=true;}
+    if(ui.needLogin&&!isAdmin){ui.signup=ui.needLogin;ui.promptSheet=false;}
+    ui.needLogin=null;ui.loginIntent=null;
   }
   if(!isAdmin){ui.dm=false;listenPrivate(false);}
   render();
 });
 getRedirectResult(auth).catch(e=>{ui.authMsg=errText(e);render();});
 
-async function dmLogin(){
+function myChars(){return user&&!user.isAnonymous?aventuriers.filter(a=>a.proprietaire===user.uid):[];}
+async function login(intent){
+  ui.loginIntent=intent;
+  const p=new GoogleAuthProvider();p.setCustomParameters({prompt:"select_account"});
+  try{await signInWithPopup(auth,p);}
+  catch(e){
+    if((e.code||"").indexOf("popup-blocked")>=0){await signInWithRedirect(auth,p);return;}
+    ui.authMsg=errText(e);ui.needLogin=null;render();
+  }
+}
+async function dmLogin(){ui.loginIntent="dm";
   const p=new GoogleAuthProvider();p.setCustomParameters({prompt:"select_account"});
   try{await signInWithPopup(auth,p);}
   catch(e){
@@ -437,6 +487,7 @@ function mapView(){
   h+='<nav class="offices" aria-label="Comptoirs"><h2>Comptoirs de la Guilde</h2>';
   bureaux.forEach(b=>{const n=openCount(b.id);
     h+='<a class="office" href="#'+esc(b.id)+'"><span class="nm">'+esc(b.nom)+(b.siege?'<span class="tag">Siège de la Guilde</span>':'')+'</span><span class="count'+(n?'':' zero')+'">'+n+' quête'+(n>1?'s':'')+'</span></a>';});
+  h+='<a class="office regl" href="#personnages"><span class="nm">Mes personnages<span class="tag">Ta fiche d\'aventurier</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#chroniques"><span class="nm">Chroniques de la Guilde<span class="tag">Les missions accomplies</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#wiki"><span class="nm">Wiki des règles maison<span class="tag">Outerworlders, Supercharged, renommée…</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#renommee"><span class="nm">Registre de renommée<span class="tag">Qui est connu, respecté… ou recherché</span></span><span aria-hidden="true">→</span></a>';
@@ -450,7 +501,7 @@ function signupList(q){
   if(!list.length)return "<em>Personne encore</em>";
   return '<span class="names">'+list.map(s=>{
     const mine=user&&s.uid===user.uid&&s.statut!=="refusee";
-    let h='<span class="name st-'+esc(s.statut)+'">'+esc(s.nom);
+    let h='<span class="name st-'+esc(s.statut)+'">'+(s.aventurier&&aventuriers.some(a=>a.id===s.aventurier)?'<a class="plink" href="#perso-'+esc(s.aventurier)+'">'+esc(s.nom)+'</a>':esc(s.nom));
     if(s.statut==="attente")h+=' <em>(en attente)</em>';
     if(s.statut==="refusee")h+=' <em>(refusée)</em>';
     if(ui.dm){
@@ -583,7 +634,7 @@ function renownView(){
       :'<div class="actions"><button class="btn board" data-a="adj-open">Ajuster des points à la main</button></div>';
   }
   h+='<div class="tablebox"><table class="roster"><thead><tr><th scope="col">Aventurier</th>'+bureaux.map(b=>'<th scope="col">'+esc(b.nom)+'</th>').join("")+(ui.dm?'<th scope="col"><span class="sr">Actions</span></th>':'')+'</tr></thead><tbody>'+
-    aventuriers.map(a=>'<tr><th scope="row">'+esc(a.nom)+(a.joueur?'<span class="pl">'+esc(a.joueur)+'</span>':'')+'</th>'+
+    aventuriers.map(a=>'<tr><th scope="row"><a class="plink row" href="#perso-'+esc(a.id)+'">'+(a.image?'<img class="av" src="'+esc(a.image)+'" alt="">':'<span class="av ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+'<span>'+esc(a.nom)+(a.joueur?'<span class="pl">'+esc(a.joueur)+'</span>':'')+'</span></a></th>'+
       bureaux.map(b=>{const n=renown(a,b.id),p=pts(a,b.id),nx=nextInfo(p);
         if(!ui.dm)return '<td>'+(n?chip(n):'<span class="muted">Inconnu</span>')+'</td>';
         return '<td>'+(n||p?chip(n):'<span class="muted">Inconnu</span>')+'<span class="ptsline">'+ptsLabel(p)+(nx&&p>=0?' · encore '+nx.need+' pour '+esc(nx.titre):'')+'</span></td>';}).join("")+
@@ -594,6 +645,61 @@ function renownView(){
   if(ui.dm&&journal.length)h+='<h3 class="subh">Journal des points (DM seulement)</h3><ul class="journal">'+journal.slice(0,30).map(j=>{const b=office(j.bureau);const d=j.date&&j.date.toDate?j.date.toDate().toLocaleDateString("fr-CA",{day:"numeric",month:"short",year:"numeric"}):"";
       return '<li><span class="jd">'+esc(d)+'</span><span><strong>'+esc(j.nom||"")+'</strong> '+(j.points>=0?'gagne':'perd')+' '+Math.abs(j.points)+' pt'+(Math.abs(j.points)>1?'s':'')+(b?' à '+esc(b.nom):'')+(j.raison?' · '+esc(j.raison):'')+'</span></li>';}).join("")+'</ul>';
   return h+'</section>';
+}
+
+/* ---------- fiches de personnage ---------- */
+function sheetForm(a){
+  a=a||{nom:"",classe:"",espece:"",description:"",background:"",image:""};
+  const img=ui.sheetImg!==undefined?ui.sheetImg:(a.image||"");
+  return '<form class="form sheetform" id="sheetform"><h2>'+(ui.sheetEdit==="new"?"Créer ma fiche de personnage":"Modifier la fiche")+'</h2>'+
+    '<div class="wide imgrow">'+(img?'<img class="portrait sm" src="'+esc(img)+'" alt="Portrait actuel">':'<span class="portrait sm ph" aria-hidden="true">?</span>')+
+    '<label for="p-img">Image du personnage<input id="p-img" type="file" accept="image/*"></label>'+(img?'<button class="btn ghost" type="button" data-a="img-clear">Retirer l\'image</button>':'')+'</div>'+
+    '<label for="p-nom">Nom du personnage<input id="p-nom" required maxlength="60" value="'+esc(a.nom)+'"></label>'+
+    '<label for="p-espece">Espèce<input id="p-espece" maxlength="60" placeholder="ex. Elfe, Goliath, Giff…" value="'+esc(a.espece)+'"></label>'+
+    '<label for="p-classe">Classe<input id="p-classe" maxlength="60" placeholder="ex. Guerrier, Magicien…" value="'+esc(a.classe)+'"></label>'+
+    '<label class="wide" for="p-desc">Description<textarea id="p-desc" maxlength="2000" placeholder="Apparence, personnalité…">'+esc(a.description)+'</textarea></label>'+
+    '<label class="wide" for="p-bg">Background (facultatif)<textarea id="p-bg" maxlength="4000" placeholder="D\'où vient ton personnage ? Outerworlder ou natif de la Sword Coast ?">'+esc(a.background)+'</textarea></label>'+
+    '<div class="actions wide"><button class="btn" type="submit">Enregistrer la fiche</button><button class="btn ghost" type="button" data-a="sheet-cancel">Annuler</button></div></form>';
+}
+function questsOf(a){return quetes.filter(q=>q.rapport&&(q.rapport.participants||[]).some(x=>x.aventurier===a.id));}
+function sheetView(id){
+  const a=aventuriers.find(x=>x.id===id);
+  if(!loaded.a)return '<p class="hint">Chargement…</p>';
+  if(!a)return '<p class="empty">Cette fiche n\'existe pas. <a href="#renommee">Retour au registre</a></p>';
+  const mine=user&&a.proprietaire===user.uid;
+  if(ui.sheetEdit===a.id&&(mine||ui.dm))return '<div class="sheetwrap">'+sheetForm(a)+'</div>';
+  let h='<article class="sheet">';
+  h+='<div class="sheet-top">'+(a.image?'<img class="portrait" src="'+esc(a.image)+'" alt="Portrait de '+esc(a.nom)+'">':'<span class="portrait ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+
+    '<div class="sheet-id"><h2>'+esc(a.nom)+'</h2><p class="sheet-sub">'+esc([a.espece,a.classe].filter(Boolean).join(" · ")||"Aventurier")+'</p>'+(a.joueur?'<p class="sheet-pl">Joué par '+esc(a.joueur)+'</p>':'')+'</div></div>';
+  if(a.don)h+='<div class="don"><span class="kind">Don du Système</span><p>'+esc(a.don)+'</p></div>';
+  if(a.description)h+='<h3>Description</h3><p class="desc">'+esc(a.description)+'</p>';
+  if(a.background)h+='<h3>Background</h3><p class="desc">'+esc(a.background)+'</p>';
+  const known=bureaux.filter(b=>renown(a,b.id)!==0);
+  h+='<h3>Renommée</h3>'+(known.length?'<ul class="sheetrep">'+known.map(b=>'<li><span>'+esc(b.nom)+'</span>'+chip(renown(a,b.id))+'</li>').join("")+'</ul>':'<p class="desc">Inconnu dans toutes les régions… pour l\'instant.</p>');
+  const qs=questsOf(a);
+  h+='<h3>Quêtes accomplies</h3>'+(qs.length?'<ul class="sheetq">'+qs.map(q=>'<li>'+rankSeal(q.rang)+' <a href="#chroniques">'+esc(q.titre)+'</a>'+(office(q.bureau)?' <em>('+esc(office(q.bureau).nom)+')</em>':'')+'</li>').join("")+'</ul>':'<p class="desc">Aucune pour le moment.</p>');
+  if(ui.dm)h+='<form class="inline" id="donform" data-id="'+esc(a.id)+'"><label for="p-don">Don du Système (DM)<input id="p-don" maxlength="500" value="'+esc(a.don||"")+'"></label><button class="btn" type="submit">Enregistrer le Don</button></form>';
+  if(mine||ui.dm)h+='<div class="actions"><button class="btn ghost" data-a="sheet-edit" data-id="'+esc(a.id)+'">Modifier la fiche</button></div>';
+  return h+'</article>';
+}
+function myCharsView(){
+  if(!user||user.isAnonymous)return '<div class="sheetwrap"><p class="hint">Connecte-toi avec ton compte Google pour créer et retrouver tes personnages.</p><button class="btn gold" data-a="login">Se connecter avec Google</button></div>';
+  if(ui.sheetEdit==="new")return '<div class="sheetwrap">'+sheetForm(null)+'</div>';
+  const mine=myChars();
+  let h='<div class="mychars">'+mine.map(a=>'<a class="charcard" href="#perso-'+esc(a.id)+'">'+(a.image?'<img class="portrait sm" src="'+esc(a.image)+'" alt="">':'<span class="portrait sm ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+'<span><strong>'+esc(a.nom)+'</strong><span class="sheet-sub">'+esc([a.espece,a.classe].filter(Boolean).join(" · "))+'</span></span></a>').join("");
+  h+='<button class="charcard add" data-a="sheet-new"><span class="portrait sm ph" aria-hidden="true">+</span><span><strong>Nouveau personnage</strong></span></button></div>';
+  if(!mine.length)h='<p class="hint">Tu n\'as pas encore de personnage. Crée ta fiche pour pouvoir t\'inscrire aux quêtes.</p>'+h;
+  return h;
+}
+function resizeImage(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();r.onerror=()=>rej(new Error("Lecture impossible"));
+    r.onload=()=>{const im=new Image();im.onerror=()=>rej(new Error("Image illisible"));im.onload=()=>{
+      const max=360,sc=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement("canvas");
+      c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+      res(c.toDataURL("image/jpeg",0.82));};im.src=r.result;};
+    r.readAsDataURL(file);
+  });
 }
 
 /* ---------- chroniques ---------- */
@@ -673,41 +779,51 @@ function statusPill(){
 }
 function render(){
   const wk=!!ui.office&&(ui.office==="wiki"||ui.office.indexOf("wiki-")===0);
-  if(ui.office&&ui.office!=="renommee"&&ui.office!=="chroniques"&&!wk&&loaded.b&&!office(ui.office))ui.office=null;
+  if(ui.office&&ui.office!=="renommee"&&ui.office!=="chroniques"&&ui.office!=="personnages"&&ui.office.indexOf("perso-")!==0&&!wk&&loaded.b&&!office(ui.office))ui.office=null;
   const reg=ui.office==="renommee";
   const chr=ui.office==="chroniques";
+  const perso=!!ui.office&&ui.office.indexOf("perso-")===0;
+  const mes=ui.office==="personnages";
   const b=ui.office&&!reg?office(ui.office):null;
   let h='<div class="wrap">';
   h+='<header><svg width="72" height="72" viewBox="-110 -110 220 220" aria-hidden="true"><circle r="80" fill="none" stroke="#d8b45e" stroke-width="3" opacity=".6"></circle>'+rose(104,'#0e1b20')+'</svg>';
-  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(chr?'Chroniques de la Guilde':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(chr?'Les missions accomplies par les aventuriers':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+statusPill()+'</header>';
-  if(b||reg||wk||chr)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
+  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions accomplies par les aventuriers':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+statusPill()+'</header>';
+  if(perso)h+='<a class="back" href="#renommee"><span aria-hidden="true">←</span> Registre de renommée</a>';
+  else if(b||reg||wk||chr||mes)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
   if(ui.authMsg)h+='<div class="dmbar"><span class="msg">'+esc(ui.authMsg)+'</span><button class="btn board" data-a="auth-ok">OK</button>'+(user&&!user.isAnonymous&&!isAdmin?'<button class="btn board" data-a="logout">Déconnexion</button>':'')+'</div>';
   if(ui.dm)h+=dmPanel(b);
-  h+=chr?chroniclesView():wk?wikiView():reg?renownView():b?boardView()+reputationSection(b.id,b.nom):mapView();
-  h+='<footer><span>Pour partir en mission : choisis une quête, appuie sur « Je veux y aller » et entre ton nom. Le DM confirme les inscriptions.</span>'+
-    '<button class="linkbtn" data-a="dm">'+(ui.dm?"Quitter le mode DM":"Mode DM")+'</button></footer>';
-  if(ui.signup){const sq=questById(ui.signup);
+  h+=mes?myCharsView():perso?sheetView(ui.office.slice(6)):chr?chroniclesView():wk?wikiView():reg?renownView():b?boardView()+reputationSection(b.id,b.nom):mapView();
+  const signed=user&&!user.isAnonymous;
+  h+='<footer><span>Pour partir en mission : choisis une quête, appuie sur « Je veux y aller » et choisis ton personnage. Le DM confirme les inscriptions.</span>'+
+    '<span class="who">'+(signed?'Connecté : '+esc(user.displayName||user.email||"aventurier")+' · <a href="#personnages">Mes personnages</a> · <button class="linkbtn" data-a="logout">Déconnexion</button>':'<button class="linkbtn" data-a="login">Se connecter</button>')+
+    ' · <button class="linkbtn" data-a="dm">'+(ui.dm?"Quitter le mode DM":"Mode DM")+'</button></span></footer>';
+  if(ui.signup){const sq=questById(ui.signup),mine=myChars();
     if(sq)h+='<div class="modal-bg" data-a="sign-cancel"><form class="modal" id="signform" role="dialog" aria-modal="true" aria-labelledby="sg-t"><h2 id="sg-t">S\'inscrire à « '+esc(sq.titre)+' »</h2>'+
-      '<label for="f-name">Ton nom ou celui de ton personnage<input id="f-name" required maxlength="40" autocomplete="nickname" value="'+esc(store("rdv-name")||"")+'"></label>'+
-      '<p>Ta demande apparaîtra « en attente » pour tout le monde. Le DM la confirme ensuite. Tu pourras la retirer depuis ce même appareil.</p>'+
-      '<div class="actions"><button class="btn" type="submit"'+(ui.busy?" disabled":"")+'>'+(ui.busy?"Envoi…":"M\'inscrire")+'</button><button class="btn ghost" type="button" data-a="sign-cancel">Annuler</button></div></form></div>';}
+      (mine.length?'<fieldset class="pick"><legend>Quel personnage part en mission ?</legend>'+mine.map((a,i)=>'<label class="pickrow" for="pk-'+i+'"><input type="radio" name="perso" id="pk-'+i+'" value="'+esc(a.id)+'"'+(i===0?' checked':'')+'>'+(a.image?'<img class="av" src="'+esc(a.image)+'" alt="">':'<span class="av ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+'<span><strong>'+esc(a.nom)+'</strong> <em>'+esc([a.espece,a.classe].filter(Boolean).join(" · "))+'</em></span></label>').join("")+'</fieldset>'+
+        '<p>Ta demande apparaîtra « en attente » pour tout le monde. Le DM la confirme quand le groupe et la date sont fixés.</p>'+
+        '<div class="actions"><button class="btn" type="submit"'+(ui.busy?" disabled":"")+'>'+(ui.busy?"Envoi…":"M\'inscrire")+'</button><button class="btn ghost" type="button" data-a="sign-cancel">Annuler</button></div>'
+       :'<p>Tu n\'as pas encore de personnage. Crée ta fiche, puis reviens t\'inscrire.</p><div class="actions"><a class="btn" href="#personnages" data-a="sign-tosheet">Créer ma fiche</a><button class="btn ghost" type="button" data-a="sign-cancel">Annuler</button></div>')+
+      '</form></div>';}
+  if(ui.promptSheet&&user&&!user.isAnonymous&&!isAdmin&&loaded.a&&!myChars().length&&!ui.signup){
+    h+='<div class="modal-bg"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="ps-t"><h2 id="ps-t">Bienvenue à la Guilde, aventurier !</h2><p>Avant de partir en mission, crée la fiche de ton personnage : son nom, son portrait, sa classe et son espèce. C\'est elle que tu choisiras pour t\'inscrire aux quêtes.</p>'+
+      '<div class="actions"><a class="btn" href="#personnages" data-a="prompt-go">Créer ma fiche</a><button class="btn ghost" type="button" data-a="prompt-later">Plus tard</button></div></div></div>';}
   if(ui.complete&&ui.dm){const cq=questById(ui.complete);
     if(cq){const bo=office(cq.bureau),def=questPts(cq);
       const parts=signupsFor(cq.id).filter(x=>x.statut==="confirmee");
       const advOpts=sel=>'<option value="">— Aucun personnage du registre —</option>'+aventuriers.map(a=>'<option value="'+esc(a.id)+'"'+(a.id===sel?' selected':'')+'>'+esc(a.nom)+(a.joueur?' ('+esc(a.joueur)+')':'')+'</option>').join("");
-      const match=nom=>{const m=aventuriers.find(a=>String(a.nom).trim().toLowerCase()===String(nom).trim().toLowerCase());return m?m.id:"";};
+      const match=(nom,aid)=>{if(aid&&aventuriers.some(a=>a.id===aid))return aid;const m=aventuriers.find(a=>String(a.nom).trim().toLowerCase()===String(nom).trim().toLowerCase());return m?m.id:"";};
       h+='<div class="modal-bg" data-a="complete-cancel"><form class="modal wide" id="completeform" role="dialog" aria-modal="true" aria-labelledby="cp-t"><h2 id="cp-t">Terminer « '+esc(cq.titre)+' »</h2>'+
         '<p>Les points de renommée sont ajoutés à '+esc(bo?bo.nom:"la région")+'. Rang '+esc((RANKS[cq.rang]||RANKS.inconnu).label)+' : '+def+' pt'+(def>1?'s':'')+' proposé'+(def>1?'s':'')+' par participant.</p>'+
         '<div class="row2"><label for="c-date">Date de la session<input id="c-date" maxlength="80" placeholder="ex. 22 novembre" value="'+esc(cq.date||"")+'"></label>'+
         '<label for="c-res">Résultat<select id="c-res">'+Object.keys(RESULTS).map(k=>'<option value="'+k+'">'+RESULTS[k]+'</option>').join("")+'</select></label></div>'+
         '<label for="c-resume">Rapport de mission (visible dans les Chroniques)<textarea id="c-resume" maxlength="4000" rows="4"></textarea></label>'+
-        '<fieldset class="parts"><legend>Participants confirmés</legend>'+(parts.length?parts.map((x,i)=>'<div class="prow"><span class="pn">'+esc(x.nom)+'</span><label class="sr" for="c-adv'+i+'">Personnage de '+esc(x.nom)+'</label><select id="c-adv'+i+'" data-nom="'+esc(x.nom)+'">'+advOpts(match(x.nom))+'</select><label class="sr" for="c-pts'+i+'">Points pour '+esc(x.nom)+'</label><input id="c-pts'+i+'" type="number" step="1" value="'+def+'"><span class="tip">pts</span></div>').join(""):'<p class="tip">Aucune inscription confirmée. La quête sera terminée sans points.</p>')+
+        '<fieldset class="parts"><legend>Participants confirmés</legend>'+(parts.length?parts.map((x,i)=>'<div class="prow"><span class="pn">'+esc(x.nom)+'</span><label class="sr" for="c-adv'+i+'">Personnage de '+esc(x.nom)+'</label><select id="c-adv'+i+'" data-nom="'+esc(x.nom)+'">'+advOpts(match(x.nom,x.aventurier))+'</select><label class="sr" for="c-pts'+i+'">Points pour '+esc(x.nom)+'</label><input id="c-pts'+i+'" type="number" step="1" value="'+def+'"><span class="tip">pts</span></div>').join(""):'<p class="tip">Aucune inscription confirmée. La quête sera terminée sans points.</p>')+
         '<p class="tip">Un participant sans personnage du registre ne reçoit pas de points. Ajoute-le d\'abord au registre de renommée.</p></fieldset>'+
         '<div class="actions"><button class="btn" type="submit">Terminer et attribuer les points</button><button class="btn ghost" type="button" data-a="complete-cancel">Annuler</button></div></form></div>';}}
   const focusId=document.activeElement&&document.activeElement.id;
   const app=document.getElementById("app");
-  const formKey=ui.editing+"|"+ui.signup+"|"+ui.addName+"|"+ui.advForm+"|"+ui.scaleEdit+"|"+ui.wikiEdit+"|"+ui.complete+"|"+ui.adjust;
-  const keep={}; if(render.lastForm===formKey)["f-titre","f-bureau","f-type","f-rang","f-statut","f-lieu","f-recompense","f-niveau","f-jmin","f-jmax","f-date","f-desc","f-name","f-addname","f-advnom","f-advjoueur","w-titre","w-ordre","w-contenu","f-pts","c-date","c-res","c-resume"].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.type==="checkbox"?el.checked:el.value;});
+  const formKey=ui.editing+"|"+ui.signup+"|"+ui.addName+"|"+ui.advForm+"|"+ui.scaleEdit+"|"+ui.wikiEdit+"|"+ui.complete+"|"+ui.adjust+"|"+ui.sheetEdit;
+  const keep={}; if(render.lastForm===formKey)["f-titre","f-bureau","f-type","f-rang","f-statut","f-lieu","f-recompense","f-niveau","f-jmin","f-jmax","f-date","f-desc","f-name","f-addname","f-advnom","f-advjoueur","w-titre","w-ordre","w-contenu","f-pts","c-date","c-res","c-resume","p-nom","p-espece","p-classe","p-desc","p-bg","p-don"].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.type==="checkbox"?el.checked:el.value;});
   const sup=document.getElementById("f-super");if(sup&&render.lastForm===formKey)keep["f-super"]=sup.checked;
   render.lastForm=formKey;
   app.innerHTML=h+'</div>';
@@ -719,7 +835,7 @@ function render(){
 function route(){
   const id=(location.hash||"").slice(1);
   const next=id&&id!=="carte"?id:null;
-  if(next!==ui.office){ui.office=next;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter="ouverte";ui.rank="all";render();try{window.scrollTo(0,0);}catch(e){}}
+  if(next!==ui.office){ui.office=next;if(!(next==="personnages"&&ui.sheetEdit==="new"))ui.sheetEdit=null;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter="ouverte";ui.rank="all";render();try{window.scrollTo(0,0);}catch(e){}}
 }
 window.addEventListener("hashchange",route);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&(ui.signup||ui.complete)){ui.signup=null;ui.complete=null;render();}});
@@ -786,9 +902,19 @@ document.addEventListener("click",async e=>{
     else if(isAdmin){ui.dm=true;}
     else{dmLogin();return;}
   }
-  else if(a==="logout"){ui.dm=false;ui.authMsg="";await signOut(auth);}
+  else if(a==="logout"){ui.dm=false;ui.authMsg="";ui.sheetEdit=null;await signOut(auth);}
   else if(a==="auth-ok"){ui.authMsg="";}
-  else if(a==="join"){ui.signup=id;ui.signupMsg=null;render();const f=document.getElementById("f-name");if(f){f.focus();f.select();}return;}
+  else if(a==="join"){
+    ui.signupMsg=null;
+    if(!user||user.isAnonymous){ui.needLogin=id;login("join");return;}
+    ui.signup=id;render();const f=document.querySelector('#signform input[name=perso]');if(f)f.focus();return;}
+  else if(a==="login"){login("player");return;}
+  else if(a==="sign-tosheet"){ui.signup=null;ui.sheetEdit="new";ui.sheetImg=undefined;}
+  else if(a==="prompt-go"||a==="prompt-later"){ui.promptSheet=false;try{sessionStorage.setItem("rdv-prompt-"+user.uid,"1");}catch(e){}if(a==="prompt-go"){ui.sheetEdit="new";ui.sheetImg=undefined;}}
+  else if(a==="sheet-new"){ui.sheetEdit="new";ui.sheetImg=undefined;}
+  else if(a==="sheet-edit"){ui.sheetEdit=id;ui.sheetImg=undefined;}
+  else if(a==="sheet-cancel"){ui.sheetEdit=null;ui.sheetImg=undefined;}
+  else if(a==="img-clear"){ui.sheetImg="";}
   else if(a==="sign-cancel"){if(e.target!==b)return;ui.signup=null;}
   else if(a==="s-mine"){await run("Retrait",()=>deleteDoc(doc(db,"inscriptions",id)));return;}
   else if(a==="s-ok"){const s=inscriptions.find(x=>x.id===id);if(s)await run("Confirmation",()=>setDoc(doc(db,"inscriptions",id),{quete:s.quete,uid:s.uid,nom:s.nom,statut:"confirmee",creeLe:s.creeLe||serverTimestamp(),majLe:serverTimestamp()}));return;}
@@ -832,6 +958,8 @@ document.addEventListener("change",e=>{
     const aid=e.target.getAttribute("data-adv"),bid=e.target.getAttribute("data-b"),n=parseInt(e.target.value,10);
     run("Renommée",()=>updateDoc(doc(db,"aventuriers",aid),new FieldPath("renommee",bid),n,"majLe",serverTimestamp()));return;
   }
+  if(e.target.id==="p-img"){const f=e.target.files&&e.target.files[0];if(!f)return;
+    resizeImage(f).then(url=>{if(url.length>380000){save={state:"error",msg:"Image trop lourde, essaie une image plus simple."};}else ui.sheetImg=url;render();}).catch(err=>{save={state:"error",msg:err.message};render();});return;}
   if(e.target.id==="f-rank"){ui.rank=e.target.value;render();}
   else if(e.target.id==="f-import"){
     const file=e.target.files&&e.target.files[0];if(!file)return;
@@ -842,19 +970,32 @@ document.addEventListener("submit",async e=>{
   e.preventDefault();
   const v=id=>{const el=document.getElementById(id);return el?el.value.trim():"";};
   if(e.target.id==="signform"){
-    const name=v("f-name").slice(0,40),qid=ui.signup;if(!name||!qid)return;
-    store("rdv-name",name);ui.busy=true;render();
+    const pick=document.querySelector('#signform input[name=perso]:checked'),qid=ui.signup;
+    const ch=pick&&aventuriers.find(a=>a.id===pick.value);if(!ch||!qid)return;
+    ui.busy=true;render();
     try{
-      if(!auth.currentUser)await signInAnonymously(auth);
       const uid=auth.currentUser.uid;
       if(signupsFor(qid).some(s=>s.uid===uid))throw {code:"already"};
-      await setDoc(doc(db,"inscriptions",qid+"__"+uid),{quete:qid,uid,nom:name,statut:"attente",creeLe:serverTimestamp()});
+      await setDoc(doc(db,"inscriptions",qid+"__"+uid),{quete:qid,uid,aventurier:ch.id,nom:String(ch.nom).slice(0,40),statut:"attente",creeLe:serverTimestamp()});
       ui.signupMsg={id:qid,text:"Demande envoyée ! Elle est visible par tous, en attente de la confirmation du DM."};
     }catch(err){
       console.error(err);
       ui.signupMsg={id:qid,err:true,text:err.code==="already"?"Tu es déjà inscrit à cette quête.":(String(err.code||"").indexOf("permission-denied")>=0?"Inscription refusée : la quête n'est peut-être plus ouverte, ou tu as déjà une demande.":errText(err))};
     }
     ui.busy=false;ui.signup=null;render();return;
+  }
+  if(e.target.id==="sheetform"){
+    const isNew=ui.sheetEdit==="new",cur=isNew?null:aventuriers.find(a=>a.id===ui.sheetEdit);
+    const nom=v("p-nom").slice(0,60);if(!nom)return;
+    const data={nom,espece:v("p-espece").slice(0,60),classe:v("p-classe").slice(0,60),description:((document.getElementById("p-desc")||{}).value||"").slice(0,2000),background:((document.getElementById("p-bg")||{}).value||"").slice(0,4000),majLe:serverTimestamp()};
+    const img=ui.sheetImg!==undefined?ui.sheetImg:(cur&&cur.image)||"";data.image=img;
+    let id=cur?cur.id:(nom.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"perso").slice(0,40)+"-"+Date.now().toString(36).slice(-4);
+    ui.sheetEdit=null;ui.sheetImg=undefined;
+    const ok=await run("Fiche",()=>isNew?setDoc(doc(db,"aventuriers",id),Object.assign(data,{proprietaire:user.uid,joueur:String(user.displayName||"").slice(0,60),creeLe:serverTimestamp()})):setDoc(doc(db,"aventuriers",id),data,{merge:true}));
+    if(ok)location.hash="#perso-"+id;return;
+  }
+  if(e.target.id==="donform"){
+    const id=e.target.getAttribute("data-id");await run("Don",()=>setDoc(doc(db,"aventuriers",id),{don:v("p-don").slice(0,500),majLe:serverTimestamp()},{merge:true}));return;
   }
   if(e.target.id==="advform"){
     const nom=v("f-advnom").slice(0,60),joueur=v("f-advjoueur").slice(0,60);if(!nom)return;
