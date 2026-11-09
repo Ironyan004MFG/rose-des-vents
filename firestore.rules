@@ -19,6 +19,9 @@ service cloud.firestore {
     function optStr(d, k, maxLen) {
       return !(k in d) || str(d[k], 0, maxLen);
     }
+    function realAccount() {
+      return signedIn() && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
     function optCount(d, k) {
       return !(k in d) || d[k] == null || (d[k] is int && d[k] >= 0 && d[k] <= 99);
     }
@@ -66,7 +69,7 @@ service cloud.firestore {
     // ID d'une demande de joueur : <idQuête>__<uid>  => une seule demande par joueur et par quête.
     // ID d'un participant ajouté par le DM : <idQuête>__dm-<aléatoire>
     function validSignup(d) {
-      return d.keys().hasOnly(['quete', 'uid', 'nom', 'statut', 'creeLe', 'majLe'])
+      return d.keys().hasOnly(['quete', 'uid', 'aventurier', 'nom', 'statut', 'creeLe', 'majLe'])
         && d.keys().hasAll(['quete', 'uid', 'nom', 'statut'])
         && str(d.quete, 1, 60) && str(d.uid, 1, 128) && str(d.nom, 1, 40)
         && d.statut in ['attente', 'confirmee', 'refusee'];
@@ -74,8 +77,10 @@ service cloud.firestore {
     match /inscriptions/{id} {
       allow read: if true;
 
-      // Joueur : sa propre demande, en attente, sur une quête ouverte, horodatée par le serveur.
-      allow create: if signedIn()
+      // Joueur connecté (compte Google) : sa propre demande, avec un de SES personnages, en attente, sur une quête ouverte.
+      allow create: if realAccount()
+        && 'aventurier' in request.resource.data
+        && get(/databases/$(database)/documents/aventuriers/$(request.resource.data.aventurier)).data.proprietaire == request.auth.uid
         && validSignup(request.resource.data)
         && id == request.resource.data.quete + '__' + request.auth.uid
         && request.resource.data.uid == request.auth.uid
@@ -107,17 +112,46 @@ service cloud.firestore {
     }
 
     // ---------- Phase 2 : renommée (lecture publique, écriture admin) ----------
+    function validAdv(d) {
+      return d.keys().hasOnly(['nom', 'joueur', 'niveaux', 'proprietaire', 'espece', 'classe', 'description',
+                               'background', 'image', 'don', 'creeLe', 'majLe'])
+        && str(d.nom, 1, 60)
+        && optStr(d, 'joueur', 60) && optStr(d, 'espece', 60) && optStr(d, 'classe', 60)
+        && optStr(d, 'description', 2000) && optStr(d, 'background', 4000) && optStr(d, 'don', 500)
+        && optStr(d, 'image', 400000)
+        && (!('niveaux' in d) || d.niveaux is map);
+    }
     match /aventuriers/{id} {
       allow read: if true;
-      allow write: if isAdmin()
-        && request.resource.data.keys().hasOnly(['nom', 'joueur', 'points', 'renommee', 'creeLe', 'majLe'])
-        && str(request.resource.data.nom, 1, 60)
-        && (!('points' in request.resource.data) || request.resource.data.points is map);
+      // Fiche : DM pour tout ; un joueur crée et modifie seulement ses propres fiches (jamais les rangs ni le Don).
+      allow create, update: if isAdmin() && validAdv(request.resource.data);
+      allow create: if realAccount() && validAdv(request.resource.data)
+        && request.resource.data.proprietaire == request.auth.uid
+        && !('niveaux' in request.resource.data) && !('don' in request.resource.data);
+      allow update: if realAccount() && validAdv(request.resource.data)
+        && resource.data.proprietaire == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['nom', 'espece', 'classe', 'description', 'background', 'image', 'majLe']);
       allow delete: if isAdmin();
     }
-    // Journal de renommée : chaque gain ou perte de points
-    match /journal/{id} {
+    // Points de renommée : réservés au DM (les joueurs ne voient que les rangs)
+    match /points/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /prive/{id} {
+      allow read, write: if isAdmin();
+    }
+    // Historique public des changements de rang
+    match /rangs/{id} {
       allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['aventurier', 'nom', 'bureau', 'ancien', 'nouveau', 'date'])
+        && request.resource.data.ancien is int && request.resource.data.nouveau is int;
+      allow delete: if isAdmin();
+    }
+    // Journal des points : réservé au DM
+    match /journal/{id} {
+      allow read: if isAdmin();
       allow create, update: if isAdmin()
         && request.resource.data.keys().hasOnly(['aventurier', 'nom', 'bureau', 'points', 'raison', 'quete', 'date'])
         && request.resource.data.points is int
