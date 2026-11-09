@@ -705,6 +705,8 @@ onAuthStateChanged(auth, async u=>{
 });
 getRedirectResult(auth).catch(e=>{ui.authMsg=errText(e);render();});
 
+// Aventuriers qui comptent dans la renommée (les PNJ comme Pax sont hors classement)
+function ranked(){return aventuriers.filter(a=>!a.pnj);}
 function myChars(){return user&&!user.isAnonymous?aventuriers.filter(a=>a.proprietaire===user.uid):[];}
 async function login(intent){
   ui.loginIntent=intent;
@@ -925,7 +927,7 @@ function addPoints(bt,a,bid,delta){
   }
 }
 function reputationSection(bid,nom){
-  const list=aventuriers.slice().sort((x,y)=>(renown(y,bid)-renown(x,bid))||(ui.dm?pts(y,bid)-pts(x,bid):0)||String(x.nom).localeCompare(String(y.nom),"fr"));
+  const list=ranked().sort((x,y)=>(renown(y,bid)-renown(x,bid))||(ui.dm?pts(y,bid)-pts(x,bid):0)||String(x.nom).localeCompare(String(y.nom),"fr"));
   let h='<section class="rep" aria-label="Réputation"><h2>Réputation à '+esc(nom)+'</h2>';
   if(!list.length)return h+'<p class="hint">Aucun aventurier n\'est encore inscrit au registre. <a href="#renommee">Voir le registre de renommée</a></p></section>';
   h+='<ul class="replist">'+list.map(a=>{const n=renown(a,bid),p=pts(a,bid);return '<li><span class="who">'+esc(a.nom)+(a.joueur?' <em>('+esc(a.joueur)+')</em>':'')+(ui.dm?'<span class="pts">'+ptsLabel(p)+'</span>':'')+'</span>'+chip(n)+'</li>';}).join("")+'</ul>';
@@ -961,7 +963,7 @@ function renownView(){
       :'<div class="actions"><button class="btn board" data-a="adj-open">Ajuster des points à la main</button></div>';
   }
   h+='<div class="tablebox"><table class="roster"><thead><tr><th scope="col">Aventurier</th>'+bureaux.map(b=>'<th scope="col">'+esc(b.nom)+'</th>').join("")+(ui.dm?'<th scope="col"><span class="sr">Actions</span></th>':'')+'</tr></thead><tbody>'+
-    aventuriers.map(a=>'<tr><th scope="row"><a class="plink row" href="#perso-'+esc(a.id)+'">'+(a.image?'<img class="av" src="'+esc(a.image)+'" alt="">':'<span class="av ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+'<span>'+esc(a.nom)+(a.joueur?'<span class="pl">'+esc(a.joueur)+'</span>':'')+'</span></a></th>'+
+    ranked().map(a=>'<tr><th scope="row"><a class="plink row" href="#perso-'+esc(a.id)+'">'+(a.image?'<img class="av" src="'+esc(a.image)+'" alt="">':'<span class="av ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+'<span>'+esc(a.nom)+(a.joueur?'<span class="pl">'+esc(a.joueur)+'</span>':'')+'</span></a></th>'+
       bureaux.map(b=>{const n=renown(a,b.id),p=pts(a,b.id),nx=nextInfo(p);
         if(!ui.dm)return '<td>'+(n?chip(n):'<span class="muted">Inconnu</span>')+'</td>';
         return '<td>'+(n||p?chip(n):'<span class="muted">Inconnu</span>')+'<span class="ptsline">'+ptsLabel(p)+(nx&&p>=0?' · encore '+nx.need+' pour '+esc(nx.titre):'')+'</span></td>';}).join("")+
@@ -985,6 +987,7 @@ function sheetForm(a){
     '<label for="p-espece">Espèce<input id="p-espece" maxlength="60" placeholder="ex. Elfe, Goliath, Giff…" value="'+esc(a.espece)+'"></label>'+
     '<label for="p-classe">Classe<input id="p-classe" maxlength="60" placeholder="ex. Guerrier, Magicien…" value="'+esc(a.classe)+'"></label>'+
     '<label class="wide" for="p-desc">Description<textarea id="p-desc" maxlength="2000" placeholder="Apparence, personnalité…">'+esc(a.description)+'</textarea></label>'+
+    (ui.dm&&isAdmin?'<label class="pickrow wide" for="p-pnj"><input type="checkbox" id="p-pnj"'+(a.pnj?' checked':'')+'><span>PNJ de la Guilde : hors classement de renommée et hors galerie (réservé au DM)</span></label>':'')+
     '<label class="wide" for="p-bg">Background (facultatif)<textarea id="p-bg" maxlength="4000" placeholder="D\'où vient ton personnage ? Outerworlder ou natif de la Sword Coast ?">'+esc(a.background)+'</textarea></label>'+
     '<div class="actions wide"><button class="btn" type="submit">Enregistrer la fiche</button><button class="btn ghost" type="button" data-a="sheet-cancel">Annuler</button></div></form>';
 }
@@ -1398,7 +1401,7 @@ function todoItems(){
   quetes.filter(q=>q.statut==="encours"&&q.rapportBrouillon&&q.rapportBrouillon.resume).forEach(q=>it.push({k:"report",t:'<strong>'+esc(q.titre)+'</strong> : rapport reçu de '+esc(q.rapportBrouillon.auteur||"un joueur"),act:'<a class="mini" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Terminer</a>'}));
   quetes.filter(q=>q.statut==="encours"&&!(q.rapportBrouillon&&q.rapportBrouillon.resume)).forEach(q=>it.push({k:"run",t:'<strong>'+esc(q.titre)+'</strong> : en cours'+(q.date?' · '+esc(q.date):''),act:'<a class="mini" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir</a>'}));
   compPending().forEach(e=>{const p=e.proposition,n=Object.keys(p.approbations||{}).length;it.push({k:"comp",t:'<strong>'+esc(p.titre)+'</strong> : '+(e.publiee===false?'nouvelle entrée':'modification')+' de '+esc((p.par&&p.par.nom)||"?")+' ('+n+'/2)',act:'<a class="mini" href="#compendium-'+esc(e.id)+'">Examiner</a>'});});
-  aventuriers.filter(a=>{const d=dossiers[a.id]||{};return a.proprietaire&&d.outerworlder!=="non"&&!d.donNom;}).forEach(a=>{const d=dossiers[a.id]||{};it.push({k:"don",t:'<strong>'+esc(a.nom)+'</strong> : '+(d.outerworlder==="oui"?'Outerworlder sans Don':'Outerworlder ? Don à attribuer ou personnage natif à indiquer'),act:'<button class="mini" data-a="man-open" data-sec="perso" data-id="'+esc(a.id)+'">Dossier</button>'});});
+  aventuriers.filter(a=>{const d=dossiers[a.id]||{};return !a.pnj&&a.proprietaire&&d.outerworlder!=="non"&&!d.donNom;}).forEach(a=>{const d=dossiers[a.id]||{};it.push({k:"don",t:'<strong>'+esc(a.nom)+'</strong> : '+(d.outerworlder==="oui"?'Outerworlder sans Don':'Outerworlder ? Don à attribuer ou personnage natif à indiquer'),act:'<button class="mini" data-a="man-open" data-sec="perso" data-id="'+esc(a.id)+'">Dossier</button>'});});
   return it;
 }
 const TODO_GROUPS=[["evol","Le monde doit réagir"],["report","Rapports de mission reçus"],["group","Groupes à former"],["run","Missions en cours"],["comp","Compendium en revue"],["don","Dons à attribuer"]];
@@ -1454,12 +1457,12 @@ function dmNotes(){
 }
 function dmStats(){
   const c={ouverte:0,encours:0,terminee:0,archivee:0};quetes.forEach(q=>{c[q.statut]=(c[q.statut]||0)+1;});
-  const players=new Set(aventuriers.map(a=>a.proprietaire).filter(Boolean)).size;
+  const players=new Set(ranked().map(a=>a.proprietaire).filter(Boolean)).size;
   const tile=(n,l)=>'<div class="tile"><span class="tn">'+n+'</span><span class="tl">'+l+'</span></div>';
-  let h='<div class="tiles">'+tile(c.ouverte,"Quêtes ouvertes")+tile(c.encours,"En cours")+tile(c.terminee+c.archivee,"Accomplies")+tile(aventuriers.length,"Personnages")+tile(players,"Joueurs inscrits")+tile(compEntries().length,"Entrées du compendium")+'</div>';
+  let h='<div class="tiles">'+tile(c.ouverte,"Quêtes ouvertes")+tile(c.encours,"En cours")+tile(c.terminee+c.archivee,"Accomplies")+tile(ranked().length,"Personnages")+tile(players,"Joueurs inscrits")+tile(compEntries().length,"Entrées du compendium")+'</div>';
   const X=seuilMonde();
   h+='<div class="tablebox light"><table class="dmtable"><thead><tr><th scope="col">Comptoir</th><th scope="col">Ouvertes</th><th scope="col">En cours</th><th scope="col">Accomplies</th><th scope="col">Évolution</th><th scope="col">Le plus renommé</th></tr></thead><tbody>'+
-    bureaux.map(b=>{const qs=quetes.filter(q=>q.bureau===b.id);let best=null,bp=-1e9;aventuriers.forEach(a=>{const p=pts(a,b.id);if(p>bp&&p>0){bp=p;best=a;}});
+    bureaux.map(b=>{const qs=quetes.filter(q=>q.bureau===b.id);let best=null,bp=-1e9;ranked().forEach(a=>{const p=pts(a,b.id);if(p>bp&&p>0){bp=p;best=a;}});
       return '<tr><th scope="row">'+esc(b.nom)+'</th><td>'+qs.filter(q=>q.statut==="ouverte").length+'</td><td>'+qs.filter(q=>q.statut==="encours").length+'</td><td>'+doneIn(b.id).length+'</td><td>'+pendingIn(b.id).length+' / '+X+'</td><td>'+(best?'<a href="#perso-'+esc(best.id)+'">'+esc(best.nom)+'</a> '+chip(levelOf(bp))+' <span class="muted">'+bp+' pts</span>':'<span class="muted">—</span>')+'</td></tr>';}).join("")+'</tbody></table></div>';
   return h;
 }
@@ -1476,7 +1479,7 @@ function dmSpaceView(){
 function galleryView(){
   if(!loaded.a)return '<p class="hint">Chargement…</p>';
   if(!aventuriers.length)return '<p class="empty">Aucun aventurier n\'est encore inscrit à la Guilde. Connecte-toi et crée ta fiche pour être le premier !</p>';
-  return '<div class="gallery">'+aventuriers.map(a=>{
+  return '<div class="gallery">'+ranked().map(a=>{
     let best=null;bureaux.forEach(b=>{const n=renown(a,b.id);if(n>0&&(!best||n>best.n))best={n,b};});
     const qn=questsOf(a).length;
     return '<a class="gcard" href="#perso-'+esc(a.id)+'">'+(a.image?'<img class="gimg" src="'+esc(a.image)+'" alt="">':'<span class="gimg ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+
@@ -1973,6 +1976,7 @@ document.addEventListener("submit",async e=>{
     const nom=v("p-nom").slice(0,60);if(!nom)return;
     const data={nom,espece:v("p-espece").slice(0,60),classe:v("p-classe").slice(0,60),description:((document.getElementById("p-desc")||{}).value||"").slice(0,2000),background:((document.getElementById("p-bg")||{}).value||"").slice(0,4000),majLe:serverTimestamp()};
     const img=ui.sheetImg!==undefined?ui.sheetImg:(cur&&cur.image)||"";data.image=img;
+    const pc=document.getElementById("p-pnj");if(pc&&isAdmin)data.pnj=pc.checked;
     let id=cur?cur.id:(nom.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"perso").slice(0,40)+"-"+Date.now().toString(36).slice(-4);
     ui.sheetEdit=null;ui.sheetImg=undefined;
     const ok=await run("Fiche",()=>isNew?setDoc(doc(db,"aventuriers",id),Object.assign(data,{proprietaire:user.uid,joueur:String(user.displayName||"").slice(0,60),creeLe:serverTimestamp()})):setDoc(doc(db,"aventuriers",id),data,{merge:true}));
