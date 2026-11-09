@@ -45,7 +45,7 @@ service cloud.firestore {
     function validQuest(d) {
       return d.keys().hasOnly(['bureau', 'titre', 'type', 'rang', 'statut', 'lieu', 'recompense', 'niveau',
                                'joueurs', 'joueursMin', 'joueursMax', 'supercharged', 'date', 'description',
-                               'pointsRenommee', 'rapport', 'redacteur', 'rapportBrouillon', 'creeLe', 'majLe'])
+                               'pointsRenommee', 'rapport', 'redacteur', 'rapportBrouillon', 'maj', 'creeLe', 'majLe'])
         && d.keys().hasAll(['bureau', 'titre', 'rang', 'statut'])
         && exists(/databases/$(database)/documents/bureaux/$(d.bureau))
         && str(d.titre, 1, 120)
@@ -53,7 +53,7 @@ service cloud.firestore {
         && d.statut in ['ouverte', 'encours', 'terminee', 'archivee']
         && optStr(d, 'type', 40) && optStr(d, 'lieu', 200) && optStr(d, 'recompense', 200)
         && optStr(d, 'niveau', 40) && optStr(d, 'joueurs', 40) && optStr(d, 'date', 80)
-        && optStr(d, 'description', 4000)
+        && optStr(d, 'description', 4000) && optStr(d, 'maj', 1000)
         && optCount(d, 'joueursMin') && optCount(d, 'joueursMax')
         && (!('supercharged' in d) || d.supercharged is bool)
         && (!('pointsRenommee' in d) || d.pointsRenommee == null || (d.pointsRenommee is int && d.pointsRenommee >= -1000 && d.pointsRenommee <= 1000))
@@ -230,6 +230,24 @@ service cloud.firestore {
         && request.resource.data.dispo.diff(resource.data.dispo).affectedKeys().hasOnly([request.auth.uid])
         && myDispoOk(request.resource.data);
       allow delete: if isAdmin() || (planner(resource.data.quete) && resource.data.par.uid == request.auth.uid);
+    }
+
+    // ---------- Le Crieur de la Sword Coast (nouvelles publiques, écrites par le DM) ----------
+    match /nouvelles/{id} {
+      allow read: if true;
+      allow write: if isAdmin()
+        && request.resource.data.keys().hasOnly(['titre', 'contenu', 'region', 'aventuriers', 'quete', 'date'])
+        && str(request.resource.data.titre, 1, 120)
+        && optStr(request.resource.data, 'contenu', 5000)
+        && (!('aventuriers' in request.resource.data) || request.resource.data.aventuriers is list);
+      allow delete: if isAdmin();
+    }
+    // ---------- Espace DM : notes secrètes et journal des évolutions (DM seulement) ----------
+    match /notesdm/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /evolutions/{id} {
+      allow read, write: if isAdmin();
     }
 
     // ---------- Wiki des règles maison (lecture publique, écriture admin) ----------
