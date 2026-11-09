@@ -202,6 +202,36 @@ service cloud.firestore {
       }
     }
 
+    // ---------- Planification (facultative) : dates proposées et disponibilités ----------
+    function validPlan(d) {
+      return d.keys().hasOnly(['quete', 'date', 'heure', 'par', 'dispo', 'dm', 'creeLe'])
+        && str(d.quete, 1, 60) && d.date is string && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && optStr(d, 'heure', 30) && d.dispo is map && d.par is map
+        && (!('dm' in d) || d.dm in ['oui', 'peut', 'non']);
+    }
+    // Inscrit (non refusé) à une quête encore ouverte
+    function planner(q) {
+      return realAccount()
+        && exists(/databases/$(database)/documents/inscriptions/$(q + '__' + request.auth.uid))
+        && get(/databases/$(database)/documents/inscriptions/$(q + '__' + request.auth.uid)).data.statut != 'refusee'
+        && get(/databases/$(database)/documents/quetes/$(q)).data.statut == 'ouverte';
+    }
+    function myDispoOk(d) {
+      return !(request.auth.uid in d.dispo) || d.dispo[request.auth.uid] in ['oui', 'peut', 'non'];
+    }
+    match /planif/{id} {
+      allow read: if true;
+      allow create, update: if isAdmin() && validPlan(request.resource.data);
+      allow create: if validPlan(request.resource.data) && planner(request.resource.data.quete)
+        && byMe(request.resource.data.par) && !('dm' in request.resource.data)
+        && request.resource.data.dispo.keys().hasOnly([request.auth.uid]) && myDispoOk(request.resource.data);
+      allow update: if validPlan(request.resource.data) && planner(resource.data.quete)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['dispo'])
+        && request.resource.data.dispo.diff(resource.data.dispo).affectedKeys().hasOnly([request.auth.uid])
+        && myDispoOk(request.resource.data);
+      allow delete: if isAdmin() || (planner(resource.data.quete) && resource.data.par.uid == request.auth.uid);
+    }
+
     // ---------- Wiki des règles maison (lecture publique, écriture admin) ----------
     match /wiki/{id} {
       allow read: if true;
