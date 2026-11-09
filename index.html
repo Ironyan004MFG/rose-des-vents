@@ -257,6 +257,22 @@ a.mini{text-decoration:none;display:inline-block}
 .nhead:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .nhead strong{font-family:var(--display);font-size:17px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.tablebox.light{overflow-x:auto;max-width:100%}
+.dmspace table a,.dmspace .todo a:not(.mini){color:#7a1f14}
+@media (max-width:640px){
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .tile{padding:10px}.tn{font-size:24px}.tl{font-size:11px}
+  table.dmtable,table.dmtable tbody,table.dmtable tr,table.dmtable th,table.dmtable td{display:block;width:auto}
+  table.dmtable thead{display:none}
+  .tablebox.light table.dmtable,.tablebox table.dmtable{min-width:0;width:100%}
+  .tablebox.light:has(table.dmtable){border:none;background:transparent;overflow:visible}
+  table.dmtable tr{border:1px solid #d9c9a0;border-radius:8px;background:#f7f1e1;padding:8px 12px;margin:0 0 10px}
+  table.dmtable tbody th[scope=row]{font-family:var(--display);font-size:17px;padding:2px 0 6px;border:none;text-align:left}
+  table.dmtable td{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:4px 0;border:none;border-top:1px dashed #e0d2ad;text-align:right;color:var(--ink)}
+  table.dmtable td::before{content:attr(data-label);font-family:var(--display);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);text-align:left}
+  table.dmtable td:not([data-label])::before{content:none}
+  table.dmtable td:empty{display:none}
+}
 .tile{background:#2a2219;color:var(--parch);border-radius:6px;padding:12px;display:flex;flex-direction:column}
 .tn{font-family:var(--display);font-size:30px;color:var(--gold)}
 .tl{font-size:13px;letter-spacing:.06em;text-transform:uppercase}
@@ -1645,6 +1661,9 @@ function render(){
   const sup=document.getElementById("f-super");if(sup&&render.lastForm===formKey)keep["f-super"]=sup.checked;
   render.lastForm=formKey;
   app.innerHTML=h+'</div>';
+  // Tableaux du DM : étiquette de colonne sur chaque cellule (affichage en cartes sur mobile)
+  app.querySelectorAll("table.dmtable").forEach(t=>{const hs=Array.from(t.querySelectorAll("thead th")).map(th=>th.textContent.trim());
+    t.querySelectorAll("tbody tr").forEach(tr=>Array.from(tr.children).forEach((c,i)=>{if(hs[i])c.setAttribute("data-label",hs[i]);}));});
   Object.keys(keep).forEach(id=>{const el=document.getElementById(id);if(el){if(el.type==="checkbox")el.checked=keep[id];else el.value=keep[id];}});
   if(focusId){const f=document.getElementById(focusId);if(f&&f.focus)f.focus();}
 }
