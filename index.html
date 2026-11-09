@@ -151,6 +151,21 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 .newsitem h3{font-family:var(--display);margin:4px 0}
 .sheet .newsitem{background:#f7f1e1;border:1px solid #d9c9a0}
 .majline{background:#fff1cc;border-left:4px solid var(--gold);padding:6px 10px;margin:0 0 10px;font-size:15px}
+/* aperçus d'images : on garde toujours le haut (la tête) visible */
+img{object-position:50% 0}
+/* atelier des portraits */
+.linked ol.steps{display:block;margin:6px 0 0;padding-left:4px;list-style:none}
+.linked ol.steps li{display:list-item;margin:4px 0;padding:0;border:none;border-radius:0;background:none;font-family:var(--body);font-size:15px;letter-spacing:normal;text-transform:none;color:var(--ink)}
+.artpre{white-space:pre-wrap;background:#fffaf0;border:1px solid #d9c9a0;border-radius:6px;padding:10px;font-size:13px;max-height:260px;overflow:auto}
+.artgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:12px}
+.artcard{background:#f7f1e1;border:1px solid #d9c9a0;border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+.artzone{aspect-ratio:4/5;display:flex;align-items:center;justify-content:center;text-align:center;border-bottom:2px dashed #c9b88f;background:#efe3c4;color:var(--ink-soft);font-size:14px;padding:8px;cursor:pointer}
+.artzone img{width:100%;height:100%;object-fit:cover}
+.artzone:focus-visible,.artzone:focus,.artzone.over{outline:3px solid var(--gold);outline-offset:-3px;background:#fff1cc}
+.artmeta{padding:10px;display:flex;flex-direction:column;gap:4px}
+.artmeta>span{font-size:13px;color:var(--ink-soft)}
+.artmeta .actions{margin-top:6px}
+.noteimg{max-width:260px;border-radius:6px;margin:8px 0}
 /* manuel du DM */
 .linked{background:#f7f1e1;border:1px solid #d9c9a0;border-left:4px solid var(--gold);border-radius:6px;padding:10px 14px;margin:12px 0}
 .linked p{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0 0}
@@ -558,7 +573,7 @@ const loaded = {b:false, q:false, i:false, a:false, w:false, c:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
 let save = {state:"idle", msg:""};
-const ui = {manSec:"perso", manId:null, manEdit:null, manImg:undefined, manML:null, manQ:"", manQf:"actives", manDraft:null, confirmMan:null, party:{mode:"manuel",ids:[],nb:4,niv:3}, gen:{diff:"moderee",region:"",type:"",res:null}, dmTab:"todo", evolve:null, noteEdit:null, noteOpen:null, noteQ:"", confirmNote:null, confirmNews:null, newsEdit:null, gazAll:false, plan:null, compEdit:null, compImg:undefined, compPreview:false, compHist:null, compVer:null, compQ:"", compCat:"", compReg:"", confirmComp:null, confirmGroup:null, reportWrite:null, sheetEdit:null, sheetImg:undefined, promptSheet:false, needLogin:null, loginIntent:null, complete:null, adjust:false, wikiEdit:null, wikiPreview:false, confirmWiki:null, advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
+const ui = {artKind:"pnj", artAll:false, artInstr:false, artCopied:null, manSec:"perso", manId:null, manEdit:null, manImg:undefined, manML:null, manQ:"", manQf:"actives", manDraft:null, confirmMan:null, party:{mode:"manuel",ids:[],nb:4,niv:3}, gen:{diff:"moderee",region:"",type:"",res:null}, dmTab:"todo", evolve:null, noteEdit:null, noteOpen:null, noteQ:"", confirmNote:null, confirmNews:null, newsEdit:null, gazAll:false, plan:null, compEdit:null, compImg:undefined, compPreview:false, compHist:null, compVer:null, compQ:"", compCat:"", compReg:"", confirmComp:null, confirmGroup:null, reportWrite:null, sheetEdit:null, sheetImg:undefined, promptSheet:false, needLogin:null, loginIntent:null, complete:null, adjust:false, wikiEdit:null, wikiPreview:false, confirmWiki:null, advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
 
 /* ---------- helpers ---------- */
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -984,11 +999,11 @@ function myCharsView(){
   if(!mine.length)h='<p class="hint">Tu n\'as pas encore de personnage. Crée ta fiche pour pouvoir t\'inscrire aux quêtes.</p>'+h;
   return h;
 }
-function resizeImage(file){
+function resizeImage(file,maxSize){
   return new Promise((res,rej)=>{
     const r=new FileReader();r.onerror=()=>rej(new Error("Lecture impossible"));
     r.onload=()=>{const im=new Image();im.onerror=()=>rej(new Error("Image illisible"));im.onload=()=>{
-      const max=360,sc=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement("canvas");
+      const max=maxSize||360,sc=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement("canvas");
       c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);c.getContext("2d").drawImage(im,0,0,c.width,c.height);
       res(c.toDataURL("image/jpeg",0.82));};im.src=r.result;};
     r.readAsDataURL(file);
@@ -1128,7 +1143,7 @@ const DIFFS=[["faible","Faible"],["moderee","Modérée"],["elevee","Élevée"]];
 const SIZES=[["TP","Très petite"],["P","Petite"],["M","Moyenne"],["G","Grande"],["TG","Très grande"],["Gig","Gigantesque"]];
 const ATTITUDES=[["","—"],["amical","Amical"],["neutre","Neutre"],["mefiant","Méfiant"],["hostile","Hostile"],["inconnu","Inconnu"]];
 const ABIL=[["for","FOR"],["dex","DEX"],["con","CON"],["int","INT"],["sag","SAG"],["cha","CHA"]];
-const MAN_SECS=[["perso","Personnages"],["pnj","PNJ"],["monstres","Bestiaire"],["rencontres","Rencontres"],["generateur","Générateur"],["quetes","Quêtes & scénarios"],["notes","Notes & pages"]];
+const MAN_SECS=[["perso","Personnages"],["pnj","PNJ"],["monstres","Bestiaire"],["rencontres","Rencontres"],["generateur","Générateur"],["quetes","Quêtes & scénarios"],["notes","Notes & pages"],["atelier","Portraits"]];
 const MAN={
   pnj:{coll:"pnj",nom:"PNJ",fields:[["nom","Nom","text",1],["image","Portrait","image"],["role","Rôle ou occupation","text"],["espece","Espèce","text"],["region","Région","region"],["lieu","Lieu","text"],["faction","Faction","text"],["attitude","Attitude envers la Guilde","select",0,ATTITUDES],["apparence","Apparence","textarea"],["voix","Voix et manières","textarea"],["secrets","Secrets","md"],["monstre","Stats (bestiaire)","monsterref"],["quetes","Quêtes liées","questmulti"],["notes","Notes","md"]]},
   monstres:{coll:"monstres",nom:"monstre",fields:[["nom","Nom","text",1],["image","Image","image"],["taille","Taille","select",0,SIZES],["type","Type","text"],["alignement","Alignement","text"],["fp","Facteur de puissance (FP)","select",0,CR_LIST.map(c=>[c,c+" ("+CR_XP[c]+" XP)"])],["ca","Classe d'armure","number"],["pv","Points de vie","text"],["vitesse","Vitesse","text"],
@@ -1300,10 +1315,36 @@ function secQuetes(){
   const f=ui.manQf||"actives",l=filterQ(quetes.filter(q=>f==="toutes"?true:f==="actives"?(q.statut==="ouverte"||q.statut==="encours"):q.statut===f),["titre","lieu"]).sort((a,b)=>String((office(a.bureau)||{}).nom).localeCompare(String((office(b.bureau)||{}).nom),"fr")||String(a.titre).localeCompare(String(b.titre),"fr"));
   return searchBar("Rechercher une quête…")+'<div class="chips" role="group" aria-label="Filtre">'+[["actives","Ouvertes et en cours"],["terminee","Terminées"],["archivee","Archivées"],["toutes","Toutes"]].map(x=>'<button class="chip" data-a="man-qf" data-v="'+x[0]+'" aria-pressed="'+(f===x[0])+'">'+x[1]+'</button>').join("")+'</div>'+
     (l.length?'<ul class="todo">'+l.map(q=>'<li><span>'+rankSeal(q.rang)+' <strong>'+esc(q.titre)+'</strong> · '+esc((office(q.bureau)||{}).nom||"")+' · '+esc(STATUS[q.statut]||"")+(scenarios[q.id]&&scenarios[q.id].scenario?' · <span class="d-low">scénario ✓</span>':'')+'</span><button class="mini" data-a="man-quest" data-id="'+esc(q.id)+'">Ouvrir</button></li>').join("")+'</ul>':'<p class="empty">Aucune quête.</p>');}
+/* ---------- Atelier des portraits : prompts pour ChatGPT + collage d'images ---------- */
+const ART_STYLE="Style : illustration officielle d'un manuel de Donjons & Dragons. Peinture numérique réaliste et très détaillée, proportions réalistes (pas de dessin animé ni de manga), textures riches (tissus, cuir, métal), lumière chaude et douce venant du haut à gauche. Fond de parchemin beige clair uni, légèrement taché, avec un vignettage doux ; aucun décor. Sujet seul, centré, représenté EN PIED de la tête aux pieds, légère contre-plongée, pose naturelle et expressive, petite ombre douce au sol. Format vertical 4:5. Aucun texte, aucune signature, aucun cadre, aucun logo.";
+const ART_INSTR="Tu es l'illustrateur du manuel de la « Grande Guilde de la Rose des Vents », une campagne de Donjons & Dragons 5e édition (règles 2024) qui se déroule sur la Sword Coast, dans les Royaumes oubliés.\n\nÀ chaque message, je te donne une fiche (PNJ, créature, lieu ou faction). Tu génères UNE seule image qui respecte toujours exactement ce style, pour que toutes les images aient l'air de sortir du même livre :\n\n"+ART_STYLE+"\n\nRègles :\n- Garde la même esthétique que l'image de référence (le portrait de Pax, le giff en manteau rouge qui tient une tasse de café) : même rendu peint, même fond de parchemin, même lumière, même cadrage en pied.\n- Crée toujours des designs originaux : ne reproduis jamais une illustration officielle existante ni un personnage connu.\n- Respecte la description (espèce, âge, vêtements, accessoires). Si un détail manque, invente-le de façon cohérente avec le rôle du personnage et la Sword Coast.\n- Les « Outerworlders » sont des gens de notre monde moderne arrivés dans ce monde de fantasy : ils portent des vêtements modernes usés, parfois mêlés à quelques pièces médiévales.\n- Pour une créature : même fond et même rendu, créature entière, pose menaçante ou naturelle, sans personnage autour.\n- Pour un lieu ou une faction : une illustration en vignette sur le même fond de parchemin (un emblème, un bâtiment ou une scène), sans texte.\n- Ne me pose pas de questions : génère directement l'image.";
+const ATT_PROMPT={amical:"bienveillant et accueillant",neutre:"neutre, réservé",mefiant:"méfiant, sur ses gardes",hostile:"menaçant, hostile",inconnu:"énigmatique"};
+function artPrompt(kind,x){
+  if(kind==="pnj"){const out=/outerworlder/i.test(x.faction||"")||/outerworlder/i.test(x.role||"");
+    return ["Portrait en pied d'un PNJ.","Nom : "+x.nom+(x.role?" — "+x.role:""),x.espece?"Espèce : "+x.espece:"",x.apparence?"Apparence : "+x.apparence:"",x.voix?"Attitude et manières : "+x.voix:"",x.attitude&&ATT_PROMPT[x.attitude]?"Expression : "+ATT_PROMPT[x.attitude]:"",x.faction?"Faction : "+x.faction:"",x.lieu?"On le croise à : "+x.lieu:"",out?"C'est un Outerworlder : une personne de notre monde moderne. Vêtements modernes usés, quelques objets de la Terre.":"",ART_STYLE].filter(Boolean).join("\n");}
+  if(kind==="monstres"){const sz=(SIZES.find(s=>s[0]===x.taille)||[,""])[1];
+    return ["Planche de bestiaire : une créature entière, en pied.","Créature : "+x.nom+" ("+[sz&&("taille "+sz.toLowerCase()),x.type].filter(Boolean).join(", ")+")",x.tags?"Mots-clés : "+x.tags:"","Montre clairement ses armes naturelles ou son équipement (d'après ses actions : "+String(x.actions||"").replace(/\*|#|\n+/g," ").replace(/\s+/g," ").slice(0,240)+")",ART_STYLE.replace("Sujet seul","Créature seule")].filter(Boolean).join("\n");}
+  return ["Illustration en vignette pour une page du manuel.","Sujet : "+x.titre+(x.categorie?" ("+x.categorie+")":""),x.region?"Région : "+regionName(x.region):"","Description : "+String(x.contenu||"").replace(/[#*_>\[\]]/g," ").replace(/\s+/g," ").slice(0,500),ART_STYLE.replace("Sujet seul, centré, représenté EN PIED de la tête aux pieds, légère contre-plongée, pose naturelle et expressive, petite ombre douce au sol.","Sujet centré (emblème, bâtiment, objet ou petite scène), ombre douce.")].filter(Boolean).join("\n");}
+function artItems(){const k=ui.artKind;return k==="monstres"?byName(monstres).map(x=>({x,id:x.id,nom:x.nom,sub:(x.type||"")+" · FP "+(x.fp||"?")})):k==="pages"?notesDm.slice().sort((a,b)=>String(a.titre).localeCompare(String(b.titre),"fr")).map(x=>({x,id:x.id,nom:x.titre,sub:x.categorie||"Note"})):byName(pnjs).map(x=>({x,id:x.id,nom:x.nom,sub:x.role||""}));}
+function artColl(){return ui.artKind==="monstres"?"monstres":ui.artKind==="pages"?"notesdm":"pnj";}
+function secAtelier(){
+  const k=ui.artKind,all=artItems(),todo=all.filter(i=>!i.x.image),list=ui.artAll?all:todo;
+  let h='<div class="linked"><strong>Comment faire</strong><ol class="steps"><li>Dans ChatGPT, crée un <strong>Projet</strong> « Rose des Vents : portraits ». Colle les instructions ci-dessous dans ses instructions, et joins-y le portrait en pied de Pax comme référence de style.</li><li>Ici, clique sur <strong>Copier le prompt</strong> d\'une fiche, puis colle-le dans une conversation du projet.</li><li>Copie l\'image générée (clic droit, Copier l\'image), clique sur la case de la fiche ici, puis fais <strong>Ctrl+V</strong>. Tu peux aussi glisser le fichier dans la case. C\'est enregistré tout de suite.</li></ol>'+
+    '<div class="actions"><button class="btn gold" data-a="art-copy-instr">'+(ui.artCopied==="instr"?'Instructions copiées ✓':'Copier les instructions pour ChatGPT')+'</button><button class="btn ghost" data-a="art-show-instr">'+(ui.artInstr?'Masquer':'Voir')+' les instructions</button></div>'+(ui.artInstr?'<pre class="artpre">'+esc(ART_INSTR)+'</pre>':'')+'</div>';
+  h+='<div class="chips" role="group" aria-label="Type">'+[["pnj","PNJ"],["monstres","Bestiaire"],["pages","Notes & pages (lieux, factions…)"]].map(x=>'<button class="chip" data-a="art-kind" data-v="'+x[0]+'" aria-pressed="'+(k===x[0])+'">'+x[1]+'</button>').join("")+
+    '<button class="chip" data-a="art-all" aria-pressed="'+(!ui.artAll)+'">Sans image seulement <span class="n">'+todo.length+'</span></button></div>';
+  if(!list.length)return h+'<p class="empty">'+(all.length?'Toutes les fiches ont leur image. Bravo !':'Aucune fiche de ce type.')+'</p>';
+  return h+'<div class="artgrid">'+list.map(i=>'<article class="artcard"><div class="artzone" tabindex="0" role="button" data-paste="'+esc(artColl())+'|'+esc(i.id)+'" aria-label="Coller ou déposer l\'image de '+esc(i.nom)+'">'+(i.x.image?'<img src="'+esc(i.x.image)+'" alt="">':'<span>Clique ici puis <strong>Ctrl+V</strong><br>ou glisse l\'image</span>')+'</div>'+
+    '<div class="artmeta"><strong>'+esc(i.nom)+'</strong><span>'+esc(i.sub)+'</span><div class="actions"><button class="btn" data-a="art-copy" data-id="'+esc(i.id)+'">'+(ui.artCopied===i.id?'Copié ✓':'Copier le prompt')+'</button><label class="btn ghost filebtn" for="art-f-'+esc(i.id)+'">Fichier…<input id="art-f-'+esc(i.id)+'" type="file" accept="image/*" data-artfile="'+esc(artColl())+'|'+esc(i.id)+'"></label>'+(i.x.image?'<button class="btn ghost" data-a="art-clear" data-id="'+esc(i.id)+'">Retirer</button>':'')+'</div></div></article>').join("")+'</div>';}
+async function artSave(target,file){const [coll,id]=target.split("|");if(!file||!/^image\//.test(file.type)){save={state:"error",msg:"Ce n'est pas une image."};render();return;}
+  try{const url=await resizeImage(file,640);if(url.length>390000){save={state:"error",msg:"Image trop lourde."};render();return;}
+    await run("Image",()=>setDoc(doc(db,coll,id),{image:url,majLe:serverTimestamp()},{merge:true}));}catch(err){save={state:"error",msg:err.message};render();}}
+function copyText(t){return (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject()).catch(()=>{const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}ta.remove();});}
+
 function dmManual(){
   const s=ui.manSec;
   let h='<div class="chips mansecs" role="group" aria-label="Sections du Manuel">'+MAN_SECS.map(x=>'<button class="chip" data-a="man-sec" data-v="'+x[0]+'" aria-pressed="'+(s===x[0])+'">'+x[1]+'</button>').join("")+'</div>';
-  return h+(s==="perso"?secPerso():s==="generateur"?secGen():s==="quetes"?secQuetes():s==="notes"?dmNotes():secGeneric(s));}
+  return h+(s==="perso"?secPerso():s==="generateur"?secGen():s==="quetes"?secQuetes():s==="notes"?dmNotes():s==="atelier"?secAtelier():secGeneric(s));}
 
 /* ---------- Espace DM ---------- */
 function todoItems(){
@@ -1355,6 +1396,7 @@ function noteForm(n){n=n||{titre:"",categorie:"",region:"",contenu:"",epingle:fa
     '<label for="n-cat">Catégorie<input id="n-cat" list="n-cats" maxlength="40" value="'+esc(n.categorie)+'"><datalist id="n-cats">'+Array.from(new Set(NOTE_CATS.concat(notesDm.map(x=>x.categorie).filter(Boolean)))).map(c=>'<option value="'+esc(c)+'">').join("")+'</datalist></label>'+
     '<label for="n-reg">Région<select id="n-reg"><option value="">Aucune</option><option value="cote"'+(n.region==="cote"?' selected':'')+'>Sword Coast</option>'+bureaux.map(b=>'<option value="'+esc(b.id)+'"'+(n.region===b.id?' selected':'')+'>'+esc(b.nom)+'</option>').join("")+'</select></label>'+
     '<label class="wide" for="n-contenu">Note <span class="tip">## Titre, **gras**, - liste</span><textarea id="n-contenu" rows="10" maxlength="50000">'+esc(n.contenu)+'</textarea></label>'+
+    '<div class="wide imgrow">'+((ui.noteImg!==undefined?ui.noteImg:n.image)?'<img class="portrait sm" src="'+esc(ui.noteImg!==undefined?ui.noteImg:n.image)+'" alt="">':'<span class="portrait sm ph" aria-hidden="true">?</span>')+'<label for="n-img">Image (facultatif)<input id="n-img" type="file" accept="image/*"></label></div>'+
     '<label class="pickrow wide" for="n-pin"><input type="checkbox" id="n-pin"'+(n.epingle?' checked':'')+'><span>Épingler en haut</span></label>'+
     '<div class="actions wide"><button class="btn" type="submit">Enregistrer</button><button class="btn ghost" type="button" data-a="note-cancel">Annuler</button></div></form>';}
 function dmNotes(){
@@ -1365,7 +1407,7 @@ function dmNotes(){
   if(!list.length)return h+'<p class="empty">'+(notesDm.length?'Aucune note ne correspond.':'Aucune note secrète. Consigne ici tes intrigues, tes PNJ et tes idées de quêtes.')+'</p>';
   return h+'<div class="notes">'+list.map(n=>{const o=ui.noteOpen===n.id;
     return '<article class="note-dm'+(n.epingle?' pin':'')+'"><button class="nhead" data-a="note-open" data-id="'+esc(n.id)+'" aria-expanded="'+o+'"><span class="ctags">'+(n.epingle?'<span class="ccat rev">Épinglée</span>':'')+(n.categorie?'<span class="ccat">'+esc(n.categorie)+'</span>':'')+(n.region?'<span class="creg">'+esc(regionName(n.region))+'</span>':'')+'</span><strong>'+esc(n.titre)+'</strong>'+(o?'':'<span class="cex">'+esc(plainExcerpt(n.contenu))+'</span>')+'</button>'+
-      (o?'<div class="wikibody">'+md(n.contenu)+'</div><div class="actions"><button class="btn" data-a="note-edit" data-id="'+esc(n.id)+'">Modifier</button>'+(ui.confirmNote===n.id?'<button class="btn danger" data-a="note-del-yes" data-id="'+esc(n.id)+'">Supprimer définitivement</button><button class="btn ghost" data-a="note-del-no">Annuler</button>':'<button class="btn ghost" data-a="note-del" data-id="'+esc(n.id)+'">Supprimer</button>')+'</div>':'')+'</article>';}).join("")+'</div>';
+      (o?(n.image?'<img class="noteimg" src="'+esc(n.image)+'" alt="">':'')+'<div class="wikibody">'+md(manLinks(n.contenu))+'</div><div class="actions"><button class="btn" data-a="note-edit" data-id="'+esc(n.id)+'">Modifier</button>'+(ui.confirmNote===n.id?'<button class="btn danger" data-a="note-del-yes" data-id="'+esc(n.id)+'">Supprimer définitivement</button><button class="btn ghost" data-a="note-del-no">Annuler</button>':'<button class="btn ghost" data-a="note-del" data-id="'+esc(n.id)+'">Supprimer</button>')+'</div>':'')+'</article>';}).join("")+'</div>';
 }
 function dmStats(){
   const c={ouverte:0,encours:0,terminee:0,archivee:0};quetes.forEach(q=>{c[q.statut]=(c[q.statut]||0)+1;});
@@ -1734,6 +1776,12 @@ document.addEventListener("click",async e=>{
   else if(a==="group"){ui.confirmGroup=id;}
   else if(a==="group-cancel"){if(e.target!==b)return;ui.confirmGroup=null;}
   else if(a==="plan"){ui.plan=id;}
+  else if(a==="art-kind"){ui.artKind=b.getAttribute("data-v");}
+  else if(a==="art-all"){ui.artAll=!ui.artAll;}
+  else if(a==="art-show-instr"){ui.artInstr=!ui.artInstr;}
+  else if(a==="art-copy-instr"){await copyText(ART_INSTR);ui.artCopied="instr";}
+  else if(a==="art-copy"){const it=artItems().find(i=>i.id===id);if(!it)return;await copyText(artPrompt(ui.artKind,it.x));ui.artCopied=id;}
+  else if(a==="art-clear"){await run("Image retirée",()=>setDoc(doc(db,artColl(),id),{image:"",majLe:serverTimestamp()},{merge:true}));return;}
   else if(a==="man-sec"){ui.manSec=b.getAttribute("data-v");ui.manId=null;ui.manEdit=null;ui.manQ="";ui.confirmMan=null;ui.noteEdit=null;}
   else if(a==="man-open"){ui.dmTab="manuel";ui.manSec=b.getAttribute("data-sec");ui.manId=id;ui.manEdit=null;ui.confirmMan=null;if(location.hash!=="#dm"){ui.pendingMan=true;location.hash="#dm";}window.scrollTo(0,0);}
   else if(a==="man-quest"){ui.dmTab="manuel";ui.manSec="quetes";ui.manId=id;ui.manEdit=null;window.scrollTo(0,0);}
@@ -1798,8 +1846,10 @@ document.addEventListener("change",e=>{
   if(e.target.id==="c-reg"){ui.compReg=e.target.value;render();return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-party")){const id=e.target.getAttribute("data-party"),l=ui.party.ids;if(e.target.checked){if(l.indexOf(id)<0)l.push(id);}else ui.party.ids=l.filter(x=>x!==id);render();return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-ml")!=null){syncML();render();return;}
+  if(e.target.getAttribute&&e.target.getAttribute("data-artfile")){const f=e.target.files&&e.target.files[0];if(f)artSave(e.target.getAttribute("data-artfile"),f);return;}
+  if(e.target.id==="n-img"){const f=e.target.files&&e.target.files[0];if(!f)return;resizeImage(f,640).then(url=>{ui.noteImg=url;render();});return;}
   if(e.target.id==="mf-img"){const f=e.target.files&&e.target.files[0];if(!f)return;
-    resizeImage(f).then(url=>{if(url.length>380000)save={state:"error",msg:"Image trop lourde."};else ui.manImg=url;render();}).catch(err=>{save={state:"error",msg:err.message};render();});return;}
+    resizeImage(f,640).then(url=>{if(url.length>380000)save={state:"error",msg:"Image trop lourde."};else ui.manImg=url;render();}).catch(err=>{save={state:"error",msg:err.message};render();});return;}
   if(e.target.id==="c2-img"){const f=e.target.files&&e.target.files[0];if(!f)return;
     resizeImage(f).then(url=>{if(url.length>380000)save={state:"error",msg:"Image trop lourde."};else ui.compImg=url;render();}).catch(err=>{save={state:"error",msg:err.message};render();});return;}
   if(e.target.id==="p-img"){const f=e.target.files&&e.target.files[0];if(!f)return;
@@ -1924,7 +1974,7 @@ document.addEventListener("submit",async e=>{
   if(e.target.id==="noteform"){
     const titre=v("n-titre").slice(0,120);if(!titre)return;const isNew=ui.noteEdit==="new",id=isNew?doc(collection(db,"notesdm")).id:ui.noteEdit;
     const pin=document.getElementById("n-pin");
-    const d={titre,categorie:v("n-cat").slice(0,40),region:v("n-reg"),contenu:((document.getElementById("n-contenu")||{}).value||"").slice(0,50000),epingle:!!(pin&&pin.checked),majLe:serverTimestamp()};
+    const d={titre,categorie:v("n-cat").slice(0,40),region:v("n-reg"),contenu:((document.getElementById("n-contenu")||{}).value||"").slice(0,50000),epingle:!!(pin&&pin.checked),majLe:serverTimestamp()};if(ui.noteImg!==undefined)d.image=ui.noteImg;ui.noteImg=undefined;
     if(isNew)d.creeLe=serverTimestamp();ui.noteEdit=null;ui.noteOpen=id;
     await run("Note",()=>setDoc(doc(db,"notesdm",id),d,{merge:true}));return;
   }
@@ -2028,6 +2078,12 @@ document.addEventListener("submit",async e=>{
     await run("Enregistrement",()=>cur?setDoc(doc(db,"quetes",id),Object.assign(q,{majLe:serverTimestamp()}),{merge:true}):setDoc(doc(db,"quetes",id),Object.assign(q,{creeLe:serverTimestamp(),majLe:serverTimestamp()})));
   }
 });
+
+document.addEventListener("paste",e=>{const z=document.activeElement&&document.activeElement.closest&&document.activeElement.closest("[data-paste]");if(!z)return;
+  const it=Array.from((e.clipboardData&&e.clipboardData.items)||[]).find(i=>i.type&&i.type.indexOf("image/")===0);if(!it)return;e.preventDefault();artSave(z.getAttribute("data-paste"),it.getAsFile());});
+document.addEventListener("dragover",e=>{if(e.target.closest&&e.target.closest("[data-paste]")){e.preventDefault();e.target.closest("[data-paste]").classList.add("over");}});
+document.addEventListener("dragleave",e=>{const z=e.target.closest&&e.target.closest("[data-paste]");if(z)z.classList.remove("over");});
+document.addEventListener("drop",e=>{const z=e.target.closest&&e.target.closest("[data-paste]");if(!z)return;e.preventDefault();const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(f)artSave(z.getAttribute("data-paste"),f);});
 
 /* ---------- start ---------- */
 route();
