@@ -671,14 +671,12 @@ function sheetView(id){
   let h='<article class="sheet">';
   h+='<div class="sheet-top">'+(a.image?'<img class="portrait" src="'+esc(a.image)+'" alt="Portrait de '+esc(a.nom)+'">':'<span class="portrait ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+
     '<div class="sheet-id"><h2>'+esc(a.nom)+'</h2><p class="sheet-sub">'+esc([a.espece,a.classe].filter(Boolean).join(" · ")||"Aventurier")+'</p>'+(a.joueur?'<p class="sheet-pl">Joué par '+esc(a.joueur)+'</p>':'')+'</div></div>';
-  if(a.don)h+='<div class="don"><span class="kind">Don du Système</span><p>'+esc(a.don)+'</p></div>';
   if(a.description)h+='<h3>Description</h3><p class="desc">'+esc(a.description)+'</p>';
   if(a.background)h+='<h3>Background</h3><p class="desc">'+esc(a.background)+'</p>';
   const known=bureaux.filter(b=>renown(a,b.id)!==0);
   h+='<h3>Renommée</h3>'+(known.length?'<ul class="sheetrep">'+known.map(b=>'<li><span>'+esc(b.nom)+'</span>'+chip(renown(a,b.id))+'</li>').join("")+'</ul>':'<p class="desc">Inconnu dans toutes les régions… pour l\'instant.</p>');
   const qs=questsOf(a);
   h+='<h3>Quêtes accomplies</h3>'+(qs.length?'<ul class="sheetq">'+qs.map(q=>'<li>'+rankSeal(q.rang)+' <a href="#chroniques">'+esc(q.titre)+'</a>'+(office(q.bureau)?' <em>('+esc(office(q.bureau).nom)+')</em>':'')+'</li>').join("")+'</ul>':'<p class="desc">Aucune pour le moment.</p>');
-  if(ui.dm)h+='<form class="inline" id="donform" data-id="'+esc(a.id)+'"><label for="p-don">Don du Système (DM)<input id="p-don" maxlength="500" value="'+esc(a.don||"")+'"></label><button class="btn" type="submit">Enregistrer le Don</button></form>';
   if(mine||ui.dm)h+='<div class="actions"><button class="btn ghost" data-a="sheet-edit" data-id="'+esc(a.id)+'">Modifier la fiche</button></div>';
   return h+'</article>';
 }
