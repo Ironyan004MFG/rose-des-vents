@@ -117,6 +117,18 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 .modal label{display:flex;flex-direction:column;gap:4px;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
 @media (prefers-reduced-motion:reduce){.mk .mk-in{transition:none}}
 
+/* galerie */
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px}
+.gcard{display:flex;flex-direction:column;background:var(--parch);color:var(--ink);border-radius:6px;overflow:hidden;text-decoration:none;box-shadow:0 10px 24px rgba(0,0,0,.45);transition:transform .15s ease}
+.gcard:hover,.gcard:focus-visible{transform:translateY(-3px);outline:3px solid var(--gold);outline-offset:0}
+.gimg{width:100%;aspect-ratio:4/5;object-fit:cover;display:block;background:#2a2219;max-width:100%}
+.gimg.ph{display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:64px;color:var(--gold)}
+.gbody{display:flex;flex-direction:column;gap:4px;padding:12px 14px 14px}
+.gname{font-family:var(--display);font-size:19px}
+.gpl{font-size:14px;color:var(--ink-soft)}
+.gmeta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:4px;font-size:14px}
+.gcard .muted{color:var(--ink-soft)}
+@media (prefers-reduced-motion:reduce){.gcard{transition:none}}
 /* groupe, rapport, méfaits */
 .aide{border:1px solid #c9b88f;border-radius:6px;background:#f7f1e1;padding:8px 12px}
 .aide summary{cursor:pointer;font-family:var(--display);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);min-height:28px;display:flex;align-items:center}
@@ -520,6 +532,7 @@ function mapView(){
   h+='<nav class="offices" aria-label="Comptoirs"><h2>Comptoirs de la Guilde</h2>';
   bureaux.forEach(b=>{const n=openCount(b.id);
     h+='<a class="office" href="#'+esc(b.id)+'"><span class="nm">'+esc(b.nom)+(b.siege?'<span class="tag">Siège de la Guilde</span>':'')+'</span><span class="count'+(n?'':' zero')+'">'+n+' quête'+(n>1?'s':'')+'</span></a>';});
+  h+='<a class="office regl" href="#aventuriers"><span class="nm">Les aventuriers de la Guilde<span class="tag">La galerie des personnages</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#personnages"><span class="nm">Mes personnages<span class="tag">Ta fiche d\'aventurier</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#chroniques"><span class="nm">Chroniques de la Guilde<span class="tag">Les missions accomplies</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#wiki"><span class="nm">Wiki des règles maison<span class="tag">Outerworlders, Supercharged, renommée…</span></span><span aria-hidden="true">→</span></a>';
@@ -738,6 +751,20 @@ function resizeImage(file){
   });
 }
 
+/* ---------- galerie ---------- */
+function galleryView(){
+  if(!loaded.a)return '<p class="hint">Chargement…</p>';
+  if(!aventuriers.length)return '<p class="empty">Aucun aventurier n\'est encore inscrit à la Guilde. Connecte-toi et crée ta fiche pour être le premier !</p>';
+  return '<div class="gallery">'+aventuriers.map(a=>{
+    let best=null;bureaux.forEach(b=>{const n=renown(a,b.id);if(n>0&&(!best||n>best.n))best={n,b};});
+    const qn=questsOf(a).length;
+    return '<a class="gcard" href="#perso-'+esc(a.id)+'">'+(a.image?'<img class="gimg" src="'+esc(a.image)+'" alt="">':'<span class="gimg ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+
+      '<span class="gbody"><strong class="gname">'+esc(a.nom)+'</strong><span class="sheet-sub">'+esc([a.espece,a.classe].filter(Boolean).join(" · ")||"Aventurier")+'</span>'+
+      (a.joueur?'<span class="gpl">Joué par '+esc(a.joueur)+'</span>':'')+
+      '<span class="gmeta">'+(best?chip(best.n)+' <em>à '+esc(best.b.nom)+'</em>':'<span class="muted">Inconnu partout</span>')+'</span>'+
+      (qn?'<span class="gpl">'+qn+' quête'+(qn>1?'s':'')+' accomplie'+(qn>1?'s':'')+'</span>':'')+'</span></a>';}).join("")+'</div>';
+}
+
 /* ---------- chroniques ---------- */
 function chroniclesView(){
   const done=quetes.filter(q=>q.rapport&&q.statut==="terminee").sort((a,b)=>{const t=x=>x.rapport.termineLe&&x.rapport.termineLe.toMillis?x.rapport.termineLe.toMillis():0;return t(b)-t(a);});
@@ -815,20 +842,21 @@ function statusPill(){
 }
 function render(){
   const wk=!!ui.office&&(ui.office==="wiki"||ui.office.indexOf("wiki-")===0);
-  if(ui.office&&ui.office!=="renommee"&&ui.office!=="chroniques"&&ui.office!=="personnages"&&ui.office.indexOf("perso-")!==0&&!wk&&loaded.b&&!office(ui.office))ui.office=null;
+  if(ui.office&&ui.office!=="renommee"&&ui.office!=="chroniques"&&ui.office!=="personnages"&&ui.office!=="aventuriers"&&ui.office.indexOf("perso-")!==0&&!wk&&loaded.b&&!office(ui.office))ui.office=null;
   const reg=ui.office==="renommee";
   const chr=ui.office==="chroniques";
   const perso=!!ui.office&&ui.office.indexOf("perso-")===0;
   const mes=ui.office==="personnages";
+  const gal=ui.office==="aventuriers";
   const b=ui.office&&!reg?office(ui.office):null;
   let h='<div class="wrap">';
   h+='<header><svg width="72" height="72" viewBox="-110 -110 220 220" aria-hidden="true"><circle r="80" fill="none" stroke="#d8b45e" stroke-width="3" opacity=".6"></circle>'+rose(104,'#0e1b20')+'</svg>';
-  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions accomplies par les aventuriers':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+statusPill()+'</header>';
+  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions accomplies par les aventuriers':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+statusPill()+'</header>';
   if(perso)h+='<a class="back" href="#renommee"><span aria-hidden="true">←</span> Registre de renommée</a>';
-  else if(b||reg||wk||chr||mes)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
+  else if(b||reg||wk||chr||mes||gal)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
   if(ui.authMsg)h+='<div class="dmbar"><span class="msg">'+esc(ui.authMsg)+'</span><button class="btn board" data-a="auth-ok">OK</button>'+(user&&!user.isAnonymous&&!isAdmin?'<button class="btn board" data-a="logout">Déconnexion</button>':'')+'</div>';
   if(ui.dm)h+=dmPanel(b);
-  h+=mes?myCharsView():perso?sheetView(ui.office.slice(6)):chr?chroniclesView():wk?wikiView():reg?renownView():b?boardView()+reputationSection(b.id,b.nom):mapView();
+  h+=gal?galleryView():mes?myCharsView():perso?sheetView(ui.office.slice(6)):chr?chroniclesView():wk?wikiView():reg?renownView():b?boardView()+reputationSection(b.id,b.nom):mapView();
   const signed=user&&!user.isAnonymous;
   h+='<footer><span>Pour partir en mission : choisis une quête, appuie sur « Je veux y aller » et choisis ton personnage. Le DM confirme les inscriptions.</span>'+
     '<span class="who">'+(signed?'Connecté : '+esc(user.displayName||user.email||"aventurier")+' · <a href="#personnages">Mes personnages</a> · <button class="linkbtn" data-a="logout">Déconnexion</button>':'<button class="linkbtn" data-a="login">Se connecter</button>')+
