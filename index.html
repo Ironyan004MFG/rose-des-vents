@@ -151,6 +151,49 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 .newsitem h3{font-family:var(--display);margin:4px 0}
 .sheet .newsitem{background:#f7f1e1;border:1px solid #d9c9a0}
 .majline{background:#fff1cc;border-left:4px solid var(--gold);padding:6px 10px;margin:0 0 10px;font-size:15px}
+/* manuel du DM */
+.mansecs{margin-bottom:14px}
+.dmspace .chip{color:var(--ink);border-color:#b9a982;background:transparent}
+.dmspace .chip[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:#2a2219}
+.dmspace .chip .n{background:#2a2219;color:var(--parch)}
+.dossier a,.dmspace .linkbtn{color:#7a1f14}
+.manback{margin:0 0 10px;color:var(--ink)}
+.mangrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.mcard{all:unset;display:flex;gap:12px;align-items:center;background:#f7f1e1;border:1px solid #d9c9a0;border-radius:8px;padding:10px;cursor:pointer;color:var(--ink)}
+.mcard:hover,.mcard:focus-visible{outline:3px solid var(--gold)}
+.mcard img,.mcard .ph{width:56px;height:56px;border-radius:50%;object-fit:cover;flex:none;background:#2a2219;color:var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:22px}
+.mb{display:flex;flex-direction:column;gap:3px;min-width:0}
+.mb strong{font-family:var(--display);font-size:16px}
+.mb>span{font-size:14px;color:var(--ink-soft)}
+.dossier h2{font-family:var(--display)}
+.dmgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:12px 0}
+.dmcard{background:#f7f1e1;border:1px solid #d9c9a0;border-radius:8px;padding:12px 14px}
+.dmcard h3{margin-top:0}
+.don-dm{background:#2a2219;color:var(--gold);border-radius:6px;padding:6px 10px;display:inline-block}
+.statblock{background:#fbf6e8;border-top:4px solid #8a2d1f;border-bottom:4px solid #8a2d1f;padding:12px 16px;margin:8px 0;max-width:720px}
+.statblock h2{color:#7a1f14;margin:0;font-family:var(--display)}
+.sbsub{font-style:italic;margin:0 0 6px}
+.statblock hr{border:none;border-top:2px solid #b9542f;margin:8px 0}
+.sbl{margin:4px 0}
+.sbimg{float:right;width:120px;height:120px;object-fit:cover;border-radius:6px;margin:0 0 8px 12px}
+table.abil{border-collapse:collapse;width:100%;max-width:480px;text-align:center}
+table.abil th{font-family:var(--display);font-size:12px;color:#7a1f14}
+table.abil td span{color:var(--ink-soft);font-size:13px}
+.d-low{color:#2f6b2f;font-weight:600}.d-mod{color:#8a6a10;font-weight:600}.d-high{color:#b5541f;font-weight:600}.d-deadly{color:var(--danger);font-weight:700}
+.partybox{background:#f7f1e1;border:1px solid #d9c9a0;border-radius:8px;padding:10px 12px;margin:10px 0}
+.prow{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.prow label,.genform label{display:flex;flex-direction:column;gap:4px;font-family:var(--display);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+.prow input{width:90px}
+.budget{margin:8px 0 0;font-size:15px}
+.genform{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:10px 0}
+.genform input,.genform select{width:auto}
+.mlist{display:flex;flex-direction:column;gap:6px}
+.mlrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mlrow>span{flex:1 1 200px}
+.mlrow input{width:80px}
+.mlrow select{flex:1 1 200px;width:auto}
+.form label.abil{max-width:120px}
+.ccat.att-amical{background:#2f6b2f}.ccat.att-hostile{background:var(--danger)}.ccat.att-mefiant{background:#8a6a10}
 /* espace DM */
 .dmtabs{margin-bottom:16px}
 .dmbar.slim{padding:8px 14px}
@@ -504,12 +547,12 @@ const DEFAULT_SCALE = [
 ];
 
 /* ---------- state ---------- */
-let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null;
+let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, pnjs = [], monstres = [], rencontres = [], scenarios = {};
 const loaded = {b:false, q:false, i:false, a:false, w:false, c:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
 let save = {state:"idle", msg:""};
-const ui = {dmTab:"todo", evolve:null, noteEdit:null, noteOpen:null, noteQ:"", confirmNote:null, confirmNews:null, newsEdit:null, gazAll:false, plan:null, compEdit:null, compImg:undefined, compPreview:false, compHist:null, compVer:null, compQ:"", compCat:"", compReg:"", confirmComp:null, confirmGroup:null, reportWrite:null, sheetEdit:null, sheetImg:undefined, promptSheet:false, needLogin:null, loginIntent:null, complete:null, adjust:false, wikiEdit:null, wikiPreview:false, confirmWiki:null, advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
+const ui = {manSec:"perso", manId:null, manEdit:null, manImg:undefined, manML:null, manQ:"", manQf:"actives", manDraft:null, confirmMan:null, party:{mode:"manuel",ids:[],nb:4,niv:3}, gen:{diff:"moderee",region:"",type:"",res:null}, dmTab:"todo", evolve:null, noteEdit:null, noteOpen:null, noteQ:"", confirmNote:null, confirmNews:null, newsEdit:null, gazAll:false, plan:null, compEdit:null, compImg:undefined, compPreview:false, compHist:null, compVer:null, compQ:"", compCat:"", compReg:"", confirmComp:null, confirmGroup:null, reportWrite:null, sheetEdit:null, sheetImg:undefined, promptSheet:false, needLogin:null, loginIntent:null, complete:null, adjust:false, wikiEdit:null, wikiPreview:false, confirmWiki:null, advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
 
 /* ---------- helpers ---------- */
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -588,12 +631,15 @@ function listen(){
 }
 // Données réservées au DM (points, journal, seuils) : lues seulement par un compte admin.
 function listenPrivate(on){
-  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;
+  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;dossiers={};pnjs=[];monstres=[];rencontres=[];scenarios={};
   if(!on)return;
   const err=e=>console.error(e);
   privUnsubs.push(onSnapshot(collection(db,"points"),snap=>{const m={};snap.docs.forEach(d=>{m[d.id]=(d.data().parRegion)||{};});pointsMap=m;render();},err));
   privUnsubs.push(onSnapshot(query(collection(db,"journal"),orderBy("date","desc"),limit(60)),snap=>{journal=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","renommee"),snap=>{priv=snap.exists()?snap.data():null;render();},err));
+  const arr=(c,set)=>privUnsubs.push(onSnapshot(collection(db,c),snap=>{set(snap.docs.map(d=>Object.assign({id:d.id},d.data())));render();},err));
+  arr("dossiers",l=>{dossiers={};l.forEach(x=>{dossiers[x.id]=x;});});arr("scenarios",l=>{scenarios={};l.forEach(x=>{scenarios[x.id]=x;});});
+  arr("pnj",l=>{pnjs=l;});arr("monstres",l=>{monstres=l;});arr("rencontres",l=>{rencontres=l;});
   privUnsubs.push(onSnapshot(collection(db,"notesdm"),snap=>{notesDm=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(collection(db,"evolutions"),snap=>{evols=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","monde"),snap=>{monde=snap.exists()?snap.data():null;render();},err));
@@ -920,7 +966,7 @@ function sheetView(id){
   const qs=questsOf(a);
   h+='<h3>Quêtes accomplies</h3>'+(qs.length?'<ul class="sheetq">'+qs.map(q=>'<li>'+rankSeal(q.rang)+' <a href="#chroniques">'+esc(q.titre)+'</a>'+(office(q.bureau)?' <em>('+esc(office(q.bureau).nom)+')</em>':'')+'</li>').join("")+'</ul>':'<p class="desc">Aucune pour le moment.</p>');
   h+=sheetNews(a.id);
-  if(mine||ui.dm)h+='<div class="actions"><button class="btn ghost" data-a="sheet-edit" data-id="'+esc(a.id)+'">Modifier la fiche</button></div>';
+  if(mine||ui.dm)h+='<div class="actions"><button class="btn ghost" data-a="sheet-edit" data-id="'+esc(a.id)+'">Modifier la fiche</button>'+(ui.dm&&isAdmin?'<button class="btn gold" data-a="man-open" data-sec="perso" data-id="'+esc(a.id)+'">Dossier DM</button>':'')+'</div>';
   return h+'</article>';
 }
 function myCharsView(){
@@ -1067,6 +1113,179 @@ function boardNews(bid){if(!nouvelles.length)return "";const l=nouvelles.filter(
 function chronNews_unused(){const l=nouvelles.slice().sort((a,b)=>tms(b.date)-tms(a.date)).slice(0,8);
   if(!l.length)return "";return '<section class="reg newsreg"><h2>Nouvelles de la Sword Coast</h2>'+newsList(l)+'</section>';}
 
+/* ---------- Manuel du DM (tout est privé : collections réservées au DM) ---------- */
+const CR_LIST=["0","1/8","1/4","1/2"].concat(Array.from({length:30},(_,i)=>String(i+1)));
+const CR_XP={"0":10,"1/8":25,"1/4":50,"1/2":100,"1":200,"2":450,"3":700,"4":1100,"5":1800,"6":2300,"7":2900,"8":3900,"9":5000,"10":5900,"11":7200,"12":8400,"13":10000,"14":11500,"15":13000,"16":15000,"17":18000,"18":20000,"19":22000,"20":25000,"21":33000,"22":41000,"23":50000,"24":62000,"25":75000,"26":90000,"27":105000,"28":120000,"29":135000,"30":155000};
+// Budget d'XP par personnage (règles 2024) : [faible, modérée, élevée]
+const XP_BUDGET={1:[50,75,100],2:[100,150,200],3:[150,225,400],4:[250,375,500],5:[500,750,1100],6:[600,1000,1400],7:[750,1300,1700],8:[1000,1700,2100],9:[1300,2000,2600],10:[1600,2300,3100],11:[1900,2900,4100],12:[2200,3700,4700],13:[2600,4200,5400],14:[2900,4900,6200],15:[3300,5400,7800],16:[3800,6100,9800],17:[4500,7200,11700],18:[5000,8700,14200],19:[5500,10700,17200],20:[6400,13200,22000]};
+const DIFFS=[["faible","Faible"],["moderee","Modérée"],["elevee","Élevée"]];
+const SIZES=[["TP","Très petite"],["P","Petite"],["M","Moyenne"],["G","Grande"],["TG","Très grande"],["Gig","Gigantesque"]];
+const ATTITUDES=[["","—"],["amical","Amical"],["neutre","Neutre"],["mefiant","Méfiant"],["hostile","Hostile"],["inconnu","Inconnu"]];
+const ABIL=[["for","FOR"],["dex","DEX"],["con","CON"],["int","INT"],["sag","SAG"],["cha","CHA"]];
+const MAN_SECS=[["perso","Personnages"],["pnj","PNJ"],["monstres","Bestiaire"],["rencontres","Rencontres"],["generateur","Générateur"],["quetes","Quêtes & scénarios"],["notes","Notes & pages"]];
+const MAN={
+  pnj:{coll:"pnj",nom:"PNJ",fields:[["nom","Nom","text",1],["image","Portrait","image"],["role","Rôle ou occupation","text"],["espece","Espèce","text"],["region","Région","region"],["lieu","Lieu","text"],["faction","Faction","text"],["attitude","Attitude envers la Guilde","select",0,ATTITUDES],["apparence","Apparence","textarea"],["voix","Voix et manières","textarea"],["secrets","Secrets","md"],["monstre","Stats (bestiaire)","monsterref"],["quetes","Quêtes liées","questmulti"],["notes","Notes","md"]]},
+  monstres:{coll:"monstres",nom:"monstre",fields:[["nom","Nom","text",1],["image","Image","image"],["taille","Taille","select",0,SIZES],["type","Type","text"],["alignement","Alignement","text"],["fp","Facteur de puissance (FP)","select",0,CR_LIST.map(c=>[c,c+" ("+CR_XP[c]+" XP)"])],["ca","Classe d'armure","number"],["pv","Points de vie","text"],["vitesse","Vitesse","text"],
+    ["for","FOR","number"],["dex","DEX","number"],["con","CON","number"],["int","INT","number"],["sag","SAG","number"],["cha","CHA","number"],
+    ["jets","Jets de sauvegarde","text"],["competences","Compétences","text"],["resist","Résistances et immunités","text"],["sens","Sens","text"],["langues","Langues","text"],
+    ["traits","Traits","md"],["actions","Actions","md"],["reactions","Réactions et actions légendaires","md"],["region","Région","region"],["tags","Mots-clés (séparés par des virgules)","text"],["notes","Notes","md"]]},
+  rencontres:{coll:"rencontres",nom:"rencontre",fields:[["nom","Nom","text",1],["region","Région","region"],["quete","Quête liée","questref"],["monstres","Monstres","monsterlist"],["terrain","Terrain et ambiance","textarea"],["notes","Tactique et déroulement","md"]]},
+  dossiers:{coll:"dossiers",nom:"dossier",fields:[["outerworlder","Outerworlder","select",0,[["","À déterminer"],["oui","Oui"],["non","Non (natif)"]]],["donNom","Don accordé par le Système","text"],["donDesc","Effet du Don","md"],["niveau","Niveau","number"],["ca","CA","number"],["pv","PV max","number"],["percPassive","Perception passive","number"],["accroches","Accroches et liens","md"],["notes","Notes du DM","md"]]},
+  scenarios:{coll:"scenarios",nom:"scénario",fields:[["scenario","Scénario","md"],["rencontres","Rencontres liées","rencmulti"],["pnj","PNJ liés","pnjmulti"],["monstres","Monstres liés","monstermulti"],["notes","Notes","md"]]}
+};
+function manList(t){return t==="pnj"?pnjs:t==="monstres"?monstres:t==="rencontres"?rencontres:[];}
+function byName(l){return l.slice().sort((a,b)=>String(a.nom||"").localeCompare(String(b.nom||""),"fr"));}
+function crXp(fp){return CR_XP[String(fp)]||0;}
+function mod(n){if(n==null||n==="")return "";const m=Math.floor((+n-10)/2);return (m>=0?"+":"")+m;}
+function encXp(list){return (list||[]).reduce((s,r)=>{const m=monstres.find(x=>x.id===r.id);return s+(m?crXp(m.fp)*(+r.nb||0):0);},0);}
+function partyLevels(){const P=ui.party;if(P.mode==="chars"){return P.ids.map(id=>{const d=dossiers[id]||{};return Math.max(1,Math.min(20,+d.niveau||1));});}
+  return Array.from({length:Math.max(1,Math.min(12,+P.nb||1))},()=>Math.max(1,Math.min(20,+P.niv||1)));}
+function budgets(){const l=partyLevels();return [0,1,2].map(i=>l.reduce((s,v)=>s+XP_BUDGET[v][i],0));}
+function diffOf(xp){const b=budgets();if(!xp)return ["—",""];if(xp<=b[0])return ["Faible","d-low"];if(xp<=b[1])return ["Modérée","d-mod"];if(xp<=b[2])return ["Élevée","d-high"];return ["Au-delà d'élevée","d-deadly"];}
+function partyBox(){const P=ui.party,chars=byName(aventuriers);
+  let h='<div class="partybox"><div class="chips" role="group" aria-label="Groupe"><button class="chip" data-a="party-mode" data-v="manuel" aria-pressed="'+(P.mode==="manuel")+'">Groupe type</button><button class="chip" data-a="party-mode" data-v="chars" aria-pressed="'+(P.mode==="chars")+'">Mes personnages</button></div>';
+  if(P.mode==="manuel")h+='<div class="prow"><label for="pa-nb">Personnages<input id="pa-nb" type="number" min="1" max="12" value="'+esc(P.nb)+'"></label><label for="pa-niv">Niveau<input id="pa-niv" type="number" min="1" max="20" value="'+esc(P.niv)+'"></label></div>';
+  else h+='<div class="cpick">'+chars.map(a=>{const d=dossiers[a.id]||{};return '<label class="cpk" for="pa-'+esc(a.id)+'"><input type="checkbox" id="pa-'+esc(a.id)+'" data-party="'+esc(a.id)+'"'+(P.ids.indexOf(a.id)>=0?' checked':'')+'><span>'+esc(a.nom)+' · niv. '+(d.niveau||'?')+'</span></label>';}).join("")+'</div>'+(P.ids.some(id=>!(dossiers[id]||{}).niveau)?'<p class="desc">Niveau inconnu = 1. Renseigne-le dans le dossier du personnage.</p>':'');
+  const b=budgets();
+  return h+'<p class="budget">Budget d\'XP du groupe : <span class="d-low">Faible '+b[0]+'</span> · <span class="d-mod">Modérée '+b[1]+'</span> · <span class="d-high">Élevée '+b[2]+'</span></p></div>';}
+function regionOpts(cur,none){return '<option value="">'+(none||"—")+'</option><option value="cote"'+(cur==="cote"?' selected':'')+'>Sword Coast</option>'+bureaux.map(b=>'<option value="'+esc(b.id)+'"'+(cur===b.id?' selected':'')+'>'+esc(b.nom)+'</option>').join("");}
+function multiPick(key,list,sel,lab){sel=sel||[];if(!list.length)return '<p class="desc">Rien à lier pour l\'instant.</p>';
+  return '<div class="cpick">'+list.map(x=>'<label class="cpk" for="mm-'+key+'-'+esc(x.id)+'"><input type="checkbox" id="mm-'+key+'-'+esc(x.id)+'" data-mm="'+key+'" value="'+esc(x.id)+'"'+(sel.indexOf(x.id)>=0?' checked':'')+'><span>'+esc(lab(x))+'</span></label>').join("")+'</div>';}
+function mlEditor(){const rows=ui.manML||[];
+  return '<div class="mlist">'+(rows.length?rows.map((r,i)=>{const m=monstres.find(x=>x.id===r.id);return '<div class="mlrow"><span>'+esc(m?m.nom:"(supprimé)")+(m?' <em>FP '+esc(m.fp||"?")+'</em>':'')+'</span><label class="sr" for="ml-n-'+i+'">Nombre</label><input id="ml-n-'+i+'" type="number" min="1" max="99" value="'+esc(r.nb)+'" data-ml="'+i+'"><button class="rm" type="button" data-a="ml-del" data-id="'+i+'" aria-label="Retirer">✕</button></div>';}).join(""):'<p class="desc">Aucun monstre.</p>')+
+    (monstres.length?'<div class="mlrow add"><label class="sr" for="ml-pick">Monstre</label><select id="ml-pick">'+byName(monstres).map(m=>'<option value="'+esc(m.id)+'">'+esc(m.nom)+' (FP '+esc(m.fp||"?")+')</option>').join("")+'</select><button class="btn ghost" type="button" data-a="ml-add">Ajouter</button></div>':'<p class="desc">Ajoute d\'abord des monstres au bestiaire.</p>')+
+    '<p class="desc">XP totale : <strong>'+encXp(rows)+'</strong> · difficulté pour le groupe : <strong class="'+diffOf(encXp(rows))[1]+'">'+diffOf(encXp(rows))[0]+'</strong></p></div>';}
+function manForm(type,d,title){const S=MAN[type];d=d||{};
+  let h='<form class="form dmform" id="manform" data-type="'+type+'"><h2>'+esc(title)+'</h2>';
+  S.fields.forEach(f=>{const [k,lab,ty,req,opts]=f,v=d[k],id="mf-"+k;
+    const wide=["textarea","md","image","monsterlist","questmulti","rencmulti","pnjmulti","monstermulti"].indexOf(ty)>=0||k==="nom"||k==="titre";
+    if(ty==="image"){const img=ui.manImg!==undefined?ui.manImg:(v||"");h+='<div class="wide imgrow">'+(img?'<img class="portrait sm" src="'+esc(img)+'" alt="">':'<span class="portrait sm ph" aria-hidden="true">?</span>')+'<label for="mf-img">'+lab+' (facultatif)<input id="mf-img" type="file" accept="image/*"></label>'+(img?'<button class="btn ghost" type="button" data-a="mimg-clear">Retirer</button>':'')+'</div>';return;}
+    h+=ty==="monsterlist"||ty.indexOf("multi")>0?'<fieldset class="wide pick"><legend>'+lab+'</legend>':'<label class="'+(wide?'wide':'')+(ABIL.some(x=>x[0]===k)?' abil':'')+'" for="'+id+'">'+lab+(ty==="md"?' <span class="tip">## Titre, **gras**, - liste</span>':'');
+    if(ty==="text")h+='<input id="'+id+'" maxlength="'+(k==="nom"?100:300)+'"'+(req?' required':'')+' value="'+esc(v||"")+'">';
+    else if(ty==="number")h+='<input id="'+id+'" type="number" min="0" max="999" value="'+esc(v==null?"":v)+'">';
+    else if(ty==="textarea")h+='<textarea id="'+id+'" rows="3" maxlength="3000">'+esc(v||"")+'</textarea>';
+    else if(ty==="md")h+='<textarea id="'+id+'" rows="'+(k==="scenario"?14:6)+'" maxlength="40000">'+esc(v||"")+'</textarea>';
+    else if(ty==="select")h+='<select id="'+id+'">'+opts.map(o=>'<option value="'+esc(o[0])+'"'+(String(v==null?(k==="fp"?"1":k==="taille"?"M":""):v)===o[0]?' selected':'')+'>'+esc(o[1])+'</option>').join("")+'</select>';
+    else if(ty==="region")h+='<select id="'+id+'">'+regionOpts(v)+'</select>';
+    else if(ty==="questref")h+='<select id="'+id+'"><option value="">—</option>'+quetes.map(q=>'<option value="'+esc(q.id)+'"'+(v===q.id?' selected':'')+'>'+esc(q.titre)+'</option>').join("")+'</select>';
+    else if(ty==="monsterref")h+='<select id="'+id+'"><option value="">—</option>'+byName(monstres).map(m=>'<option value="'+esc(m.id)+'"'+(v===m.id?' selected':'')+'>'+esc(m.nom)+'</option>').join("")+'</select>';
+    else if(ty==="monsterlist")h+=mlEditor();
+    else if(ty==="questmulti")h+=multiPick(k,quetes,v,q=>q.titre);
+    else if(ty==="rencmulti")h+=multiPick(k,byName(rencontres),v,x=>x.nom);
+    else if(ty==="pnjmulti")h+=multiPick(k,byName(pnjs),v,x=>x.nom);
+    else if(ty==="monstermulti")h+=multiPick(k,byName(monstres),v,x=>x.nom);
+    h+=ty==="monsterlist"||ty.indexOf("multi")>0?'</fieldset>':'</label>';});
+  return h+'<div class="actions wide"><button class="btn" type="submit">Enregistrer</button><button class="btn ghost" type="button" data-a="man-cancel">Annuler</button></div></form>';}
+function readManForm(type){const out={};
+  MAN[type].fields.forEach(f=>{const [k,,ty]=f,el=document.getElementById("mf-"+k);
+    if(ty==="image"){out.image=ui.manImg!==undefined?ui.manImg:undefined;if(out.image===undefined)delete out.image;return;}
+    if(ty==="number"){const s=el?el.value.trim():"";out[k]=s===""?null:Math.max(0,Math.min(999,Math.round(+s)));return;}
+    if(ty==="monsterlist"){out[k]=(ui.manML||[]).map((r,i)=>{const n=document.getElementById("ml-n-"+i);return {id:r.id,nb:Math.max(1,Math.min(99,Math.round(+(n?n.value:r.nb)||1)))};});return;}
+    if(ty.indexOf("multi")>0){out[k]=Array.from(document.querySelectorAll('#manform input[data-mm="'+k+'"]')).filter(c=>c.checked).map(c=>c.value);return;}
+    out[k]=el?String(el.value).slice(0,40000):"";});
+  return out;}
+function mdBlock(t,v){return v?'<h3>'+t+'</h3><div class="wikibody">'+md(v)+'</div>':'';}
+function txtLine(t,v){return v?'<p class="sbl"><strong>'+t+'</strong> '+esc(v)+'</p>':'';}
+function statblock(m){
+  return '<div class="statblock">'+(m.image?'<img class="sbimg" src="'+esc(m.image)+'" alt="">':'')+'<h2>'+esc(m.nom)+'</h2><p class="sbsub">'+esc([(SIZES.find(s=>s[0]===m.taille)||[,""])[1],m.type].filter(Boolean).join(" · ")+(m.alignement?', '+m.alignement:''))+'</p><hr>'+
+    '<p class="sbl"><strong>CA</strong> '+esc(m.ca==null?"—":m.ca)+' · <strong>PV</strong> '+esc(m.pv||"—")+' · <strong>Vitesse</strong> '+esc(m.vitesse||"—")+'</p>'+
+    '<table class="abil"><thead><tr>'+ABIL.map(a=>'<th scope="col">'+a[1]+'</th>').join("")+'</tr></thead><tbody><tr>'+ABIL.map(a=>'<td>'+(m[a[0]]==null?'—':esc(m[a[0]])+' <span>('+mod(m[a[0]])+')</span>')+'</td>').join("")+'</tr></tbody></table><hr>'+
+    txtLine("Jets de sauvegarde",m.jets)+txtLine("Compétences",m.competences)+txtLine("Résistances et immunités",m.resist)+txtLine("Sens",m.sens)+txtLine("Langues",m.langues)+
+    '<p class="sbl"><strong>FP</strong> '+esc(m.fp||"—")+' ('+crXp(m.fp)+' XP)</p>'+
+    (m.traits?'<hr><div class="wikibody">'+md(m.traits)+'</div>':'')+mdBlock("Actions",m.actions)+mdBlock("Réactions et actions légendaires",m.reactions)+'</div>';}
+function manTools(type,id,editLbl){return '<div class="actions"><button class="btn" data-a="man-edit" data-id="'+esc(id)+'">'+(editLbl||"Modifier")+'</button>'+(type?(ui.confirmMan===id?'<button class="btn danger" data-a="man-del-yes" data-id="'+esc(id)+'">Supprimer définitivement</button><button class="btn ghost" data-a="man-del-no">Annuler</button>':'<button class="btn ghost" data-a="man-dup" data-id="'+esc(id)+'">Dupliquer</button><button class="btn ghost" data-a="man-del" data-id="'+esc(id)+'">Supprimer</button>'):'')+'</div>';}
+function backLink(lbl){return '<button class="linkbtn manback" data-a="man-back">← '+lbl+'</button>';}
+function filterQ(l,keys){const q=ui.manQ.trim().toLowerCase();return !q?l:l.filter(x=>keys.map(k=>x[k]||"").join(" ").toLowerCase().indexOf(q)>=0);}
+function searchBar(lbl,newLbl){return '<div class="compbar"><label for="man-q" class="sr">Rechercher</label><input id="man-q" type="search" placeholder="'+lbl+'" value="'+esc(ui.manQ)+'">'+(newLbl?'<button class="btn gold" data-a="man-new">'+newLbl+'</button>':'')+'</div>';}
+const ATT_LBL={amical:"Amical",neutre:"Neutre",mefiant:"Méfiant",hostile:"Hostile",inconnu:"Inconnu"};
+// ----- sections -----
+function secPerso(){
+  if(ui.manId){const a=aventuriers.find(x=>x.id===ui.manId);if(!a)return backLink("Personnages")+'<p class="empty">Personnage introuvable.</p>';const d=dossiers[a.id]||{};
+    if(ui.manEdit)return backLink("Personnages")+manForm("dossiers",d,"Dossier DM : "+a.nom);
+    const curQ=quetes.filter(q=>q.statut==="encours"&&inscriptions.some(i=>i.quete===q.id&&i.aventurier===a.id&&i.statut==="confirmee"));
+    const waitQ=quetes.filter(q=>q.statut==="ouverte"&&inscriptions.some(i=>i.quete===q.id&&i.aventurier===a.id&&i.statut==="attente"));
+    const doneQ=questsOf(a),pm=pointsMap[a.id]||{},regs=bureaux.filter(b=>typeof pm[b.id]==="number"||renown(a,b.id));
+    const ql=l=>l.length?'<ul class="todo">'+l.map(q=>'<li><span>'+rankSeal(q.rang)+' '+esc(q.titre)+' <em>('+esc((office(q.bureau)||{}).nom||"")+')</em></span><button class="mini" data-a="man-quest" data-id="'+esc(q.id)+'">Scénario</button></li>').join("")+'</ul>':'<p class="desc">Aucune.</p>';
+    let h=backLink("Personnages")+'<article class="dossier"><div class="sheet-top">'+(a.image?'<img class="portrait" src="'+esc(a.image)+'" alt="">':'<span class="portrait ph" aria-hidden="true">'+esc(String(a.nom).charAt(0))+'</span>')+'<div class="sheet-id"><h2>'+esc(a.nom)+'</h2><p class="sheet-sub">'+esc([a.espece,a.classe].filter(Boolean).join(" · ")||"Aventurier")+(d.niveau?' · niveau '+esc(d.niveau):'')+'</p>'+(a.joueur?'<p class="sheet-pl">Joué par '+esc(a.joueur)+'</p>':'')+'<p><a href="#perso-'+esc(a.id)+'">Voir la fiche publique</a></p></div></div>';
+    h+='<div class="dmgrid"><section class="dmcard"><h3>Le Système</h3><p><strong>Outerworlder :</strong> '+({oui:"Oui",non:"Non (natif)"}[d.outerworlder]||"À déterminer")+'</p>'+(d.donNom?'<p class="don-dm"><strong>Don : '+esc(d.donNom)+'</strong></p>'+(d.donDesc?'<div class="wikibody">'+md(d.donDesc)+'</div>':''):d.outerworlder==="non"?'':'<p class="warn">Aucun Don attribué.</p>')+(a.don&&!d.donNom?'<p class="desc">Ancien Don (fiche publique) : '+esc(a.don)+'</p>':'')+'</section>';
+    h+='<section class="dmcard"><h3>En jeu</h3><p class="sbl"><strong>CA</strong> '+esc(d.ca==null?"—":d.ca)+' · <strong>PV max</strong> '+esc(d.pv==null?"—":d.pv)+' · <strong>Perception passive</strong> '+esc(d.percPassive==null?"—":d.percPassive)+'</p></section></div>';
+    h+=mdBlock("Accroches et liens",d.accroches)+mdBlock("Notes du DM",d.notes);
+    h+='<h3>Renommée</h3>'+(regs.length?'<ul class="sheetrep">'+regs.map(b=>'<li><span>'+esc(b.nom)+'</span>'+chip(renown(a,b.id))+' <span class="muted">'+(pm[b.id]||0)+' pts</span></li>').join("")+'</ul>':'<p class="desc">Inconnu partout.</p>');
+    h+='<h3>Quêtes en cours</h3>'+ql(curQ)+'<h3>Inscriptions en attente</h3>'+ql(waitQ)+'<h3>Quêtes accomplies</h3>'+ql(doneQ);
+    h+=sheetNews(a.id);
+    if(a.description)h+='<h3>Description (publique)</h3><p class="desc">'+esc(a.description)+'</p>';
+    if(a.background)h+='<h3>Background (public)</h3><p class="desc">'+esc(a.background)+'</p>';
+    return h+manTools(null,a.id,"Modifier le dossier")+'</article>';}
+  const l=filterQ(byName(aventuriers),["nom","classe","espece","joueur"]);
+  return searchBar("Rechercher un personnage…")+(l.length?'<div class="mangrid">'+l.map(a=>{const d=dossiers[a.id]||{};
+    return '<button class="mcard" data-a="man-open" data-sec="perso" data-id="'+esc(a.id)+'">'+(a.image?'<img src="'+esc(a.image)+'" alt="">':'<span class="ph" aria-hidden="true">'+esc(String(a.nom).charAt(0))+'</span>')+'<span class="mb"><strong>'+esc(a.nom)+'</strong><span>'+esc([a.classe,d.niveau?'niv. '+d.niveau:''].filter(Boolean).join(" · "))+'</span><span class="ctags">'+(d.outerworlder==="oui"?'<span class="ccat">Outerworlder</span>':'')+(d.donNom?'<span class="ccat rev">Don : '+esc(d.donNom)+'</span>':d.outerworlder!=="non"?'<span class="ccat masq">Don à attribuer</span>':'')+'</span></span></button>';}).join("")+'</div>':'<p class="empty">Aucun personnage.</p>');}
+function secGeneric(type){const S=MAN[type],list=manList(type);
+  if(ui.manEdit)return backLink(MAN_SECS.find(x=>x[0]===type)[1])+manForm(type,ui.manEdit==="new"?(ui.manDraft||null):list.find(x=>x.id===ui.manEdit),ui.manEdit==="new"?({pnj:"Nouveau PNJ",monstres:"Nouveau monstre",rencontres:"Nouvelle rencontre"}[type]):"Modifier : "+((list.find(x=>x.id===ui.manEdit)||{}).nom||""));
+  if(ui.manId){const x=list.find(y=>y.id===ui.manId);if(!x)return backLink("Retour")+'<p class="empty">Introuvable.</p>';
+    let h=backLink(MAN_SECS.find(s=>s[0]===type)[1])+'<article class="dossier">';
+    if(type==="monstres"){h+=statblock(x)+(x.tags?'<p class="desc">Mots-clés : '+esc(x.tags)+'</p>':'')+(x.region?'<p class="desc">Région : '+esc(regionName(x.region))+'</p>':'')+mdBlock("Notes",x.notes);
+      const used=rencontres.filter(r=>(r.monstres||[]).some(m=>m.id===x.id)),pn=pnjs.filter(p=>p.monstre===x.id);
+      if(used.length)h+='<h3>Utilisé dans</h3><ul class="todo">'+used.map(r=>'<li><span>'+esc(r.nom)+'</span><button class="mini" data-a="man-open" data-sec="rencontres" data-id="'+esc(r.id)+'">Ouvrir</button></li>').join("")+'</ul>';
+      if(pn.length)h+='<h3>PNJ avec ces stats</h3><p>'+pn.map(p=>esc(p.nom)).join(", ")+'</p>';}
+    else if(type==="pnj"){const m=monstres.find(y=>y.id===x.monstre);
+      h+='<div class="sheet-top">'+(x.image?'<img class="portrait" src="'+esc(x.image)+'" alt="">':'')+'<div class="sheet-id"><h2>'+esc(x.nom)+'</h2><p class="sheet-sub">'+esc([x.role,x.espece].filter(Boolean).join(" · "))+'</p><p class="ctags">'+(x.region?'<span class="creg">'+esc(regionName(x.region))+'</span>':'')+(x.faction?'<span class="ccat">'+esc(x.faction)+'</span>':'')+(x.attitude?'<span class="ccat att-'+esc(x.attitude)+'">'+esc(ATT_LBL[x.attitude]||x.attitude)+'</span>':'')+'</p>'+(x.lieu?'<p class="desc">Lieu : '+esc(x.lieu)+'</p>':'')+'</div></div>'+
+        (x.apparence?'<h3>Apparence</h3><p class="desc">'+esc(x.apparence)+'</p>':'')+(x.voix?'<h3>Voix et manières</h3><p class="desc">'+esc(x.voix)+'</p>':'')+mdBlock("Secrets",x.secrets)+mdBlock("Notes",x.notes)+
+        ((x.quetes||[]).length?'<h3>Quêtes liées</h3><ul class="todo">'+x.quetes.map(id=>questById(id)).filter(Boolean).map(q=>'<li><span>'+esc(q.titre)+'</span><button class="mini" data-a="man-quest" data-id="'+esc(q.id)+'">Scénario</button></li>').join("")+'</ul>':'')+
+        (m?'<h3>Stats</h3>'+statblock(m):'');}
+    else if(type==="rencontres"){const xp=encXp(x.monstres),q=questById(x.quete),df=diffOf(xp);
+      h+='<h2>'+esc(x.nom)+'</h2><p class="ctags">'+(x.region?'<span class="creg">'+esc(regionName(x.region))+'</span>':'')+(q?'<span class="ccat">'+esc(q.titre)+'</span>':'')+'</p>';
+      h+='<ul class="todo">'+(x.monstres||[]).map(r=>{const m=monstres.find(y=>y.id===r.id);return '<li><span><strong>'+esc(r.nb)+' ×</strong> '+esc(m?m.nom:"(supprimé)")+(m?' · FP '+esc(m.fp)+' · CA '+esc(m.ca==null?"—":m.ca)+' · PV '+esc(m.pv||"—"):'')+'</span>'+(m?'<button class="mini" data-a="man-open" data-sec="monstres" data-id="'+esc(m.id)+'">Stats</button>':'')+'</li>';}).join("")+'</ul>';
+      h+='<p class="sbl"><strong>XP totale :</strong> '+xp+' · <strong>Difficulté :</strong> <span class="'+df[1]+'">'+df[0]+'</span></p>'+partyBox();
+      h+=(x.terrain?'<h3>Terrain et ambiance</h3><p class="desc">'+esc(x.terrain)+'</p>':'')+mdBlock("Tactique et déroulement",x.notes);}
+    return h+manTools(type,x.id)+'</article>';}
+  if(type==="monstres"){const l=filterQ(byName(monstres),["nom","type","tags","fp"]);
+    return searchBar("Rechercher un monstre, un type, un mot-clé…","Nouveau monstre")+(l.length?'<div class="tablebox light"><table class="dmtable"><thead><tr><th scope="col">Nom</th><th scope="col">FP</th><th scope="col">Type</th><th scope="col">CA</th><th scope="col">PV</th><th scope="col">Région</th></tr></thead><tbody>'+
+      l.map(m=>'<tr><th scope="row"><button class="linkbtn" data-a="man-open" data-sec="monstres" data-id="'+esc(m.id)+'">'+esc(m.nom)+'</button></th><td>'+esc(m.fp||"—")+'</td><td>'+esc(m.type||"")+'</td><td>'+esc(m.ca==null?"":m.ca)+'</td><td>'+esc(m.pv||"")+'</td><td>'+esc(m.region?regionName(m.region):"")+'</td></tr>').join("")+'</tbody></table></div>':'<p class="empty">Le bestiaire est vide. Ajoute ton premier monstre !</p>');}
+  if(type==="pnj"){const l=filterQ(byName(pnjs),["nom","role","faction","lieu","espece"]);
+    return searchBar("Rechercher un PNJ, une faction, un lieu…","Nouveau PNJ")+(l.length?'<div class="mangrid">'+l.map(p=>'<button class="mcard" data-a="man-open" data-sec="pnj" data-id="'+esc(p.id)+'">'+(p.image?'<img src="'+esc(p.image)+'" alt="">':'<span class="ph" aria-hidden="true">'+esc(String(p.nom).charAt(0))+'</span>')+'<span class="mb"><strong>'+esc(p.nom)+'</strong><span>'+esc([p.role,p.region?regionName(p.region):""].filter(Boolean).join(" · "))+'</span><span class="ctags">'+(p.faction?'<span class="ccat">'+esc(p.faction)+'</span>':'')+(p.attitude?'<span class="ccat att-'+esc(p.attitude)+'">'+esc(ATT_LBL[p.attitude]||"")+'</span>':'')+'</span></span></button>').join("")+'</div>':'<p class="empty">Aucun PNJ pour l\'instant.</p>');}
+  const l=filterQ(byName(rencontres),["nom"]);
+  return searchBar("Rechercher une rencontre…","Nouvelle rencontre")+partyBox()+(l.length?'<ul class="todo">'+l.map(r=>{const xp=encXp(r.monstres),df=diffOf(xp);return '<li><span><strong>'+esc(r.nom)+'</strong>'+(r.region?' · '+esc(regionName(r.region)):'')+' · '+(r.monstres||[]).map(x=>{const m=monstres.find(y=>y.id===x.id);return x.nb+'× '+(m?m.nom:"?");}).map(esc).join(", ")+' · '+xp+' XP · <span class="'+df[1]+'">'+df[0]+'</span></span><button class="mini" data-a="man-open" data-sec="rencontres" data-id="'+esc(r.id)+'">Ouvrir</button></li>';}).join("")+'</ul>':'<p class="empty">Aucune rencontre. Crée-en une ou utilise le générateur.</p>');}
+function syncML(){(ui.manML||[]).forEach((r,i)=>{const n=document.getElementById("ml-n-"+i);if(n)r.nb=Math.max(1,Math.min(99,Math.round(+n.value)||1));});}
+function genEncounter(){const G=ui.gen,bi={faible:0,moderee:1,elevee:2}[G.diff],budget=budgets()[bi],floor=bi>0?budgets()[bi-1]:Math.round(budget*0.5);
+  let c=monstres.filter(m=>crXp(m.fp)>0&&crXp(m.fp)<=budget&&(!G.region||m.region===G.region||!m.region||m.region==="cote")&&(!G.type||String((m.type||"")+" "+(m.tags||"")).toLowerCase().indexOf(G.type.toLowerCase())>=0));
+  if(!c.length)return {err:"Aucun monstre du bestiaire ne correspond (ou tous dépassent le budget de "+budget+" XP)."};
+  let best=null;
+  for(let t=0;t<80;t++){const pool=c.slice().sort(()=>Math.random()-.5),k=1+Math.floor(Math.random()*Math.min(3,pool.length));let total=0,count=0;const g=[];
+    for(let i=0;i<k;i++){const m=pool[i],x=crXp(m.fp),max=Math.min(Math.floor((budget-total)/x),i===0?6:3,8-count);if(max<1)continue;const n=1+Math.floor(Math.random()*max);g.push({id:m.id,nb:n});total+=n*x;count+=n;}
+    let grew=true;while(grew&&count<8){grew=false;for(const r of g){const x=crXp((monstres.find(m=>m.id===r.id)||{}).fp);if(total+x<=budget&&count<8&&Math.random()<.6){r.nb++;total+=x;count++;grew=true;}}}
+    const score=(total>floor?1:0)*10+total/budget;if(!best||score>best.score)best={g,total,score};}
+  return {list:best.g,total:best.total,budget};}
+function secGen(){const G=ui.gen;
+  let h='<p class="hint">Choisis le groupe et la difficulté : le générateur pioche dans ton bestiaire pour approcher le budget d\'XP (règles 2024).</p>'+partyBox();
+  h+='<form class="inline genform" id="genform"><label for="gen-diff">Difficulté<select id="gen-diff">'+DIFFS.map(d=>'<option value="'+d[0]+'"'+(G.diff===d[0]?' selected':'')+'>'+d[1]+'</option>').join("")+'</select></label><label for="gen-reg">Région<select id="gen-reg">'+regionOpts(G.region,"Toutes")+'</select></label><label for="gen-type">Type ou mot-clé<input id="gen-type" maxlength="40" value="'+esc(G.type)+'" placeholder="ex. gobelin, mort-vivant"></label><button class="btn gold" type="submit">Générer</button></form>';
+  if(G.res){if(G.res.err)h+='<p class="empty">'+esc(G.res.err)+'</p>';
+    else{const df=diffOf(G.res.total);h+='<section class="dmcard genres"><h3>Rencontre proposée</h3><ul class="todo">'+G.res.list.map(r=>{const m=monstres.find(y=>y.id===r.id);return '<li><span><strong>'+r.nb+' ×</strong> '+esc(m?m.nom:"?")+' · FP '+esc(m?m.fp:"?")+'</span></li>';}).join("")+'</ul><p class="sbl"><strong>'+G.res.total+' XP</strong> sur un budget de '+G.res.budget+' · <span class="'+df[1]+'">'+df[0]+'</span></p><div class="actions"><button class="btn" data-a="gen-again">Relancer</button><button class="btn gold" data-a="gen-save">Enregistrer comme rencontre</button></div></section>';}}
+  return h;}
+function secQuetes(){
+  if(ui.manId){const q=questById(ui.manId);if(!q)return backLink("Quêtes")+'<p class="empty">Quête introuvable.</p>';const s=scenarios[q.id]||{};
+    if(ui.manEdit)return backLink("Quêtes")+manForm("scenarios",s,"Scénario : "+q.titre);
+    const ins=signupsFor(q.id).filter(x=>x.statut!=="refusee");
+    let h=backLink("Quêtes")+'<article class="dossier"><div class="ctags">'+rankSeal(q.rang)+'<span class="stamp st-'+esc(q.statut)+'">'+esc(STATUS[q.statut]||"")+'</span><span class="creg">'+esc((office(q.bureau)||{}).nom||"")+'</span></div><h2>'+esc(q.titre)+'</h2><p class="desc">'+esc(q.description)+'</p>'+(q.maj?'<p class="majline"><strong>Mise à jour :</strong> '+esc(q.maj)+'</p>':'')+
+      '<p class="sbl">'+[q.lieu&&'<strong>Lieu</strong> '+esc(q.lieu),q.recompense&&'<strong>Récompense</strong> '+esc(q.recompense),q.niveau&&'<strong>Niveau</strong> '+esc(q.niveau),q.date&&'<strong>Date</strong> '+esc(q.date)].filter(Boolean).join(" · ")+'</p>'+
+      '<p class="sbl"><strong>'+(q.statut==="ouverte"?'Inscrits':'Groupe')+' :</strong> '+(ins.length?ins.map(x=>(x.aventurier?'<button class="linkbtn" data-a="man-open" data-sec="perso" data-id="'+esc(x.aventurier)+'">'+esc(x.nom)+'</button>':esc(x.nom))+(x.statut==="attente"?' <em>(en attente)</em>':'')).join(", "):'personne')+'</p>'+
+      '<p><a href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir sur le babillard</a></p>';
+    h+=mdBlock("Scénario",s.scenario)||'<p class="desc">Pas encore de scénario.</p>';
+    const rs=(s.rencontres||[]).map(id=>rencontres.find(r=>r.id===id)).filter(Boolean).concat(rencontres.filter(r=>r.quete===q.id&&(s.rencontres||[]).indexOf(r.id)<0));
+    if(rs.length)h+='<h3>Rencontres</h3><ul class="todo">'+rs.map(r=>{const df=diffOf(encXp(r.monstres));return '<li><span>'+esc(r.nom)+' · '+encXp(r.monstres)+' XP · <span class="'+df[1]+'">'+df[0]+'</span></span><button class="mini" data-a="man-open" data-sec="rencontres" data-id="'+esc(r.id)+'">Ouvrir</button></li>';}).join("")+'</ul>';
+    const ps=(s.pnj||[]).map(id=>pnjs.find(p=>p.id===id)).filter(Boolean).concat(pnjs.filter(p=>(p.quetes||[]).indexOf(q.id)>=0&&(s.pnj||[]).indexOf(p.id)<0));
+    if(ps.length)h+='<h3>PNJ</h3><ul class="todo">'+ps.map(p=>'<li><span><strong>'+esc(p.nom)+'</strong>'+(p.role?' · '+esc(p.role):'')+'</span><button class="mini" data-a="man-open" data-sec="pnj" data-id="'+esc(p.id)+'">Fiche</button></li>').join("")+'</ul>';
+    const ms=(s.monstres||[]).map(id=>monstres.find(m=>m.id===id)).filter(Boolean);
+    if(ms.length)h+='<h3>Monstres</h3><ul class="todo">'+ms.map(m=>'<li><span>'+esc(m.nom)+' · FP '+esc(m.fp)+'</span><button class="mini" data-a="man-open" data-sec="monstres" data-id="'+esc(m.id)+'">Stats</button></li>').join("")+'</ul>';
+    h+=mdBlock("Notes",s.notes);
+    return h+manTools(null,q.id,"Modifier le scénario")+'</article>';}
+  const f=ui.manQf||"actives",l=filterQ(quetes.filter(q=>f==="toutes"?true:f==="actives"?(q.statut==="ouverte"||q.statut==="encours"):q.statut===f),["titre","lieu"]).sort((a,b)=>String((office(a.bureau)||{}).nom).localeCompare(String((office(b.bureau)||{}).nom),"fr")||String(a.titre).localeCompare(String(b.titre),"fr"));
+  return searchBar("Rechercher une quête…")+'<div class="chips" role="group" aria-label="Filtre">'+[["actives","Ouvertes et en cours"],["terminee","Terminées"],["archivee","Archivées"],["toutes","Toutes"]].map(x=>'<button class="chip" data-a="man-qf" data-v="'+x[0]+'" aria-pressed="'+(f===x[0])+'">'+x[1]+'</button>').join("")+'</div>'+
+    (l.length?'<ul class="todo">'+l.map(q=>'<li><span>'+rankSeal(q.rang)+' <strong>'+esc(q.titre)+'</strong> · '+esc((office(q.bureau)||{}).nom||"")+' · '+esc(STATUS[q.statut]||"")+(scenarios[q.id]&&scenarios[q.id].scenario?' · <span class="d-low">scénario ✓</span>':'')+'</span><button class="mini" data-a="man-quest" data-id="'+esc(q.id)+'">Ouvrir</button></li>').join("")+'</ul>':'<p class="empty">Aucune quête.</p>');}
+function dmManual(){
+  const s=ui.manSec;
+  let h='<div class="chips mansecs" role="group" aria-label="Sections du Manuel">'+MAN_SECS.map(x=>'<button class="chip" data-a="man-sec" data-v="'+x[0]+'" aria-pressed="'+(s===x[0])+'">'+x[1]+'</button>').join("")+'</div>';
+  return h+(s==="perso"?secPerso():s==="generateur"?secGen():s==="quetes"?secQuetes():s==="notes"?dmNotes():secGeneric(s));}
+
 /* ---------- Espace DM ---------- */
 function todoItems(){
   const it=[];
@@ -1076,7 +1295,7 @@ function todoItems(){
   quetes.filter(q=>q.statut==="encours"&&q.rapportBrouillon&&q.rapportBrouillon.resume).forEach(q=>it.push({k:"report",t:'<strong>'+esc(q.titre)+'</strong> : rapport reçu de '+esc(q.rapportBrouillon.auteur||"un joueur"),act:'<a class="mini" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Terminer</a>'}));
   quetes.filter(q=>q.statut==="encours"&&!(q.rapportBrouillon&&q.rapportBrouillon.resume)).forEach(q=>it.push({k:"run",t:'<strong>'+esc(q.titre)+'</strong> : en cours'+(q.date?' · '+esc(q.date):''),act:'<a class="mini" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir</a>'}));
   compPending().forEach(e=>{const p=e.proposition,n=Object.keys(p.approbations||{}).length;it.push({k:"comp",t:'<strong>'+esc(p.titre)+'</strong> : '+(e.publiee===false?'nouvelle entrée':'modification')+' de '+esc((p.par&&p.par.nom)||"?")+' ('+n+'/2)',act:'<a class="mini" href="#compendium-'+esc(e.id)+'">Examiner</a>'});});
-  aventuriers.filter(a=>a.proprietaire&&!a.don).forEach(a=>it.push({k:"don",t:'<strong>'+esc(a.nom)+'</strong> : aucun Don attribué (si Outerworlder)',act:'<a class="mini" href="#perso-'+esc(a.id)+'">Fiche</a>'}));
+  aventuriers.filter(a=>{const d=dossiers[a.id]||{};return a.proprietaire&&d.outerworlder!=="non"&&!d.donNom;}).forEach(a=>{const d=dossiers[a.id]||{};it.push({k:"don",t:'<strong>'+esc(a.nom)+'</strong> : '+(d.outerworlder==="oui"?'Outerworlder sans Don':'Outerworlder ? Don à attribuer ou personnage natif à indiquer'),act:'<button class="mini" data-a="man-open" data-sec="perso" data-id="'+esc(a.id)+'">Dossier</button>'});});
   return it;
 }
 const TODO_GROUPS=[["evol","Le monde doit réagir"],["report","Rapports de mission reçus"],["group","Groupes à former"],["run","Missions en cours"],["comp","Compendium en revue"],["don","Dons à attribuer"]];
@@ -1143,9 +1362,9 @@ function dmStats(){
 function dmSpaceView(){
   if(!isAdmin)return '<p class="empty">L\'Espace DM est réservé au Maître de la Guilde.</p>'+(user&&!user.isAnonymous?'':'<p><button class="btn board" data-a="dm">Mode DM</button></p>');
   const n=todoItems().length;
-  const tabs=[["todo","À traiter"+(n?' <span class="n">'+n+'</span>':'')],["evol","Évolution du monde"+(dueRegions().length?' <span class="n warn">!</span>':'')],["notes","Notes secrètes"],["stats","Vue d'ensemble"],["outils","Outils"]];
+  const tabs=[["todo","À traiter"+(n?' <span class="n">'+n+'</span>':'')],["evol","Évolution du monde"+(dueRegions().length?' <span class="n warn">!</span>':'')],["manuel","Manuel du DM"],["stats","Vue d'ensemble"],["outils","Outils"]];
   let h='<div class="chips dmtabs" role="tablist" aria-label="Espace DM">'+tabs.map(t=>'<button class="chip" role="tab" data-a="dmtab" data-v="'+t[0]+'" aria-selected="'+(ui.dmTab===t[0])+'" aria-pressed="'+(ui.dmTab===t[0])+'">'+t[1]+'</button>').join("")+'</div>';
-  h+='<div class="dmspace" role="tabpanel">'+(ui.dmTab==="evol"?dmEvol():ui.dmTab==="notes"?dmNotes():ui.dmTab==="stats"?dmStats():ui.dmTab==="outils"?dmTools():dmTodo())+'</div>';
+  h+='<div class="dmspace" role="tabpanel">'+(ui.dmTab==="evol"?dmEvol():ui.dmTab==="manuel"?dmManual():ui.dmTab==="notes"?dmNotes():ui.dmTab==="stats"?dmStats():ui.dmTab==="outils"?dmTools():dmTodo())+'</div>';
   return h;
 }
 
@@ -1332,8 +1551,9 @@ function render(){
       h+='</form></div>';}}
   const focusId=document.activeElement&&document.activeElement.id;
   const app=document.getElementById("app");
-  const formKey=ui.editing+"|"+ui.signup+"|"+ui.addName+"|"+ui.advForm+"|"+ui.scaleEdit+"|"+ui.wikiEdit+"|"+(ui.complete?ui.complete.id+ui.complete.step:"")+"|"+ui.confirmGroup+"|"+ui.plan+"|"+ui.dmTab+"|"+ui.evolve+"|"+ui.noteEdit+"|"+ui.newsEdit+"|"+ui.reportWrite+"|"+ui.adjust+"|"+ui.sheetEdit+"|"+ui.compEdit;
+  const formKey=ui.editing+"|"+ui.signup+"|"+ui.addName+"|"+ui.advForm+"|"+ui.scaleEdit+"|"+ui.wikiEdit+"|"+(ui.complete?ui.complete.id+ui.complete.step:"")+"|"+ui.confirmGroup+"|"+ui.plan+"|"+ui.dmTab+"|"+ui.manSec+"|"+ui.manId+"|"+ui.manEdit+"|"+ui.evolve+"|"+ui.noteEdit+"|"+ui.newsEdit+"|"+ui.reportWrite+"|"+ui.adjust+"|"+ui.sheetEdit+"|"+ui.compEdit;
   const keep={}; if(render.lastForm===formKey)["f-titre","f-bureau","f-type","f-rang","f-statut","f-lieu","f-recompense","f-niveau","f-jmin","f-jmax","f-date","f-desc","f-maj","ev-notes","ev-ntitre","ev-ntexte","ev-seuil","n-titre","n-cat","n-reg","n-contenu","n-search","nw-titre","nw-reg","nw-texte","f-name","f-addname","f-advnom","f-advjoueur","w-titre","w-ordre","w-contenu","f-pts","c-date","c-res","c-resume","g-date","r-texte","pl-date","pl-heure","c2-titre","c2-cat","c2-reg","c2-quete","c2-contenu","c-search","p-nom","p-espece","p-classe","p-desc","p-bg","p-don"].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.type==="checkbox"?el.checked:el.value;});
+  if(render.lastForm===formKey)document.querySelectorAll('#manform [id^="mf-"]:not([type=file]),#manform input[data-mm],#genform [id^="gen-"]').forEach(el=>{keep[el.id]=el.type==="checkbox"?el.checked:el.value;});
   const sup=document.getElementById("f-super");if(sup&&render.lastForm===formKey)keep["f-super"]=sup.checked;
   render.lastForm=formKey;
   app.innerHTML=h+'</div>';
@@ -1345,7 +1565,7 @@ function render(){
 function route(){
   const id=(location.hash||"").slice(1);
   const next=id&&id!=="carte"?id:null;
-  if(next!==ui.office){ui.office=next;if(!(next==="personnages"&&ui.sheetEdit==="new"))ui.sheetEdit=null;if(!(next==="compendium"&&ui.compEdit==="new"))ui.compEdit=null;ui.compHist=null;ui.compVer=null;ui.confirmComp=null;ui.evolve=null;ui.noteEdit=null;ui.newsEdit=null;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter=ui.pendingFilter||"ouverte";ui.rank="all";const focusQ=ui.pendingQuest;ui.pendingFilter=null;ui.pendingQuest=null;render();
+  if(next!==ui.office){ui.office=next;if(!(next==="personnages"&&ui.sheetEdit==="new"))ui.sheetEdit=null;if(!(next==="compendium"&&ui.compEdit==="new"))ui.compEdit=null;ui.compHist=null;ui.compVer=null;ui.confirmComp=null;ui.evolve=null;ui.noteEdit=null;ui.newsEdit=null;if(!ui.pendingMan){ui.manEdit=null;}ui.pendingMan=false;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter=ui.pendingFilter||"ouverte";ui.rank="all";const focusQ=ui.pendingQuest;ui.pendingFilter=null;ui.pendingQuest=null;render();
     try{const el=focusQ&&document.getElementById("q-"+focusQ);if(el){el.scrollIntoView({block:"center"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1600);}else window.scrollTo(0,0);}catch(e){}}
 }
 window.addEventListener("hashchange",route);
@@ -1492,6 +1712,24 @@ document.addEventListener("click",async e=>{
   else if(a==="group"){ui.confirmGroup=id;}
   else if(a==="group-cancel"){if(e.target!==b)return;ui.confirmGroup=null;}
   else if(a==="plan"){ui.plan=id;}
+  else if(a==="man-sec"){ui.manSec=b.getAttribute("data-v");ui.manId=null;ui.manEdit=null;ui.manQ="";ui.confirmMan=null;ui.noteEdit=null;}
+  else if(a==="man-open"){ui.dmTab="manuel";ui.manSec=b.getAttribute("data-sec");ui.manId=id;ui.manEdit=null;ui.confirmMan=null;if(location.hash!=="#dm"){ui.pendingMan=true;location.hash="#dm";}window.scrollTo(0,0);}
+  else if(a==="man-quest"){ui.dmTab="manuel";ui.manSec="quetes";ui.manId=id;ui.manEdit=null;window.scrollTo(0,0);}
+  else if(a==="man-back"){if(ui.manEdit&&ui.manId){ui.manEdit=null;}else{ui.manId=null;ui.manEdit=null;}ui.confirmMan=null;}
+  else if(a==="man-qf"){ui.manQf=b.getAttribute("data-v");}
+  else if(a==="man-new"){ui.manEdit="new";ui.manId=null;ui.manImg=undefined;ui.manML=[];ui.manDraft=null;}
+  else if(a==="man-edit"){const t=ui.manSec,x=manList(t).find(y=>y.id===id);ui.manEdit=t==="perso"||t==="quetes"?true:id;ui.manImg=undefined;ui.manML=x&&x.monstres&&t==="rencontres"?x.monstres.map(r=>({id:r.id,nb:r.nb})):[];}
+  else if(a==="man-cancel"){ui.manEdit=null;ui.manImg=undefined;ui.manDraft=null;}
+  else if(a==="man-dup"){const x=manList(ui.manSec).find(y=>y.id===id);if(!x)return;const c=Object.assign({},x);delete c.id;c.nom=(c.nom||"")+" (copie)";ui.manDraft=c;ui.manEdit="new";ui.manId=null;ui.manImg=c.image||undefined;ui.manML=(c.monstres||[]).map(r=>({id:r.id,nb:r.nb}));}
+  else if(a==="man-del"){ui.confirmMan=id;}
+  else if(a==="man-del-no"){ui.confirmMan=null;}
+  else if(a==="man-del-yes"){const c=MAN[ui.manSec].coll;ui.confirmMan=null;ui.manId=null;await run("Supprimé",()=>deleteDoc(doc(db,c,id)));return;}
+  else if(a==="mimg-clear"){ui.manImg="";}
+  else if(a==="ml-add"){const sel=document.getElementById("ml-pick");if(!sel||!sel.value)return;syncML();const r=(ui.manML||[]).find(x=>x.id===sel.value);if(r)r.nb++;else (ui.manML=ui.manML||[]).push({id:sel.value,nb:1});}
+  else if(a==="ml-del"){syncML();ui.manML.splice(+id,1);}
+  else if(a==="party-mode"){ui.party.mode=b.getAttribute("data-v");}
+  else if(a==="gen-again"){ui.gen.res=genEncounter();}
+  else if(a==="gen-save"){const r=ui.gen.res;if(!r||!r.list)return;ui.manSec="rencontres";ui.manId=null;ui.manEdit="new";ui.manML=r.list.map(x=>({id:x.id,nb:x.nb}));ui.manDraft={nom:"Rencontre générée",region:ui.gen.region};}
   else if(a==="dmtab"){ui.dmTab=b.getAttribute("data-v");ui.evolve=null;ui.noteEdit=null;ui.newsEdit=null;}
   else if(a==="evolve"){ui.dmTab="evol";ui.evolve=id;if(location.hash!=="#dm"){location.hash="#dm";}}
   else if(a==="evolve-cancel"){ui.evolve=null;}
@@ -1536,6 +1774,10 @@ document.addEventListener("change",e=>{
     run("Renommée",()=>updateDoc(doc(db,"aventuriers",aid),new FieldPath("renommee",bid),n,"majLe",serverTimestamp()));return;
   }
   if(e.target.id==="c-reg"){ui.compReg=e.target.value;render();return;}
+  if(e.target.getAttribute&&e.target.getAttribute("data-party")){const id=e.target.getAttribute("data-party"),l=ui.party.ids;if(e.target.checked){if(l.indexOf(id)<0)l.push(id);}else ui.party.ids=l.filter(x=>x!==id);render();return;}
+  if(e.target.getAttribute&&e.target.getAttribute("data-ml")!=null){syncML();render();return;}
+  if(e.target.id==="mf-img"){const f=e.target.files&&e.target.files[0];if(!f)return;
+    resizeImage(f).then(url=>{if(url.length>380000)save={state:"error",msg:"Image trop lourde."};else ui.manImg=url;render();}).catch(err=>{save={state:"error",msg:err.message};render();});return;}
   if(e.target.id==="c2-img"){const f=e.target.files&&e.target.files[0];if(!f)return;
     resizeImage(f).then(url=>{if(url.length>380000)save={state:"error",msg:"Image trop lourde."};else ui.compImg=url;render();}).catch(err=>{save={state:"error",msg:err.message};render();});return;}
   if(e.target.id==="p-img"){const f=e.target.files&&e.target.files[0];if(!f)return;
@@ -1546,7 +1788,10 @@ document.addEventListener("change",e=>{
     file.text().then(t=>{try{ui.importPreview=previewImport(JSON.parse(t));ui.dmTab="outils";}catch(err){save={state:"error",msg:"Import impossible : "+err.message};}render();});
   }
 });
-document.addEventListener("input",e=>{if(e.target.id==="n-search"){ui.noteQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("n-search");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}return;}if(e.target.id==="c-search"){ui.compQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("c-search");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}}});
+document.addEventListener("input",e=>{if(e.target.id==="man-q"){ui.manQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("man-q");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}return;}
+  if(e.target.id==="pa-nb"||e.target.id==="pa-niv"){ui.party[e.target.id==="pa-nb"?"nb":"niv"]=e.target.value;if(e.target.value){const id=e.target.id;render();const el=document.getElementById(id);if(el){el.focus();}}return;}
+  if(e.target.getAttribute&&e.target.getAttribute("data-ml")!=null){syncML();return;}
+  if(e.target.id==="n-search"){ui.noteQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("n-search");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}return;}if(e.target.id==="c-search"){ui.compQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("c-search");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}}});
 function compBy(){return {uid:user.uid,nom:String(user.displayName||user.email||"Aventurier").slice(0,60)};}
 function compFields(d){return {titre:d.titre,categorie:d.categorie,region:d.region,contenu:d.contenu||"",image:d.image||"",quete:d.quete||""};}
 // Joueur : la sauvegarde devient une proposition en revue. DM : publication directe.
@@ -1642,6 +1887,16 @@ document.addEventListener("submit",async e=>{
       Object.keys(seen).forEach(id=>{if(seen[id])addPoints(bt,aventuriers.find(y=>y.id===id),q.bureau,seen[id]);});
       await bt.commit();
     });return;
+  }
+  if(e.target.id==="genform"){ui.gen.diff=v("gen-diff")||"moderee";ui.gen.region=v("gen-reg");ui.gen.type=v("gen-type").slice(0,40);ui.gen.res=genEncounter();render();return;}
+  if(e.target.id==="manform"){
+    const type=e.target.getAttribute("data-type"),S=MAN[type];syncML();const d=readManForm(type);
+    let id;if(type==="dossiers")id=ui.manId;else if(type==="scenarios")id=ui.manId;else id=ui.manEdit==="new"?doc(collection(db,S.coll)).id:ui.manEdit;
+    if(!id)return;if(S.fields.some(f=>f[3]&&!String(d[f[0]]||"").trim()))return;
+    if(ui.manEdit==="new"&&ui.manDraft&&ui.manDraft.image&&d.image===undefined)d.image=ui.manDraft.image;
+    d.majLe=serverTimestamp();const isNew=ui.manEdit==="new";if(isNew)d.creeLe=serverTimestamp();
+    ui.manEdit=null;ui.manImg=undefined;ui.manDraft=null;if(type!=="dossiers"&&type!=="scenarios")ui.manId=id;
+    await run("Manuel du DM",()=>setDoc(doc(db,S.coll,id),d,{merge:true}));return;
   }
   if(e.target.id==="seuilform"){const n=Math.max(1,Math.min(50,Math.round(+v("ev-seuil")||3)));await run("Seuil",()=>setDoc(doc(db,"prive","monde"),{seuil:n},{merge:true}));return;}
   if(e.target.id==="noteform"){

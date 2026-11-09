@@ -249,6 +249,22 @@ service cloud.firestore {
     match /evolutions/{id} {
       allow read, write: if isAdmin();
     }
+    // ---------- Manuel du DM : dossiers des personnages (Don, notes…), PNJ, bestiaire, rencontres, scénarios ----------
+    match /dossiers/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /pnj/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /monstres/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /rencontres/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /scenarios/{id} {
+      allow read, write: if isAdmin();
+    }
 
     // ---------- Wiki des règles maison (lecture publique, écriture admin) ----------
     match /wiki/{id} {
