@@ -138,6 +138,11 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 .replist .eff{color:var(--on-board-muted);font-size:15px;min-width:0}
 @media (max-width:620px){.replist li{grid-template-columns:1fr}}
 .rep a,.reg a{color:var(--gold)}
+.rep{background:var(--board-2);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.rephead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 16px}
+.rephead a{font-family:var(--display);font-size:13px;letter-spacing:.08em;text-decoration:none}
+.rep .replist li{background:transparent;border:none;border-top:1px solid var(--line);border-radius:0;padding:8px 0}
+.rep .hint{margin:0}
 .office.regl{border-color:var(--gold)}
 .scaleform{display:flex;flex-direction:column;gap:10px}
 .srow{display:grid;grid-template-columns:56px minmax(140px,1fr) minmax(0,3fr);gap:10px;align-items:end}
@@ -456,10 +461,10 @@ function chip(n){return '<span class="'+rnClass(n)+'">'+esc(lvl(n).titre)+'</spa
 function renown(a,bid){const v=a.renommee&&a.renommee[bid];return typeof v==="number"?v:0;}
 function reputationSection(bid,nom){
   const list=aventuriers.filter(a=>renown(a,bid)!==0).sort((x,y)=>renown(y,bid)-renown(x,bid));
-  let h='<section class="rep" aria-label="Réputation"><h2>Réputation à '+esc(nom)+'</h2>';
-  if(!list.length)return h+'<p class="hint">Aucun aventurier ne s\'est encore fait un nom ici. <a href="#renommee">Voir le registre de renommée</a></p></section>';
+  let h='<section class="rep" aria-label="Réputation"><div class="rephead"><h2>Réputation à '+esc(nom)+'</h2><a href="#renommee">Registre complet →</a></div>';
+  if(!list.length)return h+'<p class="hint">Aucun aventurier ne s\'est encore fait un nom ici. Pour l\'instant, vous êtes tous des inconnus…</p></section>';
   h+='<ul class="replist">'+list.map(a=>{const n=renown(a,bid);return '<li><span class="who">'+esc(a.nom)+(a.joueur?' <em>('+esc(a.joueur)+')</em>':'')+'</span>'+chip(n)+'<span class="eff">'+esc(lvl(n).effet)+'</span></li>';}).join("")+'</ul>';
-  return h+'<p class="hint"><a href="#renommee">Voir le registre de renommée complet</a></p></section>';
+  return h+'</section>';
 }
 function renownView(){
   const sc=scaleList();
@@ -530,7 +535,7 @@ function render(){
   if(b||reg)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
   if(ui.authMsg)h+='<div class="dmbar"><span class="msg">'+esc(ui.authMsg)+'</span><button class="btn board" data-a="auth-ok">OK</button>'+(user&&!user.isAnonymous&&!isAdmin?'<button class="btn board" data-a="logout">Déconnexion</button>':'')+'</div>';
   if(ui.dm)h+=dmPanel(b);
-  h+=reg?renownView():b?boardView()+reputationSection(b.id,b.nom):mapView();
+  h+=reg?renownView():b?reputationSection(b.id,b.nom)+boardView():mapView();
   h+='<footer><span>Pour partir en mission : choisis une quête, appuie sur « Je veux y aller » et entre ton nom. Le DM confirme les inscriptions.</span>'+
     '<button class="linkbtn" data-a="dm">'+(ui.dm?"Quitter le mode DM":"Mode DM")+'</button></footer>';
   if(ui.signup){const sq=questById(ui.signup);
