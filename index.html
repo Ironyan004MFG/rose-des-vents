@@ -206,7 +206,7 @@ header .pill{margin-left:auto}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInAnonymously, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, connectAuthEmulator, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, connectFirestoreEmulator, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, getDoc, writeBatch, serverTimestamp, FieldPath } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, connectFirestoreEmulator, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, getDoc, writeBatch, serverTimestamp, FieldPath, increment, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBd6DdnvzkmPxGB_aAjAgTc1P9jHAztI30",
@@ -233,28 +233,30 @@ if (new URLSearchParams(location.search).has("emu")) {
 const RANKS = {cuivre:{label:"Cuivre",c:"var(--r-cuivre)"},fer:{label:"Fer",c:"var(--r-fer)"},argent:{label:"Argent",c:"var(--r-argent)"},or:{label:"Or",c:"var(--r-or)"},mithral:{label:"Mithril",c:"var(--r-mithral)"},inconnu:{label:"Rang inconnu",c:"#3a3128"}};
 const STATUS = {ouverte:"Ouverte",encours:"En cours",terminee:"Terminée",archivee:"Archivée"};
 const TYPES = ["Contrat","Recherche","Exploration","Prime","Escorte","Rumeur"];
-const QUEST_KEYS = ["bureau","titre","type","rang","statut","lieu","recompense","niveau","joueurs","joueursMin","joueursMax","supercharged","date","description"];
+const QUEST_KEYS = ["bureau","titre","type","rang","statut","lieu","recompense","niveau","joueurs","joueursMin","joueursMax","supercharged","date","description","pointsRenommee"];
+const DEFAULT_RANK_PTS = {cuivre:1,fer:5,argent:10,or:25,mithral:50,inconnu:0};
+const RESULTS = {reussite:"Réussite",partielle:"Réussite partielle",echec:"Échec"};
 const SEED = JSON.parse(document.getElementById("bb-seed").textContent);
 const DEFAULT_SCALE = [
-  {n:-3,titre:"Recherché",effet:"Prime sur leur tête. Les gardes les arrêtent à vue, on refuse de les servir, et la Guilde les tient à l'écart."},
-  {n:-2,titre:"Craint",effet:"Les gens s'écartent sur leur passage, les portes se ferment, les prix doublent."},
-  {n:-1,titre:"Suspect",effet:"Méfiance, gardes qui les suivent, questions insistantes, prix un peu majorés."},
-  {n:0,titre:"Inconnu",effet:"Indifférence, prix normaux, la méfiance ordinaire envers les étrangers."},
-  {n:1,titre:"Remarqué",effet:"On a entendu parler d'eux. Curiosité polie."},
-  {n:2,titre:"Reconnu",effet:"On les salue, les aubergistes se souviennent de leur nom."},
-  {n:3,titre:"Respecté",effet:"Petites faveurs, rabais modestes, les PNJ sont plus bavards."},
-  {n:4,titre:"Héros local",effet:"On leur offre à boire, les autorités les écoutent, des quêtes spéciales leur sont proposées."},
-  {n:5,titre:"Champion de la région",effet:"Audience avec les dirigeants, accès à des lieux fermés au public."},
-  {n:6,titre:"Légende",effet:"On chante leurs exploits, les foules les reconnaissent… et des ennemis puissants les remarquent."}
+  {n:-3,seuil:-50,titre:"Recherché",effet:"Prime sur leur tête. Les gardes les arrêtent à vue, on refuse de les servir, et la Guilde les tient à l'écart."},
+  {n:-2,seuil:-20,titre:"Craint",effet:"Les gens s'écartent sur leur passage, les portes se ferment, les prix doublent."},
+  {n:-1,seuil:-10,titre:"Suspect",effet:"Méfiance, gardes qui les suivent, questions insistantes, prix un peu majorés."},
+  {n:0,seuil:0,titre:"Inconnu",effet:"Indifférence, prix normaux, la méfiance ordinaire envers les étrangers."},
+  {n:1,seuil:10,titre:"Remarqué",effet:"On a entendu parler d'eux. Curiosité polie."},
+  {n:2,seuil:20,titre:"Reconnu",effet:"On les salue, les aubergistes se souviennent de leur nom."},
+  {n:3,seuil:50,titre:"Respecté",effet:"Petites faveurs, rabais modestes, les PNJ sont plus bavards."},
+  {n:4,seuil:100,titre:"Héros local",effet:"On leur offre à boire, les autorités les écoutent, des quêtes spéciales leur sont proposées."},
+  {n:5,seuil:250,titre:"Champion de la région",effet:"Audience avec les dirigeants, accès à des lieux fermés au public."},
+  {n:6,seuil:500,titre:"Légende",effet:"On chante leurs exploits, les foules les reconnaissent… et des ennemis puissants les remarquent."}
 ];
 
 /* ---------- state ---------- */
-let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [];
+let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [];
 const loaded = {b:false, q:false, i:false, a:false, w:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
 let save = {state:"idle", msg:""};
-const ui = {wikiEdit:null, wikiPreview:false, confirmWiki:null, advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
+const ui = {complete:null, adjust:false, wikiEdit:null, wikiPreview:false, confirmWiki:null, advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
 
 /* ---------- helpers ---------- */
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -266,6 +268,7 @@ function normQuest(q){
   if(out.joueursMin===undefined||out.joueursMax===undefined){const p=parsePlayers(out.joueurs);if(out.joueursMin===undefined)out.joueursMin=p.min;if(out.joueursMax===undefined)out.joueursMax=p.max;}
   ["joueursMin","joueursMax"].forEach(k=>{const v=out[k];out[k]=(v===""||v==null||isNaN(+v))?null:Math.max(0,Math.min(99,Math.round(+v)));});
   out.supercharged=!!out.supercharged;
+  out.pointsRenommee=(out.pointsRenommee===""||out.pointsRenommee==null||isNaN(+out.pointsRenommee))?null:Math.round(+out.pointsRenommee);
   if(!RANKS[out.rang])out.rang="inconnu";
   if(!STATUS[out.statut])out.statut="ouverte";
   return out;
@@ -312,7 +315,7 @@ function listen(){
     loaded.b=true;net={state:snap.metadata.fromCache&&!navigator.onLine?"hors-ligne":"ok",msg:""};render();
   },onErr);
   onSnapshot(collection(db,"quetes"),snap=>{
-    quetes=snap.docs.map(d=>Object.assign({id:d.id},normQuest(d.data())));loaded.q=true;render();
+    quetes=snap.docs.map(d=>{const x=d.data();return Object.assign({id:d.id},normQuest(x),{rapport:x.rapport||null});});loaded.q=true;render();
   },onErr);
   onSnapshot(collection(db,"inscriptions"),snap=>{
     inscriptions=snap.docs.map(d=>{const x=d.data();return Object.assign({id:d.id},x,{creeMs:x.creeLe&&x.creeLe.toMillis?x.creeLe.toMillis():Date.now()});});loaded.i=true;render();
@@ -321,6 +324,9 @@ function listen(){
     aventuriers=snap.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>String(a.nom).localeCompare(String(b.nom),"fr"));loaded.a=true;render();
   },onErr);
   onSnapshot(doc(db,"config","renommee"),snap=>{scaleDoc=snap.exists()?snap.data():null;render();},onErr);
+  onSnapshot(query(collection(db,"journal"),orderBy("date","desc"),limit(60)),snap=>{
+    journal=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();
+  },onErr);
   onSnapshot(collection(db,"wiki"),snap=>{
     wikiPages=snap.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>((a.ordre==null?999:a.ordre)-(b.ordre==null?999:b.ordre))||String(a.titre).localeCompare(String(b.titre),"fr"));loaded.w=true;render();
   },onErr);
@@ -486,12 +492,30 @@ function scaleList(){const l=scaleDoc&&Array.isArray(scaleDoc.niveaux)&&scaleDoc
 function lvl(n){return scaleList().find(s=>s.n===n)||{n,titre:String(n),effet:""};}
 function rnClass(n){return "rn rn"+(n<0?"m"+(-n):n>0?"p"+n:"0");}
 function chip(n){return '<span class="'+rnClass(n)+'">'+esc(lvl(n).titre)+'</span>';}
-function renown(a,bid){const v=a.renommee&&a.renommee[bid];return typeof v==="number"?v:0;}
+function seuilOf(s){return typeof s.seuil==="number"?s.seuil:((DEFAULT_SCALE.find(d=>d.n===s.n)||{seuil:0}).seuil);}
+function rankPts(){return Object.assign({},DEFAULT_RANK_PTS,(scaleDoc&&scaleDoc.pointsParRang)||{});}
+function questPts(q){return q.pointsRenommee!=null?q.pointsRenommee:(rankPts()[q.rang]||0);}
+function hasPts(a,bid){return !!(a.points&&typeof a.points[bid]==="number");}
+function pts(a,bid){
+  if(hasPts(a,bid))return a.points[bid];
+  const lv=a.renommee&&a.renommee[bid];
+  if(typeof lv==="number"&&lv!==0){const s=scaleList().find(x=>x.n===lv);return s?seuilOf(s):0;}
+  return 0;
+}
+function levelOf(p){let n=0;scaleList().forEach(s=>{const t=seuilOf(s);if(s.n>0&&p>=t&&s.n>n)n=s.n;if(s.n<0&&p<=t&&s.n<n)n=s.n;});return n;}
+function renown(a,bid){return levelOf(pts(a,bid));}
+function nextInfo(p){const lv=levelOf(p);const nx=scaleList().filter(s=>s.n>Math.max(lv,0)).sort((a,b)=>a.n-b.n)[0];return nx?{need:seuilOf(nx)-p,titre:nx.titre}:null;}
+function ptsLabel(p){return (p>0?"+":"")+p+" pt"+(Math.abs(p)>1?"s":"");}
+function addPoints(bt,a,bid,delta){
+  const ref=doc(db,"aventuriers",a.id);
+  if(hasPts(a,bid)||!(a.renommee&&a.renommee[bid]))bt.update(ref,new FieldPath("points",bid),increment(delta),"majLe",serverTimestamp());
+  else bt.update(ref,new FieldPath("points",bid),pts(a,bid)+delta,"majLe",serverTimestamp());
+}
 function reputationSection(bid,nom){
-  const list=aventuriers.filter(a=>renown(a,bid)!==0).sort((x,y)=>renown(y,bid)-renown(x,bid));
+  const list=aventuriers.filter(a=>pts(a,bid)!==0).sort((x,y)=>pts(y,bid)-pts(x,bid));
   let h='<section class="rep" aria-label="Réputation"><h2>Réputation à '+esc(nom)+'</h2>';
   if(!list.length)return h+'<p class="hint">Aucun aventurier ne s\'est encore fait un nom ici. <a href="#renommee">Voir le registre de renommée</a></p></section>';
-  h+='<ul class="replist">'+list.map(a=>{const n=renown(a,bid);return '<li><span class="who">'+esc(a.nom)+(a.joueur?' <em>('+esc(a.joueur)+')</em>':'')+'</span>'+chip(n)+'<span class="eff">'+esc(lvl(n).effet)+'</span></li>';}).join("")+'</ul>';
+  h+='<ul class="replist">'+list.map(a=>{const n=renown(a,bid),p=pts(a,bid);return '<li><span class="who">'+esc(a.nom)+(a.joueur?' <em>('+esc(a.joueur)+')</em>':'')+'<span class="pts">'+ptsLabel(p)+'</span></span>'+chip(n)+'<span class="eff">'+esc(lvl(n).effet)+'</span></li>';}).join("")+'</ul>';
   return h+'<p class="hint"><a href="#renommee">Voir le registre de renommée complet</a></p></section>';
 }
 function renownView(){
