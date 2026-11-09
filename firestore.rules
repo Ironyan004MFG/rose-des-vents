@@ -42,7 +42,7 @@ service cloud.firestore {
     function validQuest(d) {
       return d.keys().hasOnly(['bureau', 'titre', 'type', 'rang', 'statut', 'lieu', 'recompense', 'niveau',
                                'joueurs', 'joueursMin', 'joueursMax', 'supercharged', 'date', 'description',
-                               'creeLe', 'majLe'])
+                               'pointsRenommee', 'rapport', 'creeLe', 'majLe'])
         && d.keys().hasAll(['bureau', 'titre', 'rang', 'statut'])
         && exists(/databases/$(database)/documents/bureaux/$(d.bureau))
         && str(d.titre, 1, 120)
@@ -52,7 +52,9 @@ service cloud.firestore {
         && optStr(d, 'niveau', 40) && optStr(d, 'joueurs', 40) && optStr(d, 'date', 80)
         && optStr(d, 'description', 4000)
         && optCount(d, 'joueursMin') && optCount(d, 'joueursMax')
-        && (!('supercharged' in d) || d.supercharged is bool);
+        && (!('supercharged' in d) || d.supercharged is bool)
+        && (!('pointsRenommee' in d) || d.pointsRenommee == null || (d.pointsRenommee is int && d.pointsRenommee >= -1000 && d.pointsRenommee <= 1000))
+        && (!('rapport' in d) || d.rapport == null || d.rapport is map);
     }
     match /quetes/{id} {
       allow read: if true;
@@ -93,10 +95,34 @@ service cloud.firestore {
         || (signedIn() && resource.data.uid == request.auth.uid && resource.data.statut != 'refusee');
     }
 
+    // ---------- Wiki des règles maison (lecture publique, écriture admin) ----------
+    match /wiki/{id} {
+      allow read: if true;
+      allow write: if isAdmin()
+        && request.resource.data.keys().hasOnly(['titre', 'contenu', 'ordre', 'creeLe', 'majLe'])
+        && str(request.resource.data.titre, 1, 100)
+        && str(request.resource.data.contenu, 0, 50000)
+        && (!('ordre' in request.resource.data) || request.resource.data.ordre is number);
+      allow delete: if isAdmin();
+    }
+
     // ---------- Phase 2 : renommée (lecture publique, écriture admin) ----------
     match /aventuriers/{id} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isAdmin()
+        && request.resource.data.keys().hasOnly(['nom', 'joueur', 'points', 'renommee', 'creeLe', 'majLe'])
+        && str(request.resource.data.nom, 1, 60)
+        && (!('points' in request.resource.data) || request.resource.data.points is map);
+      allow delete: if isAdmin();
+    }
+    // Journal de renommée : chaque gain ou perte de points
+    match /journal/{id} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['aventurier', 'nom', 'bureau', 'points', 'raison', 'quete', 'date'])
+        && request.resource.data.points is int
+        && str(request.resource.data.aventurier, 1, 80);
+      allow delete: if isAdmin();
     }
     match /config/{id} {
       allow read: if true;

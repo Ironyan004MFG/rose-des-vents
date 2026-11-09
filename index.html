@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Babillard de la Rose des Vents</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
 <style id="bb-style">
 /* Layout: a parchment map of the Sword Coast on a dark guild board; each office opens its own notice board of pinned parchment quests. */
 :root{
@@ -115,6 +117,58 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 .modal label{display:flex;flex-direction:column;gap:4px;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
 @media (prefers-reduced-motion:reduce){.mk .mk-in{transition:none}}
 
+/* points, fin de quête, chroniques */
+.ptsline{display:block;font-size:12.5px;color:var(--on-board-muted);margin-top:4px;white-space:nowrap}
+.replist .pts{display:block;font-family:var(--body);font-size:13px;color:var(--on-board-muted)}
+.subh{font-family:var(--display);font-size:16px;letter-spacing:.1em;color:var(--gold);margin:8px 0 0}
+.journal{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.journal li{display:flex;gap:14px;padding:8px 0;border-bottom:1px solid var(--line);font-size:15.5px}
+.journal .jd{color:var(--on-board-muted);font-variant-numeric:tabular-nums;white-space:nowrap;min-width:92px}
+.inline.dark select,.inline.dark input{min-width:0}
+.modal.wide{max-width:640px;max-height:calc(100vh - 32px);overflow-y:auto}
+.modal textarea{min-height:90px;resize:vertical}
+.modal select{font-size:15px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.row2{grid-template-columns:1fr}}
+.parts{border:1px solid #c9b88f;border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;margin:0}
+.parts legend{font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);padding:0 6px}
+.prow{display:grid;grid-template-columns:minmax(90px,1fr) minmax(0,2fr) 80px auto;gap:8px;align-items:center}
+@media (max-width:520px){.prow{grid-template-columns:1fr 80px auto}.prow .pn{grid-column:1/-1;font-weight:600}}
+.modal .tip{font-size:13.5px;color:var(--ink-soft);font-style:italic;margin:0}
+.chron{display:flex;flex-direction:column;gap:18px;max-width:820px}
+.chr{background:var(--parch);color:var(--ink);border-radius:4px;padding:20px 22px;box-shadow:0 10px 24px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:8px}
+.chr-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.chr-top .stamp{margin-left:auto}
+.chr h2{font-family:var(--display);font-size:21px;margin:0}
+.chr-parts{margin:0;font-size:15.5px}
+.stamp.res-reussite{color:var(--open)}.stamp.res-partielle{color:var(--progress)}.stamp.res-echec{color:var(--danger)}
+/* wiki */
+.wiki{display:grid;grid-template-columns:minmax(200px,260px) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:760px){.wiki{grid-template-columns:1fr}}
+.wikinav{background:var(--board-2);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.wikinav h2{font-family:var(--display);font-size:16px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:0}
+.wikinav ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.wikinav a{display:block;color:var(--on-board);text-decoration:none;padding:8px 10px;border-radius:6px}
+.wikinav a:hover{background:rgba(216,180,94,.08)}
+.wikinav a[aria-current="page"]{background:var(--gold);color:#1b1408}
+.wikipage{background:var(--parch);color:var(--ink);border-radius:4px;padding:26px clamp(18px,4vw,40px);box-shadow:0 10px 24px rgba(0,0,0,.45);min-width:0}
+.wikititle{font-family:var(--display);font-size:clamp(24px,3.4vw,32px);margin:0 0 12px;text-wrap:balance}
+.wikibody{max-width:70ch;font-size:17.5px;line-height:1.6}
+.wikibody h2,.wikibody h3{font-family:var(--display);margin:1.4em 0 .4em;line-height:1.2}
+.wikibody h2{font-size:22px}.wikibody h3{font-size:18px}
+.wikibody p{margin:.6em 0}.wikibody ul,.wikibody ol{padding-left:1.4em}
+.wikibody a{color:#7a4f00}
+.wikibody blockquote{margin:1em 0;padding:.4em 1em;border-left:3px solid #b9a982;color:var(--ink-soft);font-style:italic}
+.wikibody table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%;margin:1em 0}
+.wikibody th,.wikibody td{border:1px solid #c9b88f;padding:6px 10px;text-align:left}
+.wikibody th{font-family:var(--display);font-size:12px;letter-spacing:.1em;text-transform:uppercase;background:var(--parch-2)}
+.wikiform{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,1fr);gap:14px}
+.wikiform label{display:flex;flex-direction:column;gap:4px;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+.wikiform .wide{grid-column:1/-1}
+.wikiform textarea{min-height:360px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14.5px;line-height:1.5;resize:vertical}
+.wikiform .tip{font-family:var(--body);text-transform:none;letter-spacing:0;font-style:italic;font-size:13px}
+.wikiform .preview{border:1px dashed #b9a982;border-radius:6px;padding:12px 16px;background:#f7f1e1}
+@media (max-width:560px){.wikiform{grid-template-columns:1fr}}
 /* renommée */
 .rn{display:inline-block;font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.06em;border-radius:999px;padding:4px 10px;white-space:nowrap;border:1px solid transparent}
 .rn0{background:#e2d6b6;color:#4d4030}
@@ -140,7 +194,7 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 .rep a,.reg a{color:var(--gold)}
 .office.regl{border-color:var(--gold)}
 .scaleform{display:flex;flex-direction:column;gap:10px}
-.srow{display:grid;grid-template-columns:56px minmax(140px,1fr) minmax(0,3fr);gap:10px;align-items:end}
+.srow{display:grid;grid-template-columns:56px minmax(140px,1fr) 110px minmax(0,3fr);gap:10px;align-items:end}
 .srow label{display:flex;flex-direction:column;gap:4px;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--on-board-muted)}
 .srow .rn{text-align:center;align-self:center}
 @media (max-width:620px){.srow{grid-template-columns:1fr}}
@@ -177,7 +231,7 @@ header .pill{margin-left:auto}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInAnonymously, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, connectAuthEmulator, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, connectFirestoreEmulator, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, getDoc, writeBatch, serverTimestamp, FieldPath } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, connectFirestoreEmulator, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, getDoc, writeBatch, serverTimestamp, FieldPath, increment, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBd6DdnvzkmPxGB_aAjAgTc1P9jHAztI30",
@@ -204,28 +258,30 @@ if (new URLSearchParams(location.search).has("emu")) {
 const RANKS = {cuivre:{label:"Cuivre",c:"var(--r-cuivre)"},fer:{label:"Fer",c:"var(--r-fer)"},argent:{label:"Argent",c:"var(--r-argent)"},or:{label:"Or",c:"var(--r-or)"},mithral:{label:"Mithril",c:"var(--r-mithral)"},inconnu:{label:"Rang inconnu",c:"#3a3128"}};
 const STATUS = {ouverte:"Ouverte",encours:"En cours",terminee:"Terminée",archivee:"Archivée"};
 const TYPES = ["Contrat","Recherche","Exploration","Prime","Escorte","Rumeur"];
-const QUEST_KEYS = ["bureau","titre","type","rang","statut","lieu","recompense","niveau","joueurs","joueursMin","joueursMax","supercharged","date","description"];
+const QUEST_KEYS = ["bureau","titre","type","rang","statut","lieu","recompense","niveau","joueurs","joueursMin","joueursMax","supercharged","date","description","pointsRenommee"];
+const DEFAULT_RANK_PTS = {cuivre:1,fer:5,argent:10,or:25,mithral:50,inconnu:0};
+const RESULTS = {reussite:"Réussite",partielle:"Réussite partielle",echec:"Échec"};
 const SEED = JSON.parse(document.getElementById("bb-seed").textContent);
 const DEFAULT_SCALE = [
-  {n:-3,titre:"Recherché",effet:"Prime sur leur tête. Les gardes les arrêtent à vue, on refuse de les servir, et la Guilde les tient à l'écart."},
-  {n:-2,titre:"Craint",effet:"Les gens s'écartent sur leur passage, les portes se ferment, les prix doublent."},
-  {n:-1,titre:"Suspect",effet:"Méfiance, gardes qui les suivent, questions insistantes, prix un peu majorés."},
-  {n:0,titre:"Inconnu",effet:"Indifférence, prix normaux, la méfiance ordinaire envers les étrangers."},
-  {n:1,titre:"Remarqué",effet:"On a entendu parler d'eux. Curiosité polie."},
-  {n:2,titre:"Reconnu",effet:"On les salue, les aubergistes se souviennent de leur nom."},
-  {n:3,titre:"Respecté",effet:"Petites faveurs, rabais modestes, les PNJ sont plus bavards."},
-  {n:4,titre:"Héros local",effet:"On leur offre à boire, les autorités les écoutent, des quêtes spéciales leur sont proposées."},
-  {n:5,titre:"Champion de la région",effet:"Audience avec les dirigeants, accès à des lieux fermés au public."},
-  {n:6,titre:"Légende",effet:"On chante leurs exploits, les foules les reconnaissent… et des ennemis puissants les remarquent."}
+  {n:-3,seuil:-50,titre:"Recherché",effet:"Prime sur leur tête. Les gardes les arrêtent à vue, on refuse de les servir, et la Guilde les tient à l'écart."},
+  {n:-2,seuil:-20,titre:"Craint",effet:"Les gens s'écartent sur leur passage, les portes se ferment, les prix doublent."},
+  {n:-1,seuil:-10,titre:"Suspect",effet:"Méfiance, gardes qui les suivent, questions insistantes, prix un peu majorés."},
+  {n:0,seuil:0,titre:"Inconnu",effet:"Indifférence, prix normaux, la méfiance ordinaire envers les étrangers."},
+  {n:1,seuil:10,titre:"Remarqué",effet:"On a entendu parler d'eux. Curiosité polie."},
+  {n:2,seuil:20,titre:"Reconnu",effet:"On les salue, les aubergistes se souviennent de leur nom."},
+  {n:3,seuil:50,titre:"Respecté",effet:"Petites faveurs, rabais modestes, les PNJ sont plus bavards."},
+  {n:4,seuil:100,titre:"Héros local",effet:"On leur offre à boire, les autorités les écoutent, des quêtes spéciales leur sont proposées."},
+  {n:5,seuil:250,titre:"Champion de la région",effet:"Audience avec les dirigeants, accès à des lieux fermés au public."},
+  {n:6,seuil:500,titre:"Légende",effet:"On chante leurs exploits, les foules les reconnaissent… et des ennemis puissants les remarquent."}
 ];
 
 /* ---------- state ---------- */
-let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null;
-const loaded = {b:false, q:false, i:false, a:false};
+let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [];
+const loaded = {b:false, q:false, i:false, a:false, w:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
 let save = {state:"idle", msg:""};
-const ui = {advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
+const ui = {complete:null, adjust:false, wikiEdit:null, wikiPreview:false, confirmWiki:null, advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
 
 /* ---------- helpers ---------- */
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -237,6 +293,7 @@ function normQuest(q){
   if(out.joueursMin===undefined||out.joueursMax===undefined){const p=parsePlayers(out.joueurs);if(out.joueursMin===undefined)out.joueursMin=p.min;if(out.joueursMax===undefined)out.joueursMax=p.max;}
   ["joueursMin","joueursMax"].forEach(k=>{const v=out[k];out[k]=(v===""||v==null||isNaN(+v))?null:Math.max(0,Math.min(99,Math.round(+v)));});
   out.supercharged=!!out.supercharged;
+  out.pointsRenommee=(out.pointsRenommee===""||out.pointsRenommee==null||isNaN(+out.pointsRenommee))?null:Math.round(+out.pointsRenommee);
   if(!RANKS[out.rang])out.rang="inconnu";
   if(!STATUS[out.statut])out.statut="ouverte";
   return out;
@@ -283,7 +340,7 @@ function listen(){
     loaded.b=true;net={state:snap.metadata.fromCache&&!navigator.onLine?"hors-ligne":"ok",msg:""};render();
   },onErr);
   onSnapshot(collection(db,"quetes"),snap=>{
-    quetes=snap.docs.map(d=>Object.assign({id:d.id},normQuest(d.data())));loaded.q=true;render();
+    quetes=snap.docs.map(d=>{const x=d.data();return Object.assign({id:d.id},normQuest(x),{rapport:x.rapport||null});});loaded.q=true;render();
   },onErr);
   onSnapshot(collection(db,"inscriptions"),snap=>{
     inscriptions=snap.docs.map(d=>{const x=d.data();return Object.assign({id:d.id},x,{creeMs:x.creeLe&&x.creeLe.toMillis?x.creeLe.toMillis():Date.now()});});loaded.i=true;render();
@@ -292,6 +349,12 @@ function listen(){
     aventuriers=snap.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>String(a.nom).localeCompare(String(b.nom),"fr"));loaded.a=true;render();
   },onErr);
   onSnapshot(doc(db,"config","renommee"),snap=>{scaleDoc=snap.exists()?snap.data():null;render();},onErr);
+  onSnapshot(query(collection(db,"journal"),orderBy("date","desc"),limit(60)),snap=>{
+    journal=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();
+  },onErr);
+  onSnapshot(collection(db,"wiki"),snap=>{
+    wikiPages=snap.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>((a.ordre==null?999:a.ordre)-(b.ordre==null?999:b.ordre))||String(a.titre).localeCompare(String(b.titre),"fr"));loaded.w=true;render();
+  },onErr);
 }
 window.addEventListener("offline",()=>{net={state:"hors-ligne",msg:""};render();});
 window.addEventListener("online",()=>{net={state:"ok",msg:""};render();});
@@ -365,6 +428,8 @@ function mapView(){
   h+='<nav class="offices" aria-label="Comptoirs"><h2>Comptoirs de la Guilde</h2>';
   bureaux.forEach(b=>{const n=openCount(b.id);
     h+='<a class="office" href="#'+esc(b.id)+'"><span class="nm">'+esc(b.nom)+(b.siege?'<span class="tag">Siège de la Guilde</span>':'')+'</span><span class="count'+(n?'':' zero')+'">'+n+' quête'+(n>1?'s':'')+'</span></a>';});
+  h+='<a class="office regl" href="#chroniques"><span class="nm">Chroniques de la Guilde<span class="tag">Les missions accomplies</span></span><span aria-hidden="true">→</span></a>';
+  h+='<a class="office regl" href="#wiki"><span class="nm">Wiki des règles maison<span class="tag">Outerworlders, Supercharged, renommée…</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#renommee"><span class="nm">Registre de renommée<span class="tag">Qui est connu, respecté… ou recherché</span></span><span aria-hidden="true">→</span></a>';
   h+='<p class="hint">'+(loaded.q?total+' quête'+(total>1?'s':'')+' ouverte'+(total>1?'s':'')+' sur la côte. Choisis un comptoir pour voir son babillard.':'Chargement des quêtes…')+'</p></nav></div>';
   return h;
@@ -398,12 +463,14 @@ function card(q){
   if(ch.level==="risque")h+='<p class="riskline">Risque de Supercharged : '+(ch.conf+ch.pend)+' demandes pour '+ch.max+' places recommandées.</p>';
   h+='<dl class="facts"><dt>Lieu</dt><dd>'+esc(q.lieu||"—")+'</dd><dt>Récompense</dt><dd>'+esc(q.recompense||"—")+'</dd><dt>Niveau</dt><dd>'+esc(q.niveau||"—")+'</dd><dt>Joueurs</dt><dd>'+esc(q.joueurs||"—")+'</dd>';
   if(q.date)h+='<dt>Date</dt><dd>'+esc(q.date)+'</dd>';
+  h+='<dt>Renommée</dt><dd>'+questPts(q)+' pt'+(questPts(q)>1?'s':'')+' par participant</dd>';
+  if(q.rapport&&q.statut!=="ouverte"){const r=q.rapport;h+='<dt>Rapport</dt><dd><strong>'+esc(RESULTS[r.resultat]||"")+'</strong>'+(r.date?' · '+esc(r.date):'')+(r.resume?'<br>'+esc(r.resume):'')+'</dd>';}
   h+='<dt>Inscrits</dt><dd>'+signupList(q)+'</dd></dl><div class="actions">';
   const already=user&&signupsFor(q.id).some(s=>s.uid===user.uid);
   if(q.statut==="ouverte"&&!already)h+='<button class="btn" data-a="join" data-id="'+esc(q.id)+'">Je veux y aller</button>';
   if(ui.dm){
     if(ui.confirmDel===q.id)h+='<button class="btn danger" data-a="del-yes" data-id="'+esc(q.id)+'">Supprimer la quête et ses inscriptions</button><button class="btn ghost" data-a="del-no">Annuler</button>';
-    else h+='<button class="btn ghost" data-a="edit" data-id="'+esc(q.id)+'">Modifier</button><button class="btn ghost" data-a="add-name" data-id="'+esc(q.id)+'">Ajouter un participant</button><button class="btn ghost" data-a="del" data-id="'+esc(q.id)+'">Supprimer</button>';
+    else h+=(q.statut!=="terminee"&&q.statut!=="archivee"?'<button class="btn" data-a="complete" data-id="'+esc(q.id)+'">Terminer la quête</button>':'')+'<button class="btn ghost" data-a="edit" data-id="'+esc(q.id)+'">Modifier</button><button class="btn ghost" data-a="add-name" data-id="'+esc(q.id)+'">Ajouter un participant</button><button class="btn ghost" data-a="del" data-id="'+esc(q.id)+'">Supprimer</button>';
   }
   h+='</div>';
   if(ui.dm&&ui.addName===q.id)h+='<form class="inline" id="nameform" data-id="'+esc(q.id)+'"><label for="f-addname">Nom du participant (confirmé)<input id="f-addname" maxlength="40" required></label><button class="btn" type="submit">Ajouter</button><button class="btn ghost" type="button" data-a="add-cancel">Annuler</button></form>';
@@ -427,6 +494,7 @@ function form(){
     '<label for="f-jmin">Joueurs recommandés : min<input id="f-jmin" type="number" min="0" max="99" value="'+(q.joueursMin==null?"":q.joueursMin)+'"></label>'+
     '<label for="f-jmax">Joueurs recommandés : max<input id="f-jmax" type="number" min="0" max="99" value="'+(q.joueursMax==null?"":q.joueursMax)+'"></label>'+
     '<label for="f-date">Date prévue<input id="f-date" maxlength="80" placeholder="ex. sam. 22 nov., 19 h" value="'+esc(q.date)+'"></label>'+
+    '<label for="f-pts">Points de renommée (vide = selon le rang)<input id="f-pts" type="number" step="1" value="'+(q.pointsRenommee==null?"":q.pointsRenommee)+'"></label>'+
     '<label class="check" for="f-super"><input id="f-super" type="checkbox"'+(q.supercharged?" checked":"")+'> Forcer « Supercharged »</label>'+
     '<label class="wide" for="f-desc">Description<textarea id="f-desc" maxlength="4000">'+esc(q.description)+'</textarea></label>'+
     '<div class="actions wide"><button class="btn" type="submit">Enregistrer la quête</button><button class="btn ghost" type="button" data-a="cancel">Annuler</button></div></form>';
@@ -453,23 +521,43 @@ function scaleList(){const l=scaleDoc&&Array.isArray(scaleDoc.niveaux)&&scaleDoc
 function lvl(n){return scaleList().find(s=>s.n===n)||{n,titre:String(n),effet:""};}
 function rnClass(n){return "rn rn"+(n<0?"m"+(-n):n>0?"p"+n:"0");}
 function chip(n){return '<span class="'+rnClass(n)+'">'+esc(lvl(n).titre)+'</span>';}
-function renown(a,bid){const v=a.renommee&&a.renommee[bid];return typeof v==="number"?v:0;}
+function seuilOf(s){return typeof s.seuil==="number"?s.seuil:((DEFAULT_SCALE.find(d=>d.n===s.n)||{seuil:0}).seuil);}
+function rankPts(){return Object.assign({},DEFAULT_RANK_PTS,(scaleDoc&&scaleDoc.pointsParRang)||{});}
+function questPts(q){return q.pointsRenommee!=null?q.pointsRenommee:(rankPts()[q.rang]||0);}
+function hasPts(a,bid){return !!(a.points&&typeof a.points[bid]==="number");}
+function pts(a,bid){
+  if(hasPts(a,bid))return a.points[bid];
+  const lv=a.renommee&&a.renommee[bid];
+  if(typeof lv==="number"&&lv!==0){const s=scaleList().find(x=>x.n===lv);return s?seuilOf(s):0;}
+  return 0;
+}
+function levelOf(p){let n=0;scaleList().forEach(s=>{const t=seuilOf(s);if(s.n>0&&p>=t&&s.n>n)n=s.n;if(s.n<0&&p<=t&&s.n<n)n=s.n;});return n;}
+function renown(a,bid){return levelOf(pts(a,bid));}
+function nextInfo(p){const lv=levelOf(p);const nx=scaleList().filter(s=>s.n>Math.max(lv,0)).sort((a,b)=>a.n-b.n)[0];return nx?{need:seuilOf(nx)-p,titre:nx.titre}:null;}
+function ptsLabel(p){return (p>0?"+":"")+p+" pt"+(Math.abs(p)>1?"s":"");}
+function addPoints(bt,a,bid,delta){
+  const ref=doc(db,"aventuriers",a.id);
+  if(hasPts(a,bid)||!(a.renommee&&a.renommee[bid]))bt.update(ref,new FieldPath("points",bid),increment(delta),"majLe",serverTimestamp());
+  else bt.update(ref,new FieldPath("points",bid),pts(a,bid)+delta,"majLe",serverTimestamp());
+}
 function reputationSection(bid,nom){
-  const list=aventuriers.filter(a=>renown(a,bid)!==0).sort((x,y)=>renown(y,bid)-renown(x,bid));
+  const list=aventuriers.filter(a=>pts(a,bid)!==0).sort((x,y)=>pts(y,bid)-pts(x,bid));
   let h='<section class="rep" aria-label="Réputation"><h2>Réputation à '+esc(nom)+'</h2>';
   if(!list.length)return h+'<p class="hint">Aucun aventurier ne s\'est encore fait un nom ici. <a href="#renommee">Voir le registre de renommée</a></p></section>';
-  h+='<ul class="replist">'+list.map(a=>{const n=renown(a,bid);return '<li><span class="who">'+esc(a.nom)+(a.joueur?' <em>('+esc(a.joueur)+')</em>':'')+'</span>'+chip(n)+'<span class="eff">'+esc(lvl(n).effet)+'</span></li>';}).join("")+'</ul>';
+  h+='<ul class="replist">'+list.map(a=>{const n=renown(a,bid),p=pts(a,bid);return '<li><span class="who">'+esc(a.nom)+(a.joueur?' <em>('+esc(a.joueur)+')</em>':'')+'<span class="pts">'+ptsLabel(p)+'</span></span>'+chip(n)+'<span class="eff">'+esc(lvl(n).effet)+'</span></li>';}).join("")+'</ul>';
   return h+'<p class="hint"><a href="#renommee">Voir le registre de renommée complet</a></p></section>';
 }
 function renownView(){
   const sc=scaleList();
   let h='<section class="reg"><h2>L\'échelle de renommée</h2><p class="hint">La renommée se compte par région : un héros à Daggerford peut être un parfait inconnu à Luskan.</p>';
   if(ui.dm&&ui.scaleEdit){
-    h+='<form id="scaleform" class="scaleform">'+sc.map(s=>'<div class="srow"><span class="'+rnClass(s.n)+'">'+(s.n>0?'+':'')+s.n+'</span><label for="sc-t'+s.n+'">Titre<input id="sc-t'+s.n+'" maxlength="40" value="'+esc(s.titre)+'"></label><label for="sc-e'+s.n+'">Comment les gens réagissent<input id="sc-e'+s.n+'" maxlength="300" value="'+esc(s.effet)+'"></label></div>').join("")+
+    h+='<form id="scaleform" class="scaleform">'+sc.map(s=>'<div class="srow"><span class="'+rnClass(s.n)+'">'+(s.n>0?'+':'')+s.n+'</span><label for="sc-t'+s.n+'">Titre<input id="sc-t'+s.n+'" maxlength="40" value="'+esc(s.titre)+'"></label><label for="sc-s'+s.n+'">Points (total)<input id="sc-s'+s.n+'" type="number" value="'+seuilOf(s)+'"'+(s.n===0?' disabled':'')+'></label><label for="sc-e'+s.n+'">Comment les gens réagissent<input id="sc-e'+s.n+'" maxlength="300" value="'+esc(s.effet)+'"></label></div>').join("")+
       '<div class="actions"><button class="btn gold" type="submit">Enregistrer l\'échelle</button><button class="btn board" type="button" data-a="scale-cancel">Annuler</button></div></form>';
   } else {
-    h+='<div class="tablebox"><table class="scale"><thead><tr><th scope="col">Niveau</th><th scope="col">Titre</th><th scope="col">Comment les gens réagissent</th></tr></thead><tbody>'+
-      sc.slice().reverse().map(s=>'<tr><td class="num">'+(s.n>0?'+':'')+s.n+'</td><td>'+chip(s.n)+'</td><td>'+esc(s.effet)+'</td></tr>').join("")+'</tbody></table></div>';
+    h+='<div class="tablebox"><table class="scale"><thead><tr><th scope="col">Niveau</th><th scope="col">Titre</th><th scope="col">Points</th><th scope="col">Comment les gens réagissent</th></tr></thead><tbody>'+
+      sc.slice().reverse().map(s=>'<tr><td class="num">'+(s.n>0?'+':'')+s.n+'</td><td>'+chip(s.n)+'</td><td class="num">'+(s.n===0?'0':(s.n>0?seuilOf(s)+' et +':seuilOf(s)+' et −'))+'</td><td>'+esc(s.effet)+'</td></tr>').join("")+'</tbody></table></div>';
+    const rp=rankPts();
+    h+='<p class="hint">Points gagnés par participant pour une quête terminée, dans la région du comptoir : '+["cuivre","fer","argent","or","mithral"].map(r=>'<strong>'+esc(RANKS[r].label)+'</strong> '+rp[r]).join(" · ")+'. Le DM peut ajuster selon le déroulement.</p>';
     if(ui.dm)h+='<div class="actions"><button class="btn board" data-a="scale-edit">Modifier l\'échelle</button></div>';
   }
   h+='</section><section class="reg"><h2>Les aventuriers</h2>';
@@ -479,13 +567,64 @@ function renownView(){
   }
   if(!loaded.a)return h+'<p class="hint">Chargement…</p></section>';
   if(!aventuriers.length)return h+'<p class="hint">Aucun aventurier n\'est encore inscrit au registre.</p></section>';
-  const opts=n=>sc.map(s=>'<option value="'+s.n+'"'+(s.n===n?' selected':'')+'>'+(s.n>0?'+':'')+s.n+' '+esc(s.titre)+'</option>').join("");
+  if(ui.dm){
+    h+=ui.adjust?'<form class="inline dark" id="adjform"><label for="j-adv">Aventurier<select id="j-adv">'+aventuriers.map(a=>'<option value="'+esc(a.id)+'">'+esc(a.nom)+'</option>').join("")+'</select></label>'+
+      '<label for="j-b">Région<select id="j-b">'+bureaux.map(b=>'<option value="'+esc(b.id)+'">'+esc(b.nom)+'</option>').join("")+'</select></label>'+
+      '<label for="j-pts">Points (+ ou −)<input id="j-pts" type="number" required step="1"></label><label for="j-why">Raison<input id="j-why" maxlength="200" placeholder="ex. A sauvé le bourgmestre"></label>'+
+      '<button class="btn gold" type="submit">Appliquer</button><button class="btn board" type="button" data-a="adj-cancel">Annuler</button></form>'
+      :'<div class="actions"><button class="btn board" data-a="adj-open">Ajuster des points à la main</button></div>';
+  }
   h+='<div class="tablebox"><table class="roster"><thead><tr><th scope="col">Aventurier</th>'+bureaux.map(b=>'<th scope="col">'+esc(b.nom)+'</th>').join("")+(ui.dm?'<th scope="col"><span class="sr">Actions</span></th>':'')+'</tr></thead><tbody>'+
     aventuriers.map(a=>'<tr><th scope="row">'+esc(a.nom)+(a.joueur?'<span class="pl">'+esc(a.joueur)+'</span>':'')+'</th>'+
-      bureaux.map(b=>{const n=renown(a,b.id);return '<td>'+(ui.dm?'<label class="sr" for="rn-'+esc(a.id)+'-'+esc(b.id)+'">Renommée de '+esc(a.nom)+' à '+esc(b.nom)+'</label><select class="rnsel" id="rn-'+esc(a.id)+'-'+esc(b.id)+'" data-adv="'+esc(a.id)+'" data-b="'+esc(b.id)+'">'+opts(n)+'</select>':(n?chip(n):'<span class="muted">Inconnu</span>'))+'</td>';}).join("")+
+      bureaux.map(b=>{const p=pts(a,b.id),n=levelOf(p),nx=nextInfo(p);return '<td>'+(p?chip(n)+'<span class="ptsline">'+ptsLabel(p)+(nx&&p>0?' · encore '+nx.need+' pour '+esc(nx.titre):'')+'</span>':'<span class="muted">Inconnu</span>')+'</td>';}).join("")+
       (ui.dm?'<td>'+(ui.confirmAdv===a.id?'<button class="btn danger sm" data-a="adv-del-yes" data-id="'+esc(a.id)+'">Confirmer</button> <button class="btn board sm" data-a="adv-del-no">Annuler</button>':'<button class="btn board sm" data-a="adv-del" data-id="'+esc(a.id)+'">Retirer</button>')+'</td>':'')+'</tr>').join("")+
-    '</tbody></table></div></section>';
-  return h;
+    '</tbody></table></div>';
+  if(journal.length)h+='<h3 class="subh">Journal de renommée</h3><ul class="journal">'+journal.slice(0,30).map(j=>{const b=office(j.bureau);const d=j.date&&j.date.toDate?j.date.toDate().toLocaleDateString("fr-CA",{day:"numeric",month:"short",year:"numeric"}):"";
+      return '<li><span class="jd">'+esc(d)+'</span><span><strong>'+esc(j.nom||"")+'</strong> '+(j.points>=0?'gagne':'perd')+' '+Math.abs(j.points)+' pt'+(Math.abs(j.points)>1?'s':'')+(b?' à '+esc(b.nom):'')+(j.raison?' · '+esc(j.raison):'')+'</span></li>';}).join("")+'</ul>';
+  return h+'</section>';
+}
+
+/* ---------- chroniques ---------- */
+function chroniclesView(){
+  const done=quetes.filter(q=>q.rapport&&(q.statut==="terminee"||q.statut==="archivee")).sort((a,b)=>{const t=x=>x.rapport.termineLe&&x.rapport.termineLe.toMillis?x.rapport.termineLe.toMillis():0;return t(b)-t(a);});
+  if(!loaded.q)return '<p class="hint">Chargement…</p>';
+  if(!done.length)return '<p class="empty">Aucune mission n\'a encore été accomplie. Les premières pages des Chroniques restent à écrire…</p>';
+  return '<div class="chron">'+done.map(q=>{const r=q.rapport,b=office(q.bureau);
+    return '<article class="chr"><div class="chr-top">'+rankSeal(q.rang)+'<span class="kind">'+esc(b?b.nom:"")+(r.date?' · '+esc(r.date):'')+'</span><span class="stamp res-'+esc(r.resultat)+'">'+esc(RESULTS[r.resultat]||"")+'</span></div>'+
+      '<h2>'+esc(q.titre)+'</h2>'+(r.resume?'<p class="desc">'+esc(r.resume)+'</p>':'')+
+      ((r.participants||[]).length?'<p class="chr-parts"><strong>Participants :</strong> '+r.participants.map(x=>esc(x.nom)+(x.points?' <em>('+ptsLabel(x.points)+')</em>':'')).join(", ")+'</p>':'')+'</article>';}).join("")+'</div>';
+}
+
+/* ---------- wiki ---------- */
+function md(text){
+  try{const html=window.marked?window.marked.parse(String(text||"")):"<p>"+esc(text).replace(/\n/g,"<br>")+"</p>";
+    return window.DOMPurify?window.DOMPurify.sanitize(html):esc(text);}catch(e){return "<p>"+esc(text)+"</p>";}
+}
+function wikiSlug(t){return ("wiki-"+String(t).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")).slice(0,60)||"wiki-page";}
+function wikiView(){
+  const cur=ui.office==="wiki"?wikiPages[0]:wikiPages.find(p=>p.id===ui.office);
+  let h='<div class="wiki">';
+  h+='<nav class="wikinav" aria-label="Pages du wiki"><h2>Règles maison</h2>';
+  if(!loaded.w)h+='<p class="hint">Chargement…</p>';
+  else if(!wikiPages.length)h+='<p class="hint">Aucune page pour l\'instant.</p>';
+  else h+='<ul>'+wikiPages.map(p=>'<li><a href="#'+esc(p.id)+'"'+(cur&&cur.id===p.id?' aria-current="page"':'')+'>'+esc(p.titre)+'</a></li>').join("")+'</ul>';
+  if(ui.dm)h+='<button class="btn gold" data-a="wiki-new">Nouvelle page</button>';
+  h+='</nav><article class="wikipage">';
+  if(ui.dm&&ui.wikiEdit){
+    const pg=ui.wikiEdit==="new"?{titre:"",contenu:"",ordre:wikiPages.length+1}:wikiPages.find(p=>p.id===ui.wikiEdit)||{titre:"",contenu:"",ordre:1};
+    const live=document.getElementById("w-contenu");
+    h+='<form id="wikiform" class="wikiform"><label for="w-titre">Titre<input id="w-titre" required maxlength="100" value="'+esc(pg.titre)+'"></label>'+
+      '<label for="w-ordre">Ordre dans le menu<input id="w-ordre" type="number" min="0" max="999" value="'+esc(pg.ordre==null?"":pg.ordre)+'"></label>'+
+      '<label class="wide" for="w-contenu">Contenu <span class="tip">Mise en forme : ## Titre, **gras**, *italique*, - liste, 1. liste numérotée, | tableau |</span><textarea id="w-contenu" maxlength="50000">'+esc(pg.contenu)+'</textarea></label>'+
+      (ui.wikiPreview?'<div class="wide preview"><span class="tip">Aperçu</span><div class="wikibody">'+md(live?live.value:pg.contenu)+'</div></div>':'')+
+      '<div class="actions wide"><button class="btn gold" type="submit">Enregistrer la page</button><button class="btn board" type="button" data-a="wiki-preview">'+(ui.wikiPreview?'Masquer l\'aperçu':'Aperçu')+'</button><button class="btn board" type="button" data-a="wiki-cancel">Annuler</button></div></form>';
+  } else if(cur){
+    h+='<h2 class="wikititle">'+esc(cur.titre)+'</h2><div class="wikibody">'+md(cur.contenu)+'</div>';
+    if(ui.dm)h+='<div class="actions">'+(ui.confirmWiki===cur.id?'<button class="btn danger" data-a="wiki-del-yes" data-id="'+esc(cur.id)+'">Supprimer définitivement</button><button class="btn ghost" data-a="wiki-del-no">Annuler</button>':'<button class="btn ghost" data-a="wiki-edit" data-id="'+esc(cur.id)+'">Modifier la page</button><button class="btn ghost" data-a="wiki-del" data-id="'+esc(cur.id)+'">Supprimer</button>')+'</div>';
+  } else if(loaded.w){
+    h+='<p class="hint">'+(ui.office==="wiki"?'Le wiki est vide pour le moment.':'Cette page n\'existe pas. <a href="#wiki">Retour au wiki</a>')+'</p>';
+  }
+  return h+'</article></div>';
 }
 
 /* ---------- DM panel ---------- */
@@ -521,16 +660,18 @@ function statusPill(){
   return '<span class="pill good" role="status">● En direct</span>';
 }
 function render(){
-  if(ui.office&&ui.office!=="renommee"&&loaded.b&&!office(ui.office))ui.office=null;
+  const wk=!!ui.office&&(ui.office==="wiki"||ui.office.indexOf("wiki-")===0);
+  if(ui.office&&ui.office!=="renommee"&&ui.office!=="chroniques"&&!wk&&loaded.b&&!office(ui.office))ui.office=null;
   const reg=ui.office==="renommee";
+  const chr=ui.office==="chroniques";
   const b=ui.office&&!reg?office(ui.office):null;
   let h='<div class="wrap">';
   h+='<header><svg width="72" height="72" viewBox="-110 -110 220 220" aria-hidden="true"><circle r="80" fill="none" stroke="#d8b45e" stroke-width="3" opacity=".6"></circle>'+rose(104,'#0e1b20')+'</svg>';
-  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+statusPill()+'</header>';
-  if(b||reg)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
+  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(chr?'Chroniques de la Guilde':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(chr?'Les missions accomplies par les aventuriers':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+statusPill()+'</header>';
+  if(b||reg||wk||chr)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
   if(ui.authMsg)h+='<div class="dmbar"><span class="msg">'+esc(ui.authMsg)+'</span><button class="btn board" data-a="auth-ok">OK</button>'+(user&&!user.isAnonymous&&!isAdmin?'<button class="btn board" data-a="logout">Déconnexion</button>':'')+'</div>';
   if(ui.dm)h+=dmPanel(b);
-  h+=reg?renownView():b?boardView()+reputationSection(b.id,b.nom):mapView();
+  h+=chr?chroniclesView():wk?wikiView():reg?renownView():b?boardView()+reputationSection(b.id,b.nom):mapView();
   h+='<footer><span>Pour partir en mission : choisis une quête, appuie sur « Je veux y aller » et entre ton nom. Le DM confirme les inscriptions.</span>'+
     '<button class="linkbtn" data-a="dm">'+(ui.dm?"Quitter le mode DM":"Mode DM")+'</button></footer>';
   if(ui.signup){const sq=questById(ui.signup);
@@ -538,10 +679,23 @@ function render(){
       '<label for="f-name">Ton nom ou celui de ton personnage<input id="f-name" required maxlength="40" autocomplete="nickname" value="'+esc(store("rdv-name")||"")+'"></label>'+
       '<p>Ta demande apparaîtra « en attente » pour tout le monde. Le DM la confirme ensuite. Tu pourras la retirer depuis ce même appareil.</p>'+
       '<div class="actions"><button class="btn" type="submit"'+(ui.busy?" disabled":"")+'>'+(ui.busy?"Envoi…":"M\'inscrire")+'</button><button class="btn ghost" type="button" data-a="sign-cancel">Annuler</button></div></form></div>';}
+  if(ui.complete&&ui.dm){const cq=questById(ui.complete);
+    if(cq){const bo=office(cq.bureau),def=questPts(cq);
+      const parts=signupsFor(cq.id).filter(x=>x.statut==="confirmee");
+      const advOpts=sel=>'<option value="">— Aucun personnage du registre —</option>'+aventuriers.map(a=>'<option value="'+esc(a.id)+'"'+(a.id===sel?' selected':'')+'>'+esc(a.nom)+(a.joueur?' ('+esc(a.joueur)+')':'')+'</option>').join("");
+      const match=nom=>{const m=aventuriers.find(a=>String(a.nom).trim().toLowerCase()===String(nom).trim().toLowerCase());return m?m.id:"";};
+      h+='<div class="modal-bg" data-a="complete-cancel"><form class="modal wide" id="completeform" role="dialog" aria-modal="true" aria-labelledby="cp-t"><h2 id="cp-t">Terminer « '+esc(cq.titre)+' »</h2>'+
+        '<p>Les points de renommée sont ajoutés à '+esc(bo?bo.nom:"la région")+'. Rang '+esc((RANKS[cq.rang]||RANKS.inconnu).label)+' : '+def+' pt'+(def>1?'s':'')+' proposé'+(def>1?'s':'')+' par participant.</p>'+
+        '<div class="row2"><label for="c-date">Date de la session<input id="c-date" maxlength="80" placeholder="ex. 22 novembre" value="'+esc(cq.date||"")+'"></label>'+
+        '<label for="c-res">Résultat<select id="c-res">'+Object.keys(RESULTS).map(k=>'<option value="'+k+'">'+RESULTS[k]+'</option>').join("")+'</select></label></div>'+
+        '<label for="c-resume">Rapport de mission (visible dans les Chroniques)<textarea id="c-resume" maxlength="4000" rows="4"></textarea></label>'+
+        '<fieldset class="parts"><legend>Participants confirmés</legend>'+(parts.length?parts.map((x,i)=>'<div class="prow"><span class="pn">'+esc(x.nom)+'</span><label class="sr" for="c-adv'+i+'">Personnage de '+esc(x.nom)+'</label><select id="c-adv'+i+'" data-nom="'+esc(x.nom)+'">'+advOpts(match(x.nom))+'</select><label class="sr" for="c-pts'+i+'">Points pour '+esc(x.nom)+'</label><input id="c-pts'+i+'" type="number" step="1" value="'+def+'"><span class="tip">pts</span></div>').join(""):'<p class="tip">Aucune inscription confirmée. La quête sera terminée sans points.</p>')+
+        '<p class="tip">Un participant sans personnage du registre ne reçoit pas de points. Ajoute-le d\'abord au registre de renommée.</p></fieldset>'+
+        '<div class="actions"><button class="btn" type="submit">Terminer et attribuer les points</button><button class="btn ghost" type="button" data-a="complete-cancel">Annuler</button></div></form></div>';}}
   const focusId=document.activeElement&&document.activeElement.id;
   const app=document.getElementById("app");
-  const formKey=ui.editing+"|"+ui.signup+"|"+ui.addName+"|"+ui.advForm+"|"+ui.scaleEdit;
-  const keep={}; if(render.lastForm===formKey)["f-titre","f-bureau","f-type","f-rang","f-statut","f-lieu","f-recompense","f-niveau","f-jmin","f-jmax","f-date","f-desc","f-name","f-addname","f-advnom","f-advjoueur"].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.type==="checkbox"?el.checked:el.value;});
+  const formKey=ui.editing+"|"+ui.signup+"|"+ui.addName+"|"+ui.advForm+"|"+ui.scaleEdit+"|"+ui.wikiEdit+"|"+ui.complete+"|"+ui.adjust;
+  const keep={}; if(render.lastForm===formKey)["f-titre","f-bureau","f-type","f-rang","f-statut","f-lieu","f-recompense","f-niveau","f-jmin","f-jmax","f-date","f-desc","f-name","f-addname","f-advnom","f-advjoueur","w-titre","w-ordre","w-contenu","f-pts","c-date","c-res","c-resume"].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.type==="checkbox"?el.checked:el.value;});
   const sup=document.getElementById("f-super");if(sup&&render.lastForm===formKey)keep["f-super"]=sup.checked;
   render.lastForm=formKey;
   app.innerHTML=h+'</div>';
@@ -553,10 +707,10 @@ function render(){
 function route(){
   const id=(location.hash||"").slice(1);
   const next=id&&id!=="carte"?id:null;
-  if(next!==ui.office){ui.office=next;ui.editing=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter="ouverte";ui.rank="all";render();try{window.scrollTo(0,0);}catch(e){}}
+  if(next!==ui.office){ui.office=next;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter="ouverte";ui.rank="all";render();try{window.scrollTo(0,0);}catch(e){}}
 }
 window.addEventListener("hashchange",route);
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&ui.signup){ui.signup=null;render();}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&(ui.signup||ui.complete)){ui.signup=null;ui.complete=null;render();}});
 
 /* ---------- actions ---------- */
 function download(name,text){
@@ -646,6 +800,17 @@ document.addEventListener("click",async e=>{
   else if(a==="adv-del-no"){ui.confirmAdv=null;}
   else if(a==="adv-del-yes"){ui.confirmAdv=null;await run("Retrait",()=>deleteDoc(doc(db,"aventuriers",id)));return;}
   else if(a==="scale-edit"){ui.scaleEdit=true;}
+  else if(a==="complete"){ui.complete=id;}
+  else if(a==="complete-cancel"){if(e.target!==b)return;ui.complete=null;}
+  else if(a==="adj-open"){ui.adjust=true;}
+  else if(a==="adj-cancel"){ui.adjust=false;}
+  else if(a==="wiki-new"){ui.wikiEdit="new";ui.wikiPreview=false;}
+  else if(a==="wiki-edit"){ui.wikiEdit=id;ui.wikiPreview=false;}
+  else if(a==="wiki-cancel"){ui.wikiEdit=null;ui.wikiPreview=false;}
+  else if(a==="wiki-preview"){ui.wikiPreview=!ui.wikiPreview;}
+  else if(a==="wiki-del"){ui.confirmWiki=id;}
+  else if(a==="wiki-del-no"){ui.confirmWiki=null;}
+  else if(a==="wiki-del-yes"){ui.confirmWiki=null;await run("Suppression",()=>deleteDoc(doc(db,"wiki",id)));location.hash="#wiki";return;}
   else if(a==="scale-cancel"){ui.scaleEdit=false;}
   render();
   if(a==="new"||a==="edit"){const f=document.getElementById("f-titre");if(f){f.focus();f.scrollIntoView({block:"center"});}}
@@ -683,12 +848,42 @@ document.addEventListener("submit",async e=>{
     const nom=v("f-advnom").slice(0,60),joueur=v("f-advjoueur").slice(0,60);if(!nom)return;
     const id=(nom.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"aventurier").slice(0,40)+"-"+Date.now().toString(36).slice(-4);
     ui.advForm=false;
-    await run("Ajout",()=>setDoc(doc(db,"aventuriers",id),{nom,joueur,renommee:{},creeLe:serverTimestamp(),majLe:serverTimestamp()}));return;
+    await run("Ajout",()=>setDoc(doc(db,"aventuriers",id),{nom,joueur,points:{},creeLe:serverTimestamp(),majLe:serverTimestamp()}));return;
+  }
+  if(e.target.id==="completeform"){
+    const q=questById(ui.complete);if(!q)return;
+    const parts=[];document.querySelectorAll("#completeform .prow").forEach((row,i)=>{const sel=document.getElementById("c-adv"+i),pt=document.getElementById("c-pts"+i);parts.push({nom:sel.getAttribute("data-nom"),aventurier:sel.value||null,points:Math.round(+pt.value||0)});});
+    const rapport={date:v("c-date").slice(0,80),resultat:v("c-res"),resume:((document.getElementById("c-resume")||{}).value||"").slice(0,4000),participants:parts,termineLe:serverTimestamp()};
+    ui.complete=null;
+    await run("Fin de quête",async()=>{
+      const bt=writeBatch(db);
+      bt.set(doc(db,"quetes",q.id),{statut:"terminee",rapport,majLe:serverTimestamp()},{merge:true});
+      const seen={};
+      parts.forEach(x=>{if(!x.aventurier||!x.points)return;const a=aventuriers.find(y=>y.id===x.aventurier);if(!a)return;
+        seen[a.id]=(seen[a.id]||0)+x.points;
+        bt.set(doc(collection(db,"journal")),{aventurier:a.id,nom:a.nom,bureau:q.bureau,points:x.points,raison:"Quête : "+q.titre,quete:q.id,date:serverTimestamp()});});
+      Object.keys(seen).forEach(id=>addPoints(bt,aventuriers.find(y=>y.id===id),q.bureau,seen[id]));
+      await bt.commit();
+    });return;
+  }
+  if(e.target.id==="adjform"){
+    const a=aventuriers.find(y=>y.id===v("j-adv")),bid=v("j-b"),n=Math.round(+v("j-pts")||0),why=v("j-why").slice(0,200);if(!a||!n)return;
+    ui.adjust=false;
+    await run("Renommée",async()=>{const bt=writeBatch(db);addPoints(bt,a,bid,n);bt.set(doc(collection(db,"journal")),{aventurier:a.id,nom:a.nom,bureau:bid,points:n,raison:why||"Ajustement du DM",date:serverTimestamp()});await bt.commit();});return;
+  }
+  if(e.target.id==="wikiform"){
+    const titre=v("w-titre").slice(0,100),contenu=(document.getElementById("w-contenu")||{}).value||"",o=v("w-ordre");if(!titre)return;
+    const isNew=ui.wikiEdit==="new";let id=isNew?wikiSlug(titre):ui.wikiEdit;
+    if(isNew&&wikiPages.some(p=>p.id===id))id=(id+"-"+Date.now().toString(36).slice(-3)).slice(0,60);
+    const data={titre,contenu:contenu.slice(0,50000),majLe:serverTimestamp()};if(o!=="")data.ordre=+o;
+    ui.wikiEdit=null;ui.wikiPreview=false;
+    const ok=await run("Wiki",()=>isNew?setDoc(doc(db,"wiki",id),Object.assign(data,{creeLe:serverTimestamp()})):setDoc(doc(db,"wiki",id),data,{merge:true}));
+    if(ok&&isNew)location.hash="#"+id;return;
   }
   if(e.target.id==="scaleform"){
-    const niveaux=scaleList().map(s=>({n:s.n,titre:v("sc-t"+s.n).slice(0,40)||s.titre,effet:v("sc-e"+s.n).slice(0,300)}));
+    const niveaux=scaleList().map(s=>{const raw=v("sc-s"+s.n);return {n:s.n,seuil:s.n===0?0:(raw===""||isNaN(+raw)?seuilOf(s):Math.round(+raw)),titre:v("sc-t"+s.n).slice(0,40)||s.titre,effet:v("sc-e"+s.n).slice(0,300)};});
     ui.scaleEdit=false;
-    await run("Échelle",()=>setDoc(doc(db,"config","renommee"),{niveaux,majLe:serverTimestamp()}));return;
+    await run("Échelle",()=>setDoc(doc(db,"config","renommee"),{niveaux,majLe:serverTimestamp()},{merge:true}));return;
   }
   if(e.target.id==="nameform"){
     const qid=e.target.getAttribute("data-id"),name=v("f-addname").slice(0,40);if(!name)return;
@@ -702,7 +897,7 @@ document.addEventListener("submit",async e=>{
     const sup=document.getElementById("f-super");
     const jmin=v("f-jmin"),jmax=v("f-jmax");
     const q=normQuest({bureau:v("f-bureau"),titre:v("f-titre")||"Quête sans titre",type:v("f-type"),rang:v("f-rang"),statut:v("f-statut"),lieu:v("f-lieu"),recompense:v("f-recompense"),niveau:v("f-niveau"),
-      joueursMin:jmin===""?null:+jmin,joueursMax:jmax===""?null:+jmax,supercharged:!!(sup&&sup.checked),date:v("f-date"),description:v("f-desc")});
+      joueursMin:jmin===""?null:+jmin,joueursMax:jmax===""?null:+jmax,supercharged:!!(sup&&sup.checked),date:v("f-date"),description:v("f-desc"),pointsRenommee:v("f-pts")===""?null:+v("f-pts")});
     if(q.joueursMin!=null&&q.joueursMax!=null&&q.joueursMin>q.joueursMax)q.joueursMin=q.joueursMax;
     q.joueurs=q.joueursMin!=null&&q.joueursMax!=null?(q.joueursMin===q.joueursMax?String(q.joueursMin):q.joueursMin+" à "+q.joueursMax):(q.joueursMin!=null?q.joueursMin+" et +":"?");
     const cur=isNew?null:questById(id);

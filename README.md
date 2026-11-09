@@ -11,13 +11,21 @@ Site : https://ironyan004mfg.github.io/rose-des-vents/
   - `quetes/{id}` : les quêtes (statuts : ouverte, encours, terminee, archivee)
   - `inscriptions/{idQuête}__{uid}` : les demandes des joueurs, séparées des quêtes
   - `admins/{uid}` : les comptes administrateurs (modifiables seulement dans la console Firebase)
-  - `aventuriers`, `config` : réservés à la renommée (phase 2)
+  - `aventuriers/{id}` : personnages et points de renommée par région (`points: {idComptoir: n}`)
+  - `journal/{id}` : chaque gain ou perte de points de renommée
+  - `config/renommee` : l'échelle (titres, seuils, effets) et les points par rang
+  - `wiki/{id}` : les pages de règles maison (Markdown)
 - **Firebase Authentication** : connexion anonyme (joueurs), Google (DM), courriel/mot de passe (robot de Claude).
 - **`firestore.rules`** : toutes les autorisations sont vérifiées côté serveur. À copier dans la console Firebase → Firestore → Règles.
 
 ## Supercharged
 Aucune limite d'inscriptions. Quand les inscriptions confirmées dépassent le maximum de joueurs recommandé,
 la quête passe « Supercharged » (le DM peut aussi le forcer).
+
+## Renommée
+Points cumulés par région : Remarqué 10, Reconnu 20, Respecté 50, Héros local 100, Champion 250, Légende 500
+(Suspect -10, Craint -20, Recherché -50). Une quête terminée rapporte selon son rang : Cuivre 1, Fer 5, Argent 10, Or 25, Mithril 50
+(modifiable par quête et par participant).
 
 ## Mode DM
 Connexion Google. Créer, modifier, archiver ou supprimer des quêtes, confirmer ou refuser des inscriptions,
