@@ -116,24 +116,26 @@ service cloud.firestore {
     function compFieldsOk(d) {
       return str(d.titre, 1, 100) && str(d.categorie, 1, 40) && str(d.region, 1, 40)
         && d.get('contenu', '') is string && d.get('contenu', '').size() <= 20000
-        && d.get('image', '') is string && d.get('image', '').size() <= 400000;
+        && d.get('image', '') is string && d.get('image', '').size() <= 400000
+        && d.get('quete', '') is string && d.get('quete', '').size() <= 60;
     }
     function byMe(m) {
       return m is map && m.keys().hasOnly(['uid', 'nom']) && m.uid == request.auth.uid && str(m.nom, 1, 60);
     }
     function validProp(p) {
-      return p is map && p.keys().hasOnly(['titre', 'categorie', 'region', 'contenu', 'image', 'par', 'approbations', 'date'])
+      return p is map && p.keys().hasOnly(['titre', 'categorie', 'region', 'contenu', 'image', 'quete', 'par', 'approbations', 'date'])
         && compFieldsOk(p) && p.approbations is map && p.par is map;
     }
     function validComp(d) {
-      return d.keys().hasOnly(['titre', 'categorie', 'region', 'contenu', 'image', 'masque', 'publiee', 'proposition',
+      return d.keys().hasOnly(['titre', 'categorie', 'region', 'contenu', 'image', 'quete', 'masque', 'publiee', 'proposition',
                                'creePar', 'modifiePar', 'creeLe', 'majLe'])
         && compFieldsOk(d) && d.masque is bool && d.publiee is bool
         && (d.get('proposition', null) == null || validProp(d.proposition));
     }
     function sameAsProp(n, p) {
       return n.titre == p.titre && n.categorie == p.categorie && n.region == p.region
-        && n.get('contenu', '') == p.get('contenu', '') && n.get('image', '') == p.get('image', '');
+        && n.get('contenu', '') == p.get('contenu', '') && n.get('image', '') == p.get('image', '')
+        && n.get('quete', '') == p.get('quete', '');
     }
     match /compendium/{id} {
       allow read: if resource.data.masque == false || isAdmin();
@@ -174,7 +176,7 @@ service cloud.firestore {
         && !(request.auth.uid in resource.data.proposition.approbations)
         && resource.data.proposition.approbations.size() == 1
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['titre', 'categorie', 'region', 'contenu', 'image', 'publiee', 'proposition', 'modifiePar', 'majLe'])
+             .hasOnly(['titre', 'categorie', 'region', 'contenu', 'image', 'quete', 'publiee', 'proposition', 'modifiePar', 'majLe'])
         && sameAsProp(request.resource.data, resource.data.proposition)
         && request.resource.data.publiee == true
         && request.resource.data.proposition == null
@@ -185,7 +187,7 @@ service cloud.firestore {
         allow read: if isAdmin() || get(/databases/$(database)/documents/compendium/$(id)).data.masque == false;
         allow create: if isAdmin()
           || (realAccount()
-            && request.resource.data.keys().hasOnly(['titre', 'categorie', 'region', 'contenu', 'image', 'par', 'approbateurs', 'date'])
+            && request.resource.data.keys().hasOnly(['titre', 'categorie', 'region', 'contenu', 'image', 'quete', 'par', 'approbateurs', 'date'])
             && compFieldsOk(request.resource.data)
             && request.resource.data.approbateurs is map
             && request.resource.data.approbateurs.size() == 2
