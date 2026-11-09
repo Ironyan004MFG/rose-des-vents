@@ -42,6 +42,10 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 
 /* map */
 .mapwrap{display:grid;grid-template-columns:minmax(0,2fr) minmax(250px,1fr);gap:24px;align-items:start}
+.mapwrap{grid-template-areas:"map nav" "gaz nav";grid-template-rows:auto 1fr}
+.mapwrap>.map{grid-area:map}
+.mapwrap>.offices{grid-area:nav}
+.mapwrap>.gazette{grid-area:gaz;margin-top:0}
 .map{background:var(--parch-3);border-radius:6px;padding:10px;box-shadow:0 14px 30px rgba(0,0,0,.5);min-width:0}
 .map svg{display:block;width:100%;height:auto}
 .mk{cursor:pointer;outline:none}
@@ -58,7 +62,7 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .count{font-family:var(--display);font-weight:700;font-variant-numeric:tabular-nums;background:var(--parch);color:var(--ink);border-radius:4px;padding:4px 10px;font-size:14px;white-space:nowrap}
 .count.zero{background:transparent;color:var(--on-board-muted);border:1px solid var(--line)}
 .hint{color:var(--on-board-muted);font-size:15px;font-style:italic;margin:4px 0 0}
-@media (max-width:860px){.mapwrap{grid-template-columns:1fr}}
+@media (max-width:860px){.mapwrap{grid-template-columns:1fr;grid-template-areas:"map" "nav" "gaz";grid-template-rows:auto}}
 
 /* board */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:26px 22px;align-items:start}
@@ -129,7 +133,7 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 .gzkick{display:block;font-family:var(--display);font-size:13px;letter-spacing:.3em;text-transform:uppercase;color:#8a2d1f}
 .gzhead h2{font-family:var(--display);font-size:clamp(26px,5vw,42px);letter-spacing:.04em;margin:4px 0;color:#2a2219}
 .gzsub{font-style:italic;color:var(--ink-soft)}
-.gzcols{columns:3 280px;column-gap:28px;column-rule:1px solid #c9b88f}
+.gzcols{columns:2 260px;column-gap:28px;column-rule:1px solid #c9b88f}
 .gzart{break-inside:avoid;margin:0 0 18px}
 .gzart h3{font-family:var(--display);font-size:20px;margin:4px 0 6px;line-height:1.2}
 .gzart.lead h3{font-size:26px}
@@ -687,8 +691,8 @@ function mapView(){
   h+='<a class="office regl" href="#chroniques"><span class="nm">Chroniques de la Guilde<span class="tag">Les missions en cours et accomplies</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#wiki"><span class="nm">Wiki des règles maison<span class="tag">Outerworlders, Supercharged, renommée…</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#renommee"><span class="nm">Registre de renommée<span class="tag">Qui est connu, respecté… ou recherché</span></span><span aria-hidden="true">→</span></a>';
-  h+='<p class="hint">'+(loaded.q?total+' quête'+(total>1?'s':'')+' ouverte'+(total>1?'s':'')+' sur la côte. Choisis un comptoir pour voir son babillard.':'Chargement des quêtes…')+'</p></nav></div>';
-  return h+gazette();
+  h+='<p class="hint">'+(loaded.q?total+' quête'+(total>1?'s':'')+' ouverte'+(total>1?'s':'')+' sur la côte. Choisis un comptoir pour voir son babillard.':'Chargement des quêtes…')+'</p></nav>'+gazette()+'</div>';
+  return h;
 }
 
 /* ---------- board ---------- */
