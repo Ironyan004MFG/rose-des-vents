@@ -117,6 +117,32 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 .modal label{display:flex;flex-direction:column;gap:4px;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
 @media (prefers-reduced-motion:reduce){.mk .mk-in{transition:none}}
 
+/* groupe, rapport, méfaits */
+.aide{border:1px solid #c9b88f;border-radius:6px;background:#f7f1e1;padding:8px 12px}
+.aide summary{cursor:pointer;font-family:var(--display);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);min-height:28px;display:flex;align-items:center}
+.aide dl{margin:8px 0 0;display:grid;grid-template-columns:auto 1fr;gap:8px 12px;align-items:start}
+.aide dd{margin:0;font-size:15px}
+@media (max-width:520px){.aide dl{grid-template-columns:1fr}}
+.mefpill{display:inline-block;font-family:var(--display);font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.m-mineur{background:#ead0c3;color:#5e2a1c}.m-moyen{background:#d9927d;color:#3f130a}.m-grave{background:#9b2c22;color:#fff3ee}
+.steps{list-style:none;display:flex;gap:6px;margin:0;padding:0;counter-reset:st}
+.steps li{counter-increment:st;font-family:var(--display);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);border:1px solid #c9b88f;border-radius:999px;padding:5px 12px}
+.steps li::before{content:counter(st) ". "}
+.steps li[aria-current="step"]{background:var(--ink);color:var(--parch);border-color:var(--ink)}
+.steps li.done{color:var(--open);border-color:var(--open)}
+.tablebox.light{background:#f7f1e1;border-color:#c9b88f}
+.tablebox.light table{min-width:480px}
+.tablebox.light th,.tablebox.light td{border-bottom-color:#d9c9a0;color:var(--ink)}
+.tablebox.light thead th{color:var(--ink-soft)}
+.tablebox.light td.num{color:var(--ink)}
+.mef input.cnt{width:70px;padding:6px 8px}
+.mef select{min-width:150px;font-size:14px;padding:6px 8px}
+.askrow{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;border-top:1px dashed #c9b88f;padding-top:10px}
+.askrow label{flex:1 1 200px;display:flex;flex-direction:column;gap:4px;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+.mefset{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:12px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:0}
+.mefset legend{font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--on-board-muted);padding:0 6px}
+.mefset label{display:flex;flex-direction:column;gap:4px;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--on-board-muted)}
+.mefset input{width:100px}
 /* fiches de personnage */
 footer .who{display:inline-flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
 footer .who a{color:var(--gold)}
@@ -297,6 +323,13 @@ const STATUS = {ouverte:"Ouverte",encours:"En cours",terminee:"Terminée",archiv
 const TYPES = ["Contrat","Recherche","Exploration","Prime","Escorte","Rumeur"];
 const QUEST_KEYS = ["bureau","titre","type","rang","statut","lieu","recompense","niveau","joueurs","joueursMin","joueursMax","supercharged","date","description"];
 const DEFAULT_RANK_PTS = {cuivre:1,fer:5,argent:10,or:25,mithral:50,inconnu:0};
+const DEFAULT_MEFAITS = {mineur:1,moyen:3,grave:10};
+const MEFAIT_LABELS = {mineur:"Mineur",moyen:"Moyen",grave:"Grave"};
+const MEFAIT_AIDE = {
+  mineur:{ex:"Bagarre de taverne, petit vol, insulter un garde, refuser de payer sa note.",pourquoi:"Sur une quête de Cuivre (+1), un seul méfait mineur annule le gain : les débutants apprennent vite que ça ne paie pas."},
+  moyen:{ex:"Vandalisme, cambriolage, menacer un notable, frapper un garde, libérer un prisonnier.",pourquoi:"Ça fait mal sans détruire : une quête de Fer (+5) reste positive malgré un méfait moyen."},
+  grave:{ex:"Meurtre d'un innocent, incendie, trahir un client de la Guilde, profaner un temple.",pourquoi:"Un seul méfait grave fait passer un inconnu à « Suspect » (−10). Ça pèse, comme un vrai crime."}
+};
 const RESULTS = {reussite:"Réussite",partielle:"Réussite partielle",echec:"Échec"};
 const SEED = JSON.parse(document.getElementById("bb-seed").textContent);
 const DEFAULT_SCALE = [
@@ -318,7 +351,7 @@ const loaded = {b:false, q:false, i:false, a:false, w:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
 let save = {state:"idle", msg:""};
-const ui = {sheetEdit:null, sheetImg:undefined, promptSheet:false, needLogin:null, loginIntent:null, complete:null, adjust:false, wikiEdit:null, wikiPreview:false, confirmWiki:null, advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
+const ui = {confirmGroup:null, reportWrite:null, sheetEdit:null, sheetImg:undefined, promptSheet:false, needLogin:null, loginIntent:null, complete:null, adjust:false, wikiEdit:null, wikiPreview:false, confirmWiki:null, advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
 
 /* ---------- helpers ---------- */
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -376,7 +409,7 @@ function listen(){
     loaded.b=true;net={state:snap.metadata.fromCache&&!navigator.onLine?"hors-ligne":"ok",msg:""};render();
   },onErr);
   onSnapshot(collection(db,"quetes"),snap=>{
-    quetes=snap.docs.map(d=>{const x=d.data();return Object.assign({id:d.id},normQuest(x),{rapport:x.rapport||null});});loaded.q=true;render();
+    quetes=snap.docs.map(d=>{const x=d.data();return Object.assign({id:d.id},normQuest(x),{rapport:x.rapport||null,redacteur:x.redacteur||null,rapportBrouillon:x.rapportBrouillon||null});});loaded.q=true;render();
   },onErr);
   onSnapshot(collection(db,"inscriptions"),snap=>{
     inscriptions=snap.docs.map(d=>{const x=d.data();return Object.assign({id:d.id},x,{creeMs:x.creeLe&&x.creeLe.toMillis?x.creeLe.toMillis():Date.now()});});loaded.i=true;render();
@@ -503,7 +536,7 @@ function signupList(q){
     const mine=user&&s.uid===user.uid&&s.statut!=="refusee";
     let h='<span class="name st-'+esc(s.statut)+'">'+(s.aventurier&&aventuriers.some(a=>a.id===s.aventurier)?'<a class="plink" href="#perso-'+esc(s.aventurier)+'">'+esc(s.nom)+'</a>':esc(s.nom));
     if(s.statut==="attente")h+=' <em>(en attente)</em>';
-    if(s.statut==="refusee")h+=' <em>(refusée)</em>';
+    if(s.statut==="refusee")h+=' <em>(non retenue)</em>';
     if(ui.dm){
       if(s.statut!=="confirmee")h+='<button class="rm ok" data-a="s-ok" data-id="'+esc(s.id)+'" aria-label="Confirmer '+esc(s.nom)+'" title="Confirmer">✓</button>';
       if(s.statut==="attente")h+='<button class="rm" data-a="s-no" data-id="'+esc(s.id)+'" aria-label="Refuser '+esc(s.nom)+'" title="Refuser">✕</button>';
@@ -525,12 +558,14 @@ function card(q){
   if(q.date)h+='<dt>Date</dt><dd>'+esc(q.date)+'</dd>';
   if(ui.dm)h+='<dt>Renommée</dt><dd>'+questPts(q)+' pt'+(questPts(q)>1?'s':'')+' par participant <em>(DM)</em></dd>';
   if(q.rapport&&q.statut!=="ouverte"){const r=q.rapport;h+='<dt>Rapport</dt><dd><strong>'+esc(RESULTS[r.resultat]||"")+'</strong>'+(r.date?' · '+esc(r.date):'')+(r.resume?'<br>'+esc(r.resume):'')+'</dd>';}
+  if(ui.dm&&q.statut==="encours"&&(q.redacteur||q.rapportBrouillon)){const rs=signupsFor(q.id).find(x=>x.uid===q.redacteur);h+='<dt>Rapport</dt><dd>'+(q.rapportBrouillon&&q.rapportBrouillon.resume?'Proposé par '+esc(q.rapportBrouillon.auteur||"un joueur")+' ✓':'Demandé à '+esc(rs?rs.nom:"un joueur")+', en attente')+'</dd>';}
   h+='<dt>Inscrits</dt><dd>'+signupList(q)+'</dd></dl><div class="actions">';
+  if(user&&q.redacteur===user.uid&&q.statut==="encours")h+='<button class="btn gold" data-a="report-write" data-id="'+esc(q.id)+'">'+(q.rapportBrouillon&&q.rapportBrouillon.resume?'Modifier mon rapport de mission':'Écrire le rapport de mission')+'</button>';
   const already=user&&signupsFor(q.id).some(s=>s.uid===user.uid);
   if(q.statut==="ouverte"&&!already)h+='<button class="btn" data-a="join" data-id="'+esc(q.id)+'">Je veux y aller</button>';
   if(ui.dm){
     if(ui.confirmDel===q.id)h+='<button class="btn danger" data-a="del-yes" data-id="'+esc(q.id)+'">Supprimer la quête et ses inscriptions</button><button class="btn ghost" data-a="del-no">Annuler</button>';
-    else h+=(q.statut!=="terminee"&&q.statut!=="archivee"?'<button class="btn" data-a="complete" data-id="'+esc(q.id)+'">Terminer la quête</button>':'')+'<button class="btn ghost" data-a="edit" data-id="'+esc(q.id)+'">Modifier</button><button class="btn ghost" data-a="add-name" data-id="'+esc(q.id)+'">Ajouter un participant</button><button class="btn ghost" data-a="del" data-id="'+esc(q.id)+'">Supprimer</button>';
+    else h+=(q.statut==="ouverte"&&signupsFor(q.id).some(x=>x.statut!=="refusee")?'<button class="btn" data-a="group" data-id="'+esc(q.id)+'">Confirmer le groupe</button>':'')+(q.statut==="encours"?'<button class="btn" data-a="complete" data-id="'+esc(q.id)+'">Terminer la quête</button>':'')+'<button class="btn ghost" data-a="edit" data-id="'+esc(q.id)+'">Modifier</button><button class="btn ghost" data-a="add-name" data-id="'+esc(q.id)+'">Ajouter un participant</button><button class="btn ghost" data-a="del" data-id="'+esc(q.id)+'">Supprimer</button>';
   }
   h+='</div>';
   if(ui.dm&&ui.addName===q.id)h+='<form class="inline" id="nameform" data-id="'+esc(q.id)+'"><label for="f-addname">Nom du participant (confirmé)<input id="f-addname" maxlength="40" required></label><button class="btn" type="submit">Ajouter</button><button class="btn ghost" type="button" data-a="add-cancel">Annuler</button></form>';
@@ -583,6 +618,7 @@ function rnClass(n){return "rn rn"+(n<0?"m"+(-n):n>0?"p"+n:"0");}
 function chip(n){return '<span class="'+rnClass(n)+'">'+esc(lvl(n).titre)+'</span>';}
 function seuilOf(s){const v=priv&&priv.seuils&&priv.seuils[String(s.n)];return typeof v==="number"?v:((DEFAULT_SCALE.find(d=>d.n===s.n)||{seuil:0}).seuil);}
 function rankPts(){return Object.assign({},DEFAULT_RANK_PTS,(priv&&priv.pointsParRang)||{});}
+function mefaitPts(){return Object.assign({},DEFAULT_MEFAITS,(priv&&priv.mefaits)||{});}
 function questPts(q){const o=priv&&priv.quetes&&priv.quetes[q.id];return typeof o==="number"?o:(rankPts()[q.rang]||0);}
 function pts(a,bid){const m=pointsMap[a.id];return m&&typeof m[bid]==="number"?m[bid]:0;}
 function levelOf(p){let n=0;scaleList().forEach(s=>{const t=seuilOf(s);if(s.n>0&&p>=t&&s.n>n)n=s.n;if(s.n<0&&p<=t&&s.n<n)n=s.n;});return n;}
@@ -611,11 +647,13 @@ function renownView(){
   let h='<section class="reg"><h2>L\'échelle de renommée</h2><p class="hint">La renommée se compte par région : un héros à Daggerford peut être un parfait inconnu à Luskan.</p>';
   if(ui.dm&&ui.scaleEdit){
     h+='<form id="scaleform" class="scaleform">'+sc.map(s=>'<div class="srow"><span class="'+rnClass(s.n)+'">'+(s.n>0?'+':'')+s.n+'</span><label for="sc-t'+s.n+'">Titre<input id="sc-t'+s.n+'" maxlength="40" value="'+esc(s.titre)+'"></label><label for="sc-s'+s.n+'">Points (total)<input id="sc-s'+s.n+'" type="number" value="'+seuilOf(s)+'"'+(s.n===0?' disabled':'')+'></label><label for="sc-e'+s.n+'">Comment les gens réagissent<input id="sc-e'+s.n+'" maxlength="300" value="'+esc(s.effet)+'"></label></div>').join("")+
+      '<fieldset class="mefset"><legend>Méfaits (points retirés, DM seulement)</legend>'+Object.keys(DEFAULT_MEFAITS).map(k=>'<label for="mf-'+k+'">'+MEFAIT_LABELS[k]+'<input id="mf-'+k+'" type="number" min="0" max="999" value="'+mefaitPts()[k]+'"></label>').join("")+'</fieldset>'+
       '<div class="actions"><button class="btn gold" type="submit">Enregistrer l\'échelle</button><button class="btn board" type="button" data-a="scale-cancel">Annuler</button></div></form>';
   } else {
     h+='<div class="tablebox"><table class="scale"><thead><tr><th scope="col">Niveau</th><th scope="col">Titre</th>'+(ui.dm?'<th scope="col">Points</th>':'')+'<th scope="col">Comment les gens réagissent</th></tr></thead><tbody>'+
       sc.slice().reverse().map(s=>'<tr><td class="num">'+(s.n>0?'+':'')+s.n+'</td><td>'+chip(s.n)+'</td>'+(ui.dm?'<td class="num">'+(s.n===0?'0':(s.n>0?seuilOf(s)+' et +':seuilOf(s)+' et −'))+'</td>':'')+'<td>'+esc(s.effet)+'</td></tr>').join("")+'</tbody></table></div>';
     const rp=rankPts();
+    if(ui.dm)h+='<p class="hint">Visible par le DM seulement. Méfaits : '+Object.keys(DEFAULT_MEFAITS).map(k=>'<strong>'+MEFAIT_LABELS[k]+'</strong> −'+mefaitPts()[k]).join(" · ")+'.</p>';
     if(ui.dm)h+='<p class="hint">Visible par le DM seulement. Points gagnés par participant pour une quête terminée, dans la région du comptoir : '+["cuivre","fer","argent","or","mithral"].map(r=>'<strong>'+esc(RANKS[r].label)+'</strong> '+rp[r]).join(" · ")+'. Le DM peut ajuster selon le déroulement.</p>';
     if(ui.dm)h+='<div class="actions"><button class="btn board" data-a="scale-edit">Modifier l\'échelle</button></div>';
   }
@@ -805,23 +843,56 @@ function render(){
   if(ui.promptSheet&&user&&!user.isAnonymous&&!isAdmin&&loaded.a&&!myChars().length&&!ui.signup){
     h+='<div class="modal-bg"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="ps-t"><h2 id="ps-t">Bienvenue à la Guilde, aventurier !</h2><p>Avant de partir en mission, crée la fiche de ton personnage : son nom, son portrait, sa classe et son espèce. C\'est elle que tu choisiras pour t\'inscrire aux quêtes.</p>'+
       '<div class="actions"><a class="btn" href="#personnages" data-a="prompt-go">Créer ma fiche</a><button class="btn ghost" type="button" data-a="prompt-later">Plus tard</button></div></div></div>';}
-  if(ui.complete&&ui.dm){const cq=questById(ui.complete);
-    if(cq){const bo=office(cq.bureau),def=questPts(cq);
-      const parts=signupsFor(cq.id).filter(x=>x.statut==="confirmee");
+  if(ui.confirmGroup&&ui.dm){const gq=questById(ui.confirmGroup);
+    if(gq){const list=signupsFor(gq.id).filter(x=>x.statut!=="refusee");
+      h+='<div class="modal-bg" data-a="group-cancel"><form class="modal wide" id="groupform" role="dialog" aria-modal="true" aria-labelledby="gp-t"><h2 id="gp-t">Confirmer le groupe : « '+esc(gq.titre)+' »</h2>'+
+        '<p>Coche les aventuriers qui partent. La quête passe « En cours » et les autres demandes sont marquées « non retenue ».</p>'+
+        '<fieldset class="pick"><legend>Le groupe</legend>'+list.map((x,i)=>'<label class="pickrow" for="g-'+i+'"><input type="checkbox" id="g-'+i+'" data-sid="'+esc(x.id)+'" checked><span><strong>'+esc(x.nom)+'</strong>'+(x.statut==="attente"?' <em>(en attente)</em>':'')+'</span></label>').join("")+'</fieldset>'+
+        '<label for="g-date">Date de la session<input id="g-date" maxlength="80" placeholder="ex. samedi 22 novembre, 19 h" value="'+esc(gq.date||"")+'"></label>'+
+        '<div class="actions"><button class="btn" type="submit">Confirmer et lancer la quête</button><button class="btn ghost" type="button" data-a="group-cancel">Annuler</button></div></form></div>';}}
+  if(ui.reportWrite){const rq=questById(ui.reportWrite);
+    if(rq)h+='<div class="modal-bg" data-a="report-cancel"><form class="modal wide" id="reportform" role="dialog" aria-modal="true" aria-labelledby="rp-t"><h2 id="rp-t">Rapport de mission : « '+esc(rq.titre)+' »</h2>'+
+      '<p>Raconte ce que le groupe a vécu. Le DM le relira avant de le publier dans les Chroniques de la Guilde.</p>'+
+      '<label for="r-texte">Rapport<textarea id="r-texte" maxlength="4000" rows="8">'+esc(rq.rapportBrouillon&&rq.rapportBrouillon.resume||"")+'</textarea></label>'+
+      '<div class="actions"><button class="btn" type="submit">Envoyer au DM</button><button class="btn ghost" type="button" data-a="report-cancel">Annuler</button></div></form></div>';}
+  if(ui.complete&&ui.dm){const C=ui.complete,cq=questById(C.id);
+    if(cq){const bo=office(cq.bureau),mp=mefaitPts();
       const advOpts=sel=>'<option value="">— Aucun personnage du registre —</option>'+aventuriers.map(a=>'<option value="'+esc(a.id)+'"'+(a.id===sel?' selected':'')+'>'+esc(a.nom)+(a.joueur?' ('+esc(a.joueur)+')':'')+'</option>').join("");
-      const match=(nom,aid)=>{if(aid&&aventuriers.some(a=>a.id===aid))return aid;const m=aventuriers.find(a=>String(a.nom).trim().toLowerCase()===String(nom).trim().toLowerCase());return m?m.id:"";};
-      h+='<div class="modal-bg" data-a="complete-cancel"><form class="modal wide" id="completeform" role="dialog" aria-modal="true" aria-labelledby="cp-t"><h2 id="cp-t">Terminer « '+esc(cq.titre)+' »</h2>'+
-        '<p>Les points de renommée sont ajoutés à '+esc(bo?bo.nom:"la région")+'. Rang '+esc((RANKS[cq.rang]||RANKS.inconnu).label)+' : '+def+' pt'+(def>1?'s':'')+' proposé'+(def>1?'s':'')+' par participant.</p>'+
-        '<div class="row2"><label for="c-date">Date de la session<input id="c-date" maxlength="80" placeholder="ex. 22 novembre" value="'+esc(cq.date||"")+'"></label>'+
-        '<label for="c-res">Résultat<select id="c-res">'+Object.keys(RESULTS).map(k=>'<option value="'+k+'">'+RESULTS[k]+'</option>').join("")+'</select></label></div>'+
-        '<label for="c-resume">Rapport de mission (visible dans les Chroniques)<textarea id="c-resume" maxlength="4000" rows="4"></textarea></label>'+
-        '<fieldset class="parts"><legend>Participants confirmés</legend>'+(parts.length?parts.map((x,i)=>'<div class="prow"><span class="pn">'+esc(x.nom)+'</span><label class="sr" for="c-adv'+i+'">Personnage de '+esc(x.nom)+'</label><select id="c-adv'+i+'" data-nom="'+esc(x.nom)+'">'+advOpts(match(x.nom,x.aventurier))+'</select><label class="sr" for="c-pts'+i+'">Points pour '+esc(x.nom)+'</label><input id="c-pts'+i+'" type="number" step="1" value="'+def+'"><span class="tip">pts</span></div>').join(""):'<p class="tip">Aucune inscription confirmée. La quête sera terminée sans points.</p>')+
-        '<p class="tip">Un participant sans personnage du registre ne reçoit pas de points. Ajoute-le d\'abord au registre de renommée.</p></fieldset>'+
-        '<div class="actions"><button class="btn" type="submit">Terminer et attribuer les points</button><button class="btn ghost" type="button" data-a="complete-cancel">Annuler</button></div></form></div>';}}
+      const steps=['Rapport','Méfaits','Bilan'];
+      h+='<div class="modal-bg" data-a="complete-cancel"><form class="modal wide" id="completeform" data-step="'+C.step+'" role="dialog" aria-modal="true" aria-labelledby="cp-t"><h2 id="cp-t">Terminer « '+esc(cq.titre)+' »</h2>'+
+        '<ol class="steps">'+steps.map((t,i)=>'<li'+(i+1===C.step?' aria-current="step"':'')+(i+1<C.step?' class="done"':'')+'>'+t+'</li>').join("")+'</ol>';
+      if(C.step===1){
+        const writers=C.parts.filter(x=>x.uid&&x.uid!=="dm");
+        h+='<div class="row2"><label for="c-date">Date de la session<input id="c-date" maxlength="80" value="'+esc(C.rapport.date)+'"></label>'+
+          '<label for="c-res">Résultat<select id="c-res">'+Object.keys(RESULTS).map(k=>'<option value="'+k+'"'+(k===C.rapport.resultat?' selected':'')+'>'+RESULTS[k]+'</option>').join("")+'</select></label></div>'+
+          (cq.rapportBrouillon&&cq.rapportBrouillon.resume?'<p class="tip">Rapport proposé par '+esc(cq.rapportBrouillon.auteur||"un joueur")+'. Relis-le et modifie-le au besoin.</p>':'')+
+          '<label for="c-resume">Rapport de mission (publié dans les Chroniques)<textarea id="c-resume" maxlength="4000" rows="6">'+esc(C.rapport.resume)+'</textarea></label>'+
+          (writers.length?'<div class="askrow"><label for="c-writer">Ou faire écrire le rapport par<select id="c-writer">'+writers.map(x=>'<option value="'+esc(x.uid)+'"'+(cq.redacteur===x.uid?' selected':'')+'>'+esc(x.nom)+'</option>').join("")+'</select></label><button class="btn ghost" type="button" data-a="ask-writer">Lui demander le rapport</button></div>':'')+
+          '<div class="actions"><button class="btn" type="submit">Suivant : les méfaits</button><button class="btn ghost" type="button" data-a="complete-cancel">Annuler</button></div>';
+      } else if(C.step===2){
+        h+='<p>Combien de méfaits chaque aventurier s\'est-il <strong>fait prendre</strong> à commettre ? Les points retirés s\'appliquent dans la région du comptoir et se soustraient au gain de la mission.</p>'+
+          '<details class="aide" open><summary>Aide-mémoire : l\'échelle des méfaits</summary><dl>'+Object.keys(DEFAULT_MEFAITS).map(k=>'<dt><span class="mefpill m-'+k+'">'+MEFAIT_LABELS[k]+' −'+mp[k]+'</span></dt><dd><strong>Exemples :</strong> '+esc(MEFAIT_AIDE[k].ex)+'<br><em>'+esc(MEFAIT_AIDE[k].pourquoi)+'</em></dd>').join("")+'</dl>'+
+          '<p class="tip">Rappel des rangs négatifs : Suspect à −10, Craint à −20, Recherché à −50.</p></details>'+
+          '<div class="tablebox light"><table class="mef"><thead><tr><th scope="col">Aventurier</th><th scope="col">Personnage du registre</th>'+Object.keys(DEFAULT_MEFAITS).map(k=>'<th scope="col">'+MEFAIT_LABELS[k]+'</th>').join("")+'</tr></thead><tbody>'+
+          C.parts.map((x,i)=>'<tr><th scope="row">'+esc(x.nom)+'</th><td><label class="sr" for="m-adv'+i+'">Personnage de '+esc(x.nom)+'</label><select id="m-adv'+i+'">'+advOpts(x.aventurier)+'</select></td>'+
+            Object.keys(DEFAULT_MEFAITS).map(k=>'<td><label class="sr" for="m-'+k+i+'">'+MEFAIT_LABELS[k]+' pour '+esc(x.nom)+'</label><input class="cnt" id="m-'+k+i+'" type="number" min="0" max="99" value="'+(x[k]||0)+'"></td>').join("")+'</tr>').join("")+
+          '</tbody></table></div>'+(C.parts.length?'':'<p class="tip">Aucun participant confirmé.</p>')+
+          '<p class="tip">Un participant sans personnage du registre ne reçoit ni points ni pénalité.</p>'+
+          '<div class="actions"><button class="btn" type="submit">Suivant : le bilan</button><button class="btn ghost" type="button" data-a="step-back">Retour</button></div>';
+      } else {
+        h+='<p>Renommée à '+esc(bo?bo.nom:"la région")+'. Rang '+esc((RANKS[cq.rang]||RANKS.inconnu).label)+' : +'+questPts(cq)+' proposé. Ajuste le gain si le groupe s\'est illustré.</p>'+
+          '<div class="tablebox light"><table class="mef"><thead><tr><th scope="col">Aventurier</th><th scope="col">Gain</th><th scope="col">Méfaits</th><th scope="col">Total</th><th scope="col">Rang</th></tr></thead><tbody>'+
+          C.parts.map((x,i)=>{const a=aventuriers.find(y=>y.id===x.aventurier);const pen=Object.keys(DEFAULT_MEFAITS).reduce((t,k)=>t+(x[k]||0)*mp[k],0);const net=(x.gain||0)-pen;
+            const before=a?renown(a,cq.bureau):0,after=a?levelOf(pts(a,cq.bureau)+net):0;
+            return '<tr><th scope="row">'+esc(x.nom)+(a?'':' <em>(hors registre)</em>')+'</th><td><label class="sr" for="b-gain'+i+'">Gain pour '+esc(x.nom)+'</label><input class="cnt" id="b-gain'+i+'" type="number" step="1" value="'+(x.gain||0)+'"'+(a?'':' disabled')+'></td><td class="num">'+(pen?'−'+pen:'0')+'</td><td class="num"><strong>'+(net>0?'+':'')+net+'</strong></td><td>'+(a?chip(before)+(after!==before?' → '+chip(after):''):'—')+'</td></tr>';}).join("")+
+          '</tbody></table></div>'+
+          '<div class="actions"><button class="btn" type="submit">Terminer la quête</button><button class="btn ghost" type="button" data-a="step-recalc">Recalculer</button><button class="btn ghost" type="button" data-a="step-back">Retour</button></div>';
+      }
+      h+='</form></div>';}}
   const focusId=document.activeElement&&document.activeElement.id;
   const app=document.getElementById("app");
-  const formKey=ui.editing+"|"+ui.signup+"|"+ui.addName+"|"+ui.advForm+"|"+ui.scaleEdit+"|"+ui.wikiEdit+"|"+ui.complete+"|"+ui.adjust+"|"+ui.sheetEdit;
-  const keep={}; if(render.lastForm===formKey)["f-titre","f-bureau","f-type","f-rang","f-statut","f-lieu","f-recompense","f-niveau","f-jmin","f-jmax","f-date","f-desc","f-name","f-addname","f-advnom","f-advjoueur","w-titre","w-ordre","w-contenu","f-pts","c-date","c-res","c-resume","p-nom","p-espece","p-classe","p-desc","p-bg","p-don"].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.type==="checkbox"?el.checked:el.value;});
+  const formKey=ui.editing+"|"+ui.signup+"|"+ui.addName+"|"+ui.advForm+"|"+ui.scaleEdit+"|"+ui.wikiEdit+"|"+(ui.complete?ui.complete.id+ui.complete.step:"")+"|"+ui.confirmGroup+"|"+ui.reportWrite+"|"+ui.adjust+"|"+ui.sheetEdit;
+  const keep={}; if(render.lastForm===formKey)["f-titre","f-bureau","f-type","f-rang","f-statut","f-lieu","f-recompense","f-niveau","f-jmin","f-jmax","f-date","f-desc","f-name","f-addname","f-advnom","f-advjoueur","w-titre","w-ordre","w-contenu","f-pts","c-date","c-res","c-resume","g-date","r-texte","p-nom","p-espece","p-classe","p-desc","p-bg","p-don"].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.type==="checkbox"?el.checked:el.value;});
   const sup=document.getElementById("f-super");if(sup&&render.lastForm===formKey)keep["f-super"]=sup.checked;
   render.lastForm=formKey;
   app.innerHTML=h+'</div>';
@@ -836,7 +907,7 @@ function route(){
   if(next!==ui.office){ui.office=next;if(!(next==="personnages"&&ui.sheetEdit==="new"))ui.sheetEdit=null;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter="ouverte";ui.rank="all";render();try{window.scrollTo(0,0);}catch(e){}}
 }
 window.addEventListener("hashchange",route);
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&(ui.signup||ui.complete)){ui.signup=null;ui.complete=null;render();}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&(ui.signup||ui.complete||ui.confirmGroup||ui.reportWrite)){ui.signup=null;ui.complete=null;ui.confirmGroup=null;ui.reportWrite=null;render();}});
 
 /* ---------- actions ---------- */
 function download(name,text){
@@ -891,6 +962,13 @@ async function migrate(){
   });
 }
 
+function v0(id){const el=document.getElementById(id);return el?el.value.trim():"";}
+function readStep(){
+  const C=ui.complete;if(!C)return;
+  if(C.step===1){C.rapport={date:v0("c-date").slice(0,80),resultat:v0("c-res")||"reussite",resume:((document.getElementById("c-resume")||{}).value||"").slice(0,4000)};}
+  if(C.step===2){C.parts.forEach((x,i)=>{x.aventurier=v0("m-adv"+i)||null;Object.keys(DEFAULT_MEFAITS).forEach(k=>{x[k]=Math.max(0,Math.round(+v0("m-"+k+i)||0));});});}
+  if(C.step===3){C.parts.forEach((x,i)=>{const el=document.getElementById("b-gain"+i);if(el&&!el.disabled)x.gain=Math.round(+el.value||0);});}
+}
 document.addEventListener("click",async e=>{
   const b=e.target.closest("[data-a]");if(!b)return;
   const a=b.getAttribute("data-a"),id=b.getAttribute("data-id");
@@ -915,8 +993,8 @@ document.addEventListener("click",async e=>{
   else if(a==="img-clear"){ui.sheetImg="";}
   else if(a==="sign-cancel"){if(e.target!==b)return;ui.signup=null;}
   else if(a==="s-mine"){await run("Retrait",()=>deleteDoc(doc(db,"inscriptions",id)));return;}
-  else if(a==="s-ok"){const s=inscriptions.find(x=>x.id===id);if(s)await run("Confirmation",()=>setDoc(doc(db,"inscriptions",id),{quete:s.quete,uid:s.uid,nom:s.nom,statut:"confirmee",creeLe:s.creeLe||serverTimestamp(),majLe:serverTimestamp()}));return;}
-  else if(a==="s-no"){const s=inscriptions.find(x=>x.id===id);if(s)await run("Refus",()=>setDoc(doc(db,"inscriptions",id),{quete:s.quete,uid:s.uid,nom:s.nom,statut:"refusee",creeLe:s.creeLe||serverTimestamp(),majLe:serverTimestamp()}));return;}
+  else if(a==="s-ok"){const s=inscriptions.find(x=>x.id===id);if(s)await run("Confirmation",()=>setDoc(doc(db,"inscriptions",id),Object.assign({quete:s.quete,uid:s.uid,nom:s.nom,statut:"confirmee",creeLe:s.creeLe||serverTimestamp(),majLe:serverTimestamp()},s.aventurier?{aventurier:s.aventurier}:{})));return;}
+  else if(a==="s-no"){const s=inscriptions.find(x=>x.id===id);if(s)await run("Refus",()=>setDoc(doc(db,"inscriptions",id),Object.assign({quete:s.quete,uid:s.uid,nom:s.nom,statut:"refusee",creeLe:s.creeLe||serverTimestamp(),majLe:serverTimestamp()},s.aventurier?{aventurier:s.aventurier}:{})));return;}
   else if(a==="s-del"){await run("Retrait",()=>deleteDoc(doc(db,"inscriptions",id)));return;}
   else if(a==="new"){ui.editing="new";ui.confirmDel=null;}
   else if(a==="edit"){ui.editing=id;ui.confirmDel=null;}
@@ -936,8 +1014,20 @@ document.addEventListener("click",async e=>{
   else if(a==="adv-del-no"){ui.confirmAdv=null;}
   else if(a==="adv-del-yes"){ui.confirmAdv=null;await run("Retrait",async()=>{const bt=writeBatch(db);bt.delete(doc(db,"aventuriers",id));bt.delete(doc(db,"points",id));await bt.commit();});return;}
   else if(a==="scale-edit"){ui.scaleEdit=true;}
-  else if(a==="complete"){ui.complete=id;}
+  else if(a==="complete"){const q=questById(id);if(!q)return;
+    const match=(nom,aid)=>{if(aid&&aventuriers.some(x=>x.id===aid))return aid;const m=aventuriers.find(x=>String(x.nom).trim().toLowerCase()===String(nom).trim().toLowerCase());return m?m.id:"";};
+    ui.complete={id,step:1,rapport:{date:q.date||"",resultat:"reussite",resume:(q.rapportBrouillon&&q.rapportBrouillon.resume)||""},
+      parts:signupsFor(id).filter(x=>x.statut==="confirmee").map(x=>({nom:x.nom,uid:x.uid,aventurier:match(x.nom,x.aventurier),gain:questPts(q),mineur:0,moyen:0,grave:0}))};}
   else if(a==="complete-cancel"){if(e.target!==b)return;ui.complete=null;}
+  else if(a==="step-back"){readStep();ui.complete.step--;}
+  else if(a==="step-recalc"){readStep();}
+  else if(a==="ask-writer"){const uid=v0("c-writer"),q=questById(ui.complete.id),w=ui.complete.parts.find(x=>x.uid===uid);if(!q||!w)return;readStep();
+    await run("Rapport demandé",()=>setDoc(doc(db,"quetes",q.id),{redacteur:uid,majLe:serverTimestamp()},{merge:true}));
+    ui.complete=null;save={state:"saved",msg:""};ui.signupMsg={id:q.id,text:"Rapport demandé à "+w.nom+". Un bouton « Écrire le rapport de mission » apparaît sur la quête pour ce joueur."};render();return;}
+  else if(a==="group"){ui.confirmGroup=id;}
+  else if(a==="group-cancel"){if(e.target!==b)return;ui.confirmGroup=null;}
+  else if(a==="report-write"){ui.reportWrite=id;}
+  else if(a==="report-cancel"){if(e.target!==b)return;ui.reportWrite=null;}
   else if(a==="adj-open"){ui.adjust=true;}
   else if(a==="adj-cancel"){ui.adjust=false;}
   else if(a==="wiki-new"){ui.wikiEdit="new";ui.wikiPreview=false;}
@@ -1002,20 +1092,44 @@ document.addEventListener("submit",async e=>{
     await run("Ajout",()=>setDoc(doc(db,"aventuriers",id),{nom,joueur,niveaux:{},creeLe:serverTimestamp(),majLe:serverTimestamp()}));return;
   }
   if(e.target.id==="completeform"){
-    const q=questById(ui.complete);if(!q)return;
-    const parts=[];document.querySelectorAll("#completeform .prow").forEach((row,i)=>{const sel=document.getElementById("c-adv"+i),pt=document.getElementById("c-pts"+i);parts.push({nom:sel.getAttribute("data-nom"),aventurier:sel.value||null,points:Math.round(+pt.value||0)});});
-    const rapport={date:v("c-date").slice(0,80),resultat:v("c-res"),resume:((document.getElementById("c-resume")||{}).value||"").slice(0,4000),participants:parts.map(x=>({nom:x.nom,aventurier:x.aventurier})),termineLe:serverTimestamp()};
+    const C=ui.complete,q=C&&questById(C.id);if(!q)return;
+    readStep();
+    if(C.step<3){C.step++;render();return;}
+    const mp=mefaitPts();
+    const rapport={date:C.rapport.date,resultat:C.rapport.resultat,resume:C.rapport.resume,participants:C.parts.map(x=>({nom:x.nom,aventurier:x.aventurier||null})),termineLe:serverTimestamp()};
     ui.complete=null;
     await run("Fin de quête",async()=>{
       const bt=writeBatch(db);
-      bt.set(doc(db,"quetes",q.id),{statut:"terminee",rapport,majLe:serverTimestamp()},{merge:true});
+      bt.set(doc(db,"quetes",q.id),{statut:"terminee",rapport,rapportBrouillon:null,redacteur:null,majLe:serverTimestamp()},{merge:true});
       const seen={};
-      parts.forEach(x=>{if(!x.aventurier||!x.points)return;const a=aventuriers.find(y=>y.id===x.aventurier);if(!a)return;
-        seen[a.id]=(seen[a.id]||0)+x.points;
-        bt.set(doc(collection(db,"journal")),{aventurier:a.id,nom:a.nom,bureau:q.bureau,points:x.points,raison:"Quête : "+q.titre,quete:q.id,date:serverTimestamp()});});
-      Object.keys(seen).forEach(id=>addPoints(bt,aventuriers.find(y=>y.id===id),q.bureau,seen[id]));
+      C.parts.forEach(x=>{const a=x.aventurier&&aventuriers.find(y=>y.id===x.aventurier);if(!a)return;
+        const pen=Object.keys(DEFAULT_MEFAITS).reduce((t,k)=>t+(x[k]||0)*mp[k],0),net=(x.gain||0)-pen;
+        const det=Object.keys(DEFAULT_MEFAITS).filter(k=>x[k]).map(k=>x[k]+" "+MEFAIT_LABELS[k].toLowerCase()+(x[k]>1?"s":"")).join(", ");
+        seen[a.id]=(seen[a.id]||0)+net;
+        bt.set(doc(collection(db,"journal")),{aventurier:a.id,nom:a.nom,bureau:q.bureau,points:net,raison:"Quête : "+q.titre+" (gain +"+(x.gain||0)+(pen?", méfaits −"+pen+" : "+det:"")+")",quete:q.id,date:serverTimestamp()});});
+      Object.keys(seen).forEach(id=>{if(seen[id])addPoints(bt,aventuriers.find(y=>y.id===id),q.bureau,seen[id]);});
       await bt.commit();
     });return;
+  }
+  if(e.target.id==="groupform"){
+    const q=questById(ui.confirmGroup);if(!q)return;
+    const picks={};document.querySelectorAll("#groupform input[data-sid]").forEach(c=>{picks[c.getAttribute("data-sid")]=c.checked;});
+    if(!Object.values(picks).some(Boolean)){save={state:"error",msg:"Coche au moins un aventurier."};render();return;}
+    const date=v("g-date").slice(0,80);ui.confirmGroup=null;
+    await run("Groupe confirmé",async()=>{
+      const bt=writeBatch(db);
+      signupsFor(q.id).filter(x=>x.statut!=="refusee").forEach(x=>{const st=picks[x.id]?"confirmee":"refusee";if(st!==x.statut)bt.set(doc(db,"inscriptions",x.id),Object.assign({quete:x.quete,uid:x.uid,nom:x.nom,statut:st,creeLe:x.creeLe||serverTimestamp(),majLe:serverTimestamp()},x.aventurier?{aventurier:x.aventurier}:{}));});
+      bt.set(doc(db,"quetes",q.id),{statut:"encours",date,majLe:serverTimestamp()},{merge:true});
+      await bt.commit();
+    });return;
+  }
+  if(e.target.id==="reportform"){
+    const q=questById(ui.reportWrite);if(!q)return;
+    const texte=((document.getElementById("r-texte")||{}).value||"").trim().slice(0,4000);if(!texte)return;
+    const auteur=(signupsFor(q.id).find(x=>x.uid===user.uid)||{}).nom||user.displayName||"un joueur";
+    ui.reportWrite=null;
+    await run("Rapport",()=>setDoc(doc(db,"quetes",q.id),{rapportBrouillon:{resume:texte,auteur:String(auteur).slice(0,60),majLe:serverTimestamp()},majLe:serverTimestamp()},{merge:true}));
+    ui.signupMsg={id:q.id,text:"Rapport envoyé au DM. Merci !"};render();return;
   }
   if(e.target.id==="adjform"){
     const a=aventuriers.find(y=>y.id===v("j-adv")),bid=v("j-b"),n=Math.round(+v("j-pts")||0),why=v("j-why").slice(0,200);if(!a||!n)return;
@@ -1035,7 +1149,8 @@ document.addEventListener("submit",async e=>{
     const niveaux=scaleList().map(s=>{const raw=v("sc-s"+s.n);return {n:s.n,seuil:s.n===0?0:(raw===""||isNaN(+raw)?seuilOf(s):Math.round(+raw)),titre:v("sc-t"+s.n).slice(0,40)||s.titre,effet:v("sc-e"+s.n).slice(0,300)};});
     ui.scaleEdit=false;
     const seuils={};niveaux.forEach(n=>{seuils[String(n.n)]=n.seuil;});
-    await run("Échelle",async()=>{const bt=writeBatch(db);bt.set(doc(db,"config","renommee"),{niveaux:niveaux.map(n=>({n:n.n,titre:n.titre,effet:n.effet})),majLe:serverTimestamp()},{merge:true});bt.set(doc(db,"prive","renommee"),{seuils},{merge:true});await bt.commit();
+    const mefaits={};Object.keys(DEFAULT_MEFAITS).forEach(k=>{const x=v("mf-"+k);mefaits[k]=x===""||isNaN(+x)?mefaitPts()[k]:Math.abs(Math.round(+x));});
+    await run("Échelle",async()=>{const bt=writeBatch(db);bt.set(doc(db,"config","renommee"),{niveaux:niveaux.map(n=>({n:n.n,titre:n.titre,effet:n.effet})),majLe:serverTimestamp()},{merge:true});bt.set(doc(db,"prive","renommee"),{seuils,mefaits},{merge:true});await bt.commit();
       // recalcul des rangs publics avec les nouveaux seuils
       const bt2=writeBatch(db);let k=0;aventuriers.forEach(a=>bureaux.forEach(b=>{const nl=levelOf(pts(a,b.id));if(nl!==renown(a,b.id)){k++;bt2.update(doc(db,"aventuriers",a.id),new FieldPath("niveaux",b.id),nl);}}));if(k)await bt2.commit();});return;
   }
