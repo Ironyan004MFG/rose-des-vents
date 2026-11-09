@@ -123,6 +123,74 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 .stamp.sm{font-size:9px;padding:2px 5px;margin-left:6px;vertical-align:middle}
 .chr-h{font-family:var(--display);font-size:20px;letter-spacing:.08em;color:var(--gold);margin:28px 0 12px}
 .note.flash{outline:4px solid var(--gold);outline-offset:4px;transition:outline-color 1.4s ease}
+/* gazette */
+.gazette{margin-top:28px;background:#efe3c4;color:var(--ink);border-radius:6px;padding:22px 24px 26px;box-shadow:0 14px 30px rgba(0,0,0,.45);background-image:repeating-linear-gradient(0deg,rgba(90,70,40,.035) 0 2px,transparent 2px 4px)}
+.gzhead{text-align:center;border-bottom:3px double #6b5838;padding-bottom:12px;margin-bottom:16px}
+.gzkick{display:block;font-family:var(--display);font-size:13px;letter-spacing:.3em;text-transform:uppercase;color:#8a2d1f}
+.gzhead h2{font-family:var(--display);font-size:clamp(26px,5vw,42px);letter-spacing:.04em;margin:4px 0;color:#2a2219}
+.gzsub{font-style:italic;color:var(--ink-soft)}
+.gzcols{columns:3 280px;column-gap:28px;column-rule:1px solid #c9b88f}
+.gzart{break-inside:avoid;margin:0 0 18px}
+.gzart h3{font-family:var(--display);font-size:20px;margin:4px 0 6px;line-height:1.2}
+.gzart.lead h3{font-size:26px}
+.gzart .wikibody p{margin:0 0 8px}
+.gzart .wikibody p:first-child::first-letter{font-family:var(--display);font-size:2.4em;float:left;line-height:.9;margin:4px 6px 0 0;color:#8a2d1f}
+.gzmore{text-align:center;margin:6px 0 0}
+.ntop{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ntop .jd{font-size:13px;color:var(--ink-soft);font-style:italic}
+.nchars{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 0}
+.nchar{display:inline-flex;align-items:center;gap:6px;background:#2a2219;color:var(--parch);border-radius:999px;padding:3px 10px 3px 3px;font-size:13px;text-decoration:none}
+.nchar img{width:24px;height:24px;border-radius:50%;object-fit:cover}
+.nchar:not(:has(img)){padding-left:10px}
+.news{display:flex;flex-direction:column;gap:12px}
+.newsitem{background:var(--parch);color:var(--ink);border-radius:6px;padding:12px 16px}
+.newsitem h3{font-family:var(--display);margin:4px 0}
+.sheet .newsitem{background:#f7f1e1;border:1px solid #d9c9a0}
+.majline{background:#fff1cc;border-left:4px solid var(--gold);padding:6px 10px;margin:0 0 10px;font-size:15px}
+/* espace DM */
+.dmtabs{margin-bottom:16px}
+.chip .n.warn{background:var(--danger);color:#fff}
+.dmspace{background:var(--parch);color:var(--ink);border-radius:8px;padding:18px 20px;box-shadow:0 10px 24px rgba(0,0,0,.4)}
+.dmsec{margin:0 0 20px}
+.dmsec h2{font-family:var(--display);font-size:18px;letter-spacing:.06em;margin:0 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dmsec h2 .n{font-size:12px;background:#2a2219;color:var(--parch);border-radius:999px;padding:2px 8px}
+.todo{list-style:none;margin:0;padding:0}
+.todo li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #d9c9a0;flex-wrap:wrap}
+.todo li>span{flex:1 1 240px}
+a.mini{text-decoration:none;display:inline-block}
+.dmspace .mini{color:var(--ink)}
+.mini.danger{background:var(--danger);color:#fff;border-color:var(--danger)}
+.dmspace .compbar input[type=search]{background:#fffaf0;color:var(--ink);border-color:#c9b88f}
+.warn{color:var(--danger)}
+.dmseuil{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;margin-bottom:14px}
+.dmseuil input{width:80px}
+.prog{display:inline-block;width:110px;height:10px;border-radius:5px;background:#d9c9a0;vertical-align:middle;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--gold)}
+.dmtable tr.due{background:#fbe7c6}
+.evq{border-bottom:1px solid #d9c9a0;padding:8px 0}
+.evfields{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin:6px 0 0 30px}
+.evfields .wide{grid-column:1/-1}
+.evlog{border-left:3px solid var(--gold);padding:4px 0 4px 12px;margin:0 0 14px}
+.cpick{display:flex;flex-wrap:wrap;gap:6px}
+.cpk{display:inline-flex;align-items:center;gap:6px;border:1px solid #c9b88f;border-radius:999px;padding:4px 10px;font-size:14px;cursor:pointer;background:#fffaf0}
+.cpk:has(input:checked){background:#2a2219;color:var(--parch)}
+.notes{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.note-dm{background:#f7f1e1;border:1px solid #d9c9a0;border-radius:6px;padding:10px 14px}
+.note-dm.pin{border-color:var(--gold);border-width:2px}
+.nhead{all:unset;display:flex;flex-direction:column;gap:4px;cursor:pointer;width:100%}
+.nhead:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.nhead strong{font-family:var(--display);font-size:17px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.tile{background:#2a2219;color:var(--parch);border-radius:6px;padding:12px;display:flex;flex-direction:column}
+.tn{font-family:var(--display);font-size:30px;color:var(--gold)}
+.tl{font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+.dmform h2{margin-top:0}
+.form label.pickrow,.form label.cpk{flex-direction:row;align-items:center;text-transform:none;letter-spacing:normal;font-family:var(--body);font-size:15px;color:var(--ink)}
+.form label.pickrow strong{font-family:var(--display)}
+.form .cpk input,.form .pickrow input{width:auto;margin:0}
+.evq .pickrow{background:none}
+.form label.cpk:has(input:checked){color:var(--parch)}
+@media (max-width:560px){.dmspace{padding:14px 12px}.evfields{margin-left:0}.gazette{padding:16px 14px}}
 /* planification */
 .planline{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 10px;font-size:15px}
 .mini.plan{font-size:13px}
@@ -400,7 +468,7 @@ if (new URLSearchParams(location.search).has("emu")) {
 const RANKS = {cuivre:{label:"Cuivre",c:"var(--r-cuivre)"},fer:{label:"Fer",c:"var(--r-fer)"},argent:{label:"Argent",c:"var(--r-argent)"},or:{label:"Or",c:"var(--r-or)"},mithral:{label:"Mithril",c:"var(--r-mithral)"},inconnu:{label:"Rang inconnu",c:"#3a3128"}};
 const STATUS = {ouverte:"Ouverte",encours:"En cours",terminee:"Terminée",archivee:"Archivée"};
 const TYPES = ["Contrat","Recherche","Exploration","Prime","Escorte","Rumeur"];
-const QUEST_KEYS = ["bureau","titre","type","rang","statut","lieu","recompense","niveau","joueurs","joueursMin","joueursMax","supercharged","date","description"];
+const QUEST_KEYS = ["bureau","titre","type","rang","statut","lieu","recompense","niveau","joueurs","joueursMin","joueursMax","supercharged","date","description","maj"];
 const DEFAULT_RANK_PTS = {cuivre:1,fer:5,argent:10,or:25,mithral:50,inconnu:0};
 const BASE_CATS = ["PNJ","Créatures","Lieux","Indices & rumeurs","Objets","Factions"];
 const DEFAULT_MEFAITS = {mineur:1,moyen:3,grave:10};
@@ -426,12 +494,12 @@ const DEFAULT_SCALE = [
 ];
 
 /* ---------- state ---------- */
-let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [];
+let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null;
 const loaded = {b:false, q:false, i:false, a:false, w:false, c:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
 let save = {state:"idle", msg:""};
-const ui = {plan:null, compEdit:null, compImg:undefined, compPreview:false, compHist:null, compVer:null, compQ:"", compCat:"", compReg:"", confirmComp:null, confirmGroup:null, reportWrite:null, sheetEdit:null, sheetImg:undefined, promptSheet:false, needLogin:null, loginIntent:null, complete:null, adjust:false, wikiEdit:null, wikiPreview:false, confirmWiki:null, advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
+const ui = {dmTab:"todo", evolve:null, noteEdit:null, noteOpen:null, noteQ:"", confirmNote:null, confirmNews:null, newsEdit:null, gazAll:false, plan:null, compEdit:null, compImg:undefined, compPreview:false, compHist:null, compVer:null, compQ:"", compCat:"", compReg:"", confirmComp:null, confirmGroup:null, reportWrite:null, sheetEdit:null, sheetImg:undefined, promptSheet:false, needLogin:null, loginIntent:null, complete:null, adjust:false, wikiEdit:null, wikiPreview:false, confirmWiki:null, advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
 
 /* ---------- helpers ---------- */
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -439,7 +507,7 @@ function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(
 function parsePlayers(s){const n=String(s||"").match(/\d+/g);if(!n)return {min:null,max:null};const a=n.map(Number);return {min:a[0],max:a.length>1?a[a.length-1]:(/\+/.test(s)?null:a[0])};}
 function normQuest(q){
   const out={};QUEST_KEYS.forEach(k=>{if(q[k]!==undefined)out[k]=q[k];});
-  ["type","lieu","recompense","niveau","joueurs","date","description"].forEach(k=>{out[k]=String(out[k]==null?"":out[k]);});
+  ["type","lieu","recompense","niveau","joueurs","date","description","maj"].forEach(k=>{out[k]=String(out[k]==null?"":out[k]);});
   if(out.joueursMin===undefined||out.joueursMax===undefined){const p=parsePlayers(out.joueurs);if(out.joueursMin===undefined)out.joueursMin=p.min;if(out.joueursMax===undefined)out.joueursMax=p.max;}
   ["joueursMin","joueursMax"].forEach(k=>{const v=out[k];out[k]=(v===""||v==null||isNaN(+v))?null:Math.max(0,Math.min(99,Math.round(+v)));});
   out.supercharged=!!out.supercharged;
@@ -502,6 +570,7 @@ function listen(){
     rangs=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();
   },onErr);
   onSnapshot(query(collection(db,"compendium"),where("masque","==",false)),snap=>{compPublic=snap.docs.map(d=>Object.assign({id:d.id},d.data()));loaded.c=true;render();},onErr);
+  onSnapshot(collection(db,"nouvelles"),snap=>{nouvelles=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},onErr);
   onSnapshot(collection(db,"planif"),snap=>{planifs=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},onErr);
   onSnapshot(collection(db,"wiki"),snap=>{
     wikiPages=snap.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>((a.ordre==null?999:a.ordre)-(b.ordre==null?999:b.ordre))||String(a.titre).localeCompare(String(b.titre),"fr"));loaded.w=true;render();
@@ -509,12 +578,15 @@ function listen(){
 }
 // Données réservées au DM (points, journal, seuils) : lues seulement par un compte admin.
 function listenPrivate(on){
-  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};journal=[];priv=null;compAll=[];
+  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;
   if(!on)return;
   const err=e=>console.error(e);
   privUnsubs.push(onSnapshot(collection(db,"points"),snap=>{const m={};snap.docs.forEach(d=>{m[d.id]=(d.data().parRegion)||{};});pointsMap=m;render();},err));
   privUnsubs.push(onSnapshot(query(collection(db,"journal"),orderBy("date","desc"),limit(60)),snap=>{journal=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","renommee"),snap=>{priv=snap.exists()?snap.data():null;render();},err));
+  privUnsubs.push(onSnapshot(collection(db,"notesdm"),snap=>{notesDm=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
+  privUnsubs.push(onSnapshot(collection(db,"evolutions"),snap=>{evols=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
+  privUnsubs.push(onSnapshot(doc(db,"prive","monde"),snap=>{monde=snap.exists()?snap.data():null;render();},err));
   privUnsubs.push(onSnapshot(collection(db,"compendium"),snap=>{compAll=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
 }
 window.addEventListener("offline",()=>{net={state:"hors-ligne",msg:""};render();});
@@ -610,7 +682,7 @@ function mapView(){
   h+='<a class="office regl" href="#wiki"><span class="nm">Wiki des règles maison<span class="tag">Outerworlders, Supercharged, renommée…</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#renommee"><span class="nm">Registre de renommée<span class="tag">Qui est connu, respecté… ou recherché</span></span><span aria-hidden="true">→</span></a>';
   h+='<p class="hint">'+(loaded.q?total+' quête'+(total>1?'s':'')+' ouverte'+(total>1?'s':'')+' sur la côte. Choisis un comptoir pour voir son babillard.':'Chargement des quêtes…')+'</p></nav></div>';
-  return h;
+  return h+gazette();
 }
 
 /* ---------- board ---------- */
@@ -672,6 +744,7 @@ function card(q){
   let h='<article id="q-'+esc(q.id)+'" class="note'+(q.statut==="terminee"||q.statut==="archivee"?" done":"")+(ch.level==="super"?" super":"")+'">';
   h+='<div class="note-top"><div style="display:flex;flex-direction:column;gap:4px">'+rankSeal(q.rang)+'<span class="kind">'+esc(q.type)+'</span></div><div class="stamps"><span class="stamp st-'+esc(q.statut)+'">'+esc(STATUS[q.statut]||q.statut)+'</span>'+(ch.level==="super"?'<span class="stamp st-super">Supercharged</span>':'')+'</div></div>';
   h+='<h2>'+esc(q.titre)+'</h2><p class="desc">'+esc(q.description)+'</p>';
+  if(q.maj)h+='<p class="majline"><strong>Mise à jour :</strong> '+esc(q.maj)+'</p>';
   if(ch.level==="super")h+='<p class="superline">Plus d\'aventuriers que prévu : la mission sera plus dangereuse… et plus glorieuse.</p>';
   if(ch.level==="risque")h+='<p class="riskline">Risque de Supercharged : '+(ch.conf+ch.pend)+' demandes pour '+ch.max+' places recommandées.</p>';
   h+='<dl class="facts"><dt>Lieu</dt><dd>'+esc(q.lieu||"—")+'</dd><dt>Récompense</dt><dd>'+esc(q.recompense||"—")+'</dd><dt>Niveau</dt><dd>'+esc(q.niveau||"—")+'</dd><dt>Joueurs</dt><dd>'+esc(q.joueurs||"—")+'</dd>';
@@ -712,6 +785,7 @@ function form(){
     '<label for="f-pts">Points de renommée (vide = selon le rang)<input id="f-pts" type="number" step="1" value="'+(priv&&priv.quetes&&typeof priv.quetes[q.id]==="number"?priv.quetes[q.id]:"")+'"></label>'+
     '<label class="check" for="f-super"><input id="f-super" type="checkbox"'+(q.supercharged?" checked":"")+'> Forcer « Supercharged »</label>'+
     '<label class="wide" for="f-desc">Description<textarea id="f-desc" maxlength="4000">'+esc(q.description)+'</textarea></label>'+
+    '<label class="wide" for="f-maj">Mise à jour (évolution du monde, facultatif)<input id="f-maj" maxlength="1000" value="'+esc(q.maj||"")+'"></label>'+
     '<div class="actions wide"><button class="btn" type="submit">Enregistrer la quête</button><button class="btn ghost" type="button" data-a="cancel">Annuler</button></div></form>';
 }
 function boardView(){
@@ -835,6 +909,7 @@ function sheetView(id){
   h+='<h3>Renommée</h3>'+(known.length?'<ul class="sheetrep">'+known.map(b=>'<li><span>'+esc(b.nom)+'</span>'+chip(renown(a,b.id))+'</li>').join("")+'</ul>':'<p class="desc">Inconnu dans toutes les régions… pour l\'instant.</p>');
   const qs=questsOf(a);
   h+='<h3>Quêtes accomplies</h3>'+(qs.length?'<ul class="sheetq">'+qs.map(q=>'<li>'+rankSeal(q.rang)+' <a href="#chroniques">'+esc(q.titre)+'</a>'+(office(q.bureau)?' <em>('+esc(office(q.bureau).nom)+')</em>':'')+'</li>').join("")+'</ul>':'<p class="desc">Aucune pour le moment.</p>');
+  h+=sheetNews(a.id);
   if(mine||ui.dm)h+='<div class="actions"><button class="btn ghost" data-a="sheet-edit" data-id="'+esc(a.id)+'">Modifier la fiche</button></div>';
   return h+'</article>';
 }
@@ -937,6 +1012,133 @@ function compEntryView(id){
   return h+'</article>';
 }
 
+/* ---------- évolution du monde ---------- */
+const NOTE_CATS = ["Intrigues","PNJ","Secrets","Idées de quêtes","Factions","Lieux"];
+const RANK_ORDER = ["cuivre","fer","argent","or","mithral"];
+function nextRank(r){const i=RANK_ORDER.indexOf(r);return i<0?"cuivre":RANK_ORDER[Math.min(i+1,RANK_ORDER.length-1)];}
+function seuilMonde(){const v=monde&&monde.seuil;return typeof v==="number"&&v>0?v:3;}
+function doneIn(bid){return quetes.filter(q=>q.bureau===bid&&q.rapport&&(q.statut==="terminee"||q.statut==="archivee"));}
+function pendingIn(bid){const r=(monde&&monde.regions&&monde.regions[bid])||{},vues=r.vues||[];return doneIn(bid).filter(q=>vues.indexOf(q.id)<0);}
+function dueRegions(){return bureaux.filter(b=>pendingIn(b.id).length>=seuilMonde());}
+function newsFor(bid){return nouvelles.filter(n=>!bid||n.region===bid||(bid&&n.region==="cote")).sort((a,b)=>tms(b.date)-tms(a.date));}
+function tms(t){return t&&t.toMillis?t.toMillis():0;}
+function newsChars(n){const l=(n.aventuriers||[]).map(id=>aventuriers.find(a=>a.id===id)).filter(Boolean);
+  return l.length?'<p class="nchars">'+l.map(a=>'<a class="nchar" href="#perso-'+esc(a.id)+'">'+(a.image?'<img src="'+esc(a.image)+'" alt="">':'')+esc(a.nom)+'</a>').join("")+'</p>':'';}
+function newsArticle(n){return '<article class="newsitem"><div class="ntop"><span class="creg">'+esc(regionName(n.region))+'</span><span class="jd">'+esc(fmtDate(n.date))+'</span></div><h3>'+esc(n.titre)+'</h3><div class="wikibody">'+md(n.contenu)+'</div>'+newsChars(n)+'</article>';}
+function newsList(list){return '<div class="news">'+list.map(newsArticle).join("")+'</div>';}
+function gazette(){const l=nouvelles.slice().sort((a,b)=>tms(b.date)-tms(a.date));if(!l.length&&!isAdmin)return "";
+  const lim=ui.gazAll?l:l.slice(0,5);
+  return '<section class="gazette" aria-labelledby="gz-t"><div class="gzhead"><span class="gzkick">Oyez, oyez !</span><h2 id="gz-t">Le Crieur de la Sword Coast</h2><span class="gzsub">Les nouvelles criées sur les places, de Luskan à Baldur\'s Gate</span></div>'+
+    (l.length?'<div class="gzcols">'+lim.map((n,i)=>'<article class="gzart'+(i===0?' lead':'')+'"><div class="ntop"><span class="creg">'+esc(regionName(n.region))+'</span><span class="jd">'+esc(fmtDate(n.date))+'</span></div><h3>'+esc(n.titre)+'</h3><div class="wikibody">'+md(n.contenu)+'</div>'+newsChars(n)+'</article>').join("")+'</div>'+
+      (l.length>5?'<p class="gzmore"><button class="btn ghost" data-a="gaz-all">'+(ui.gazAll?'Moins de nouvelles':'Toutes les nouvelles ('+l.length+')')+'</button></p>':''):'<p class="desc">Aucune nouvelle pour l\'instant. Publie la première depuis l\'Espace DM.</p>')+'</section>';}
+function sheetNews(aid){const l=nouvelles.filter(n=>(n.aventuriers||[]).indexOf(aid)>=0).sort((a,b)=>tms(b.date)-tms(a.date));
+  return l.length?'<h3>Dans les nouvelles</h3>'+newsList(l):'';}
+function charPicker(pfx,sel){sel=sel||[];const l=aventuriers.slice().sort((a,b)=>String(a.nom).localeCompare(String(b.nom),"fr"));
+  return l.length?'<div class="cpick" role="group" aria-label="Aventuriers mentionnés">'+l.map(a=>'<label class="cpk" for="'+pfx+'-'+esc(a.id)+'"><input type="checkbox" id="'+pfx+'-'+esc(a.id)+'" data-'+pfx+'="'+esc(a.id)+'"'+(sel.indexOf(a.id)>=0?' checked':'')+'><span>'+esc(a.nom)+'</span></label>').join("")+'</div>':'<p class="desc">Aucun aventurier au registre.</p>';}
+// Brouillon d'article « crieur public » à partir d'un rapport de mission (le DM le retouche avant de publier).
+function draftFromQuest(q){const r=q.rapport||{},b=office(q.bureau),parts=(r.participants||[]);
+  const names=parts.map(x=>x.nom),who=names.length>1?names.slice(0,-1).join(", ")+" et "+names[names.length-1]:(names[0]||"des aventuriers de la Guilde");
+  const lieu=q.lieu?" ("+q.lieu+")":"";
+  const intro={reussite:"Oyez, oyez, bonnes gens de "+(b?b.nom:"la côte")+" ! ",partielle:"Oyez, oyez ! On murmure à "+(b?b.nom:"la côte")+" que ",echec:"Oyez, oyez… Triste nouvelle à "+(b?b.nom:"la côte")+" : "}[r.resultat]||"Oyez, oyez ! ";
+  const corps={reussite:who+" de la Grande Guilde de la Rose des Vents ont mené à bien la mission « "+q.titre+" »"+lieu+".",partielle:who+" sont revenus de la mission « "+q.titre+" »"+lieu+", mais tout ne s'est pas passé comme prévu.",echec:who+" ont échoué dans la mission « "+q.titre+" »"+lieu+"."}[r.resultat]||who+" ont accompli la mission « "+q.titre+" ».";
+  const titre={reussite:"Exploit à "+(b?b.nom:"la côte")+" : "+q.titre,partielle:"Demi-victoire à "+(b?b.nom:"la côte")+" : "+q.titre,echec:"Revers à "+(b?b.nom:"la côte")+" : "+q.titre}[r.resultat]||q.titre;
+  return {titre:titre.slice(0,120),region:q.bureau,quete:q.id,aventuriers:parts.map(x=>x.aventurier).filter(Boolean),
+    contenu:(intro+corps+(r.resume?"\n\nSelon les témoins : *"+r.resume+"*":"")+"\n\nQue l'on se le dise !").slice(0,5000)};}
+function newsForm(n){n=n||{titre:"",contenu:"",region:"cote",aventuriers:[]};
+  return '<form class="form dmform" id="newsform"><h2>'+(ui.newsEdit==="new"?'Crier une nouvelle':'Modifier la nouvelle')+'</h2>'+
+    '<label class="wide" for="nw-titre">Titre<input id="nw-titre" required maxlength="120" value="'+esc(n.titre)+'" placeholder="Ex. Des héros sauvent le moulin de Phandalin !"></label>'+
+    '<label for="nw-reg">Région<select id="nw-reg"><option value="cote">Toute la Sword Coast</option>'+bureaux.map(b=>'<option value="'+esc(b.id)+'"'+(n.region===b.id?' selected':'')+'>'+esc(b.nom)+'</option>').join("")+'</select></label>'+
+    '<label class="wide" for="nw-texte">Article <span class="tip">Écris-le comme un crieur public ! **gras**, *italique*</span><textarea id="nw-texte" rows="6" maxlength="5000">'+esc(n.contenu)+'</textarea></label>'+
+    (n.quete?'<p class="hint wide">Brouillon tiré du rapport de « '+esc((questById(n.quete)||{}).titre||"")+' ». Retouche-le à ta guise.</p>':'')+
+    '<fieldset class="wide pick"><legend>Aventuriers mentionnés (l\'article apparaît sur leur fiche)</legend>'+charPicker("nwc",n.aventuriers)+'</fieldset>'+
+    '<div class="actions wide"><button class="btn gold" type="submit">Publier</button><button class="btn ghost" type="button" data-a="news-cancel">Annuler</button></div></form>';}
+function boardNews(bid){if(!nouvelles.length)return "";const l=nouvelles.filter(n=>n.region===bid).sort((a,b)=>tms(b.date)-tms(a.date)).slice(0,3);
+  if(!l.length)return "";const b=office(bid);return '<section class="reg newsreg"><h2>Nouvelles de '+esc(b?b.nom:"la région")+'</h2>'+newsList(l)+'</section>';}
+function chronNews_unused(){const l=nouvelles.slice().sort((a,b)=>tms(b.date)-tms(a.date)).slice(0,8);
+  if(!l.length)return "";return '<section class="reg newsreg"><h2>Nouvelles de la Sword Coast</h2>'+newsList(l)+'</section>';}
+
+/* ---------- Espace DM ---------- */
+function todoItems(){
+  const it=[];
+  dueRegions().forEach(b=>it.push({k:"evol",t:'<strong>'+esc(b.nom)+'</strong> : le monde doit réagir ('+pendingIn(b.id).length+' quêtes accomplies)',act:'<button class="mini" data-a="evolve" data-id="'+esc(b.id)+'">Faire évoluer</button>'}));
+  quetes.filter(q=>q.statut==="ouverte").forEach(q=>{const s=signupsFor(q.id),att=s.filter(x=>x.statut==="attente").length;if(!att)return;const pb=planBest(q),b=office(q.bureau);
+    it.push({k:"group",t:'<strong>'+esc(q.titre)+'</strong> ('+esc(b?b.nom:"")+') : '+att+' demande'+(att>1?'s':'')+' en attente'+(pb?' · meilleure date : '+esc(fmtPlan(pb)):''),act:'<a class="mini" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir</a>'});});
+  quetes.filter(q=>q.statut==="encours"&&q.rapportBrouillon&&q.rapportBrouillon.resume).forEach(q=>it.push({k:"report",t:'<strong>'+esc(q.titre)+'</strong> : rapport reçu de '+esc(q.rapportBrouillon.auteur||"un joueur"),act:'<a class="mini" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Terminer</a>'}));
+  quetes.filter(q=>q.statut==="encours"&&!(q.rapportBrouillon&&q.rapportBrouillon.resume)).forEach(q=>it.push({k:"run",t:'<strong>'+esc(q.titre)+'</strong> : en cours'+(q.date?' · '+esc(q.date):''),act:'<a class="mini" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir</a>'}));
+  compPending().forEach(e=>{const p=e.proposition,n=Object.keys(p.approbations||{}).length;it.push({k:"comp",t:'<strong>'+esc(p.titre)+'</strong> : '+(e.publiee===false?'nouvelle entrée':'modification')+' de '+esc((p.par&&p.par.nom)||"?")+' ('+n+'/2)',act:'<a class="mini" href="#compendium-'+esc(e.id)+'">Examiner</a>'});});
+  aventuriers.filter(a=>a.proprietaire&&!a.don).forEach(a=>it.push({k:"don",t:'<strong>'+esc(a.nom)+'</strong> : aucun Don attribué (si Outerworlder)',act:'<a class="mini" href="#perso-'+esc(a.id)+'">Fiche</a>'}));
+  return it;
+}
+const TODO_GROUPS=[["evol","Le monde doit réagir"],["report","Rapports de mission reçus"],["group","Groupes à former"],["run","Missions en cours"],["comp","Compendium en revue"],["don","Dons à attribuer"]];
+function dmTodo(){const it=todoItems();if(!it.length)return '<p class="empty">Rien à traiter. Le monde est calme… pour l\'instant.</p>';
+  return TODO_GROUPS.map(g=>{const l=it.filter(x=>x.k===g[0]);if(!l.length)return "";return '<section class="dmsec"><h2>'+g[1]+' <span class="n">'+l.length+'</span></h2><ul class="todo">'+l.map(x=>'<li><span>'+x.t+'</span>'+x.act+'</li>').join("")+'</ul></section>';}).join("");}
+function evolveForm(bid){
+  const b=office(bid),pend=pendingIn(bid),open=quetes.filter(q=>q.bureau===bid&&q.statut==="ouverte");
+  let h='<form class="form dmform" id="evolform"><h2>Le monde réagit : '+esc(b?b.nom:bid)+'</h2>';
+  h+='<div class="wide"><h3>Ce que les aventuriers ont accompli</h3>'+(pend.length?'<ul class="todo">'+pend.map(q=>'<li><span><strong>'+esc(q.titre)+'</strong> · '+esc(RESULTS[q.rapport.resultat]||"")+(q.rapport.resume?' : '+esc(String(q.rapport.resume).slice(0,160))+(q.rapport.resume.length>160?'…':''):'')+'</span></li>').join("")+'</ul>':'<p class="desc">Aucune nouvelle quête accomplie depuis la dernière évolution.</p>')+'</div>';
+  h+='<label class="wide" for="ev-notes">Notes privées : comment le monde réagit <span class="tip">Visible seulement par toi</span><textarea id="ev-notes" rows="5" maxlength="10000" placeholder="Ex. Le Poing Enflammé remarque le groupe. La contrebande se déplace vers les égouts…"></textarea></label>';
+  h+='<fieldset class="wide pick"><legend>Nouvelle publique (facultatif)</legend><label for="ev-ntitre">Titre<input id="ev-ntitre" maxlength="120" placeholder="Ex. Les routes du nord sont plus sûres"></label><label for="ev-ntexte">Article<textarea id="ev-ntexte" rows="3" maxlength="5000"></textarea></label><p class="desc">Aventuriers mentionnés :</p>'+charPicker("evc",[])+'</fieldset>';
+  h+='<fieldset class="wide pick"><legend>Quêtes ouvertes à faire évoluer (facultatif)</legend>'+(open.length?open.map(q=>{const s=signupsFor(q.id).filter(x=>x.statut!=="refusee").length;
+    return '<div class="evq"><label class="pickrow" for="ev-q-'+esc(q.id)+'"><input type="checkbox" id="ev-q-'+esc(q.id)+'" data-evq="'+esc(q.id)+'"><span><strong>'+esc(q.titre)+'</strong> '+rankSeal(q.rang)+(s?' <em class="warn">'+s+' inscrit'+(s>1?'s':'')+'</em>':'')+'</span></label>'+
+      '<div class="evfields"><label for="ev-r-'+esc(q.id)+'">Nouveau rang<select id="ev-r-'+esc(q.id)+'">'+RANK_ORDER.concat(["inconnu"]).map(r=>'<option value="'+r+'"'+(r===nextRank(q.rang)?' selected':'')+'>'+esc(RANKS[r].label)+'</option>').join("")+'</select></label>'+
+      '<label for="ev-p-'+esc(q.id)+'">Récompense<input id="ev-p-'+esc(q.id)+'" maxlength="200" value="'+esc(q.recompense)+'"></label>'+
+      '<label class="wide" for="ev-m-'+esc(q.id)+'">Mise à jour affichée sur la quête<input id="ev-m-'+esc(q.id)+'" maxlength="1000" placeholder="Ex. Les gobelins ont fortifié le moulin."></label></div></div>';}).join(""):'<p class="desc">Aucune quête ouverte à ce comptoir.</p>')+'</fieldset>';
+  return h+'<div class="actions wide"><button class="btn gold" type="submit">Enregistrer l\'évolution</button><button class="btn ghost" type="button" data-a="evolve-cancel">Annuler</button></div></form>';
+}
+function dmEvol(){
+  if(ui.evolve)return evolveForm(ui.evolve);
+  const X=seuilMonde();
+  let h='<form class="inline dmseuil" id="seuilform"><label for="ev-seuil">Le monde réagit toutes les<input id="ev-seuil" type="number" min="1" max="50" value="'+X+'"></label><span>quêtes accomplies dans une région.</span><button class="btn ghost" type="submit">Enregistrer</button></form>';
+  h+='<div class="tablebox light"><table class="dmtable"><thead><tr><th scope="col">Comptoir</th><th scope="col">Depuis la dernière évolution</th><th scope="col"></th></tr></thead><tbody>'+bureaux.map(b=>{const n=pendingIn(b.id).length,pc=Math.min(100,Math.round(n/X*100));
+    return '<tr'+(n>=X?' class="due"':'')+'><th scope="row">'+esc(b.nom)+'</th><td><span class="prog" role="img" aria-label="'+n+' sur '+X+'"><i style="width:'+pc+'%"></i></span> '+n+' / '+X+(n>=X?' <strong class="warn">Le monde doit réagir</strong>':'')+'</td><td><button class="mini" data-a="evolve" data-id="'+esc(b.id)+'">Faire évoluer</button></td></tr>';}).join("")+'</tbody></table></div>';
+  h+='<section class="dmsec"><h2>Journal des évolutions</h2>'+(evols.length?evols.slice().sort((a,b)=>tms(b.date)-tms(a.date)).map(e=>'<article class="evlog"><div class="ntop"><span class="creg">'+esc(regionName(e.region))+'</span><span class="jd">'+esc(fmtDate(e.date))+'</span></div>'+
+    (e.notes?'<div class="wikibody">'+md(e.notes)+'</div>':'<p class="desc">Sans notes.</p>')+
+    ((e.changements||[]).length?'<ul class="todo">'+e.changements.map(c=>'<li><span>'+esc(c.titre)+' : '+esc((RANKS[c.ancienRang]||{}).label||c.ancienRang)+' → '+esc((RANKS[c.nouveauRang]||{}).label||c.nouveauRang)+(c.maj?' · « '+esc(c.maj)+' »':'')+'</span></li>').join("")+'</ul>':'')+
+    (e.nouvelleTitre?'<p class="desc">Nouvelle publiée : « '+esc(e.nouvelleTitre)+' »</p>':'')+'</article>').join(""):'<p class="desc">Aucune évolution pour l\'instant.</p>')+'</section>';
+  if(ui.newsEdit)return h+newsForm(ui.newsEdit==="new"?null:ui.newsEdit.indexOf("from:")===0?draftFromQuest(questById(ui.newsEdit.slice(5))):nouvelles.find(n=>n.id===ui.newsEdit));
+  const sans=quetes.filter(q=>q.rapport&&(q.statut==="terminee"||q.statut==="archivee")&&!nouvelles.some(n=>n.quete===q.id)).sort((a,b)=>tms(b.rapport.termineLe)-tms(a.rapport.termineLe));
+  h+='<section class="dmsec"><h2>Missions sans article <span class="n">'+sans.length+'</span></h2>'+(sans.length?'<ul class="todo">'+sans.map(q=>'<li><span><strong>'+esc(q.titre)+'</strong> · '+esc((office(q.bureau)||{}).nom||"")+' · '+esc(RESULTS[q.rapport.resultat]||"")+'</span><button class="mini" data-a="news-from" data-id="'+esc(q.id)+'">Créer une nouvelle</button></li>').join("")+'</ul>':'<p class="desc">Toutes les missions accomplies ont leur article.</p>')+'</section>';
+  h+='<section class="dmsec"><h2>Le Crieur : nouvelles publiées <button class="mini" data-a="news-new">Crier une nouvelle</button></h2>'+(nouvelles.length?'<ul class="todo">'+nouvelles.slice().sort((a,b)=>tms(b.date)-tms(a.date)).map(n=>'<li><span><strong>'+esc(n.titre)+'</strong> · '+esc(regionName(n.region))+' · '+esc(fmtDate(n.date))+'</span>'+(ui.confirmNews===n.id?'<span><button class="mini danger" data-a="news-del-yes" data-id="'+esc(n.id)+'">Supprimer</button><button class="mini" data-a="news-del-no">Annuler</button></span>':'<span><button class="mini" data-a="news-edit" data-id="'+esc(n.id)+'">Modifier</button><button class="mini" data-a="news-del" data-id="'+esc(n.id)+'">Retirer</button></span>')+'</li>').join("")+'</ul>':'<p class="desc">Aucune nouvelle publiée.</p>')+'</section>';
+  return h;
+}
+function noteForm(n){n=n||{titre:"",categorie:"",region:"",contenu:"",epingle:false};
+  return '<form class="form dmform" id="noteform"><h2>'+(ui.noteEdit==="new"?'Nouvelle note':'Modifier la note')+'</h2>'+
+    '<label class="wide" for="n-titre">Titre<input id="n-titre" required maxlength="120" value="'+esc(n.titre)+'"></label>'+
+    '<label for="n-cat">Catégorie<input id="n-cat" list="n-cats" maxlength="40" value="'+esc(n.categorie)+'"><datalist id="n-cats">'+Array.from(new Set(NOTE_CATS.concat(notesDm.map(x=>x.categorie).filter(Boolean)))).map(c=>'<option value="'+esc(c)+'">').join("")+'</datalist></label>'+
+    '<label for="n-reg">Région<select id="n-reg"><option value="">Aucune</option><option value="cote"'+(n.region==="cote"?' selected':'')+'>Sword Coast</option>'+bureaux.map(b=>'<option value="'+esc(b.id)+'"'+(n.region===b.id?' selected':'')+'>'+esc(b.nom)+'</option>').join("")+'</select></label>'+
+    '<label class="wide" for="n-contenu">Note <span class="tip">## Titre, **gras**, - liste</span><textarea id="n-contenu" rows="10" maxlength="50000">'+esc(n.contenu)+'</textarea></label>'+
+    '<label class="pickrow wide" for="n-pin"><input type="checkbox" id="n-pin"'+(n.epingle?' checked':'')+'><span>Épingler en haut</span></label>'+
+    '<div class="actions wide"><button class="btn" type="submit">Enregistrer</button><button class="btn ghost" type="button" data-a="note-cancel">Annuler</button></div></form>';}
+function dmNotes(){
+  if(ui.noteEdit)return noteForm(ui.noteEdit==="new"?null:notesDm.find(n=>n.id===ui.noteEdit));
+  const q=ui.noteQ.trim().toLowerCase();
+  const list=notesDm.filter(n=>!q||(n.titre+" "+n.contenu+" "+n.categorie).toLowerCase().indexOf(q)>=0).sort((a,b)=>(!!b.epingle-!!a.epingle)||tms(b.majLe)-tms(a.majLe));
+  let h='<div class="compbar"><label for="n-search" class="sr">Rechercher</label><input id="n-search" type="search" placeholder="Rechercher dans tes notes…" value="'+esc(ui.noteQ)+'"><button class="btn gold" data-a="note-new">Nouvelle note</button></div>';
+  if(!list.length)return h+'<p class="empty">'+(notesDm.length?'Aucune note ne correspond.':'Aucune note secrète. Consigne ici tes intrigues, tes PNJ et tes idées de quêtes.')+'</p>';
+  return h+'<div class="notes">'+list.map(n=>{const o=ui.noteOpen===n.id;
+    return '<article class="note-dm'+(n.epingle?' pin':'')+'"><button class="nhead" data-a="note-open" data-id="'+esc(n.id)+'" aria-expanded="'+o+'"><span class="ctags">'+(n.epingle?'<span class="ccat rev">Épinglée</span>':'')+(n.categorie?'<span class="ccat">'+esc(n.categorie)+'</span>':'')+(n.region?'<span class="creg">'+esc(regionName(n.region))+'</span>':'')+'</span><strong>'+esc(n.titre)+'</strong>'+(o?'':'<span class="cex">'+esc(plainExcerpt(n.contenu))+'</span>')+'</button>'+
+      (o?'<div class="wikibody">'+md(n.contenu)+'</div><div class="actions"><button class="btn" data-a="note-edit" data-id="'+esc(n.id)+'">Modifier</button>'+(ui.confirmNote===n.id?'<button class="btn danger" data-a="note-del-yes" data-id="'+esc(n.id)+'">Supprimer définitivement</button><button class="btn ghost" data-a="note-del-no">Annuler</button>':'<button class="btn ghost" data-a="note-del" data-id="'+esc(n.id)+'">Supprimer</button>')+'</div>':'')+'</article>';}).join("")+'</div>';
+}
+function dmStats(){
+  const c={ouverte:0,encours:0,terminee:0,archivee:0};quetes.forEach(q=>{c[q.statut]=(c[q.statut]||0)+1;});
+  const players=new Set(aventuriers.map(a=>a.proprietaire).filter(Boolean)).size;
+  const tile=(n,l)=>'<div class="tile"><span class="tn">'+n+'</span><span class="tl">'+l+'</span></div>';
+  let h='<div class="tiles">'+tile(c.ouverte,"Quêtes ouvertes")+tile(c.encours,"En cours")+tile(c.terminee+c.archivee,"Accomplies")+tile(aventuriers.length,"Personnages")+tile(players,"Joueurs inscrits")+tile(compEntries().length,"Entrées du compendium")+'</div>';
+  const X=seuilMonde();
+  h+='<div class="tablebox light"><table class="dmtable"><thead><tr><th scope="col">Comptoir</th><th scope="col">Ouvertes</th><th scope="col">En cours</th><th scope="col">Accomplies</th><th scope="col">Évolution</th><th scope="col">Le plus renommé</th></tr></thead><tbody>'+
+    bureaux.map(b=>{const qs=quetes.filter(q=>q.bureau===b.id);let best=null,bp=-1e9;aventuriers.forEach(a=>{const p=pts(a,b.id);if(p>bp&&p>0){bp=p;best=a;}});
+      return '<tr><th scope="row">'+esc(b.nom)+'</th><td>'+qs.filter(q=>q.statut==="ouverte").length+'</td><td>'+qs.filter(q=>q.statut==="encours").length+'</td><td>'+doneIn(b.id).length+'</td><td>'+pendingIn(b.id).length+' / '+X+'</td><td>'+(best?'<a href="#perso-'+esc(best.id)+'">'+esc(best.nom)+'</a> '+chip(levelOf(bp))+' <span class="muted">'+bp+' pts</span>':'<span class="muted">—</span>')+'</td></tr>';}).join("")+'</tbody></table></div>';
+  return h;
+}
+function dmSpaceView(){
+  if(!isAdmin)return '<p class="empty">L\'Espace DM est réservé au Maître de la Guilde.</p>'+(user&&!user.isAnonymous?'':'<p><button class="btn board" data-a="dm">Mode DM</button></p>');
+  const n=todoItems().length;
+  const tabs=[["todo","À traiter"+(n?' <span class="n">'+n+'</span>':'')],["evol","Évolution du monde"+(dueRegions().length?' <span class="n warn">!</span>':'')],["notes","Notes secrètes"],["stats","Vue d'ensemble"]];
+  let h='<div class="chips dmtabs" role="tablist" aria-label="Espace DM">'+tabs.map(t=>'<button class="chip" role="tab" data-a="dmtab" data-v="'+t[0]+'" aria-selected="'+(ui.dmTab===t[0])+'" aria-pressed="'+(ui.dmTab===t[0])+'">'+t[1]+'</button>').join("")+'</div>';
+  h+='<div class="dmspace" role="tabpanel">'+(ui.dmTab==="evol"?dmEvol():ui.dmTab==="notes"?dmNotes():ui.dmTab==="stats"?dmStats():dmTodo())+'</div>';
+  return h;
+}
+
 /* ---------- galerie ---------- */
 function galleryView(){
   if(!loaded.a)return '<p class="hint">Chargement…</p>';
@@ -1010,6 +1212,7 @@ function dmPanel(b){
   const miss=seedMissing();
   let h='<div class="dmbar"><span class="msg">Mode DM : chaque changement est enregistré tout de suite et visible par tous.</span>';
   if(b)h+='<button class="btn gold" data-a="new">Nouvelle quête</button>';
+  {const n=todoItems().length;h+='<a class="btn gold" href="#dm">Espace DM'+(n?' ('+n+')':'')+'</a>';}
   h+='<button class="btn board" data-a="export">Exporter en JSON</button>';
   h+='<label class="btn board filebtn" for="f-import">Importer un JSON<input id="f-import" type="file" accept="application/json,.json"></label>';
   if(loaded.b&&loaded.q&&(miss.b.length||miss.q.length))h+='<button class="btn gold" data-a="migrate">Migrer les données intégrées ('+miss.b.length+' comptoirs, '+miss.q.length+' quêtes)</button>';
@@ -1035,27 +1238,28 @@ function statusPill(){
 }
 function render(){
   const wk=!!ui.office&&(ui.office==="wiki"||ui.office.indexOf("wiki-")===0);
-  if(ui.office&&ui.office!=="renommee"&&ui.office!=="chroniques"&&ui.office!=="personnages"&&ui.office!=="aventuriers"&&ui.office!=="compendium"&&ui.office.indexOf("compendium-")!==0&&ui.office.indexOf("perso-")!==0&&!wk&&loaded.b&&!office(ui.office))ui.office=null;
+  if(ui.office&&ui.office!=="renommee"&&ui.office!=="chroniques"&&ui.office!=="personnages"&&ui.office!=="aventuriers"&&ui.office!=="dm"&&ui.office!=="compendium"&&ui.office.indexOf("compendium-")!==0&&ui.office.indexOf("perso-")!==0&&!wk&&loaded.b&&!office(ui.office))ui.office=null;
   const reg=ui.office==="renommee";
   const chr=ui.office==="chroniques";
   const perso=!!ui.office&&ui.office.indexOf("perso-")===0;
   const mes=ui.office==="personnages";
   const gal=ui.office==="aventuriers";
+  const dms=ui.office==="dm";
   const comp=ui.office==="compendium",compE=!!ui.office&&ui.office.indexOf("compendium-")===0;
   const b=ui.office&&!reg?office(ui.office):null;
   let h='<div class="wrap">';
   h+='<header><svg width="72" height="72" viewBox="-110 -110 220 220" aria-hidden="true"><circle r="80" fill="none" stroke="#d8b45e" stroke-width="3" opacity=".6"></circle>'+rose(104,'#0e1b20')+'</svg>';
-  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(comp||compE?'Compendium de la Guilde':gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(comp||compE?'Le savoir partagé des aventuriers':gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions en cours et accomplies par les aventuriers':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+statusPill()+'</header>';
+  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(dms?'Espace DM':comp||compE?'Compendium de la Guilde':gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(dms?'Le bureau secret du Maître de la Guilde':comp||compE?'Le savoir partagé des aventuriers':gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions en cours et accomplies par les aventuriers':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+statusPill()+'</header>';
   if(compE)h+='<a class="back" href="#compendium"><span aria-hidden="true">←</span> Compendium</a>';
   else if(perso)h+='<a class="back" href="#renommee"><span aria-hidden="true">←</span> Registre de renommée</a>';
-  else if(b||reg||wk||chr||mes||gal||comp)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
+  else if(b||reg||wk||chr||mes||gal||comp||dms)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
   if(ui.authMsg)h+='<div class="dmbar"><span class="msg">'+esc(ui.authMsg)+'</span><button class="btn board" data-a="auth-ok">OK</button>'+(user&&!user.isAnonymous&&!isAdmin?'<button class="btn board" data-a="logout">Déconnexion</button>':'')+'</div>';
   if(ui.dm)h+=dmPanel(b);
-  h+=comp?compendiumView():compE?compEntryView(ui.office.slice(11)):gal?galleryView():mes?myCharsView():perso?sheetView(ui.office.slice(6)):chr?chroniclesView():wk?wikiView():reg?renownView():b?boardView()+reputationSection(b.id,b.nom):mapView();
+  h+=dms?dmSpaceView():comp?compendiumView():compE?compEntryView(ui.office.slice(11)):gal?galleryView():mes?myCharsView():perso?sheetView(ui.office.slice(6)):chr?chroniclesView():wk?wikiView():reg?renownView():b?boardView()+boardNews(b.id)+reputationSection(b.id,b.nom):mapView();
   const signed=user&&!user.isAnonymous;
   h+='<footer><span>Pour partir en mission : choisis une quête, appuie sur « Je veux y aller » et choisis ton personnage. Le DM confirme les inscriptions.</span>'+
     '<span class="who">'+(signed?'Connecté : '+esc(user.displayName||user.email||"aventurier")+' · <a href="#personnages">Mes personnages</a> · <button class="linkbtn" data-a="logout">Déconnexion</button>':'<button class="linkbtn" data-a="login">Se connecter</button>')+
-    ' · <button class="linkbtn" data-a="dm">'+(ui.dm?"Quitter le mode DM":"Mode DM")+'</button></span></footer>';
+    (isAdmin?' · <a href="#dm">Espace DM</a>':'')+' · <button class="linkbtn" data-a="dm">'+(ui.dm?"Quitter le mode DM":"Mode DM")+'</button></span></footer>';
   if(ui.signup){const sq=questById(ui.signup),mine=myChars();
     if(sq)h+='<div class="modal-bg" data-a="sign-cancel"><form class="modal" id="signform" role="dialog" aria-modal="true" aria-labelledby="sg-t"><h2 id="sg-t">S\'inscrire à « '+esc(sq.titre)+' »</h2>'+
       (mine.length?'<fieldset class="pick"><legend>Quel personnage part en mission ?</legend>'+mine.map((a,i)=>'<label class="pickrow" for="pk-'+i+'"><input type="radio" name="perso" id="pk-'+i+'" value="'+esc(a.id)+'"'+(i===0?' checked':'')+'>'+(a.image?'<img class="av" src="'+esc(a.image)+'" alt="">':'<span class="av ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+'<span><strong>'+esc(a.nom)+'</strong> <em>'+esc([a.espece,a.classe].filter(Boolean).join(" · "))+'</em></span></label>').join("")+'</fieldset>'+
@@ -1115,8 +1319,8 @@ function render(){
       h+='</form></div>';}}
   const focusId=document.activeElement&&document.activeElement.id;
   const app=document.getElementById("app");
-  const formKey=ui.editing+"|"+ui.signup+"|"+ui.addName+"|"+ui.advForm+"|"+ui.scaleEdit+"|"+ui.wikiEdit+"|"+(ui.complete?ui.complete.id+ui.complete.step:"")+"|"+ui.confirmGroup+"|"+ui.plan+"|"+ui.reportWrite+"|"+ui.adjust+"|"+ui.sheetEdit+"|"+ui.compEdit;
-  const keep={}; if(render.lastForm===formKey)["f-titre","f-bureau","f-type","f-rang","f-statut","f-lieu","f-recompense","f-niveau","f-jmin","f-jmax","f-date","f-desc","f-name","f-addname","f-advnom","f-advjoueur","w-titre","w-ordre","w-contenu","f-pts","c-date","c-res","c-resume","g-date","r-texte","pl-date","pl-heure","c2-titre","c2-cat","c2-reg","c2-quete","c2-contenu","c-search","p-nom","p-espece","p-classe","p-desc","p-bg","p-don"].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.type==="checkbox"?el.checked:el.value;});
+  const formKey=ui.editing+"|"+ui.signup+"|"+ui.addName+"|"+ui.advForm+"|"+ui.scaleEdit+"|"+ui.wikiEdit+"|"+(ui.complete?ui.complete.id+ui.complete.step:"")+"|"+ui.confirmGroup+"|"+ui.plan+"|"+ui.dmTab+"|"+ui.evolve+"|"+ui.noteEdit+"|"+ui.newsEdit+"|"+ui.reportWrite+"|"+ui.adjust+"|"+ui.sheetEdit+"|"+ui.compEdit;
+  const keep={}; if(render.lastForm===formKey)["f-titre","f-bureau","f-type","f-rang","f-statut","f-lieu","f-recompense","f-niveau","f-jmin","f-jmax","f-date","f-desc","f-maj","ev-notes","ev-ntitre","ev-ntexte","ev-seuil","n-titre","n-cat","n-reg","n-contenu","n-search","nw-titre","nw-reg","nw-texte","f-name","f-addname","f-advnom","f-advjoueur","w-titre","w-ordre","w-contenu","f-pts","c-date","c-res","c-resume","g-date","r-texte","pl-date","pl-heure","c2-titre","c2-cat","c2-reg","c2-quete","c2-contenu","c-search","p-nom","p-espece","p-classe","p-desc","p-bg","p-don"].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.type==="checkbox"?el.checked:el.value;});
   const sup=document.getElementById("f-super");if(sup&&render.lastForm===formKey)keep["f-super"]=sup.checked;
   render.lastForm=formKey;
   app.innerHTML=h+'</div>';
@@ -1128,7 +1332,7 @@ function render(){
 function route(){
   const id=(location.hash||"").slice(1);
   const next=id&&id!=="carte"?id:null;
-  if(next!==ui.office){ui.office=next;if(!(next==="personnages"&&ui.sheetEdit==="new"))ui.sheetEdit=null;if(!(next==="compendium"&&ui.compEdit==="new"))ui.compEdit=null;ui.compHist=null;ui.compVer=null;ui.confirmComp=null;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter=ui.pendingFilter||"ouverte";ui.rank="all";const focusQ=ui.pendingQuest;ui.pendingFilter=null;ui.pendingQuest=null;render();
+  if(next!==ui.office){ui.office=next;if(!(next==="personnages"&&ui.sheetEdit==="new"))ui.sheetEdit=null;if(!(next==="compendium"&&ui.compEdit==="new"))ui.compEdit=null;ui.compHist=null;ui.compVer=null;ui.confirmComp=null;ui.evolve=null;ui.noteEdit=null;ui.newsEdit=null;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter=ui.pendingFilter||"ouverte";ui.rank="all";const focusQ=ui.pendingQuest;ui.pendingFilter=null;ui.pendingQuest=null;render();
     try{const el=focusQ&&document.getElementById("q-"+focusQ);if(el){el.scrollIntoView({block:"center"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1600);}else window.scrollTo(0,0);}catch(e){}}
 }
 window.addEventListener("hashchange",route);
@@ -1275,6 +1479,24 @@ document.addEventListener("click",async e=>{
   else if(a==="group"){ui.confirmGroup=id;}
   else if(a==="group-cancel"){if(e.target!==b)return;ui.confirmGroup=null;}
   else if(a==="plan"){ui.plan=id;}
+  else if(a==="dmtab"){ui.dmTab=b.getAttribute("data-v");ui.evolve=null;ui.noteEdit=null;ui.newsEdit=null;}
+  else if(a==="evolve"){ui.dmTab="evol";ui.evolve=id;if(location.hash!=="#dm"){location.hash="#dm";}}
+  else if(a==="evolve-cancel"){ui.evolve=null;}
+  else if(a==="gaz-all"){ui.gazAll=!ui.gazAll;}
+  else if(a==="note-new"){ui.noteEdit="new";}
+  else if(a==="note-edit"){ui.noteEdit=id;}
+  else if(a==="note-cancel"){ui.noteEdit=null;}
+  else if(a==="note-open"){ui.noteOpen=ui.noteOpen===id?null:id;ui.confirmNote=null;}
+  else if(a==="note-del"){ui.confirmNote=id;}
+  else if(a==="note-del-no"){ui.confirmNote=null;}
+  else if(a==="note-del-yes"){ui.confirmNote=null;await run("Note supprimée",()=>deleteDoc(doc(db,"notesdm",id)));return;}
+  else if(a==="news-new"){ui.newsEdit="new";}
+  else if(a==="news-from"){ui.dmTab="evol";ui.newsEdit="from:"+id;}
+  else if(a==="news-edit"){ui.newsEdit=id;}
+  else if(a==="news-cancel"){ui.newsEdit=null;}
+  else if(a==="news-del"){ui.confirmNews=id;}
+  else if(a==="news-del-no"){ui.confirmNews=null;}
+  else if(a==="news-del-yes"){ui.confirmNews=null;await run("Nouvelle retirée",()=>deleteDoc(doc(db,"nouvelles",id)));return;}
   else if(a==="plan-close"){if(e.target!==b)return;ui.plan=null;}
   else if(a==="plan-set"){const p=planifs.find(x=>x.id===id);if(!p)return;const isDm=b.getAttribute("data-dm")==="1";
     const cur=isDm?p.dm:(p.dispo||{})[user.uid];const nx=DISPO[(DISPO.indexOf(cur)+1)];const key=isDm?"dm":"dispo."+user.uid;
@@ -1311,7 +1533,7 @@ document.addEventListener("change",e=>{
     file.text().then(t=>{try{ui.importPreview=previewImport(JSON.parse(t));}catch(err){save={state:"error",msg:"Import impossible : "+err.message};}render();});
   }
 });
-document.addEventListener("input",e=>{if(e.target.id==="c-search"){ui.compQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("c-search");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}}});
+document.addEventListener("input",e=>{if(e.target.id==="n-search"){ui.noteQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("n-search");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}return;}if(e.target.id==="c-search"){ui.compQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("c-search");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}}});
 function compBy(){return {uid:user.uid,nom:String(user.displayName||user.email||"Aventurier").slice(0,60)};}
 function compFields(d){return {titre:d.titre,categorie:d.categorie,region:d.region,contenu:d.contenu||"",image:d.image||"",quete:d.quete||""};}
 // Joueur : la sauvegarde devient une proposition en revue. DM : publication directe.
@@ -1408,6 +1630,39 @@ document.addEventListener("submit",async e=>{
       await bt.commit();
     });return;
   }
+  if(e.target.id==="seuilform"){const n=Math.max(1,Math.min(50,Math.round(+v("ev-seuil")||3)));await run("Seuil",()=>setDoc(doc(db,"prive","monde"),{seuil:n},{merge:true}));return;}
+  if(e.target.id==="noteform"){
+    const titre=v("n-titre").slice(0,120);if(!titre)return;const isNew=ui.noteEdit==="new",id=isNew?doc(collection(db,"notesdm")).id:ui.noteEdit;
+    const pin=document.getElementById("n-pin");
+    const d={titre,categorie:v("n-cat").slice(0,40),region:v("n-reg"),contenu:((document.getElementById("n-contenu")||{}).value||"").slice(0,50000),epingle:!!(pin&&pin.checked),majLe:serverTimestamp()};
+    if(isNew)d.creeLe=serverTimestamp();ui.noteEdit=null;ui.noteOpen=id;
+    await run("Note",()=>setDoc(doc(db,"notesdm",id),d,{merge:true}));return;
+  }
+  if(e.target.id==="newsform"){
+    const titre=v("nw-titre").slice(0,120);if(!titre)return;const ed=ui.newsEdit,isFrom=ed.indexOf("from:")===0,isNew=ed==="new"||isFrom;
+    const cur=isNew?null:nouvelles.find(n=>n.id===ed);const id=isNew?doc(collection(db,"nouvelles")).id:ed;
+    const chars=[];document.querySelectorAll("#newsform input[data-nwc]").forEach(c=>{if(c.checked)chars.push(c.getAttribute("data-nwc"));});
+    const d={titre,region:v("nw-reg")||"cote",contenu:((document.getElementById("nw-texte")||{}).value||"").slice(0,5000),aventuriers:chars,quete:isFrom?ed.slice(5):((cur&&cur.quete)||"")};
+    if(isNew)d.date=serverTimestamp();ui.newsEdit=null;
+    await run("Nouvelle publiée",()=>setDoc(doc(db,"nouvelles",id),d,{merge:true}));return;
+  }
+  if(e.target.id==="evolform"){
+    const bid=ui.evolve;if(!bid)return;
+    const notes=((document.getElementById("ev-notes")||{}).value||"").slice(0,10000),nt=v("ev-ntitre").slice(0,120),nx=((document.getElementById("ev-ntexte")||{}).value||"").slice(0,5000);
+    const chars=[];document.querySelectorAll("#evolform input[data-evc]").forEach(c=>{if(c.checked)chars.push(c.getAttribute("data-evc"));});
+    const changes=[];document.querySelectorAll("#evolform input[data-evq]").forEach(c=>{if(!c.checked)return;const qid=c.getAttribute("data-evq"),q=questById(qid);if(!q)return;
+      changes.push({quete:qid,titre:q.titre,ancienRang:q.rang,nouveauRang:v("ev-r-"+qid)||q.rang,maj:v("ev-m-"+qid).slice(0,1000),recompense:v("ev-p-"+qid).slice(0,200)});});
+    const pend=pendingIn(bid).map(q=>q.id),allDone=doneIn(bid).map(q=>q.id);
+    ui.evolve=null;
+    await run("Évolution enregistrée",async()=>{
+      const bt=writeBatch(db);let nid=null;
+      if(nt){nid=doc(collection(db,"nouvelles")).id;bt.set(doc(db,"nouvelles",nid),{titre:nt,contenu:nx,region:bid,aventuriers:chars,quete:"",date:serverTimestamp()});}
+      changes.forEach(c=>{const up={rang:c.nouveauRang,recompense:c.recompense,majLe:serverTimestamp()};if(c.maj)up.maj=c.maj;bt.set(doc(db,"quetes",c.quete),up,{merge:true});});
+      bt.set(doc(collection(db,"evolutions")),{region:bid,date:serverTimestamp(),quetes:pend,notes,changements:changes.map(c=>({quete:c.quete,titre:c.titre,ancienRang:c.ancienRang,nouveauRang:c.nouveauRang,maj:c.maj})),nouvelle:nid,nouvelleTitre:nt});
+      bt.set(doc(db,"prive","monde"),{regions:{[bid]:{vues:allDone}}},{merge:true});
+      await bt.commit();
+    });return;
+  }
   if(e.target.id==="planform"){
     const q=questById(ui.plan);if(!q)return;const date=v("pl-date"),heure=v("pl-heure").slice(0,30);
     if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date<todayIso())return;
@@ -1473,7 +1728,7 @@ document.addEventListener("submit",async e=>{
     const sup=document.getElementById("f-super");
     const jmin=v("f-jmin"),jmax=v("f-jmax");
     const q=normQuest({bureau:v("f-bureau"),titre:v("f-titre")||"Quête sans titre",type:v("f-type"),rang:v("f-rang"),statut:v("f-statut"),lieu:v("f-lieu"),recompense:v("f-recompense"),niveau:v("f-niveau"),
-      joueursMin:jmin===""?null:+jmin,joueursMax:jmax===""?null:+jmax,supercharged:!!(sup&&sup.checked),date:v("f-date"),description:v("f-desc")});
+      joueursMin:jmin===""?null:+jmin,joueursMax:jmax===""?null:+jmax,supercharged:!!(sup&&sup.checked),date:v("f-date"),description:v("f-desc"),maj:v("f-maj")});
     const ptsOverride=v("f-pts");
     if(q.joueursMin!=null&&q.joueursMax!=null&&q.joueursMin>q.joueursMax)q.joueursMin=q.joueursMax;
     q.joueurs=q.joueursMin!=null&&q.joueursMax!=null?(q.joueursMin===q.joueursMax?String(q.joueursMin):q.joueursMin+" à "+q.joueursMax):(q.joueursMin!=null?q.joueursMin+" et +":"?");
