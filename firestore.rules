@@ -45,7 +45,7 @@ service cloud.firestore {
     function validQuest(d) {
       return d.keys().hasOnly(['bureau', 'titre', 'type', 'rang', 'statut', 'lieu', 'recompense', 'niveau',
                                'joueurs', 'joueursMin', 'joueursMax', 'supercharged', 'date', 'description',
-                               'pointsRenommee', 'rapport', 'creeLe', 'majLe'])
+                               'pointsRenommee', 'rapport', 'redacteur', 'rapportBrouillon', 'creeLe', 'majLe'])
         && d.keys().hasAll(['bureau', 'titre', 'rang', 'statut'])
         && exists(/databases/$(database)/documents/bureaux/$(d.bureau))
         && str(d.titre, 1, 120)
@@ -62,6 +62,14 @@ service cloud.firestore {
     match /quetes/{id} {
       allow read: if true;
       allow create, update: if isAdmin() && validQuest(request.resource.data);
+      // Le joueur désigné par le DM peut seulement proposer le rapport de mission d'une quête en cours.
+      allow update: if realAccount()
+        && resource.data.statut == 'encours'
+        && resource.data.redacteur == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rapportBrouillon', 'majLe'])
+        && request.resource.data.rapportBrouillon is map
+        && request.resource.data.rapportBrouillon.resume is string
+        && request.resource.data.rapportBrouillon.resume.size() <= 4000;
       allow delete: if isAdmin();
     }
 
