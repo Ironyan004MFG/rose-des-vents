@@ -154,6 +154,32 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 /* aperçus d'images : on garde toujours le haut (la tête) visible */
 img{object-position:50% 0}
 .revealbox{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#eef4e6;border:1px solid #b9cfa5;border-radius:6px;padding:8px 12px;margin:12px 0}
+/* avis de recherche */
+.wantedwrap{margin:4px 0 22px}
+.wantedwrap h2{font-family:var(--display);color:var(--on-board);font-size:20px;letter-spacing:.06em;margin:0 0 12px}
+.wantedgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px}
+.wanted{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:18px 14px 14px;text-decoration:none;color:#3a2a17;
+  background:radial-gradient(ellipse at center,#f3e4bd 0%,#e7d3a0 65%,#cfb27a 100%);border:1px solid #b8975e;box-shadow:0 10px 22px rgba(0,0,0,.45);transform:rotate(-1.2deg)}
+.wanted:nth-child(even){transform:rotate(1.4deg)}
+.wanted::before{content:"";position:absolute;top:7px;left:50%;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#d9d4c7,#6e665a);box-shadow:0 2px 3px rgba(0,0,0,.5)}
+.wanted:hover,.wanted:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.wtop{font-family:var(--display);font-size:clamp(20px,2.2vw,26px);font-weight:700;letter-spacing:.04em;max-width:100%;text-transform:uppercase;line-height:1;margin-top:6px}
+.wetat{font-family:var(--display);font-size:12px;letter-spacing:.2em;text-transform:uppercase;border-top:2px solid #3a2a17;border-bottom:2px solid #3a2a17;padding:2px 8px}
+.w3 .wetat{color:#7a1410;border-color:#7a1410;font-size:15px;font-weight:700}
+.wpic{width:78%;aspect-ratio:4/5;margin:8px 0 4px;border:3px solid #3a2a17;background:#efe0b6;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.wpic img{width:100%;height:100%;object-fit:cover}
+.wpic img.sketch{filter:grayscale(1) contrast(2.1) brightness(1.25) sepia(.55);mix-blend-mode:multiply;opacity:.9}
+.wpic img.clear{filter:sepia(.35) contrast(1.05)}
+.wpic.none{border-style:dashed}
+.wpic.none span{font-family:var(--display);font-size:64px;color:#9c8458}
+.wnom{font-family:var(--display);font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.wid{font-style:italic;font-size:14px}
+.wdesc{font-size:13.5px;font-style:italic;color:#5a4528}
+.wcrime{font-size:13px}
+.wprime{font-family:var(--display);font-size:22px;font-weight:700;color:#7a1410;margin-top:4px}
+.w1 .wprime{font-size:17px}
+.wfoot{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6b5434;margin-top:2px}
+@media (prefers-reduced-motion:reduce){.wanted,.wanted:nth-child(even){transform:none}}
 /* atelier des portraits */
 .linked ol.steps{display:block;margin:6px 0 0;padding-left:4px;list-style:none}
 .linked ol.steps li{display:list-item;margin:4px 0;padding:0;border:none;border-radius:0;background:none;font-family:var(--body);font-size:15px;letter-spacing:normal;text-transform:none;color:var(--ink)}
@@ -885,6 +911,17 @@ function form(){
     '<label class="wide" for="f-maj">Mise à jour (évolution du monde, facultatif)<input id="f-maj" maxlength="1000" value="'+esc(q.maj||"")+'"></label>'+
     '<div class="actions wide"><button class="btn" type="submit">Enregistrer la quête</button><button class="btn ghost" type="button" data-a="cancel">Annuler</button></div></form>';
 }
+/* ---------- avis de recherche (renommée négative) ---------- */
+const WANTED={"-1":{prime:"50 po",etat:"Recherché vivant",crime:"Soupçonné de méfaits envers la cité"},"-2":{prime:"250 po",etat:"Recherché vivant",crime:"Pour violences et troubles répétés"},"-3":{prime:"1 000 po",etat:"Mort ou vif",crime:"Pour crimes graves contre la cité"}};
+function wantedPoster(a,bid){const n=Math.max(-3,renown(a,bid)),W=WANTED[String(n)],b=office(bid),k=-n;
+  const ident=[a.espece,a.classe].filter(Boolean).join(" · ");
+  const pic=n===-1?'<div class="wpic none" aria-hidden="true"><span>?</span></div>':(a.image?'<div class="wpic"><img class="'+(n===-2?'sketch':'clear')+'" src="'+esc(a.image)+'" alt="'+(n===-2?'Croquis de ':'Portrait de ')+esc(a.nom)+'"></div>':'<div class="wpic none" aria-hidden="true"><span>?</span></div>');
+  return '<a class="wanted w'+k+'" href="#perso-'+esc(a.id)+'"><span class="wtop">Recherché</span><span class="wetat">'+esc(W.etat)+'</span>'+pic+
+    '<span class="wnom">'+esc(a.nom)+'</span>'+(ident?'<span class="wid">'+esc(ident)+'</span>':'')+
+    (n===-1&&a.description?'<span class="wdesc">« '+esc(String(a.description).slice(0,110))+(String(a.description).length>110?'…':'')+' »</span>':'')+
+    '<span class="wcrime">'+esc(W.crime)+(b?' de '+esc(b.nom):'')+'</span><span class="wprime">Prime : '+esc(W.prime)+'</span><span class="wfoot">Par ordre du Guet'+(b?' de '+esc(b.nom):'')+'</span></a>';}
+function wantedSection(bid){const l=ranked().filter(a=>renown(a,bid)<0).sort((x,y)=>renown(x,bid)-renown(y,bid)||String(x.nom).localeCompare(String(y.nom),"fr"));
+  if(!l.length)return "";return '<section class="wantedwrap" aria-label="Avis de recherche"><h2>Avis de recherche</h2><div class="wantedgrid">'+l.map(a=>wantedPoster(a,bid)).join("")+'</div></section>';}
 function boardView(){
   const mine=quetes.filter(q=>q.bureau===ui.office);
   const c={ouverte:0,encours:0,terminee:0,archivee:0,all:0};
@@ -895,6 +932,7 @@ function boardView(){
     chips.map(f=>'<button class="chip" data-a="filter" data-v="'+f[0]+'" aria-pressed="'+(ui.filter===f[0])+'">'+f[1]+'<span class="n">'+(c[f[0]]||0)+'</span></button>').join("")+
     '</div><label for="f-rank" style="display:flex;gap:8px;align-items:center;font-family:var(--display);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--on-board-muted)">Rang<select id="f-rank"><option value="all">Tous</option>'+
     Object.keys(RANKS).map(k=>'<option value="'+k+'"'+(ui.rank===k?" selected":"")+'>'+esc(RANKS[k].label)+'</option>').join("")+'</select></label></div>';
+  h+=wantedSection(ui.office);
   h+='<section class="grid" aria-label="Quêtes">';
   if(ui.dm&&ui.editing)h+=form();
   h+=!loaded.q?'<p class="empty">Chargement des quêtes…</p>':(list.length?list.map(card).join(""):'<p class="empty">Aucune quête affichée à ce comptoir pour le moment. Repasse bientôt.</p>');
