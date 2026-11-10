@@ -256,6 +256,9 @@ service cloud.firestore {
     match /pnj/{id} {
       allow read, write: if isAdmin();
     }
+    match /factions/{id} {
+      allow read, write: if isAdmin();
+    }
     match /monstres/{id} {
       allow read, write: if isAdmin();
     }
