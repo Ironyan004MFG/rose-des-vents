@@ -1072,7 +1072,8 @@ function resizeImage(file,maxSize){
 }
 
 /* ---------- compendium ---------- */
-function compAllRaw(){return (isAdmin&&compAll.length?compAll:compPublic);}
+// Hors Mode DM, l'admin voit le compendium exactement comme les joueurs (sans les entrées masquées).
+function compAllRaw(){return (isAdmin&&ui.dm&&compAll.length?compAll:compPublic);}
 function compEntries(){return compAllRaw().filter(e=>e.publiee!==false).sort((a,b)=>String(a.titre).localeCompare(String(b.titre),"fr"));}
 function compPending(){return compAllRaw().filter(e=>e.proposition);}
 function compFind(id){return compAllRaw().find(x=>x.id===id);}
