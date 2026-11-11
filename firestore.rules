@@ -272,6 +272,9 @@ service cloud.firestore {
     match /modules/{id} {
       allow read, write: if isAdmin();
     }
+    match /butins/{id} {
+      allow read, write: if isAdmin();
+    }
     match /monstres/{id} {
       allow read, write: if isAdmin();
     }
