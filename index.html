@@ -276,6 +276,17 @@ textarea.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px}
 .qilist{list-style:none;padding:0;margin:6px 0;display:flex;flex-direction:column;gap:4px}
 .qichips{margin:4px 0 0;font-size:13px}
 .ptadd.qi{border-color:#c9a227;color:#7a5a00}
+.ptfind{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.ptfind>label{display:flex;flex-direction:column;gap:4px;font-size:14px}
+.ptfind input,.ptfind select{font:inherit;padding:8px;border:1px solid var(--parch-3);border-radius:4px;min-height:40px;background:#fff;color:var(--ink)}
+.ptfindres{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px;max-height:320px;overflow:auto}
+.ptfindres button{width:100%;text-align:left;background:#fff;border:1px solid var(--parch-3);border-radius:6px;padding:8px 10px;min-height:44px;font:inherit;font-size:14px;cursor:pointer;color:var(--ink)}
+.ptfindres button:hover{background:#fff8e4}
+.ptfindres button:disabled{opacity:.5;cursor:default}
+.ptfindopts{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.ptfindopts label{display:flex;flex-direction:column;gap:3px;font-size:13px}
+.ptfindopts input[type=number]{width:80px}
+.ptfindnew{border:1px dashed #a8946a;border-radius:6px;padding:8px 10px;background:#f6efdb;display:flex;flex-direction:column;gap:6px}
 /* Crieur */
 .crs{display:inline-block;font-family:var(--display);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;border-radius:999px;padding:3px 10px;margin:6px 0 2px}
 .crs.ok{background:#3d7a3a;color:#fff}.crs.wait{background:#c08a1e;color:#fff}.crs.pend{background:#e2d6b6;color:#4a3d2a}
@@ -1803,11 +1814,13 @@ function todoItems(){
     const act=br?'<button class="mini gold" data-a="crieur-read" data-id="'+esc(q.id)+'">Relire et publier</button>':dem?'<button class="mini" data-a="crieur-cancel" data-id="'+esc(q.id)+'">Annuler la demande</button>':
       (pj&&dmr?'<button class="mini gold" data-a="crieur-ask" data-id="'+esc(q.id)+'" data-v="complet">Générer l\'article</button>':'')+'<button class="mini" data-a="crieur-ask" data-id="'+esc(q.id)+'" data-v="dm">Générer (DM)</button><button class="mini" data-a="news-from" data-id="'+esc(q.id)+'">L\'écrire moi-même</button>';
     it.push({k:"crieur",t:'<strong>'+esc(q.titre)+'</strong> · '+esc((office(q.bureau)||{}).nom||"")+' · '+esc(RESULTS[q.rapport.resultat]||"")+'<br>'+st+reps,act:'<span class="cracts">'+act+'</span>'});});
+  monstres.filter(m=>m.aCompleter).forEach(m=>{const q=questById(m.creeDansQuete);it.push({k:"fiche",t:'<strong>'+esc(m.nom)+'</strong> : créature ajoutée en combat'+(q?' pendant « '+esc(q.titre)+' »':'')+'. Complète sa fiche (type, FP, actions, table de butin).',act:'<button class="mini" data-a="man-open" data-sec="monstres" data-id="'+esc(m.id)+'">Compléter</button>'});});
+  pnjs.filter(x=>x.aCompleter).forEach(x=>{const q=questById(x.creeDansQuete);it.push({k:"fiche",t:'<strong>'+esc(x.nom)+'</strong> : PNJ ajouté en combat'+(q?' pendant « '+esc(q.titre)+' »':'')+'. Complète sa fiche (rôle, apparence, stats, table de butin).',act:'<button class="mini" data-a="man-open" data-sec="pnj" data-id="'+esc(x.id)+'">Compléter</button>'});});
   compPending().forEach(e=>{const p=e.proposition,n=Object.keys(p.approbations||{}).length;it.push({k:"comp",t:'<strong>'+esc(p.titre)+'</strong> : '+(e.publiee===false?'nouvelle entrée':'modification')+' de '+esc((p.par&&p.par.nom)||"?")+' ('+n+'/2)',act:'<a class="mini" href="#compendium-'+esc(e.id)+'">Examiner</a>'});});
   aventuriers.filter(a=>{const d=dossiers[a.id]||{};return !a.pnj&&a.proprietaire&&d.outerworlder!=="non"&&!d.donNom;}).forEach(a=>{const d=dossiers[a.id]||{};it.push({k:"don",t:'<strong>'+esc(a.nom)+'</strong> : '+(d.outerworlder==="oui"?'Outerworlder sans Don':'Outerworlder ? Don à attribuer ou personnage natif à indiquer'),act:'<button class="mini" data-a="man-open" data-sec="perso" data-id="'+esc(a.id)+'">Dossier</button>'});});
   return it;
 }
-const TODO_GROUPS=[["evol","Le monde doit réagir"],["report","Rapports de mission reçus"],["crieur","Articles du Crieur"],["group","Groupes à former"],["run","Missions en cours"],["comp","Compendium en revue"],["don","Dons à attribuer"]];
+const TODO_GROUPS=[["evol","Le monde doit réagir"],["fiche","Fiches à compléter"],["report","Rapports de mission reçus"],["crieur","Articles du Crieur"],["group","Groupes à former"],["run","Missions en cours"],["comp","Compendium en revue"],["don","Dons à attribuer"]];
 function dmTodo(){const it=todoItems();if(!it.length)return '<p class="empty">Rien à traiter. Le monde est calme… pour l\'instant.</p>';
   return TODO_GROUPS.map(g=>{const l=it.filter(x=>x.k===g[0]);if(!l.length)return "";return '<section class="dmsec"><h2>'+g[1]+' <span class="n">'+l.length+'</span></h2><ul class="todo">'+l.map(x=>'<li><span>'+x.t+'</span>'+x.act+'</li>').join("")+'</ul></section>';}).join("");}
 function evolveForm(bid){
@@ -2383,6 +2396,18 @@ function ptStartBox(q){
     '<p class="desc">Les monstres de la rencontre sont ajoutés, puis tu inscris l\'initiative de chacun avant de lancer le combat.</p></div>';
   return h;
 }
+function ptNorm(x){return String(x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");}
+function ptFinder(){
+  const k=ptNorm(ui.ptFind||"").trim(),P=ui.pt;
+  let h='<div class="ptfind"><label for="pt-find">Ajouter un combattant : tape un nom (bestiaire ou PNJ)<input id="pt-find" type="search" autocomplete="off" value="'+esc(ui.ptFind||"")+'" placeholder="Ex. gobelin, Skratch, contrebandier…"></label>';
+  if(k.length<2)return h+'</div>';
+  const ms=monstres.filter(m=>ptNorm(m.nom).indexOf(k)>=0).slice(0,8),ps=pnjs.filter(x=>ptNorm(x.nom).indexOf(k)>=0||ptNorm(x.role).indexOf(k)>=0).slice(0,6),exact=ms.concat(ps).some(x=>ptNorm(x.nom)===k);
+  h+='<ul class="ptfindres" role="listbox">'+ms.map(m=>'<li><button data-a="pt-findadd" data-k="m" data-id="'+esc(m.id)+'"><span class="ccat">Bestiaire</span> <strong>'+esc(m.nom)+'</strong> <span class="desc">FP '+esc(m.fp||"?")+' · CA '+esc(m.ca==null?"—":m.ca)+' · PV '+esc(m.pv||"—")+(m.butinTable?' · 💰':'')+'</span></button></li>').join("")+
+    ps.map(x=>{const inn=P.liste.some(c=>c.ref===x.id);return '<li><button data-a="pt-findadd" data-k="p" data-id="'+esc(x.id)+'"'+(inn?' disabled':'')+'><span class="ccat">PNJ</span> <strong>'+esc(x.nom)+'</strong> <span class="desc">'+esc(x.role||"")+(x.attitude==="hostile"?' · hostile':'')+(inn?' · déjà présent':'')+(x.butinTable?' · 💰':'')+'</span></button></li>';}).join("")+'</ul>';
+  h+='<div class="ptfindopts"><label for="pt-find-nb">Nombre<input id="pt-find-nb" type="number" min="1" max="20" value="1"></label><label for="pt-find-camp">Camp<select id="pt-find-camp"><option value="">Automatique</option><option value="ennemi">Ennemi</option><option value="allie">Allié</option></select></label></div>';
+  if(!exact)h+='<div class="ptfindnew"><strong>Créer « '+esc(ui.ptFind.trim())+' »</strong> <span class="desc">Nouvelle fiche dans ton Manuel, à compléter plus tard (une tâche est ajoutée dans À traiter).</span><div class="ptfindopts"><label for="pt-new-type">Fiche<select id="pt-new-type"><option value="m">Créature du bestiaire</option><option value="p">PNJ</option></select></label><label for="pt-new-ca">CA<input id="pt-new-ca" type="number" min="0"></label><label for="pt-new-pv">PV<input id="pt-new-pv" type="number" min="1"></label><button class="btn gold sm" data-a="pt-findnew">Créer et ajouter</button></div></div>';
+  return h+'</div>';
+}
 function ptAddBox(q,open){
   const sg=ptSignups(q),encs=ptEncounters(q);
   const P=ui.pt,inFight=P.combat&&P.combat.phase==="combat";
@@ -2391,10 +2416,7 @@ function ptAddBox(q,open){
   const absent=byName(aventuriers).filter(a=>!a.pnj&&!P.liste.some(c=>c.ref===a.id));
   if(absent.length)h+='<form class="ptexpr" id="pt-pj"><select id="pt-pj-sel" aria-label="Personnage du registre"><option value="">Un aventurier en particulier…</option>'+absent.map(a=>'<option value="'+esc(a.id)+'">'+esc(a.nom)+(a.joueur?' ('+esc(a.joueur)+')':'')+'</option>').join("")+'</select><button class="btn ghost">Ajouter</button></form>';
   h+='<p><button class="btn ghost" data-a="pt-group"'+(sg.length?'':' disabled')+'>👥 Le groupe ('+sg.length+')</button>'+encs.map(r=>'<button class="btn ghost" data-a="pt-enc" data-id="'+esc(r.id)+'">👹 '+esc(r.nom)+'</button>').join("")+'</p>';
-  h+='<form class="ptexpr" id="pt-mon"><select id="pt-mon-sel" aria-label="Monstre du bestiaire"><option value="">Monstre du bestiaire…</option>'+byName(monstres).map(m=>'<option value="'+esc(m.id)+'">'+esc(m.nom)+' (FP '+esc(m.fp||"?")+')</option>').join("")+'</select><input id="pt-mon-nb" type="number" min="1" max="20" value="1" aria-label="Nombre"><button class="btn ghost">Ajouter</button></form>';
-  h+='<form class="ptexpr" id="pt-cus"><input id="pt-cus-nom" placeholder="Autre (nom)" aria-label="Nom"><input id="pt-cus-ca" type="number" placeholder="CA" aria-label="CA"><input id="pt-cus-pv" type="number" placeholder="PV" aria-label="PV"><select id="pt-cus-camp" aria-label="Camp"><option value="ennemi">Ennemi</option><option value="allie">Allié</option></select><button class="btn ghost">Ajouter</button></form>';
-  const pn=byName(pnjs).filter(x=>!P.liste.some(c=>c.ref===x.id));
-  if(pn.length)h+='<form class="ptexpr" id="pt-pnjf"><select id="pt-pnj-sel" aria-label="PNJ du manuel"><option value="">Un PNJ qui accompagne le groupe…</option>'+pn.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.nom)+(x.role?' · '+esc(x.role):'')+'</option>').join("")+'</select><button class="btn ghost">Ajouter</button></form>';
+  h+=ptFinder();
   if(ui.pt.liste.length)h+='<p><button class="linkbtn" data-a="pt-clean">Retirer les monstres vaincus</button> · <button class="linkbtn" data-a="pt-reset">Tout effacer</button></p>';
   return h+'</details>';
 }
@@ -2588,6 +2610,17 @@ async function partyAction(a,id,b,e){
   if(a==="pt-tab"){ui.ptTab=v;ch=false;}
   else if(a==="pt-sel"){ui.ptSel=ui.ptSel===id?null:id;ui.ptCond=null;ui.ptEditC=null;render();const el=document.getElementById("pt-"+(ui.ptSel===P.cur?P.cur:ui.ptSel));if(el&&ui.ptSel)el.scrollIntoView({block:"nearest",behavior:"smooth"});return;}
   else if(a==="pt-selx"){ui.ptSel=null;ch=false;}
+  else if(a==="pt-findadd"||a==="pt-findnew"){const g=k=>document.getElementById(k),nb=Math.max(1,Math.min(20,+(g("pt-find-nb")||{}).value||1)),camp=(g("pt-find-camp")||{}).value||"",bf=ptIds();let added=[];
+    if(a==="pt-findadd"&&b.getAttribute("data-k")==="m"){const m=monstres.find(x=>x.id===id);if(!m)return;for(let i=0;i<nb;i++)ptAddMonster(m);added=P.liste.filter(c=>bf.indexOf(c.cid)<0);ptLog(nb+" × "+m.nom+(nb>1?" entrent":" entre")+" en scène.");}
+    else if(a==="pt-findadd"){const pn=pnjs.find(x=>x.id===id);if(!pn)return;ptAddPnj(pn);added=P.liste.filter(c=>bf.indexOf(c.cid)<0);added.forEach(c=>{c.camp=pn.attitude==="hostile"?"ennemi":"allie";});ptLog(pn.nom+" entre en scène.");}
+    else{const nom=String(ui.ptFind||"").trim().slice(0,60);if(!nom)return;const ty=(g("pt-new-type")||{}).value||"m",ca=(g("pt-new-ca")||{}).value,pv=Math.max(1,+(g("pt-new-pv")||{}).value||1),qq=ptQuest();
+      if(ty==="m"){const nid=doc(collection(db,"monstres")).id,data={nom:nom,ca:ca===""?null:+ca,pv:String(pv),fp:"1/4",type:"",aCompleter:true,creeDansQuete:qq?qq.id:"",creeLe:serverTimestamp()},m=Object.assign({id:nid},data);
+        setDoc(doc(db,"monstres",nid),data,{merge:true}).catch(err=>{save={state:"error",msg:errText(err)};render();});
+        for(let i=0;i<nb;i++)ptAddMonster(Object.assign({},m,{creeLe:null}));}
+      else{const nid=doc(collection(db,"pnj")).id;setDoc(doc(db,"pnj",nid),{nom:nom,role:"",attitude:camp==="allie"?"neutre":"hostile",aCompleter:true,quetes:qq?[qq.id]:[],creeDansQuete:qq?qq.id:"",creeLe:serverTimestamp()},{merge:true}).catch(err=>{save={state:"error",msg:errText(err)};render();});
+        P.liste.push({cid:ptUid(),kind:"pnj",ref:nid,nom:nom,camp:camp||"ennemi",ca:ca===""?"":+ca,pvMax:pv,pv:pv,tmp:0,init:"",dex:0,xp:0,conds:[],conc:false});}
+      added=P.liste.filter(c=>bf.indexOf(c.cid)<0);ptLog("Nouvelle fiche : "+nom+" (à compléter dans le Manuel).");}
+    if(camp)added.forEach(c=>{c.camp=camp;});ui.ptFind="";const fi=g("pt-find");if(fi)fi.value="";ptJoin(bf);ui.ptAddOpen=true;}
   else if(a==="pt-qi"){ui.ptQi=ui.ptQi===id?null:id;ui.ptEff=null;ui.ptCond=null;ch=false;}
   else if(a==="pt-qix"){ui.ptQi=null;ch=false;}
   else if(a==="pt-qisave"&&c){const l=[];document.querySelectorAll('.ptpick input[data-nom]').forEach(x=>{if(x.checked)l.push(x.getAttribute("data-nom"));});c.qitems=l;ui.ptQi=null;if(l.length)ptLog(c.nom+" porte : "+l.join(", ")+".");}
@@ -2942,7 +2975,7 @@ document.addEventListener("change",e=>{
     file.text().then(t=>{try{ui.importPreview=previewImport(JSON.parse(t));ui.dmTab="outils";}catch(err){save={state:"error",msg:"Import impossible : "+err.message};}render();});
   }
 });
-document.addEventListener("input",e=>{if(e.target.id==="pt-cq"){ui.ptCq=e.target.value;render();return;}if(e.target.id==="man-q"){ui.manQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("man-q");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}return;}
+document.addEventListener("input",e=>{if(e.target.id==="pt-find"){ui.ptFind=e.target.value;render();return;}if(e.target.id==="pt-cq"){ui.ptCq=e.target.value;render();return;}if(e.target.id==="man-q"){ui.manQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("man-q");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}return;}
   if(e.target.id==="pa-nb"||e.target.id==="pa-niv"){ui.party[e.target.id==="pa-nb"?"nb":"niv"]=e.target.value;if(e.target.value){const id=e.target.id;render();const el=document.getElementById(id);if(el){el.focus();}}return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-ml")!=null){syncML();return;}
   if(e.target.id==="n-search"){ui.noteQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("n-search");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}return;}if(e.target.id==="c-search"){ui.compQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("c-search");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}}});
@@ -3052,7 +3085,7 @@ document.addEventListener("submit",async e=>{
     let id;if(type==="dossiers")id=ui.manId;else if(type==="scenarios")id=ui.manId;else id=ui.manEdit==="new"?doc(collection(db,S.coll)).id:ui.manEdit;
     if(!id)return;if(S.fields.some(f=>f[3]&&!String(d[f[0]]||"").trim()))return;
     if(ui.manEdit==="new"&&ui.manDraft&&ui.manDraft.image&&d.image===undefined)d.image=ui.manDraft.image;
-    d.majLe=serverTimestamp();const isNew=ui.manEdit==="new";if(isNew)d.creeLe=serverTimestamp();
+    d.majLe=serverTimestamp();const isNew=ui.manEdit==="new";if(isNew)d.creeLe=serverTimestamp();if(type==="monstres"||type==="pnj")d.aCompleter=false;
     ui.manEdit=null;ui.manImg=undefined;ui.manDraft=null;if(type!=="dossiers"&&type!=="scenarios")ui.manId=id;
     await run("Manuel du DM",()=>setDoc(doc(db,S.coll,id),d,{merge:true}));return;
   }
