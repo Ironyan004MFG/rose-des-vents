@@ -182,6 +182,128 @@ img{object-position:50% 0}
 @media (prefers-reduced-motion:reduce){.wanted,.wanted:nth-child(even){transform:none}}
 .portrait.emblem{object-fit:contain;background:#f3e9d0}
 .mcard[href]{text-decoration:none}
+/* Mode Partie */
+.partie{background:var(--parch);color:var(--ink);border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:16px}
+.partie h2{font-family:var(--display);margin:4px 0 0;font-size:26px}
+.partie h3{font-family:var(--display);font-size:16px;margin:18px 0 8px}
+.partie .desc{color:var(--ink-soft)}
+.partie a{color:#7a1f14}
+.partie .linkbtn{color:#7a1f14}
+.pthead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--parch-3);padding-bottom:12px}
+.ptround{display:flex;flex-direction:column;align-items:center;background:var(--ink);color:var(--gold);border-radius:8px;padding:6px 16px;min-width:84px}
+.ptround span{font-family:var(--display);font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+.ptround strong{font-family:var(--display);font-size:30px;line-height:1}
+.ptalert{display:flex;gap:12px;align-items:center;justify-content:space-between;background:#7a1f14;color:#fff;border-radius:6px;padding:10px 14px;font-weight:600;position:sticky;top:8px;z-index:5}
+.ptalert button{background:#fff;color:#7a1f14;border:none;border-radius:4px;padding:6px 14px;min-height:36px;font-weight:700;cursor:pointer}
+.ptgrid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+.ptbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.ptlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.ptrow{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:10px;align-items:start;background:#f6efdb;border:1px solid var(--parch-3);border-left:5px solid #8a7a5c;border-radius:6px;padding:10px}
+.ptrow.k-pj{border-left-color:#2c5d7c}
+.ptrow.k-monstre{border-left-color:#8a2a1c}
+.ptrow.k-pnj{border-left-color:#6b5a2a}
+.ptrow.cur{box-shadow:0 0 0 3px var(--gold);background:#fff8e4}
+.ptrow.dead{opacity:.5}
+.ptrow.dead .ptname strong,.ptrow.dead .ptlink{text-decoration:line-through}
+.ptrow.down{background:#f6e3dc}
+.ptinit{display:flex;flex-direction:column;gap:2px;font-size:11px;font-family:var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+.ptinit input{width:100%;box-sizing:border-box;font-size:20px;font-weight:700;text-align:center;padding:6px 2px;border:1px solid var(--parch-3);border-radius:4px;background:#fff;color:var(--ink);min-height:44px}
+.ptmain{min-width:0;display:flex;flex-direction:column;gap:6px}
+.ptname{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:16px}
+.ptturn{color:#b8860b}
+.ptlink{background:none;border:none;padding:0;font:inherit;font-weight:700;color:#7a1f14;text-decoration:underline;cursor:pointer;text-align:left}
+.ptca{font-size:13px;color:var(--ink-soft);white-space:nowrap}
+.ptconc{font-size:11px;font-weight:700;background:#2c5d7c;color:#fff;border-radius:999px;padding:2px 8px}
+.ptdead{font-size:11px;font-weight:700;background:var(--ink);color:#fff;border-radius:999px;padding:2px 8px}
+.pthp{display:flex;align-items:center;gap:10px}
+.pthp .bar{flex:1;height:10px;background:#ddd0ae;border-radius:999px;overflow:hidden;max-width:220px}
+.pthp .bar span{display:block;height:100%}
+.pthp .ok{background:#3d7a3a}.pthp .mid{background:#c08a1e}.pthp .low{background:#a3271a}
+.pthp .num{font-size:14px;font-weight:600;white-space:nowrap}
+.pthp em{color:#2c5d7c;font-style:normal}
+.ptconds{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ptcond{display:inline-flex;align-items:center;background:#e9dcb8;border:1px solid #c9b27a;border-radius:999px;overflow:hidden}
+.ptcx{background:none;border:none;font:inherit;font-size:13px;padding:4px 8px;min-height:32px;cursor:pointer;color:var(--ink)}
+.ptcx.del{padding:4px 8px 4px 2px;color:#7a1f14}
+.ptadd{background:none;border:1px dashed #a8946a;border-radius:999px;font:inherit;font-size:13px;padding:4px 10px;min-height:32px;cursor:pointer;color:var(--ink-soft)}
+.ptadd:hover{background:#efe4c6}
+.ptds{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:13px}
+.ptds .dsg{display:inline-flex;gap:4px;align-items:center}
+.dsb{width:26px;height:26px;border-radius:50%;border:2px solid #8a7a5c;background:#fff;cursor:pointer;padding:0}
+.dsb.s.on{background:#3d7a3a;border-color:#3d7a3a}
+.dsb.f.on{background:#a3271a;border-color:#a3271a}
+.ptds .low{color:#a3271a}
+.ptpick,.ptedit{background:#fff;border:1px solid var(--parch-3);border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.ptpick label,.ptedit label{font-size:13px;display:flex;flex-direction:column;gap:3px}
+.ptpick input,.ptedit input{font:inherit;padding:6px 8px;border:1px solid var(--parch-3);border-radius:4px;min-height:36px;box-sizing:border-box}
+.ptedit{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}
+.ptedit .ptbtns{grid-column:1/-1;display:flex;gap:8px}
+.ptpickg{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}
+.ptpickg button{text-align:left;background:#f6efdb;border:1px solid var(--parch-3);border-radius:4px;padding:6px 8px;min-height:40px;cursor:pointer;font:inherit;font-size:14px;color:var(--ink)}
+.ptpickg button span{display:block;font-size:11px;color:var(--ink-soft)}
+.ptpickg button:hover{background:#efe4c6}
+.ptact{display:flex;flex-direction:column;gap:6px;align-items:stretch;width:132px}
+.ptact input{font:inherit;font-size:16px;padding:6px 8px;border:1px solid var(--parch-3);border-radius:4px;min-height:40px;box-sizing:border-box;width:100%;background:#fff;color:var(--ink)}
+.ptab{display:flex;gap:4px}
+.ptab button{flex:1;min-height:40px;border-radius:4px;border:1px solid var(--parch-3);background:#fff;cursor:pointer;font-size:16px;font-weight:700;color:var(--ink)}
+.ptab button.dmg{background:#a3271a;border-color:#a3271a;color:#fff}
+.ptab button.heal{background:#3d7a3a;border-color:#3d7a3a;color:#fff}
+.ptxp{background:#efe4c6;border-radius:6px;padding:8px 12px;margin:10px 0 0}
+.ptaddbox{margin-top:14px;border-top:1px solid var(--parch-3)}
+.ptaddbox p{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ptexpr{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.ptexpr input,.ptexpr select{font:inherit;padding:8px;border:1px solid var(--parch-3);border-radius:4px;min-height:40px;box-sizing:border-box;background:#fff;color:var(--ink);flex:1;min-width:70px}
+.ptexpr input[type=number]{flex:0 0 76px}
+.ptside{position:sticky;top:12px;max-height:calc(100vh - 24px);display:flex;flex-direction:column;background:#f6efdb;border:1px solid var(--parch-3);border-radius:8px;overflow:hidden}
+.pttabs{display:flex;overflow-x:auto;border-bottom:1px solid var(--parch-3);background:#efe4c6;flex-shrink:0}
+.pttabs button{flex:1;white-space:nowrap;background:none;border:none;border-bottom:3px solid transparent;padding:10px 12px;min-height:44px;font-family:var(--display);font-size:13px;letter-spacing:.05em;cursor:pointer;color:var(--ink-soft)}
+.pttabs button.on{border-bottom-color:#7a1f14;color:var(--ink);font-weight:700}
+.ptpanel{padding:14px;overflow-y:auto}
+.ptpanel .wikibody{font-size:16px}
+.ptpnj{border:1px solid var(--parch-3);border-radius:6px;padding:8px 10px;margin-bottom:6px;background:#fff}
+.ptpnj summary{cursor:pointer;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ptpnj summary img{width:36px;height:36px;border-radius:50%;object-fit:cover;object-position:top}
+.ptpnj p{margin:6px 0;font-size:14px}
+.ptpp{display:flex;flex-wrap:wrap;gap:6px}
+.ptpp span{background:#fff;border:1px solid var(--parch-3);border-radius:999px;padding:4px 10px;font-size:14px}
+.pttests{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+.pttests li{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--parch-3);border-radius:6px;padding:8px;font-size:14px}
+.ptdd{flex-shrink:0;background:var(--ink);color:var(--gold);font-family:var(--display);font-weight:700;border-radius:4px;padding:3px 8px;font-size:13px}
+.ptdc{border-collapse:collapse;width:100%;max-width:320px}
+.ptdc td{border-bottom:1px solid var(--parch-3);padding:6px 8px}
+.ptdl{margin:0}
+.ptdl div{padding:6px 8px;border-radius:4px}
+.ptdl div.hl{background:#fff1c2;box-shadow:0 0 0 2px var(--gold)}
+.ptdl dt{font-weight:700}
+.ptdl dt span{font-weight:400;color:var(--ink-soft);font-size:13px}
+.ptdl dd{margin:2px 0 0;font-size:14px}
+.ptdice{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.ptdice button{min-height:48px;font-family:var(--display);font-size:16px;font-weight:700;background:var(--ink);color:var(--gold);border:none;border-radius:6px;cursor:pointer}
+.ptadv{display:flex;gap:4px;margin:8px 0}
+.ptadv button{flex:1;min-height:40px;border:1px solid var(--parch-3);background:#fff;border-radius:4px;cursor:pointer;font:inherit;font-size:13px;color:var(--ink)}
+.ptadv button.on{background:#7a1f14;color:#fff;border-color:#7a1f14}
+.ptrolls{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px}
+.ptrolls li{display:flex;gap:10px;align-items:baseline;font-size:14px;padding:4px 6px;border-radius:4px}
+.ptrolls li strong{font-size:18px;min-width:36px;text-align:right}
+.ptrolls li.last{background:#fff1c2}
+.ptrolls li.last strong{font-size:26px}
+.ptjournal{list-style:none;padding:0;margin:8px 0;display:flex;flex-direction:column;gap:3px;font-size:14px}
+.ptjournal li span{color:var(--ink-soft);margin-right:8px;font-variant-numeric:tabular-nums}
+.ptfoot{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;border-top:1px solid var(--parch-3);padding-top:12px}
+a.btn{text-decoration:none;display:inline-flex;align-items:center}
+@media (max-width:900px){
+  .ptgrid{grid-template-columns:1fr}
+  .ptside{position:static;max-height:none}
+}
+@media (max-width:560px){
+  .partie{padding:12px;border-radius:0;margin:0 -16px}
+  .ptrow{grid-template-columns:52px minmax(0,1fr);padding:8px}
+  .ptact{grid-column:1/-1;width:auto;flex-direction:row;flex-wrap:wrap}
+  .ptact input{flex:1 1 80px;width:auto}
+  .ptact .ptab{flex:1 1 auto}
+  .ptinit input{font-size:18px}
+  .ptbar .btn{flex:1}
+}
 /* atelier des portraits */
 .linked ol.steps{display:block;margin:6px 0 0;padding-left:4px;list-style:none}
 .linked ol.steps li{display:list-item;margin:4px 0;padding:0;border:none;border-radius:0;background:none;font-family:var(--body);font-size:15px;letter-spacing:normal;text-transform:none;color:var(--ink)}
@@ -614,7 +736,7 @@ const DEFAULT_SCALE = [
 ];
 
 /* ---------- state ---------- */
-let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], pnjs = [], monstres = [], rencontres = [], scenarios = {};
+let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], parties = [], pnjs = [], monstres = [], rencontres = [], scenarios = {};
 const loaded = {b:false, q:false, i:false, a:false, w:false, c:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
@@ -698,7 +820,7 @@ function listen(){
 }
 // Données réservées au DM (points, journal, seuils) : lues seulement par un compte admin.
 function listenPrivate(on){
-  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;dossiers={};factions=[];pnjs=[];monstres=[];rencontres=[];scenarios={};
+  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;dossiers={};factions=[];parties=[];pnjs=[];monstres=[];rencontres=[];scenarios={};
   if(!on)return;
   const err=e=>console.error(e);
   privUnsubs.push(onSnapshot(collection(db,"points"),snap=>{const m={};snap.docs.forEach(d=>{m[d.id]=(d.data().parRegion)||{};});pointsMap=m;render();},err));
@@ -706,7 +828,7 @@ function listenPrivate(on){
   privUnsubs.push(onSnapshot(doc(db,"prive","renommee"),snap=>{priv=snap.exists()?snap.data():null;render();},err));
   const arr=(c,set)=>privUnsubs.push(onSnapshot(collection(db,c),snap=>{set(snap.docs.map(d=>Object.assign({id:d.id},d.data())));render();},err));
   arr("dossiers",l=>{dossiers={};l.forEach(x=>{dossiers[x.id]=x;});});arr("scenarios",l=>{scenarios={};l.forEach(x=>{scenarios[x.id]=x;});});
-  arr("pnj",l=>{pnjs=l;});arr("factions",l=>{factions=l;});arr("monstres",l=>{monstres=l;});arr("rencontres",l=>{rencontres=l;});
+  arr("pnj",l=>{pnjs=l;});arr("factions",l=>{factions=l;});arr("parties",l=>{parties=l;});arr("monstres",l=>{monstres=l;});arr("rencontres",l=>{rencontres=l;});
   privUnsubs.push(onSnapshot(collection(db,"notesdm"),snap=>{notesDm=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(collection(db,"evolutions"),snap=>{evols=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","monde"),snap=>{monde=snap.exists()?snap.data():null;render();},err));
@@ -883,7 +1005,7 @@ function card(q){
   if(q.statut==="ouverte"&&!already)h+='<button class="btn" data-a="join" data-id="'+esc(q.id)+'">Je veux y aller</button>';
   if(ui.dm){
     if(ui.confirmDel===q.id)h+='<button class="btn danger" data-a="del-yes" data-id="'+esc(q.id)+'">Supprimer la quête et ses inscriptions</button><button class="btn ghost" data-a="del-no">Annuler</button>';
-    else h+=(q.statut==="ouverte"&&signupsFor(q.id).some(x=>x.statut!=="refusee")?'<button class="btn" data-a="group" data-id="'+esc(q.id)+'">Confirmer le groupe</button>':'')+(q.statut==="encours"?'<button class="btn" data-a="complete" data-id="'+esc(q.id)+'">Terminer la quête</button>':'')+(q.statut==="terminee"?'<button class="btn" data-a="archive" data-id="'+esc(q.id)+'">Archiver</button>':'')+(q.statut==="archivee"?'<button class="btn" data-a="unarchive" data-id="'+esc(q.id)+'">Désarchiver</button>':'')+'<button class="btn ghost" data-a="edit" data-id="'+esc(q.id)+'">Modifier</button><button class="btn ghost" data-a="add-name" data-id="'+esc(q.id)+'">Ajouter un participant</button><button class="btn ghost" data-a="del" data-id="'+esc(q.id)+'">Supprimer</button>';
+    else h+=(q.statut==="ouverte"&&signupsFor(q.id).some(x=>x.statut!=="refusee")?'<button class="btn" data-a="group" data-id="'+esc(q.id)+'">Confirmer le groupe</button>':'')+(q.statut==="encours"?'<button class="btn" data-a="complete" data-id="'+esc(q.id)+'">Terminer la quête</button>':'')+(q.statut==="terminee"?'<button class="btn" data-a="archive" data-id="'+esc(q.id)+'">Archiver</button>':'')+(q.statut==="archivee"?'<button class="btn" data-a="unarchive" data-id="'+esc(q.id)+'">Désarchiver</button>':'')+(q.statut==="ouverte"||q.statut==="encours"?'<a class="btn gold" href="#partie-'+esc(q.id)+'">▶ Mode Partie</a>':'')+'<button class="btn ghost" data-a="edit" data-id="'+esc(q.id)+'">Modifier</button><button class="btn ghost" data-a="add-name" data-id="'+esc(q.id)+'">Ajouter un participant</button><button class="btn ghost" data-a="del" data-id="'+esc(q.id)+'">Supprimer</button>';
   }
   h+='</div>';
   if(ui.dm&&ui.addName===q.id)h+='<form class="inline" id="nameform" data-id="'+esc(q.id)+'"><label for="f-addname">Nom du participant (confirmé)<input id="f-addname" maxlength="40" required></label><button class="btn" type="submit">Ajouter</button><button class="btn ghost" type="button" data-a="add-cancel">Annuler</button></form>';
@@ -1402,7 +1524,7 @@ function secQuetes(){
     let h=backLink("Quêtes")+'<article class="dossier"><div class="ctags">'+rankSeal(q.rang)+'<span class="stamp st-'+esc(q.statut)+'">'+esc(STATUS[q.statut]||"")+'</span><span class="creg">'+esc((office(q.bureau)||{}).nom||"")+'</span></div><h2>'+esc(q.titre)+'</h2><p class="desc">'+esc(q.description)+'</p>'+(q.maj?'<p class="majline"><strong>Mise à jour :</strong> '+esc(q.maj)+'</p>':'')+
       '<p class="sbl">'+[q.lieu&&'<strong>Lieu</strong> '+esc(q.lieu),q.recompense&&'<strong>Récompense</strong> '+esc(q.recompense),q.niveau&&'<strong>Niveau</strong> '+esc(q.niveau),q.date&&'<strong>Date</strong> '+esc(q.date)].filter(Boolean).join(" · ")+'</p>'+
       '<p class="sbl"><strong>'+(q.statut==="ouverte"?'Inscrits':'Groupe')+' :</strong> '+(ins.length?ins.map(x=>(x.aventurier?'<button class="linkbtn" data-a="man-open" data-sec="perso" data-id="'+esc(x.aventurier)+'">'+esc(x.nom)+'</button>':esc(x.nom))+(x.statut==="attente"?' <em>(en attente)</em>':'')).join(", "):'personne')+'</p>'+
-      '<p><a href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir sur le babillard</a></p>';
+      '<p><a href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir sur le babillard</a> · <a href="#partie-'+esc(q.id)+'"><strong>▶ Lancer le Mode Partie</strong></a></p>';
     const rs=(s.rencontres||[]).map(id=>rencontres.find(r=>r.id===id)).filter(Boolean).concat(rencontres.filter(r=>r.quete===q.id&&(s.rencontres||[]).indexOf(r.id)<0));
     if(rs.length)h+='<h3>Rencontres</h3><ul class="todo">'+rs.map(r=>{const df=diffOf(encXp(r.monstres));return '<li><span>'+esc(r.nom)+' · '+encXp(r.monstres)+' XP · <span class="'+df[1]+'">'+df[0]+'</span></span><button class="mini" data-a="man-open" data-sec="rencontres" data-id="'+esc(r.id)+'">Ouvrir</button></li>';}).join("")+'</ul>';
     const ps=(s.pnj||[]).map(id=>pnjs.find(p=>p.id===id)).filter(Boolean).concat(pnjs.filter(p=>(p.quetes||[]).indexOf(q.id)>=0&&(s.pnj||[]).indexOf(p.id)<0));
@@ -1637,24 +1759,26 @@ function statusPill(){
 }
 function render(){
   const wk=!!ui.office&&(ui.office==="wiki"||ui.office.indexOf("wiki-")===0);
-  if(ui.office&&ui.office!=="renommee"&&ui.office!=="chroniques"&&ui.office!=="personnages"&&ui.office!=="aventuriers"&&ui.office!=="dm"&&ui.office!=="compendium"&&ui.office.indexOf("compendium-")!==0&&ui.office.indexOf("perso-")!==0&&!wk&&loaded.b&&!office(ui.office))ui.office=null;
+  if(ui.office&&ui.office!=="renommee"&&ui.office!=="chroniques"&&ui.office!=="personnages"&&ui.office!=="aventuriers"&&ui.office!=="dm"&&ui.office!=="compendium"&&ui.office.indexOf("compendium-")!==0&&ui.office.indexOf("perso-")!==0&&ui.office.indexOf("partie-")!==0&&!wk&&loaded.b&&!office(ui.office))ui.office=null;
   const reg=ui.office==="renommee";
   const chr=ui.office==="chroniques";
   const perso=!!ui.office&&ui.office.indexOf("perso-")===0;
   const mes=ui.office==="personnages";
   const gal=ui.office==="aventuriers";
   const dms=ui.office==="dm";
+  const pty=!!ui.office&&ui.office.indexOf("partie-")===0;
   const comp=ui.office==="compendium",compE=!!ui.office&&ui.office.indexOf("compendium-")===0;
   const b=ui.office&&!reg?office(ui.office):null;
   let h='<div class="wrap">';
   h+='<header><svg width="72" height="72" viewBox="-110 -110 220 220" aria-hidden="true"><circle r="80" fill="none" stroke="#d8b45e" stroke-width="3" opacity=".6"></circle>'+rose(104,'#0e1b20')+'</svg>';
-  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(dms?'Espace DM':comp||compE?'Compendium de la Guilde':gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(dms?'Le bureau secret du Maître de la Guilde':comp||compE?'Le savoir partagé des aventuriers':gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions en cours et accomplies par les aventuriers':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+dmPill()+statusPill()+'</header>';
-  if(compE)h+='<a class="back" href="#compendium"><span aria-hidden="true">←</span> Compendium</a>';
+  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(pty?'Mode Partie':dms?'Espace DM':comp||compE?'Compendium de la Guilde':gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(dms?'Le bureau secret du Maître de la Guilde':comp||compE?'Le savoir partagé des aventuriers':gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions en cours et accomplies par les aventuriers':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+dmPill()+statusPill()+'</header>';
+  if(pty){const pq=ptQuest();h+='<a class="back" href="#'+(pq?esc(pq.bureau):'carte')+'"><span aria-hidden="true">←</span> Retour au babillard</a>';}
+  else if(compE)h+='<a class="back" href="#compendium"><span aria-hidden="true">←</span> Compendium</a>';
   else if(perso)h+='<a class="back" href="#renommee"><span aria-hidden="true">←</span> Registre de renommée</a>';
   else if(b||reg||wk||chr||mes||gal||comp||dms)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
   if(ui.authMsg)h+='<div class="dmbar"><span class="msg">'+esc(ui.authMsg)+'</span><button class="btn board" data-a="auth-ok">OK</button>'+(user&&!user.isAnonymous&&!isAdmin?'<button class="btn board" data-a="logout">Déconnexion</button>':'')+'</div>';
-  if(ui.dm)h+=dmPanel(b);
-  h+=dms?dmSpaceView():comp?compendiumView():compE?compEntryView(ui.office.slice(11)):gal?galleryView():mes?myCharsView():perso?sheetView(ui.office.slice(6)):chr?chroniclesView():wk?wikiView():reg?renownView():b?boardView()+boardNews(b.id)+reputationSection(b.id,b.nom):mapView();
+  if(ui.dm&&!pty)h+=dmPanel(b);
+  h+=pty?partyView():dms?dmSpaceView():comp?compendiumView():compE?compEntryView(ui.office.slice(11)):gal?galleryView():mes?myCharsView():perso?sheetView(ui.office.slice(6)):chr?chroniclesView():wk?wikiView():reg?renownView():b?boardView()+boardNews(b.id)+reputationSection(b.id,b.nom):mapView();
   const signed=user&&!user.isAnonymous;
   h+='<footer><span>Pour partir en mission : choisis une quête, appuie sur « Je veux y aller » et choisis ton personnage. Le DM confirme les inscriptions.</span>'+
     '<span class="who">'+(signed?'Connecté : '+esc(user.displayName||user.email||"aventurier")+' · <a href="#personnages">Mes personnages</a> · <button class="linkbtn" data-a="logout">Déconnexion</button>':'<button class="linkbtn" data-a="login">Se connecter</button>')+
@@ -1723,7 +1847,12 @@ function render(){
   if(render.lastForm===formKey)document.querySelectorAll('#manform [id^="mf-"]:not([type=file]),#manform input[data-mm],#genform [id^="gen-"]').forEach(el=>{keep[el.id]=el.type==="checkbox"?el.checked:el.value;});
   const sup=document.getElementById("f-super");if(sup&&render.lastForm===formKey)keep["f-super"]=sup.checked;
   render.lastForm=formKey;
+  const ptKeep={};let ptFoc=null,ptSel=null;
+  if(pty){document.querySelectorAll(".partie input[id],.partie select[id]").forEach(el=>{if(el.value!=="")ptKeep[el.id]=el.value;});
+    const ae=document.activeElement;if(ae&&ae.id&&ae.closest&&ae.closest(".partie")){ptFoc=ae.id;try{ptSel=[ae.selectionStart,ae.selectionEnd];}catch(e){}}}
   app.innerHTML=h+'</div>';
+  if(pty){Object.keys(ptKeep).forEach(k=>{const el=document.getElementById(k);if(el)el.value=ptKeep[k];});
+    if(ptFoc){const el=document.getElementById(ptFoc);if(el){el.focus();try{if(ptSel&&ptSel[0]!=null)el.setSelectionRange(ptSel[0],ptSel[1]);}catch(e){}}}}
   // Tableaux du DM : étiquette de colonne sur chaque cellule (affichage en cartes sur mobile)
   app.querySelectorAll("table.dmtable").forEach(t=>{const hs=Array.from(t.querySelectorAll("thead th")).map(th=>th.textContent.trim());
     t.querySelectorAll("tbody tr").forEach(tr=>Array.from(tr.children).forEach((c,i)=>{if(hs[i])c.setAttribute("data-label",hs[i]);}));});
@@ -1739,7 +1868,252 @@ function route(){
     try{const el=focusQ&&document.getElementById("q-"+focusQ);if(el){el.scrollIntoView({block:"center"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1600);}else window.scrollTo(0,0);}catch(e){}}
 }
 window.addEventListener("hashchange",route);
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&(ui.signup||ui.complete||ui.confirmGroup||ui.reportWrite||ui.plan)){ui.plan=null;ui.signup=null;ui.complete=null;ui.confirmGroup=null;ui.reportWrite=null;render();}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&ui.ptSb){ui.ptSb=null;render();return;}
+  if(e.key==="Escape"&&(ui.signup||ui.complete||ui.confirmGroup||ui.reportWrite||ui.plan)){ui.plan=null;ui.signup=null;ui.complete=null;ui.confirmGroup=null;ui.reportWrite=null;render();}});
+
+/* ---------- Mode Partie (DM) ---------- */
+const PT_CONDS=[
+ ["prone","À terre","Prone","Se déplace en rampant (coût double) ; se relever coûte la moitié de sa vitesse. Désavantage à ses attaques. Attaques contre lui : avantage à 5 pi ou moins, désavantage au-delà."],
+ ["grappled","Agrippé","Grappled","Vitesse 0. Désavantage à ses attaques contre toute cible autre que l'agrippeur. L'agrippeur peut le déplacer (coût double). Évasion : action, test de FOR (Athlétisme) ou DEX (Acrobaties) contre le DD de l'agrippeur."],
+ ["deafened","Assourdi","Deafened","N'entend rien ; échoue automatiquement aux tests qui demandent l'ouïe."],
+ ["blinded","Aveuglé","Blinded","Ne voit rien ; échoue aux tests qui demandent la vue. Désavantage à ses attaques ; les attaques contre lui ont l'avantage."],
+ ["charmed","Charmé","Charmed","Ne peut pas attaquer le charmeur ni le cibler avec des effets nuisibles. Le charmeur a l'avantage à ses tests d'interaction sociale contre lui."],
+ ["poisoned","Empoisonné","Poisoned","Désavantage aux jets d'attaque et aux tests de caractéristique."],
+ ["restrained","Entravé","Restrained","Vitesse 0. Désavantage à ses attaques et à ses sauvegardes de DEX ; les attaques contre lui ont l'avantage."],
+ ["frightened","Effrayé","Frightened","Désavantage aux tests et aux attaques tant que la source de sa peur est en vue ; ne peut pas s'en approcher volontairement."],
+ ["stunned","Étourdi","Stunned","Incapable d'agir. Échoue aux sauvegardes de FOR et de DEX ; les attaques contre lui ont l'avantage."],
+ ["incapacitated","Incapable d'agir","Incapacitated","Aucune action, action bonus ni réaction ; perd sa concentration ; ne peut pas parler ; désavantage à l'initiative."],
+ ["invisible","Invisible","Invisible","Avantage à l'initiative. Avantage à ses attaques ; désavantage aux attaques contre lui, sauf si l'attaquant peut le voir."],
+ ["paralyzed","Paralysé","Paralyzed","Incapable d'agir, vitesse 0. Échoue aux sauvegardes de FOR et de DEX ; les attaques contre lui ont l'avantage ; toute touche à 5 pi ou moins est un coup critique."],
+ ["petrified","Pétrifié","Petrified","Changé en pierre : incapable d'agir, vitesse 0. Échoue aux sauvegardes de FOR et de DEX ; les attaques contre lui ont l'avantage ; résistance à tous les dégâts ; immunisé au poison."],
+ ["unconscious","Inconscient","Unconscious","Incapable d'agir, à terre, lâche ce qu'il tient. Échoue aux sauvegardes de FOR et de DEX ; les attaques contre lui ont l'avantage ; toute touche à 5 pi ou moins est un coup critique."],
+ ["exhaustion","Épuisement","Exhaustion","Par niveau : −2 aux tests d20 et −5 pi de vitesse. Niveau 6 : mort. Un repos long retire un niveau."]];
+const PT_COND=Object.fromEntries(PT_CONDS.map(c=>[c[0],c]));
+const PT_DC=[["Très facile",5],["Facile",10],["Moyen",15],["Difficile",20],["Très difficile",25],["Quasi impossible",30]];
+const PT_RULES=[
+ ["Actions en combat","**Attaquer**, **Magie** (lancer un sort, utiliser un objet magique), **Foncer** (vitesse doublée), **Se désengager** (pas d'attaque d'opportunité), **Esquiver** (attaques contre toi avec désavantage, avantage aux sauvegardes de DEX), **Aider**, **Se cacher** (DEX (Discrétion) DD 15, hors de vue), **Influencer**, **Préparer**, **Rechercher**, **Étudier**, **Utiliser un objet**."],
+ ["Concentration","Dégâts subis : sauvegarde de CON, DD 10 ou la moitié des dégâts (le plus élevé, max 30). Perdue aussi si la créature est incapable d'agir ou meurt."],
+ ["Jets contre la mort","À 0 PV, au début de chaque tour : d20. 10+ : succès ; 9 ou moins : échec. 20 naturel : reprend 1 PV. 1 naturel : deux échecs. Trois succès : stable ; trois échecs : mort. Dégâts à 0 PV : un échec (deux sur un critique). Dégâts restants ≥ PV max : mort instantanée."],
+ ["Abri","**Demi-abri** : +2 à la CA et aux sauvegardes de DEX. **Trois quarts** : +5. **Total** : ne peut pas être ciblé directement."],
+ ["Visibilité","**Zone faiblement obscurcie** (pénombre, brouillard léger) : désavantage aux tests de Sagesse (Perception) basés sur la vue. **Zone fortement obscurcie** (ténèbres) : comme aveuglé."],
+ ["Attaque d'opportunité","Quand une créature hostile visible quitte ton allonge, tu peux utiliser ta réaction pour une attaque au corps à corps. Se désengager l'évite."],
+ ["Chute et asphyxie","**Chute** : 1d6 contondants par tranche de 10 pi (max 20d6), puis à terre. **Retenir son souffle** : 1 + modificateur de CON minutes (min 30 s) ; ensuite, 1 niveau d'épuisement par tour."],
+ ["Repos","**Repos court** (1 h) : dépense de dés de vie. **Repos long** (8 h) : récupère tous les PV et dés de vie, retire 1 niveau d'épuisement."]];
+
+function ptQuest(){return ui.office&&ui.office.indexOf("partie-")===0?questById(ui.office.slice(7)):null;}
+function ptBlank(qid){return {id:qid,round:0,cur:null,liste:[],journal:[],rev:0};}
+function ptClone(o){return JSON.parse(JSON.stringify(o));}
+function ptSync(qid){
+  const d=parties.find(p=>p.id===qid);
+  if(!ui.pt||ui.pt.id!==qid){ui.pt=d?Object.assign(ptBlank(qid),ptClone(d)):ptBlank(qid);ui.ptRev=ui.pt.rev||0;return;}
+  if(d&&d.rev&&d.rev!==ui.ptRev&&Date.now()-(ui.ptEditMs||0)>4000){ui.pt=Object.assign(ptBlank(qid),ptClone(d));ui.ptRev=d.rev;}
+}
+let ptTimer=null;
+function ptSave(){
+  ui.ptEditMs=Date.now();ui.pt.rev=Date.now();ui.ptRev=ui.pt.rev;
+  clearTimeout(ptTimer);const st=ptClone(ui.pt),qid=st.id;delete st.id;
+  ptTimer=setTimeout(()=>{setDoc(doc(db,"parties",qid),Object.assign(st,{majLe:serverTimestamp()})).catch(e=>{console.error(e);save={state:"error",msg:errText(e)};render();});},500);
+}
+function ptLog(t){const j=ui.pt.journal||(ui.pt.journal=[]);const d=new Date();j.push({h:String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"),t:String(t).slice(0,500)});if(j.length>300)j.splice(0,j.length-300);}
+function ptOrder(){return (ui.pt.liste||[]).slice().sort((a,b)=>((+b.init||0)-(+a.init||0))||((+b.dex||0)-(+a.dex||0))||String(a.nom).localeCompare(String(b.nom),"fr"));}
+function ptC(cid){return (ui.pt.liste||[]).find(c=>c.cid===cid);}
+function ptUid(){return Math.random().toString(36).slice(2,9);}
+function ptPvAvg(s){const m=String(s||"").match(/\d+/);return m?+m[0]:1;}
+function ptDexMod(n){return n==null||n===""?0:Math.floor((+n-10)/2);}
+function ptD(n){return 1+Math.floor(Math.random()*n);}
+function ptSignups(q){const s=signupsFor(q.id).filter(x=>x.statut!=="refusee"),c=s.filter(x=>x.statut==="confirmee");return c.length?c:s;}
+function ptEncounters(q){const s=scenarios[q.id]||{};return (s.rencontres||[]).map(id=>rencontres.find(r=>r.id===id)).filter(Boolean).concat(rencontres.filter(r=>r.quete===q.id&&(s.rencontres||[]).indexOf(r.id)<0));}
+function ptAddPC(s){
+  if(s.aventurier&&ui.pt.liste.some(c=>c.ref===s.aventurier))return false;
+  const a=aventuriers.find(x=>x.id===s.aventurier)||{},d=dossiers[s.aventurier]||{};
+  ui.pt.liste.push({cid:ptUid(),kind:"pj",ref:s.aventurier||"",nom:a.nom||s.nom||"Aventurier",ca:d.ca==null?"":+d.ca,pvMax:d.pv==null?0:+d.pv,pv:d.pv==null?0:+d.pv,tmp:0,init:"",dex:0,pp:d.percPassive==null?"":+d.percPassive,conds:[],conc:false,ds:{s:0,f:0}});return true;
+}
+function ptAddMonster(m,label){
+  const same=ui.pt.liste.filter(c=>c.ref===m.id).length;const pv=ptPvAvg(m.pv);
+  ui.pt.liste.push({cid:ptUid(),kind:"monstre",ref:m.id,nom:label||(m.nom+" "+(same+1)),ca:m.ca==null?"":+m.ca,pvMax:pv,pv:pv,tmp:0,init:"",dex:ptDexMod(m.dex),xp:crXp(m.fp),conds:[],conc:false});
+}
+function ptRollInit(all){(ui.pt.liste||[]).forEach(c=>{if(c.kind!=="pj"&&(all||c.init===""||c.init==null)){c.init=ptD(20)+(+c.dex||0);}});}
+function ptAlive(c){return c.kind==="pj"||c.pv>0;}
+function ptEndTurn(c){
+  if(!c)return;
+  (c.conds||[]).forEach(x=>{if(x.d>0){x.d--;if(x.d===0)ptLog(c.nom+" n'est plus "+PT_COND[x.k][1].toLowerCase()+".");}});
+  c.conds=(c.conds||[]).filter(x=>!(x.d===0&&x.timed));
+}
+function ptNext(dir){
+  const o=ptOrder().filter(ptAlive);if(!o.length)return;
+  let i=o.findIndex(c=>c.cid===ui.pt.cur);
+  if(dir>0){ptEndTurn(ptC(ui.pt.cur));i++;if(i>=o.length||i<0){i=0;ui.pt.round=(ui.pt.round||0)+1;ptLog("— Round "+ui.pt.round+" —");}}
+  else{i--;if(i<0){i=o.length-1;ui.pt.round=Math.max(1,(ui.pt.round||1)-1);}}
+  ui.pt.cur=o[i].cid;
+  const c=o[i];if(c.kind==="pj"&&c.pv<=0)ui.ptAlert=c.nom+" est à 0 PV : jet contre la mort (d20, 10+ = succès).";
+}
+function ptDamage(c,n){
+  if(!(n>0))return;const before=c.pv;let rest=n;
+  if(c.tmp>0){const t=Math.min(c.tmp,rest);c.tmp-=t;rest-=t;}
+  c.pv=Math.max(0,c.pv-rest);ptLog(c.nom+" subit "+n+" dégâts ("+c.pv+"/"+c.pvMax+" PV).");
+  const al=[];
+  if(c.conc&&n>0)al.push(c.nom+" : sauvegarde de Concentration (CON) DD "+Math.min(30,Math.max(10,Math.floor(n/2)))+".");
+  if(c.pv===0){
+    if(c.kind==="pj"){
+      if(before===0){c.ds=c.ds||{s:0,f:0};c.ds.f=Math.min(3,c.ds.f+1);al.push(c.nom+" subit des dégâts à 0 PV : un échec au jet contre la mort (deux si coup critique).");}
+      else if(rest-before>=c.pvMax&&c.pvMax>0){al.push("Dégâts massifs : "+c.nom+" meurt sur le coup (dégâts restants ≥ PV max) !");ptLog(c.nom+" meurt sur le coup.");}
+      else{if(!c.conds.some(x=>x.k==="unconscious"))c.conds.push({k:"unconscious",d:0});c.ds={s:0,f:0};c.conc=false;al.push(c.nom+" tombe à 0 PV : inconscient, jets contre la mort à chaque tour.");ptLog(c.nom+" tombe inconscient.");}
+    }else{c.conc=false;ptLog(c.nom+" est vaincu"+(c.xp?" ("+c.xp+" XP)":"")+".");}
+  }
+  if(al.length)ui.ptAlert=al.join(" ");
+}
+function ptHeal(c,n){
+  if(!(n>0))return;const was=c.pv;c.pv=Math.min(c.pvMax||Infinity,c.pv+n);
+  if(was===0&&c.pv>0){c.conds=(c.conds||[]).filter(x=>x.k!=="unconscious");c.ds={s:0,f:0};ptLog(c.nom+" reprend connaissance.");}
+  ptLog(c.nom+" récupère "+n+" PV ("+c.pv+"/"+c.pvMax+").");
+}
+function ptRoll(expr){
+  const s=String(expr||"").toLowerCase().replace(/\s+/g,"").replace(/^d/,"1d");const re=/([+-]?)(\d*)d(\d+)|([+-]?)(\d+)/g;let m,total=0,parts=[],ok=false;
+  while((m=re.exec(s))){ok=true;
+    if(m[3]){const n=Math.min(50,+(m[2]||1)),f=+m[3],sg=m[1]==="-"?-1:1;
+      if(n===1&&f===20&&ui.ptAdv){const a=ptD(20),b=ptD(20),v=ui.ptAdv==="adv"?Math.max(a,b):Math.min(a,b);total+=sg*v;parts.push((ui.ptAdv==="adv"?"avantage ":"désavantage ")+"["+a+", "+b+"]");}
+      else{const r=[];for(let i=0;i<n;i++)r.push(ptD(f));total+=sg*r.reduce((x,y)=>x+y,0);parts.push((sg<0?"−":"")+n+"d"+f+" ["+r.join(", ")+"]");}}
+    else if(m[5]){const v=(m[4]==="-"?-1:1)*+m[5];total+=v;parts.push((v<0?"−":"+")+Math.abs(v));}}
+  if(!ok)return null;return {e:expr,t:total,d:parts.join(" ")};
+}
+function ptTests(q){
+  const s=scenarios[q.id]||{},src=[s.scenario,s.notes].concat(ptEncounters(q).map(r=>r.notes)).filter(Boolean).join("\n");
+  const out=[],seen={};
+  src.split(/\n+/).forEach(line=>{const clean=line.replace(/\[\[([^\]]+)\]\]/g,"$1").replace(/[*_#>`]/g,"").trim();
+    clean.split(/(?<=[.!?;])\s+/).forEach(sen=>{const re=/\b(?:DD|DC)\s*(\d{1,2})/g;let m;while((m=re.exec(sen))){const k=m[1]+"|"+sen;if(seen[k])continue;seen[k]=1;out.push({dd:+m[1],t:sen.trim()});}});});
+  return out;
+}
+function ptCondChip(c,x){const k=PT_COND[x.k];if(!k)return "";
+  return '<span class="ptcond" title="'+esc(k[3])+'"><button class="ptcx" data-a="pt-cinfo" data-v="'+x.k+'">'+esc(k[1])+(x.k==="exhaustion"?" "+(x.n||1):"")+(x.d>0?' · '+x.d+'r':'')+'</button><button class="ptcx del" data-a="pt-cdel" data-id="'+c.cid+'" data-v="'+x.k+'" aria-label="Retirer '+esc(k[1])+'">✕</button></span>';}
+function ptRow(c){
+  const cur=ui.pt.cur===c.cid,dead=c.kind!=="pj"&&c.pv<=0,down=c.kind==="pj"&&c.pv<=0;
+  const pct=c.pvMax>0?Math.max(0,Math.min(100,Math.round(100*c.pv/c.pvMax))):0,hc=pct>50?"ok":pct>25?"mid":"low";
+  let h='<li class="ptrow'+(cur?' cur':'')+(dead?' dead':'')+(down?' down':'')+' k-'+c.kind+'" id="pt-'+c.cid+'">';
+  h+='<label class="ptinit"><span>Init.</span><input type="number" inputmode="numeric" class="pt-in" data-id="'+c.cid+'" data-f="init" value="'+esc(c.init===""||c.init==null?"":c.init)+'" aria-label="Initiative de '+esc(c.nom)+'"></label>';
+  h+='<div class="ptmain"><div class="ptname">'+(cur?'<span class="ptturn" aria-label="Tour actuel">▶</span>':'')+(c.kind==="monstre"&&monstres.some(m=>m.id===c.ref)?'<button class="ptlink" data-a="pt-sb" data-id="'+esc(c.ref)+'">'+esc(c.nom)+'</button>':'<strong>'+esc(c.nom)+'</strong>')+
+    '<span class="ptca" title="Classe d\'armure">🛡 '+esc(c.ca===""?"—":c.ca)+'</span>'+(c.kind==="pj"&&c.pp!==""&&c.pp!=null?'<span class="ptca" title="Perception passive">👁 '+esc(c.pp)+'</span>':'')+(c.conc?'<span class="ptconc">Concentration</span>':'')+(dead?'<span class="ptdead">Vaincu</span>':'')+'</div>';
+  h+='<div class="pthp"><span class="bar"><span class="'+hc+'" style="width:'+pct+'%"></span></span><span class="num">'+c.pv+' / '+(c.pvMax||"?")+' PV'+(c.tmp>0?' <em>+'+c.tmp+' temp.</em>':'')+'</span></div>';
+  h+='<div class="ptconds">'+(c.conds||[]).map(x=>ptCondChip(c,x)).join("")+'<button class="ptadd" data-a="pt-copen" data-id="'+c.cid+'">+ État</button><button class="ptadd" data-a="pt-conc" data-id="'+c.cid+'">'+(c.conc?'− Concentration':'+ Concentration')+'</button></div>';
+  if(down){const ds=c.ds||{s:0,f:0};h+='<div class="ptds"><span>Jets contre la mort</span><span class="dsg">Succès '+[1,2,3].map(i=>'<button class="dsb s'+(ds.s>=i?' on':'')+'" data-a="pt-ds" data-id="'+c.cid+'" data-v="s'+i+'" aria-label="Succès '+i+'"></button>').join("")+'</span><span class="dsg">Échecs '+[1,2,3].map(i=>'<button class="dsb f'+(ds.f>=i?' on':'')+'" data-a="pt-ds" data-id="'+c.cid+'" data-v="f'+i+'" aria-label="Échec '+i+'"></button>').join("")+'</span>'+(ds.s>=3?'<strong>Stable</strong>':ds.f>=3?'<strong class="low">Mort</strong>':'')+'</div>';}
+  if(ui.ptCond===c.cid){h+='<div class="ptpick"><label>Durée (rounds, vide = jusqu\'à nouvel ordre) <input type="number" min="1" id="pt-cdur" inputmode="numeric"></label><div class="ptpickg">'+PT_CONDS.map(k=>'<button data-a="pt-cadd" data-id="'+c.cid+'" data-v="'+k[0]+'" title="'+esc(k[3])+'">'+esc(k[1])+' <span>'+esc(k[2])+'</span></button>').join("")+'</div><button class="ptadd" data-a="pt-cclose">Fermer</button></div>';}
+  if(ui.ptEditC===c.cid){h+='<div class="ptedit"><label>Nom <input id="pe-nom" value="'+esc(c.nom)+'"></label><label>CA <input id="pe-ca" type="number" value="'+esc(c.ca)+'"></label><label>PV max <input id="pe-pvmax" type="number" value="'+esc(c.pvMax)+'"></label><label>PV actuels <input id="pe-pv" type="number" value="'+esc(c.pv)+'"></label><label>Mod. DEX <input id="pe-dex" type="number" value="'+esc(c.dex||0)+'"></label>'+(c.kind==="pj"?'<label>Perc. passive <input id="pe-pp" type="number" value="'+esc(c.pp)+'"></label>':'')+'<div class="ptbtns"><button class="btn gold" data-a="pt-esave" data-id="'+c.cid+'">Enregistrer</button><button class="btn ghost" data-a="pt-eclose">Annuler</button></div></div>';}
+  h+='</div><div class="ptact"><input type="number" min="0" inputmode="numeric" id="hp-'+c.cid+'" placeholder="PV" aria-label="Montant pour '+esc(c.nom)+'"><div class="ptab"><button class="dmg" data-a="pt-dmg" data-id="'+c.cid+'" title="Dégâts">−</button><button class="heal" data-a="pt-heal" data-id="'+c.cid+'" title="Soins">+</button><button data-a="pt-tmp" data-id="'+c.cid+'" title="PV temporaires">T</button></div><div class="ptab"><button data-a="pt-edit" data-id="'+c.cid+'" title="Modifier" aria-label="Modifier '+esc(c.nom)+'">✎</button><button data-a="pt-del" data-id="'+c.cid+'" title="Retirer du combat" aria-label="Retirer '+esc(c.nom)+'">✕</button></div></div></li>';
+  return h;
+}
+function ptSide(q){
+  const tab=ui.ptTab||"scenario",s=scenarios[q.id]||{};
+  const tabs=[["scenario","Scénario"],["tests","Tests & DD"],["regles","Règles"],["des","Dés"],["journal","Journal"]];
+  let h='<div class="pttabs" role="tablist">'+tabs.map(t=>'<button role="tab" aria-selected="'+(tab===t[0])+'" class="'+(tab===t[0]?'on':'')+'" data-a="pt-tab" data-v="'+t[0]+'">'+t[1]+'</button>').join("")+'</div><div class="ptpanel">';
+  if(tab==="scenario"){
+    h+=s.scenario?'<div class="wikibody">'+md(manLinks(s.scenario))+'</div>':'<p class="desc">Aucun scénario pour cette quête. <a href="#man/quetes/'+encodeURIComponent(q.id)+'">L\'écrire dans le manuel</a></p>';
+    const ps=(s.pnj||[]).map(id=>pnjs.find(p=>p.id===id)).filter(Boolean).concat(pnjs.filter(p=>(p.quetes||[]).indexOf(q.id)>=0&&(s.pnj||[]).indexOf(p.id)<0));
+    if(ps.length)h+='<h3>PNJ de la quête</h3>'+ps.map(p=>'<details class="ptpnj"><summary>'+(p.image?'<img src="'+esc(p.image)+'" alt="">':'')+'<strong>'+esc(p.nom)+'</strong>'+(p.role?' · '+esc(p.role):'')+'</summary>'+(p.voix?'<p><strong>Voix :</strong> '+esc(p.voix)+'</p>':'')+(p.apparence?'<p><strong>Apparence :</strong> '+esc(p.apparence)+'</p>':'')+(p.secrets?'<div class="wikibody"><strong>Secrets :</strong> '+md(manLinks(p.secrets))+'</div>':'')+(p.monstre?'<button class="ptadd" data-a="pt-sb" data-id="'+esc(p.monstre)+'">Bloc de stats</button>':'')+'</details>').join("");
+    if(s.notes)h+=mdBlock("Notes",s.notes);
+  }else if(tab==="tests"){
+    const pcs=(ui.pt.liste||[]).filter(c=>c.kind==="pj"&&c.pp!==""&&c.pp!=null);
+    if(pcs.length){const best=pcs.slice().sort((a,b)=>b.pp-a.pp)[0];h+='<h3>Perception passive du groupe</h3><p class="ptpp">'+pcs.map(c=>'<span>'+esc(c.nom)+' <strong>'+c.pp+'</strong></span>').join("")+'</p><p class="desc">La plus haute : '+esc(best.nom)+' ('+best.pp+'). Un piège ou une créature cachée avec un DD inférieur ou égal est remarqué sans jet.</p>';}
+    const t=ptTests(q);
+    h+='<h3>Tests prévus dans le scénario</h3>'+(t.length?'<ul class="pttests">'+t.map(x=>'<li><span class="ptdd">DD '+x.dd+'</span><span>'+esc(x.t)+'</span></li>').join("")+'</ul>':'<p class="desc">Aucun DD trouvé dans le scénario ou les rencontres.</p>');
+    h+='<h3>Fixer un DD à la volée</h3><table class="ptdc"><tbody>'+PT_DC.map(d=>'<tr><td>'+d[0]+'</td><td><strong>'+d[1]+'</strong></td></tr>').join("")+'</tbody></table>';
+    h+='<p class="desc">Test en groupe : tout le monde lance, réussite si au moins la moitié réussit. Test opposé : les deux lancent, le plus haut l\'emporte (égalité : statu quo).</p>';
+  }else if(tab==="regles"){
+    h+='<h3>États</h3><dl class="ptdl">'+PT_CONDS.map(k=>'<div id="cond-'+k[0]+'"'+(ui.ptInfo===k[0]?' class="hl"':'')+'><dt>'+esc(k[1])+' <span>('+esc(k[2])+')</span></dt><dd>'+esc(k[3])+'</dd></div>').join("")+'</dl>';
+    h+=PT_RULES.map(r=>'<h3>'+esc(r[0])+'</h3><div class="wikibody">'+md(r[1])+'</div>').join("");
+  }else if(tab==="des"){
+    h+='<div class="ptdice">'+[4,6,8,10,12,20,100].map(f=>'<button data-a="pt-roll" data-v="1d'+f+'">d'+f+'</button>').join("")+'</div>';
+    h+='<div class="ptadv"><button class="'+(ui.ptAdv==="adv"?'on':'')+'" data-a="pt-adv" data-v="adv">Avantage</button><button class="'+(!ui.ptAdv?'on':'')+'" data-a="pt-adv" data-v="">Normal</button><button class="'+(ui.ptAdv==="dis"?'on':'')+'" data-a="pt-adv" data-v="dis">Désavantage</button></div>';
+    h+='<form class="ptexpr" id="pt-expr"><input id="pt-expr-in" placeholder="Ex. : 2d6+3 ou d20+5" aria-label="Formule de dés"><button class="btn gold">Lancer</button></form>';
+    h+=(ui.ptDice||[]).length?'<ul class="ptrolls">'+ui.ptDice.map((r,i)=>'<li class="'+(i===0?'last':'')+'"><strong>'+r.t+'</strong><span>'+esc(r.e)+' : '+esc(r.d)+'</span></li>').join("")+'</ul>':'<p class="desc">Les avantages et désavantages s\'appliquent aux d20.</p>';
+  }else{
+    h+='<form class="ptexpr" id="pt-note"><input id="pt-note-in" placeholder="Ajouter une note (décision, indice trouvé, butin…)" aria-label="Note de partie"><button class="btn gold">Noter</button></form>';
+    const j=(ui.pt.journal||[]).slice().reverse();
+    h+=j.length?'<ul class="ptjournal">'+j.map(x=>'<li><span>'+esc(x.h)+'</span>'+esc(x.t)+'</li>').join("")+'</ul><p><button class="btn ghost" data-a="pt-copy">Copier le journal (pour le rapport)</button> <button class="btn ghost" data-a="pt-jclear">Vider le journal</button></p>':'<p class="desc">Les rounds, les K.-O. et tes notes s\'inscrivent ici automatiquement.</p>';
+  }
+  return h+'</div>';
+}
+function partyView(){
+  if(!isAdmin)return '<p class="empty">Le Mode Partie est réservé au DM.</p>';
+  const q=ptQuest();if(!q)return '<p class="empty">Quête introuvable.</p>';
+  ptSync(q.id);const P=ui.pt,o=ptOrder(),b=office(q.bureau)||{};
+  const xp=P.liste.filter(c=>c.kind==="monstre"&&c.pv<=0).reduce((t,c)=>t+(+c.xp||0),0),npj=P.liste.filter(c=>c.kind==="pj").length;
+  let h='<section class="partie"><div class="pthead"><div><p class="ctags">'+rankSeal(q.rang)+'<span class="creg">'+esc(b.nom||"")+'</span></p><h2>'+esc(q.titre)+'</h2></div><div class="ptround">'+(P.round>0?'<span>Round</span><strong>'+P.round+'</strong>':'<span>Hors combat</span>')+'</div></div>';
+  if(ui.ptAlert)h+='<div class="ptalert" role="alert"><span>⚠ '+esc(ui.ptAlert)+'</span><button data-a="pt-aok" aria-label="Fermer l\'alerte">OK</button></div>';
+  h+='<div class="ptgrid"><div class="ptcombat">';
+  h+='<div class="ptbar">'+(P.round>0?'<button class="btn ghost" data-a="pt-prev">◀ Précédent</button><button class="btn gold" data-a="pt-next">Tour suivant ▶</button><button class="btn ghost" data-a="pt-end">Fin du combat</button>':'<button class="btn gold" data-a="pt-start"'+(P.liste.length?'':' disabled')+'>⚔ Commencer le combat</button><button class="btn ghost" data-a="pt-rollinit"'+(P.liste.some(c=>c.kind!=="pj")?'':' disabled')+'>🎲 Initiative des monstres</button>')+'</div>';
+  h+=o.length?'<ol class="ptlist">'+o.map(ptRow).join("")+'</ol>':'<p class="desc">Ajoute le groupe et une rencontre pour commencer.</p>';
+  if(xp)h+='<p class="ptxp">XP des monstres vaincus : <strong>'+xp+'</strong>'+(npj?' · soit '+Math.floor(xp/npj)+' XP par aventurier':'')+'</p>';
+  const sg=ptSignups(q),encs=ptEncounters(q);
+  h+='<div class="ptaddbox"><h3>Ajouter au combat</h3>';
+  h+='<p><button class="btn ghost" data-a="pt-group"'+(sg.length?'':' disabled')+'>👥 Le groupe ('+sg.length+')</button>'+encs.map(r=>'<button class="btn ghost" data-a="pt-enc" data-id="'+esc(r.id)+'">👹 '+esc(r.nom)+'</button>').join("")+'</p>';
+  h+='<form class="ptexpr" id="pt-mon"><select id="pt-mon-sel" aria-label="Monstre du bestiaire"><option value="">Monstre du bestiaire…</option>'+byName(monstres).map(m=>'<option value="'+esc(m.id)+'">'+esc(m.nom)+' (FP '+esc(m.fp||"?")+')</option>').join("")+'</select><input id="pt-mon-nb" type="number" min="1" max="20" value="1" aria-label="Nombre"><button class="btn ghost">Ajouter</button></form>';
+  h+='<form class="ptexpr" id="pt-cus"><input id="pt-cus-nom" placeholder="Autre (nom)" aria-label="Nom"><input id="pt-cus-ca" type="number" placeholder="CA" aria-label="CA"><input id="pt-cus-pv" type="number" placeholder="PV" aria-label="PV"><button class="btn ghost">Ajouter</button></form>';
+  if(P.liste.length)h+='<p><button class="linkbtn" data-a="pt-clean">Retirer les monstres vaincus</button> · <button class="linkbtn" data-a="pt-reset">Tout effacer</button></p>';
+  h+='</div></div><div class="ptside">'+ptSide(q)+'</div></div>';
+  h+='<div class="ptfoot"><a class="btn ghost" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir la quête sur le babillard</a>'+(q.statut==="encours"?'<button class="btn gold" data-a="complete" data-id="'+esc(q.id)+'">Terminer la quête</button>':'')+'</div>';
+  if(ui.ptSb){const m=monstres.find(x=>x.id===ui.ptSb);if(m)h+='<div class="modal-bg" data-a="pt-sbclose"><div class="modal wide" role="dialog" aria-modal="true" aria-label="Bloc de stats">'+statblock(m)+'<button class="btn" data-a="pt-sbclose">Fermer</button></div></div>';}
+  return h+'</section>';
+}
+async function partyAction(a,id,b,e){
+  const q=ptQuest();if(!q||!ui.pt)return;const P=ui.pt,c=id?ptC(id):null,v=b.getAttribute("data-v")||"";
+  const amt=()=>{const el=document.getElementById("hp-"+id);const n=Math.round(+(el&&el.value)||0);if(el)el.value="";return n;};
+  let ch=true;
+  if(a==="pt-tab"){ui.ptTab=v;ch=false;}
+  else if(a==="pt-group"){let n=0;ptSignups(q).forEach(s=>{if(ptAddPC(s))n++;});if(n)ptLog(n+" aventurier"+(n>1?"s":"")+" entre"+(n>1?"nt":"")+" en scène.");}
+  else if(a==="pt-enc"){const r=rencontres.find(x=>x.id===id);if(!r)return;(r.monstres||[]).forEach(x=>{const m=monstres.find(y=>y.id===x.id);if(m)for(let i=0;i<(x.nb||1);i++)ptAddMonster(m);});ptLog("Rencontre : "+r.nom+".");}
+  else if(a==="pt-rollinit"){ptRollInit(false);}
+  else if(a==="pt-start"){ptRollInit(false);const o=ptOrder().filter(ptAlive);if(!o.length)return;P.round=1;P.cur=o[0].cid;ptLog("⚔ Début du combat — Round 1 —");
+    const miss=P.liste.filter(x=>x.kind==="pj"&&(x.init===""||x.init==null)).map(x=>x.nom);if(miss.length)ui.ptAlert="Initiative à saisir pour : "+miss.join(", ")+".";}
+  else if(a==="pt-next"){ptNext(1);}
+  else if(a==="pt-prev"){ptNext(-1);}
+  else if(a==="pt-end"){ptLog("Fin du combat après "+P.round+" round"+(P.round>1?"s":"")+".");P.round=0;P.cur=null;}
+  else if(a==="pt-dmg"&&c){ptDamage(c,amt());}
+  else if(a==="pt-heal"&&c){ptHeal(c,amt());}
+  else if(a==="pt-tmp"&&c){const n=amt();if(n>0){c.tmp=Math.max(c.tmp||0,n);ptLog(c.nom+" gagne "+n+" PV temporaires.");}}
+  else if(a==="pt-del"&&c){P.liste=P.liste.filter(x=>x.cid!==id);if(P.cur===id)P.cur=null;}
+  else if(a==="pt-edit"){document.querySelectorAll('[id^="pe-"]').forEach(el=>{el.value="";});ui.ptEditC=id;ui.ptCond=null;ch=false;}
+  else if(a==="pt-eclose"){ui.ptEditC=null;ch=false;}
+  else if(a==="pt-esave"&&c){const g=k=>{const el=document.getElementById(k);return el?el.value:"";};
+    c.nom=g("pe-nom").trim().slice(0,60)||c.nom;c.ca=g("pe-ca")===""?"":+g("pe-ca");c.pvMax=Math.max(0,+g("pe-pvmax")||0);c.pv=Math.max(0,Math.min(c.pvMax||Infinity,+g("pe-pv")||0));c.dex=+g("pe-dex")||0;if(c.kind==="pj")c.pp=g("pe-pp")===""?"":+g("pe-pp");ui.ptEditC=null;}
+  else if(a==="pt-copen"){ui.ptCond=ui.ptCond===id?null:id;ui.ptEditC=null;ch=false;}
+  else if(a==="pt-cclose"){ui.ptCond=null;ch=false;}
+  else if(a==="pt-cadd"&&c){const el=document.getElementById("pt-cdur"),d=Math.max(0,Math.round(+(el&&el.value)||0));if(el)el.value="";
+    const ex=c.conds.find(x=>x.k===v);
+    if(v==="exhaustion"){if(ex)ex.n=Math.min(6,(ex.n||1)+1);else c.conds.push({k:v,d:0,n:1});const n=(c.conds.find(x=>x.k===v)||{}).n;ptLog(c.nom+" : épuisement niveau "+n+".");if(n>=6)ui.ptAlert=c.nom+" atteint le niveau 6 d'épuisement : mort.";}
+    else if(ex){ex.d=d;ex.timed=d>0;}else{c.conds.push({k:v,d:d,timed:d>0});ptLog(c.nom+" est "+PT_COND[v][1].toLowerCase()+(d?" ("+d+" rounds)":"")+".");}
+    if(["incapacitated","paralyzed","petrified","stunned","unconscious"].indexOf(v)>=0&&c.conc){c.conc=false;ui.ptAlert=c.nom+" perd sa concentration ("+PT_COND[v][1].toLowerCase()+").";}
+    ui.ptCond=null;}
+  else if(a==="pt-cdel"&&c){const ex=c.conds.find(x=>x.k===v);if(ex&&v==="exhaustion"&&(ex.n||1)>1)ex.n--;else c.conds=c.conds.filter(x=>x.k!==v);}
+  else if(a==="pt-cinfo"){ui.ptTab="regles";ui.ptInfo=v;ch=false;render();const el=document.getElementById("cond-"+v);if(el)el.scrollIntoView({block:"center",behavior:"smooth"});return;}
+  else if(a==="pt-conc"&&c){c.conc=!c.conc;if(c.conc)ptLog(c.nom+" se concentre sur un sort.");}
+  else if(a==="pt-ds"&&c){const t=v[0],n=+v.slice(1);c.ds=c.ds||{s:0,f:0};c.ds[t]=c.ds[t]===n?n-1:n;
+    if(c.ds.s>=3)ptLog(c.nom+" est stabilisé.");if(c.ds.f>=3){ptLog(c.nom+" meurt.");ui.ptAlert=c.nom+" a raté trois jets contre la mort.";}}
+  else if(a==="pt-sb"){ui.ptSb=id;ch=false;}
+  else if(a==="pt-sbclose"){if(e.target!==b)return;ui.ptSb=null;ch=false;}
+  else if(a==="pt-aok"){ui.ptAlert=null;ch=false;}
+  else if(a==="pt-roll"){const r=ptRoll(v);if(r){(ui.ptDice=ui.ptDice||[]).unshift(r);ui.ptDice=ui.ptDice.slice(0,12);}ch=false;}
+  else if(a==="pt-adv"){ui.ptAdv=v||null;ch=false;}
+  else if(a==="pt-clean"){P.liste=P.liste.filter(x=>x.kind==="pj"||x.pv>0);}
+  else if(a==="pt-reset"){if(!ui.ptConfirmReset){ui.ptConfirmReset=true;ui.ptAlert="Clique encore sur « Tout effacer » pour vider le combat (le journal est conservé).";ch=false;}else{ui.ptConfirmReset=false;ui.ptAlert=null;P.liste=[];P.round=0;P.cur=null;}}
+  else if(a==="pt-jclear"){if(!ui.ptConfirmJ){ui.ptConfirmJ=true;ui.ptAlert="Clique encore sur « Vider le journal » pour confirmer.";ch=false;}else{ui.ptConfirmJ=false;ui.ptAlert=null;P.journal=[];}}
+  else if(a==="pt-copy"){const t=(P.journal||[]).map(x=>x.h+" "+x.t).join("\n");try{await navigator.clipboard.writeText(t);ui.ptAlert="Journal copié : colle-le dans le rapport de mission.";}catch(err){ui.ptAlert="Copie impossible ici : sélectionne le texte du journal à la main.";}ch=false;}
+  else return;
+  if(a!=="pt-reset")ui.ptConfirmReset=false;if(a!=="pt-jclear")ui.ptConfirmJ=false;
+  if(ch)ptSave();render();
+  if(a==="pt-next"||a==="pt-start"){const el=document.getElementById("pt-"+P.cur);if(el)el.scrollIntoView({block:"nearest",behavior:"smooth"});}
+}
+function partySubmit(e){
+  const f=e.target;if(!ui.pt||!f.id||f.id.indexOf("pt-")!==0)return false;e.preventDefault();const P=ui.pt;
+  if(f.id==="pt-expr"){const el=document.getElementById("pt-expr-in"),r=ptRoll(el.value);if(r){(ui.ptDice=ui.ptDice||[]).unshift(r);ui.ptDice=ui.ptDice.slice(0,12);}render();const n=document.getElementById("pt-expr-in");if(n){n.value=el.value;n.focus();}return true;}
+  if(f.id==="pt-note"){const ni=document.getElementById("pt-note-in"),t=ni.value.trim();ni.value="";if(t){ptLog(t);ptSave();}render();const n=document.getElementById("pt-note-in");if(n)n.focus();return true;}
+  if(f.id==="pt-mon"){const m=monstres.find(x=>x.id===document.getElementById("pt-mon-sel").value);if(!m)return true;const nb=Math.max(1,Math.min(20,+document.getElementById("pt-mon-nb").value||1));for(let i=0;i<nb;i++)ptAddMonster(m);ptLog(nb+" × "+m.nom+" entre"+(nb>1?"nt":"")+" en scène.");ptSave();render();return true;}
+  if(f.id==="pt-cus"){const nom=document.getElementById("pt-cus-nom").value.trim().slice(0,60);if(!nom)return true;const pv=Math.max(1,+document.getElementById("pt-cus-pv").value||1),ca=document.getElementById("pt-cus-ca").value;
+    ["pt-cus-nom","pt-cus-ca","pt-cus-pv"].forEach(k=>{document.getElementById(k).value="";});P.liste.push({cid:ptUid(),kind:"pnj",ref:"",nom:nom,ca:ca===""?"":+ca,pvMax:pv,pv:pv,tmp:0,init:"",dex:0,xp:0,conds:[],conc:false});ptSave();render();return true;}
+  return true;
+}
+function partyChange(e){
+  const t=e.target;if(!ui.pt||!t.classList||!t.classList.contains("pt-in"))return false;const c=ptC(t.getAttribute("data-id"));if(!c)return true;
+  c[t.getAttribute("data-f")]=t.value===""?"":+t.value;ptSave();setTimeout(render,0);return true;
+}
 
 /* ---------- actions ---------- */
 function download(name,text){
@@ -1807,6 +2181,7 @@ document.addEventListener("click",async e=>{
     if(location.hash!=="#dm"){ui.pendingMan=true;location.hash="#dm";}render();window.scrollTo(0,0);return;}
   const b=e.target.closest("[data-a]");if(!b)return;
   const a=b.getAttribute("data-a"),id=b.getAttribute("data-id");
+  if(a.indexOf("pt-")===0){await partyAction(a,id,b,e);return;}
   if(a==="filter"){ui.filter=b.getAttribute("data-v");}
   else if(a==="dm"){
     if(ui.dm){ui.dm=false;}
@@ -1949,6 +2324,7 @@ document.addEventListener("click",async e=>{
   if(a==="new"||a==="edit"){const f=document.getElementById("f-titre");if(f){f.focus();f.scrollIntoView({block:"center"});}}
 });
 document.addEventListener("change",e=>{
+  if(partyChange(e))return;
   if(e.target.classList&&e.target.classList.contains("rnsel")){
     const aid=e.target.getAttribute("data-adv"),bid=e.target.getAttribute("data-b"),n=parseInt(e.target.value,10);
     run("Renommée",()=>updateDoc(doc(db,"aventuriers",aid),new FieldPath("renommee",bid),n,"majLe",serverTimestamp()));return;
@@ -2006,6 +2382,7 @@ async function approveComp(e,force){
   });
 }
 document.addEventListener("submit",async e=>{
+  if(partySubmit(e))return;
   e.preventDefault();
   const v=id=>{const el=document.getElementById(id);return el?el.value.trim():"";};
   if(e.target.id==="signform"){
