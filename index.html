@@ -267,6 +267,12 @@ a.ccat{text-decoration:none}
 .ptnotes input{font:inherit;padding:8px;border:1px solid var(--parch-3);border-radius:4px;min-height:40px;background:#fff;color:var(--ink)}
 .ptaddbox summary{cursor:pointer;font-family:var(--display);font-size:15px;padding:8px 0}
 @media (max-width:560px){.ptencf{grid-template-columns:1fr}.ptphase .ptstep{margin-left:0}}
+.ltview{margin:12px 0;border:1px solid var(--parch-3);border-radius:6px;padding:8px 12px;background:#f6efdb}
+.ltview summary{cursor:pointer;font-weight:700}
+.ltview tr.taken td{opacity:.6}
+textarea.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px}
+.rar{font-weight:700}
+.rar.r-mediocre{color:#7d7d7d}.rar.r-classique{color:#2a2520}.rar.r-inhabituel{color:#1e8a14}.rar.r-rare{color:#0a5fbf}.rar.r-epique{color:#8f2fc2}.rar.r-legendaire{color:#d36a00;text-shadow:0 0 6px rgba(255,140,0,.35)}.rar.r-quete{color:#a67c00}
 /* Crieur */
 .crs{display:inline-block;font-family:var(--display);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;border-radius:999px;padding:3px 10px;margin:6px 0 2px}
 .crs.ok{background:#3d7a3a;color:#fff}.crs.wait{background:#c08a1e;color:#fff}.crs.pend{background:#e2d6b6;color:#4a3d2a}
@@ -1510,18 +1516,18 @@ const MOD_LBL=Object.fromEntries(MOD_STATUS);
 const ABIL=[["for","FOR"],["dex","DEX"],["con","CON"],["int","INT"],["sag","SAG"],["cha","CHA"]];
 const MAN_SECS=[["perso","Personnages"],["pnj","PNJ"],["factions","Factions"],["monstres","Bestiaire"],["rencontres","Rencontres"],["generateur","Générateur"],["quetes","Quêtes & scénarios"],["modules","Modules officiels"],["loot","Loot Box"],["notes","Notes & pages"],["atelier","Portraits"]];
 const MAN={
-  pnj:{coll:"pnj",nom:"PNJ",fields:[["nom","Nom","text",1],["image","Portrait","image"],["role","Rôle ou occupation","text"],["espece","Espèce","text"],["region","Région","region"],["lieu","Lieu","text"],["faction","Factions (séparées par des virgules)","text"],["outerworlder","Outerworlder (venu d'un autre monde)","check"],["attitude","Attitude envers la Guilde","select",0,ATTITUDES],["apparence","Apparence","textarea"],["voix","Voix et manières","textarea"],["secrets","Secrets","md"],["monstre","Stats (bestiaire)","monsterref"],["quetes","Quêtes liées","questmulti"],["notes","Notes","md"]]},
+  pnj:{coll:"pnj",nom:"PNJ",fields:[["nom","Nom","text",1],["image","Portrait","image"],["role","Rôle ou occupation","text"],["espece","Espèce","text"],["region","Région","region"],["lieu","Lieu","text"],["faction","Factions (séparées par des virgules)","text"],["outerworlder","Outerworlder (venu d'un autre monde)","check"],["attitude","Attitude envers la Guilde","select",0,ATTITUDES],["apparence","Apparence","textarea"],["voix","Voix et manières","textarea"],["secrets","Secrets","md"],["monstre","Stats (bestiaire)","monsterref"],["quetes","Quêtes liées","questmulti"],["butinTable","Table de butin (privée) : objets de quête et butin propre à ce PNJ","loottable"],["notes","Notes","md"]]},
   monstres:{coll:"monstres",nom:"monstre",fields:[["nom","Nom","text",1],["image","Image","image"],["taille","Taille","select",0,SIZES],["type","Type","text"],["alignement","Alignement","text"],["fp","Facteur de puissance (FP)","select",0,CR_LIST.map(c=>[c,c+" ("+CR_XP[c]+" XP)"])],["ca","Classe d'armure","number"],["pv","Points de vie","text"],["vitesse","Vitesse","text"],
     ["for","FOR","number"],["dex","DEX","number"],["con","CON","number"],["int","INT","number"],["sag","SAG","number"],["cha","CHA","number"],
     ["jets","Jets de sauvegarde","text"],["competences","Compétences","text"],["resist","Résistances et immunités","text"],["sens","Sens","text"],["langues","Langues","text"],
-    ["traits","Traits","md"],["actions","Actions","md"],["reactions","Réactions et actions légendaires","md"],["region","Région","region"],["tags","Mots-clés (séparés par des virgules)","text"],["notes","Notes","md"]]},
+    ["traits","Traits","md"],["actions","Actions","md"],["reactions","Réactions et actions légendaires","md"],["region","Région","region"],["tags","Mots-clés (séparés par des virgules)","text"],["butinTable","Table de butin (privée)","loottable"],["notes","Notes","md"]]},
   factions:{coll:"factions",nom:"faction",fields:[["nom","Nom","text",1],["image","Emblème","image"],["type","Type (guilde, culte, gang, autorité, ordre…)","text"],["regions","Zones d'influence","regionmulti"],["siege","Siège","text"],["chef","Chef (nom d'un PNJ ou description)","text"],["attitude","Attitude envers la Guilde","select",0,ATTITUDES],
     ["presentation","Présentation (pour toi)","md"],["objectifs","Objectifs publics","md"],["secrets","Objectifs secrets et secrets","md"],["allies","Alliés","factionmulti"],["rivaux","Rivaux","factionmulti"],["notes","Notes","md"]]},
   modules:{coll:"modules",nom:"module",fields:[["nom","Nom du module","text",1],["ordre","Ordre chronologique (1, 2, 3…)","number"],["periode","Période (ex. été 1492 DR)","text"],["statut","Statut","select",0,MOD_STATUS],["regions","Régions touchées","regionmulti"],["heros","Les héros qui le vivent (l'autre groupe)","text"],
     ["resume","Résumé de l'intrigue (pour toi)","md"],["signes","Signes publics : ce que le peuple voit et entend (rumeurs, Crieur)","md"],["consequences","Conséquences par région (pour les évolutions)","md"],["accroches","Quêtes secondaires pour la Guilde (aider les héros)","md"],["notes","Notes","md"]]},
   rencontres:{coll:"rencontres",nom:"rencontre",fields:[["nom","Nom","text",1],["region","Région","region"],["quete","Quête liée","questref"],["monstres","Monstres","monsterlist"],["terrain","Terrain et ambiance","textarea"],["notes","Tactique et déroulement","md"],["butin","Butin prévu (une ligne par objet, ex. « Épée courte (10 po) »)","textarea"]]},
   dossiers:{coll:"dossiers",nom:"dossier",fields:[["outerworlder","Outerworlder","select",0,[["","À déterminer"],["oui","Oui"],["non","Non (natif)"]]],["donNom","Don accordé par le Système","text"],["donDesc","Effet du Don","md"],["niveau","Niveau","number"],["ca","CA","number"],["pv","PV max","number"],["percPassive","Perception passive","number"],["accroches","Accroches et liens","md"],["notes","Notes du DM","md"]]},
-  scenarios:{coll:"scenarios",nom:"scénario",fields:[["module","Module officiel lié (quête secondaire)","moduleref"],["scenario","Scénario","md"],["rencontres","Rencontres liées","rencmulti"],["pnj","PNJ liés","pnjmulti"],["monstres","Monstres liés","monstermulti"],["notes","Notes","md"]]}
+  scenarios:{coll:"scenarios",nom:"scénario",fields:[["module","Module officiel lié (quête secondaire)","moduleref"],["scenario","Scénario","md"],["rencontres","Rencontres liées","rencmulti"],["pnj","PNJ liés","pnjmulti"],["monstres","Monstres liés","monstermulti"],["butinQuete","Objets de quête","questloot"],["notes","Notes","md"]]}
 };
 function manList(t){return t==="modules"?modules:t==="factions"?factions:t==="pnj"?pnjs:t==="monstres"?monstres:t==="rencontres"?rencontres:[];}
 function byName(l){return l.slice().sort((a,b)=>String(a.nom||"").localeCompare(String(b.nom||""),"fr"));}
@@ -1555,6 +1561,8 @@ function manForm(type,d,title){const S=MAN[type];d=d||{};
     else if(ty==="check")h+='<input id="'+id+'" type="checkbox"'+(v?' checked':'')+'>';
     else if(ty==="number")h+='<input id="'+id+'" type="number" min="0" max="999" value="'+esc(v==null?"":v)+'">';
     else if(ty==="textarea")h+='<textarea id="'+id+'" rows="3" maxlength="3000">'+esc(v||"")+'</textarea>';
+    else if(ty==="questloot")h+='<span class="tip">Une ligne par objet : Porteur &gt; Objet | valeur | chances | rareté. Le porteur est le nom d\'un monstre du bestiaire ou d\'un PNJ. Un « ! » devant l\'objet le rend garanti. Pendant cette quête seulement, l\'objet s\'ajoute à la table de son porteur et ne tombe qu\'une fois.</span><textarea id="'+id+'" rows="4" maxlength="3000" class="mono" placeholder="Skratch &gt; !Clé de bronze naine&#10;Gobelin guerrier &gt; Carte du repaire | | 10 | Inhabituel">'+esc(v||"")+'</textarea>';
+    else if(ty==="loottable")h+='<span class="tip">Une ligne par butin possible : Objet | valeur | chances | rareté. Raretés : Médiocre, Classique, Inhabituel, Rare, Épique, Légendaire (sans chance indiquée, la rareté la fixe : Légendaire = très rare). « Rien | | 20 » = chance de ne rien trouver. « Pièces | | 15 » = des pièces selon le FP. Une ligne qui commence par ! est un objet de quête : garanti, mais une seule fois. Une ligne qui commence par * est un objet unique : il tombe au hasard, une seule fois (ensuite sa chance devient « Rien »).</span><textarea id="'+id+'" rows="8" maxlength="4000" class="mono" placeholder="Pièces | | 15&#10;Cimeterre ébréché | 1 po | | Médiocre&#10;Collier de dents de loup | 2 pa | | Classique&#10;Dague du chef de clan | 25 po | | Rare&#10;!Lettre du commanditaire&#10;Rien | | 20">'+esc(v||"")+'</textarea>';
     else if(ty==="md")h+='<textarea id="'+id+'" rows="'+(k==="scenario"?14:6)+'" maxlength="40000">'+esc(v||"")+'</textarea>';
     else if(ty==="select")h+='<select id="'+id+'">'+opts.map(o=>'<option value="'+esc(o[0])+'"'+(String(v==null?(k==="fp"?"1":k==="taille"?"M":""):v)===o[0]?' selected':'')+'>'+esc(o[1])+'</option>').join("")+'</select>';
     else if(ty==="region")h+='<select id="'+id+'">'+regionOpts(v)+'</select>';
@@ -1669,7 +1677,7 @@ function secGeneric(type){const S=MAN[type],list=manList(type);
       if(qs.length)h+='<h3>Quêtes liées</h3><p>'+qs.map(q=>linkChip("quetes",q,esc(q.titre))).join("")+'</p>';
       h+=mdBlock("Notes",x.notes)+revealBox("factions",x.id);
       return h+manTools(type,x.id)+'</article>';}
-    if(type==="monstres"){h+=statblock(x)+(x.tags?'<p class="desc">Mots-clés : '+esc(x.tags)+'</p>':'')+(x.region?'<p class="desc">Région : '+esc(regionName(x.region))+'</p>':'')+mdBlock("Notes",x.notes);
+    if(type==="monstres"){h+=statblock(x)+ltView(x)+(x.tags?'<p class="desc">Mots-clés : '+esc(x.tags)+'</p>':'')+(x.region?'<p class="desc">Région : '+esc(regionName(x.region))+'</p>':'')+mdBlock("Notes",x.notes);
       const used=rencontres.filter(r=>(r.monstres||[]).some(m=>m.id===x.id)),pn=pnjs.filter(p=>p.monstre===x.id);
       if(used.length)h+='<h3>Utilisé dans</h3><ul class="todo">'+used.map(r=>'<li><span>'+esc(r.nom)+'</span><button class="mini" data-a="man-open" data-sec="rencontres" data-id="'+esc(r.id)+'">Ouvrir</button></li>').join("")+'</ul>';
       if(pn.length)h+='<h3>PNJ avec ces stats</h3><p>'+pn.map(p=>linkChip("pnj",p,esc(p.nom))).join("")+'</p>';
@@ -1685,6 +1693,7 @@ function secGeneric(type){const S=MAN[type],list=manList(type);
       h+='<ul class="todo">'+(x.monstres||[]).map(r=>{const m=monstres.find(y=>y.id===r.id);return '<li><span><strong>'+esc(r.nb)+' ×</strong> '+esc(m?m.nom:"(supprimé)")+(m?' · FP '+esc(m.fp)+' · CA '+esc(m.ca==null?"—":m.ca)+' · PV '+esc(m.pv||"—"):'')+'</span>'+(m?'<button class="mini" data-a="man-open" data-sec="monstres" data-id="'+esc(m.id)+'">Stats</button>':'')+'</li>';}).join("")+'</ul>';
       h+='<p class="sbl"><strong>XP totale :</strong> '+xp+' · <strong>Difficulté :</strong> <span class="'+df[1]+'">'+df[0]+'</span></p>'+partyBox();
       h+=(x.terrain?'<h3>Terrain et ambiance</h3><p class="desc">'+esc(x.terrain)+'</p>':'')+mdBlock("Tactique et déroulement",x.notes);}
+    if(type==="pnj")h+=ltView(x);
     if(type==="pnj"||type==="monstres")h+=revealBox(type,x.id);
     return h+manTools(type,x.id)+'</article>';}
   if(type==="monstres"){const l=filterQ(byName(monstres),["nom","type","tags","fp"]);
@@ -1723,6 +1732,7 @@ function secQuetes(){
       '<p class="sbl">'+[q.lieu&&'<strong>Lieu</strong> '+esc(q.lieu),q.recompense&&'<strong>Récompense</strong> '+esc(q.recompense),q.niveau&&'<strong>Niveau</strong> '+esc(q.niveau),q.date&&'<strong>Date</strong> '+esc(q.date)].filter(Boolean).join(" · ")+'</p>'+
       '<p class="sbl"><strong>'+(q.statut==="ouverte"?'Inscrits':'Groupe')+' :</strong> '+(ins.length?ins.map(x=>(x.aventurier?'<button class="linkbtn" data-a="man-open" data-sec="perso" data-id="'+esc(x.aventurier)+'">'+esc(x.nom)+'</button>':esc(x.nom))+(x.statut==="attente"?' <em>(en attente)</em>':'')).join(", "):'personne')+'</p>'+
       '<p><a href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir sur le babillard</a> · <a href="#partie-'+esc(q.id)+'"><strong>▶ Lancer le Mode Partie</strong></a></p>';
+    const qls=ltQuestStatus(q);if(qls.length)h+='<h3>Objets de quête</h3><ul class="lootlist">'+qls.map(x=>'<li><span>'+rarName({nom:x.e.nom,quete:x.e.garanti,rar:x.e.rar})+' <span class="desc">· porté par '+esc(x.who)+(x.e.garanti?' · garanti':' · '+esc(RAR[x.e.rar]?RAR[x.e.rar][1]:""))+'</span></span>'+(x.pris?'<span><span class="ccat">Déjà obtenu</span> <button class="mini" data-a="lt-reset" data-coll="scenarios" data-id="'+esc(q.id)+'" data-v="'+esc(x.e.nom)+'">Remettre en jeu</button></span>':'')+'</li>').join("")+'</ul>';
     if(ptReport(q))h+=ptReportBlock(q,q.statut==="terminee"||q.statut==="archivee");
     const rs=(s.rencontres||[]).map(id=>rencontres.find(r=>r.id===id)).filter(Boolean).concat(rencontres.filter(r=>r.quete===q.id&&(s.rencontres||[]).indexOf(r.id)<0));
     if(rs.length)h+='<p class="ptlaunch">'+rs.map(r=>'<button class="btn gold sm" data-a="man-launch" data-id="'+esc(q.id)+'" data-v="'+esc(r.id)+'">⚔ Lancer le combat : '+esc(r.nom)+'</button>').join("")+'</p>';
@@ -2463,7 +2473,36 @@ function lootKind(m){const t=String(m.type||"").toLowerCase(),n=String(m.nom||""
 function lootCoins(fp){const d=(n,f)=>{let t=0;for(let i=0;i<n;i++)t+=ptD(f);return t;};
   if(fp<0.125)return {po:0,txt:d(2,6)+" pc",v:0};if(fp<1){const n=d(3,6);return {po:n/10,txt:n+" pa",v:n/10};}
   if(fp<=4){const n=d(3,6);return {po:n,txt:n+" po",v:n};}if(fp<=10){const n=d(2,8)*10;return {po:n,txt:n+" po",v:n};}if(fp<=16){const n=d(2,10)*100;return {po:n,txt:n+" po",v:n};}const n=d(2,8)*1000;return {po:n,txt:n+" po",v:n};}
+const RARES=[["mediocre","Médiocre",30],["classique","Classique",20],["inhabituel","Inhabituel",8],["rare","Rare",3],["epique","Épique",1],["legendaire","Légendaire",0.2]];
+const RAR=Object.fromEntries(RARES.map(r=>[r[0],r]));
+function rarOf(t){t=String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");if(!t)return "";
+  return /^(med|gris|poor)/.test(t)?"mediocre":/^(class|comm|blanc)/.test(t)?"classique":/^(inhab|vert|unc)/.test(t)?"inhabituel":/^(rare|bleu)/.test(t)?"rare":/^(epi|viol)/.test(t)?"epique":/^(leg|oran)/.test(t)?"legendaire":"";}
+function rarName(x){return '<span class="rar r-'+(x.quete?'quete':(x.rar||"classique"))+'">'+esc(x.nom)+'</span>';}
+function ltParse(txt){return String(txt||"").split(/\n+/).map(l=>l.trim()).filter(l=>l&&l.indexOf("|")>=0||/^[!*]|^rien\b|^pi[eè]ces\b/i.test(l)).map(l=>{const g=l[0]==="!",u=g||l[0]==="*";const c=(u?l.slice(1):l).split("|").map(x=>x.trim());
+  const nom=c[0]||"",vm=String(c[1]||"").match(/(\d+(?:[.,]\d+)?)\s*(po|pa|pc|pp)?/i);let v=0;if(vm){const n=+vm[1].replace(",",".");const u=(vm[2]||"po").toLowerCase();v=u==="pa"?n/10:u==="pc"?n/100:u==="pp"?n*10:n;}
+  const k=/^rien$/i.test(nom)?"rien":/^pi[eè]ces$/i.test(nom)?"coins":"item",rr=k==="item"?(rarOf(c[3])||"classique"):"";
+  const raw=String(c[2]||"").replace(",",".").trim(),w=g?0:Math.max(0,raw===""?(k==="item"?RAR[rr][2]:k==="rien"?20:15):(+raw||0));return {nom:nom.slice(0,120),valeur:v,poids:w,garanti:g,unique:u,k:k,rar:rr};}).filter(e=>e.nom);}
+function ltQuestLines(rec){const q=ptQuest();if(!q||!rec)return [];const s=scenarios[q.id]||{},nm=String(rec.nom||"").trim().toLowerCase(),pris=new Set(s.butinPris||[]);
+  return String(s.butinQuete||"").split(/\n+/).map(l=>l.trim()).filter(l=>l.indexOf(">")>0).map(l=>{const i=l.indexOf(">");return {who:l.slice(0,i).trim().toLowerCase(),rest:l.slice(i+1).trim()};})
+    .filter(x=>x.who===nm).map(x=>{const e=ltParse(x.rest[0]==="!"||x.rest[0]==="*"?x.rest:"*"+x.rest)[0];return e?Object.assign(e,{unique:true,qsrc:q.id,pris:pris.has(e.nom)}):null;}).filter(Boolean);}
+function ltQuestStatus(q){const s=scenarios[q.id]||{},pris=new Set(s.butinPris||[]);return String(s.butinQuete||"").split(/\n+/).map(l=>l.trim()).filter(l=>l.indexOf(">")>0).map(l=>{const i=l.indexOf(">"),e=ltParse(l.slice(i+1).trim()[0]==="!"?l.slice(i+1).trim():"*"+l.slice(i+1).trim())[0];return e?{who:l.slice(0,i).trim(),e:e,pris:pris.has(e.nom)}:null;}).filter(Boolean);}
+function ltDraws(fp){const r=Math.random()<0.5?1:0;return fp<3?1:fp<5?1+r:fp<9?2+r:fp<13?3+r:fp<17?4:5;}
+function ltView(x){const t=ltParse(x.butinTable);if(!t.length)return '';const pris=new Set(x.butinPris||[]);
+  const tot=t.filter(e=>!e.garanti).reduce((a,e)=>a+e.poids,0)||1,fp=fpNum((x.fp!=null?x:monstres.find(m=>m.id===x.monstre)||{}).fp);
+  return '<details class="ltview"><summary>💰 Table de butin <span class="desc">(privée · '+ltDraws(fp)+(fp>=3&&fp<13?'-'+(ltDraws(fp)+1):'')+' tirage'+(ltDraws(fp)>1||fp>=3?'s':'')+' selon le FP)</span></summary><table class="dmtable"><thead><tr><th scope="col">Butin possible</th><th scope="col">Valeur</th><th scope="col">Chance par tirage</th></tr></thead><tbody>'+
+    t.map(e=>{const pc=100*e.poids/tot;if(e.unique&&pris.has(e.nom))return '<tr class="taken"><td><s>'+esc(e.nom)+'</s> <span class="ccat">Déjà obtenu</span> <button class="mini" data-a="lt-reset" data-coll="'+(x.fp!=null?"monstres":"pnj")+'" data-id="'+esc(x.id)+'" data-v="'+esc(e.nom)+'">Remettre en jeu</button></td><td>'+esc(lootPo(e.valeur)||"—")+'</td><td>devient « Rien »</td></tr>';return '<tr><td>'+(e.garanti?rarName({nom:e.nom,quete:1})+' <span class="ccat">Objet de quête · garanti une fois</span>':e.unique?rarName(e)+' <span class="ccat">Unique</span> <span class="desc">'+esc(RAR[e.rar]?RAR[e.rar][1]:"")+'</span>':e.k==="rien"?'<em>Rien</em>':e.k==="coins"?'Pièces <span class="desc">(selon le FP)</span>':rarName(e)+' <span class="desc">'+esc(RAR[e.rar][1])+'</span>')+'</td><td>'+esc(e.k==="coins"?"variable":lootPo(e.valeur)||"—")+'</td><td>'+(e.garanti?'100 %':(pc<1?pc.toFixed(1):Math.round(pc))+' %')+'</td></tr>';}).join("")+'</tbody></table></details>';}
+function ltRoll(rec,fp,src,coll){const ql=ltQuestLines(rec),t=ltParse(rec&&rec.butinTable).concat(ql);if(!t.length)return null;const out=[];
+  const S=ui.ltSess=ui.ltSess||{},key=(coll||"")+"/"+(rec.id||""),qk="scenarios/"+((ql[0]||{}).qsrc||""),taken=new Set((rec.butinPris||[]).concat(S[key]||[]));
+  ql.forEach(e=>{if(e.pris||(S[qk]||[]).indexOf(e.nom)>=0)taken.add(e.nom);});
+  const U=e=>e.unique?(e.qsrc?{coll:"scenarios",id:e.qsrc,nom:e.nom}:{coll:coll||"",id:rec.id||"",nom:e.nom}):null,mark=e=>{if(e.unique){const k=e.qsrc?qk:key;(S[k]=S[k]||[]).push(e.nom);taken.add(e.nom);}};
+  t.filter(e=>e.garanti&&!taken.has(e.nom)).forEach(e=>{out.push({nom:e.nom,valeur:e.valeur,source:src,quete:1,rar:"quete",uniq:U(e)});mark(e);});
+  const pool=t.filter(e=>!e.garanti&&e.poids>0).map(e=>e.unique&&taken.has(e.nom)?Object.assign({},e,{k:"rien"}):e),tot=pool.reduce((a,e)=>a+e.poids,0);
+  if(tot>0)for(let i=0;i<ltDraws(fp);i++){let r=Math.random()*tot,e=pool[0];for(const x of pool){if((r-=x.poids)<0){e=x;break;}}
+    if(e.k==="rien")continue;if(e.unique&&taken.has(e.nom))continue;if(e.unique){out.push({nom:e.nom,valeur:e.valeur,source:src,rar:e.rar,uniq:U(e)});mark(e);continue;}if(e.k==="coins"){const c=lootCoins(fp);out.push({nom:c.txt,valeur:c.v,coins:1,source:src});continue;}
+    const same=out.find(o=>o.nom===e.nom&&!o.coins);if(same){same.n=(same.n||1)+1;same.valeur+=e.valeur;continue;}out.push({nom:e.nom,valeur:e.valeur,source:src,rar:e.rar});}
+  return out.map(o=>o.n?Object.assign(o,{nom:o.nom+" ×"+o.n}):o);}
 function lootFor(m){
+  const tb=ltRoll(m,fpNum(m.fp),m.nom,"monstres");if(tb)return tb;
   const fp=fpNum(m.fp),k=lootKind(m),out=[],pick=a=>a[Math.floor(Math.random()*a.length)],rnd=Math.random;
   const carries=k==="humain"||k==="fee"||k==="geant"||k==="fielon"||(k==="mort"&&rnd()<0.5);
   if(carries){const c=lootCoins(fp);if(c.v||c.txt)out.push({nom:c.txt,valeur:c.v,coins:1});}
@@ -2480,14 +2519,18 @@ function lootParse(txt){return String(txt||"").split(/\n+/).map(l=>l.replace(/^[
 function lootPo(v){v=+v||0;if(!v)return "";return v>=1?(Math.round(v*10)/10)+" po":v>=0.1?Math.round(v*10)+" pa":Math.round(v*100)+" pc";}
 function lootChecklist(items,pfx){
   const pcs=(ui.pt.liste||[]).filter(c=>c.kind==="pj");
-  return items.length?'<ul class="lootlist">'+items.map((x,i)=>'<li><label class="ptchk"><input type="checkbox" id="'+pfx+'-c'+i+'" checked><span>'+esc(x.nom)+(x.valeur&&!x.coins&&!x.prevu?' <em>'+esc(lootPo(x.valeur))+'</em>':'')+(x.source?' <span class="desc">· '+esc(x.source)+'</span>':'')+(x.prevu?' <span class="ccat">Prévu</span>':'')+'</span></label><select id="'+pfx+'-p'+i+'" aria-label="Pour qui"><option value="">Le groupe</option>'+pcs.map(c=>'<option value="'+esc(c.ref)+'">'+esc(c.nom)+'</option>').join("")+'</select></li>').join("")+'</ul>':'<p class="desc">Rien pour l\'instant.</p>';
+  return items.length?'<ul class="lootlist">'+items.map((x,i)=>'<li><label class="ptchk"><input type="checkbox" id="'+pfx+'-c'+i+'" checked><span>'+(x.coins?esc(x.nom):rarName(x))+(x.valeur&&!x.coins&&!x.prevu?' <em>'+esc(lootPo(x.valeur))+'</em>':'')+(x.source?' <span class="desc">· '+esc(x.source)+'</span>':'')+(x.prevu?' <span class="ccat">Prévu</span>':'')+(x.quete?' <span class="ccat">Objet de quête</span>':'')+'</span></label><select id="'+pfx+'-p'+i+'" aria-label="Pour qui"><option value="">Le groupe</option>'+pcs.map(c=>'<option value="'+esc(c.ref)+'">'+esc(c.nom)+'</option>').join("")+'</select></li>').join("")+'</ul>':'<p class="desc">Rien pour l\'instant.</p>';
 }
 function lootCollect(items,pfx,ctx){const pcs=(ui.pt.liste||[]).filter(c=>c.kind==="pj"),out=[];
   items.forEach((x,i)=>{const c=document.getElementById(pfx+"-c"+i),s=document.getElementById(pfx+"-p"+i);if(!c||!c.checked)return;const pr=s?s.value:"",pc=pcs.find(y=>y.ref===pr);
-    out.push(Object.assign({nom:x.nom,valeur:+x.valeur||0,source:x.source||"",pour:pr,pourNom:pc?pc.nom:""},ctx));});return out;}
-async function lootSave(list){if(!list.length)return;const now=Date.now();
+    out.push(Object.assign({nom:x.nom,valeur:+x.valeur||0,source:x.source||"",rar:x.quete?"quete":(x.rar||""),pour:pr,pourNom:pc?pc.nom:""},ctx,x.uniq?{uniq:x.uniq}:{}));});return out;}
+async function lootSave(list){if(!list.length)return;const now=Date.now(),U={};
+  list.forEach(x=>{if(x.uniq&&x.uniq.coll&&x.uniq.id){const k=x.uniq.coll+"/"+x.uniq.id;(U[k]=U[k]||{coll:x.uniq.coll,id:x.uniq.id,noms:[]}).noms.push(x.uniq.nom);}});
+  await Promise.all(Object.values(U).map(u=>{const rec=(u.coll==="scenarios"?scenarios[u.id]:(u.coll==="pnj"?pnjs:monstres).find(r=>r.id===u.id))||{};const all=[...new Set((rec.butinPris||[]).concat(u.noms))];return setDoc(doc(db,u.coll,u.id),{butinPris:all},{merge:true});}));
   await Promise.all(list.map((x,i)=>setDoc(doc(db,"butins",now.toString(36)+"-"+i+"-"+Math.random().toString(36).slice(2,6)),Object.assign({creeMs:now,creeLe:serverTimestamp()},x))));}
-function lootDefeated(){const C=ui.pt.combat,out=[];if(!C)return out;(ui.pt.liste||[]).filter(c=>c.kind==="monstre"&&c.pv<=0&&!c.looted).forEach(c=>{const m=monstres.find(x=>x.id===c.ref);if(m)out.push({c:c,m:m});});return out;}
+function lootDefeated(){const C=ui.pt.combat,out=[];if(!C)return out;(ui.pt.liste||[]).filter(c=>c.kind!=="pj"&&ptCamp(c)==="ennemi"&&c.pv<=0&&!c.looted&&!c.lootGen).forEach(c=>{
+  if(c.kind==="monstre"){const m=monstres.find(x=>x.id===c.ref);if(m)out.push({c:c,m:m});return;}
+  const pn=pnjs.find(x=>x.id===c.ref);if(pn){const mm=monstres.find(x=>x.id===(pn.monstre||c.mon))||{};out.push({c:c,m:mm,pnj:pn});}});return out;}
 function lootTotal(l){return l.reduce((t,x)=>t+(+x.valeur||0),0);}
 function secLoot(){
   const all=butins.slice().sort((a,b)=>(b.creeMs||0)-(a.creeMs||0)),f=ui.lootF||"";
@@ -2496,15 +2539,16 @@ function secLoot(){
   let h='<div class="mantools-top"><p class="desc">Tout ce que les aventuriers ont récupéré, pour t\'en souvenir. Le butin s\'ajoute en clôturant une rencontre dans le Mode Partie, ou à la main ci-dessous.</p></div>';
   h+='<div class="lootbar"><label for="loot-f">Quête<select id="loot-f"><option value="">Toutes</option>'+qs.map(q=>'<option value="'+esc(q.id)+'"'+(f===q.id?' selected':'')+'>'+esc(q.titre)+'</option>').join("")+'</select></label><span class="lootsum">'+l.length+' objet'+(l.length>1?'s':'')+' · valeur estimée '+esc(lootPo(lootTotal(l))||"0 po")+'</span></div>';
   const keys=Object.keys(by).sort((a,b)=>a==="__groupe"?-1:b==="__groupe"?1:a.localeCompare(b,"fr"));
-  h+=keys.length?keys.map(k=>'<section class="lootgrp"><h3>'+(k==="__groupe"?'Le groupe (non partagé)':esc(k))+' <span class="desc">· '+esc(lootPo(lootTotal(by[k]))||"0 po")+'</span></h3><ul class="lootlist">'+by[k].map(x=>{const q=questById(x.quete);return '<li><span><strong>'+esc(x.nom)+'</strong>'+(x.valeur?' <em>'+esc(lootPo(x.valeur))+'</em>':'')+'<span class="desc"> · '+esc(q?q.titre:"")+(x.rencontre?' · '+esc(x.rencontre):'')+(x.source?' · '+esc(x.source):'')+'</span></span><span class="lootact"><select data-a="noop" class="loot-to" data-id="'+esc(x.id)+'" aria-label="Attribuer à"><option value="">Le groupe</option>'+byName(aventuriers).filter(a=>!a.pnj).map(a=>'<option value="'+esc(a.id)+'"'+(x.pour===a.id?' selected':'')+'>'+esc(a.nom)+'</option>').join("")+'</select><button class="mini" data-a="loot-del" data-id="'+esc(x.id)+'">Retirer</button></span></li>';}).join("")+'</ul></section>').join(""):'<p class="empty">Le coffre est vide pour l\'instant.</p>';
+  h+=keys.length?keys.map(k=>'<section class="lootgrp"><h3>'+(k==="__groupe"?'Le groupe (non partagé)':esc(k))+' <span class="desc">· '+esc(lootPo(lootTotal(by[k]))||"0 po")+'</span></h3><ul class="lootlist">'+by[k].map(x=>{const q=questById(x.quete);return '<li><span><strong>'+(x.rar?rarName({nom:x.nom,rar:x.rar,quete:x.rar==="quete"}):esc(x.nom))+'</strong>'+(x.valeur?' <em>'+esc(lootPo(x.valeur))+'</em>':'')+'<span class="desc"> · '+esc(q?q.titre:"")+(x.rencontre?' · '+esc(x.rencontre):'')+(x.source?' · '+esc(x.source):'')+'</span></span><span class="lootact"><select data-a="noop" class="loot-to" data-id="'+esc(x.id)+'" aria-label="Attribuer à"><option value="">Le groupe</option>'+byName(aventuriers).filter(a=>!a.pnj).map(a=>'<option value="'+esc(a.id)+'"'+(x.pour===a.id?' selected':'')+'>'+esc(a.nom)+'</option>').join("")+'</select><button class="mini" data-a="loot-del" data-id="'+esc(x.id)+'">Retirer</button></span></li>';}).join("")+'</ul></section>').join(""):'<p class="empty">Le coffre est vide pour l\'instant.</p>';
   h+='<form id="loot-add" class="lootadd"><h3>Ajouter à la main</h3><label for="la-nom">Objet<input id="la-nom" maxlength="120" required placeholder="Ex. Épée courte +1"></label><label for="la-val">Valeur (po)<input id="la-val" type="number" min="0" step="0.1"></label><label for="la-q">Quête<select id="la-q"><option value="">—</option>'+quetes.slice().sort((a,b)=>String(a.titre).localeCompare(String(b.titre),"fr")).map(q=>'<option value="'+esc(q.id)+'"'+(f===q.id?' selected':'')+'>'+esc(q.titre)+'</option>').join("")+'</select></label><label for="la-p">Pour<select id="la-p"><option value="">Le groupe</option>'+byName(aventuriers).filter(a=>!a.pnj).map(a=>'<option value="'+esc(a.id)+'">'+esc(a.nom)+'</option>').join("")+'</select></label><button class="btn gold">Ajouter</button></form>';
   return h;
 }
 function ptLootTab(q){
   const mine=butins.filter(x=>x.quete===q.id),r=ui.pt.combat&&ui.pt.combat.ref?rencontres.find(x=>x.id===ui.pt.combat.ref):null;
   let h='<p class="desc">Le butin se distribue en clôturant une rencontre. Le Loot Box complet est dans le Manuel du DM.</p>';
+  const qls=ltQuestStatus(q);if(qls.length)h+='<h3>Objets de quête</h3><ul class="lootlist">'+qls.map(x=>'<li><span>'+rarName({nom:x.e.nom,quete:x.e.garanti,rar:x.e.rar})+' <span class="desc">· porté par '+esc(x.who)+'</span></span>'+(x.pris?'<span class="ccat">Obtenu</span>':'')+'</li>').join("")+'</ul>';
   if(r&&r.butin)h+='<h3>Butin prévu : '+esc(r.nom)+'</h3><div class="wikibody">'+md(r.butin)+'</div>';
-  h+='<h3>Récupéré pendant cette quête</h3>'+(mine.length?'<ul class="lootlist">'+mine.map(x=>'<li><span><strong>'+esc(x.nom)+'</strong>'+(x.valeur?' <em>'+esc(lootPo(x.valeur))+'</em>':'')+'<span class="desc"> · '+esc(x.pourNom||"le groupe")+'</span></span></li>').join("")+'</ul><p class="desc">Valeur estimée : '+esc(lootPo(lootTotal(mine))||"0 po")+'</p>':'<p class="desc">Rien pour l\'instant.</p>');
+  h+='<h3>Récupéré pendant cette quête</h3>'+(mine.length?'<ul class="lootlist">'+mine.map(x=>'<li><span><strong>'+(x.rar?rarName({nom:x.nom,rar:x.rar,quete:x.rar==="quete"}):esc(x.nom))+'</strong>'+(x.valeur?' <em>'+esc(lootPo(x.valeur))+'</em>':'')+'<span class="desc"> · '+esc(x.pourNom||"le groupe")+'</span></span></li>').join("")+'</ul><p class="desc">Valeur estimée : '+esc(lootPo(lootTotal(mine))||"0 po")+'</p>':'<p class="desc">Rien pour l\'instant.</p>');
   return h;
 }
 function partyView(){
@@ -2556,8 +2600,10 @@ async function partyAction(a,id,b,e){
   else if(a==="pt-roll1"&&c){c.init=ptD(20)+(+c.dex||0);}
   else if(a==="pt-fight"){if(!P.combat)return;const o=ptOrder().filter(ptAlive);if(!o.length)return;P.combat.phase="combat";P.round=1;P.cur=o[0].cid;ui.ptSel=null;ptStats().combats++;ptLog("⚔ Début du combat — Round 1 —");
     const miss=P.liste.filter(x=>x.init===""||x.init==null).map(x=>x.nom);if(miss.length)ui.ptAlert="Sans initiative (placés en fin de tour) : "+miss.join(", ")+". Tu peux encore la saisir sur leur fiche.";}
-  else if(a==="pt-close"){ui.ptClose=true;const r=P.combat&&P.combat.ref?rencontres.find(x=>x.id===P.combat.ref):null;ui.ptLootItems=r?lootParse(r.butin):[];ch=false;}
-  else if(a==="pt-lootgen"){const L=ui.ptLootItems=ui.ptLootItems||[];lootDefeated().forEach(x=>{lootFor(x.m).forEach(it=>L.push(it));x.c.lootGen=1;});if(!lootDefeated().length&&!L.length)ui.ptAlert="Aucun ennemi vaincu : rien à fouiller.";ch=false;}
+  else if(a==="pt-close"){ui.ptClose=true;ui.ltSess={};const r=P.combat&&P.combat.ref?rencontres.find(x=>x.id===P.combat.ref):null;ui.ptLootItems=r?lootParse(r.butin):[];ch=false;}
+  else if(a==="pt-lootgen"){const L=ui.ptLootItems=ui.ptLootItems||[];const dz=lootDefeated(),qid=(ptQuest()||{}).id,PL=P.pnjLoot=P.pnjLoot||{};dz.forEach(x=>{
+      if(!x.pnj&&x.m.id){const pn=pnjs.find(y=>y.monstre===x.m.id&&(y.quetes||[]).indexOf(qid)>=0&&y.butinTable&&!PL[y.id]&&(y.attitude==="hostile"||String(x.c.nom).indexOf(y.nom)>=0));if(pn){x.pnj=pn;PL[pn.id]=1;}}
+      const items=x.pnj?(ltRoll(x.pnj,fpNum(x.m.fp||1),x.pnj.nom,"pnj")||[]).concat(x.m.id?lootFor(x.m).filter(i=>!i.quete).map(i=>Object.assign(i,{source:x.pnj.nom})):[]):lootFor(x.m);items.forEach(it=>L.push(it));x.c.lootGen=1;});if(!dz.length&&!L.length)ui.ptAlert="Aucun ennemi vaincu : rien à fouiller.";ch=false;}
   else if(a==="pt-close-cancel"){if(e.target!==b)return;ui.ptClose=false;ch=false;}
   else if(a==="pt-enc-cancel"){if(P.combat)ptLog("Rencontre « "+P.combat.nom+" » annulée.");P.combat=null;P.round=0;P.cur=null;}
   else if(a==="pt-group"){const bf=ptIds();let n=0;ptSignups(q).forEach(s=>{if(ptAddPC(s))n++;});if(n)ptLog(n+" aventurier"+(n>1?"s":"")+" entre"+(n>1?"nt":"")+" en scène.");ptJoin(bf);}
@@ -2834,6 +2880,8 @@ document.addEventListener("click",async e=>{
   else if(a==="plan-del"){await run("Date retirée",()=>deleteDoc(doc(db,"planif",id)));return;}
   else if(a==="report-write"){ui.reportWrite=id;}
   else if(a==="loot-del"){const x=butins.find(y=>y.id===id);if(!x)return;await run("Butin retiré",()=>deleteDoc(doc(db,"butins",id)));return;}
+  else if(a==="lt-reset"){const coll=b.getAttribute("data-coll"),nom=b.getAttribute("data-v"),rec=coll==="scenarios"?scenarios[id]:(coll==="pnj"?pnjs:monstres).find(r=>r.id===id);if(!rec)return;
+    await run("Objet remis en jeu",()=>setDoc(doc(db,coll,id),{butinPris:(rec.butinPris||[]).filter(n=>n!==nom)},{merge:true}));return;}
   else if(a==="man-launch"){ui.ptLaunch=b.getAttribute("data-v");location.hash="#partie-"+id;return;}
   else if(a==="report-assign"){const q=questById(id),el=document.getElementById("rw-"+id);if(!q||!el||!el.value)return;
     await run("Rédacteur",()=>setDoc(doc(db,"quetes",id),{redacteur:el.value,majLe:serverTimestamp()},{merge:true}));return;}
