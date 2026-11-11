@@ -267,6 +267,16 @@ a.ccat{text-decoration:none}
 .ptnotes input{font:inherit;padding:8px;border:1px solid var(--parch-3);border-radius:4px;min-height:40px;background:#fff;color:var(--ink)}
 .ptaddbox summary{cursor:pointer;font-family:var(--display);font-size:15px;padding:8px 0}
 @media (max-width:560px){.ptencf{grid-template-columns:1fr}.ptphase .ptstep{margin-left:0}}
+/* Crieur */
+.crs{display:inline-block;font-family:var(--display);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;border-radius:999px;padding:3px 10px;margin:6px 0 2px}
+.crs.ok{background:#3d7a3a;color:#fff}.crs.wait{background:#c08a1e;color:#fff}.crs.pend{background:#e2d6b6;color:#4a3d2a}
+.crrep summary{cursor:pointer;font-size:14px;margin-top:4px}
+.crcols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+.crcols h4{margin:4px 0;font-family:var(--display);font-size:14px}
+.crcols .wikibody{font-size:14px;background:rgba(255,255,255,.5);border-radius:6px;padding:6px 10px}
+.cracts{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.mini.gold{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+@media (max-width:700px){.crcols{grid-template-columns:1fr}}
 /* Butin */
 .lootbox{border:1px solid var(--parch-3);border-radius:8px;padding:10px 12px;background:#f6efdb;margin:10px 0}
 .lootbox h3{margin:0 0 6px}
@@ -895,7 +905,7 @@ const DEFAULT_SCALE = [
 ];
 
 /* ---------- state ---------- */
-let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], parties = [], modules = [], butins = [], pnjs = [], monstres = [], rencontres = [], scenarios = {};
+let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], parties = [], modules = [], butins = [], crieur = null, pnjs = [], monstres = [], rencontres = [], scenarios = {};
 const loaded = {b:false, q:false, i:false, a:false, w:false, c:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
@@ -920,7 +930,7 @@ function office(id){return bureaux.filter(b=>b.id===id)[0];}
 function questById(id){return quetes.filter(q=>q.id===id)[0];}
 function myConfirmed(q){return !!(user&&!user.isAnonymous&&signupsFor(q.id).some(s=>s.uid===user.uid&&s.statut==="confirmee"));}
 function reportBox(q){
-  if(q.statut!=="encours"||ui.dm||!myConfirmed(q))return "";
+  if((q.statut!=="encours"&&q.statut!=="terminee")||ui.dm||!myConfirmed(q))return "";
   const grp=signupsFor(q.id).filter(s=>s.statut==="confirmee"&&s.uid&&s.uid!=="dm"&&s.id===q.id+"__"+s.uid),w=grp.find(s=>s.uid===q.redacteur);
   let h='<div class="repbox"><p><strong>📜 Rapport de mission :</strong> '+(q.rapportBrouillon&&q.rapportBrouillon.resume?'envoyé au DM par '+esc(q.rapportBrouillon.auteur||"le groupe")+' ✓':w?'rédigé par <strong>'+esc(w.nom)+'</strong>'+(w.uid===user.uid?' (toi !)':''):'personne n\'est encore désigné. Choisissez qui l\'écrira.')+'</p>';
   if(!(q.rapportBrouillon&&q.rapportBrouillon.resume))h+='<div class="repsel"><label for="rw-'+esc(q.id)+'">Rédacteur<select id="rw-'+esc(q.id)+'">'+grp.map(s=>'<option value="'+esc(s.uid)+'"'+(s.uid===(q.redacteur||user.uid)?' selected':'')+'>'+esc(s.nom)+(s.uid===user.uid?' (moi)':'')+'</option>').join("")+'</select></label><button class="btn ghost" data-a="report-assign" data-id="'+esc(q.id)+'">'+(w?'Changer':'Désigner')+'</button></div>';
@@ -987,7 +997,7 @@ function listen(){
 }
 // Données réservées au DM (points, journal, seuils) : lues seulement par un compte admin.
 function listenPrivate(on){
-  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;dossiers={};factions=[];parties=[];modules=[];butins=[];pnjs=[];monstres=[];rencontres=[];scenarios={};
+  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;dossiers={};factions=[];parties=[];modules=[];butins=[];crieur=null;pnjs=[];monstres=[];rencontres=[];scenarios={};
   if(!on)return;
   const err=e=>console.error(e);
   privUnsubs.push(onSnapshot(collection(db,"points"),snap=>{const m={};snap.docs.forEach(d=>{m[d.id]=(d.data().parRegion)||{};});pointsMap=m;render();},err));
@@ -999,6 +1009,7 @@ function listenPrivate(on){
   privUnsubs.push(onSnapshot(collection(db,"notesdm"),snap=>{notesDm=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(collection(db,"evolutions"),snap=>{evols=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","monde"),snap=>{monde=snap.exists()?snap.data():null;render();},err));
+  privUnsubs.push(onSnapshot(doc(db,"prive","crieur"),snap=>{crieur=snap.exists()?snap.data():null;render();},err));
   privUnsubs.push(onSnapshot(collection(db,"compendium"),snap=>{compAll=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
 }
 window.addEventListener("offline",()=>{net={state:"hors-ligne",msg:""};render();});
@@ -1168,7 +1179,7 @@ function card(q){
   if(ui.dm&&q.statut==="encours"&&(q.redacteur||q.rapportBrouillon)){const rs=signupsFor(q.id).find(x=>x.uid===q.redacteur);h+='<dt>Rapport</dt><dd>'+(q.rapportBrouillon&&q.rapportBrouillon.resume?'Proposé par '+esc(q.rapportBrouillon.auteur||"un joueur")+' ✓':'Demandé à '+esc(rs?rs.nom:"un joueur")+', en attente')+'</dd>';}
   h+='<dt>Inscrits</dt><dd>'+signupList(q)+'</dd></dl>'+planLine(q)+'<div class="actions">';
   h+=reportBox(q);
-  if(user&&q.redacteur===user.uid&&q.statut==="encours")h+='<button class="btn gold" data-a="report-write" data-id="'+esc(q.id)+'">'+(q.rapportBrouillon&&q.rapportBrouillon.resume?'Modifier mon rapport de mission':'Écrire le rapport de mission')+'</button>';
+  if(user&&q.redacteur===user.uid&&(q.statut==="encours"||q.statut==="terminee"))h+='<button class="btn gold" data-a="report-write" data-id="'+esc(q.id)+'">'+(q.rapportBrouillon&&q.rapportBrouillon.resume?'Modifier mon rapport de mission':'Écrire le rapport de mission')+'</button>';
   const already=user&&signupsFor(q.id).some(s=>s.uid===user.uid);
   if(q.statut==="ouverte"&&!already)h+='<button class="btn" data-a="join" data-id="'+esc(q.id)+'">Je veux y aller</button>';
   if(ui.dm){
@@ -1771,11 +1782,19 @@ function todoItems(){
     it.push({k:"group",t:'<strong>'+esc(q.titre)+'</strong> ('+esc(b?b.nom:"")+') : '+att+' demande'+(att>1?'s':'')+' en attente'+(pb?' · meilleure date : '+esc(fmtPlan(pb)):''),act:'<a class="mini" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir</a>'});});
   quetes.filter(q=>q.statut==="encours"&&q.rapportBrouillon&&q.rapportBrouillon.resume).forEach(q=>it.push({k:"report",t:'<strong>'+esc(q.titre)+'</strong> : rapport reçu de '+esc(q.rapportBrouillon.auteur||"un joueur"),act:'<a class="mini" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Terminer</a>'}));
   quetes.filter(q=>q.statut==="encours"&&!(q.rapportBrouillon&&q.rapportBrouillon.resume)).forEach(q=>it.push({k:"run",t:'<strong>'+esc(q.titre)+'</strong> : en cours'+(q.date?' · '+esc(q.date):''),act:'<a class="mini" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir</a>'}));
+  quetes.filter(q=>q.rapport&&(q.statut==="terminee"||q.statut==="archivee")&&!nouvelles.some(n=>n.quete===q.id)).sort((a,b)=>tms(b.rapport.termineLe)-tms(a.rapport.termineLe)).forEach(q=>{
+    const C=crieur||{},dem=(C.demandes||{})[q.id],br=(C.brouillons||{})[q.id],pj=q.rapportBrouillon&&q.rapportBrouillon.resume,dmr=ptReport(q)||(q.rapport&&q.rapport.resume)||"";
+    const w=q.redacteur?(signupsFor(q.id).find(x=>x.uid===q.redacteur)||{}).nom:"";
+    const st=br?'<span class="crs ok">Article prêt à relire</span>':dem?'<span class="crs wait">Génération demandée'+(dem.mode==="dm"?' (rapport DM seulement)':'')+'</span> <span class="desc">Dis à Claude : « génère les articles du Crieur »</span>':pj&&dmr?'<span class="crs ok">Prêt à générer</span>':!pj?'<span class="crs pend">En attente du joueur'+(w?' : '+esc(w):' : aucun rédacteur désigné')+'</span>':'<span class="crs pend">Rapport du DM à compléter</span>';
+    const reps='<details class="crrep"><summary>Voir les rapports</summary><div class="crcols"><div><h4>Rapport du DM</h4>'+(dmr?'<div class="wikibody">'+md(dmr)+'</div>':'<p class="desc">Aucun.</p>')+'</div><div><h4>Rapport du joueur'+(pj&&q.rapportBrouillon.auteur?' ('+esc(q.rapportBrouillon.auteur)+')':'')+'</h4>'+(pj?'<div class="wikibody">'+md(q.rapportBrouillon.resume)+'</div>':'<p class="desc">'+(w?'En attente de '+esc(w)+'.':'Personne n\'a encore été désigné.')+'</p>')+'</div></div></details>';
+    const act=br?'<button class="mini gold" data-a="crieur-read" data-id="'+esc(q.id)+'">Relire et publier</button>':dem?'<button class="mini" data-a="crieur-cancel" data-id="'+esc(q.id)+'">Annuler la demande</button>':
+      (pj&&dmr?'<button class="mini gold" data-a="crieur-ask" data-id="'+esc(q.id)+'" data-v="complet">Générer l\'article</button>':'')+'<button class="mini" data-a="crieur-ask" data-id="'+esc(q.id)+'" data-v="dm">Générer (DM)</button><button class="mini" data-a="news-from" data-id="'+esc(q.id)+'">L\'écrire moi-même</button>';
+    it.push({k:"crieur",t:'<strong>'+esc(q.titre)+'</strong> · '+esc((office(q.bureau)||{}).nom||"")+' · '+esc(RESULTS[q.rapport.resultat]||"")+'<br>'+st+reps,act:'<span class="cracts">'+act+'</span>'});});
   compPending().forEach(e=>{const p=e.proposition,n=Object.keys(p.approbations||{}).length;it.push({k:"comp",t:'<strong>'+esc(p.titre)+'</strong> : '+(e.publiee===false?'nouvelle entrée':'modification')+' de '+esc((p.par&&p.par.nom)||"?")+' ('+n+'/2)',act:'<a class="mini" href="#compendium-'+esc(e.id)+'">Examiner</a>'});});
   aventuriers.filter(a=>{const d=dossiers[a.id]||{};return !a.pnj&&a.proprietaire&&d.outerworlder!=="non"&&!d.donNom;}).forEach(a=>{const d=dossiers[a.id]||{};it.push({k:"don",t:'<strong>'+esc(a.nom)+'</strong> : '+(d.outerworlder==="oui"?'Outerworlder sans Don':'Outerworlder ? Don à attribuer ou personnage natif à indiquer'),act:'<button class="mini" data-a="man-open" data-sec="perso" data-id="'+esc(a.id)+'">Dossier</button>'});});
   return it;
 }
-const TODO_GROUPS=[["evol","Le monde doit réagir"],["report","Rapports de mission reçus"],["group","Groupes à former"],["run","Missions en cours"],["comp","Compendium en revue"],["don","Dons à attribuer"]];
+const TODO_GROUPS=[["evol","Le monde doit réagir"],["report","Rapports de mission reçus"],["crieur","Articles du Crieur"],["group","Groupes à former"],["run","Missions en cours"],["comp","Compendium en revue"],["don","Dons à attribuer"]];
 function dmTodo(){const it=todoItems();if(!it.length)return '<p class="empty">Rien à traiter. Le monde est calme… pour l\'instant.</p>';
   return TODO_GROUPS.map(g=>{const l=it.filter(x=>x.k===g[0]);if(!l.length)return "";return '<section class="dmsec"><h2>'+g[1]+' <span class="n">'+l.length+'</span></h2><ul class="todo">'+l.map(x=>'<li><span>'+x.t+'</span>'+x.act+'</li>').join("")+'</ul></section>';}).join("");}
 function evolveForm(bid){
@@ -1803,7 +1822,7 @@ function dmEvol(){
     (e.notes?'<div class="wikibody">'+md(e.notes)+'</div>':'<p class="desc">Sans notes.</p>')+
     ((e.changements||[]).length?'<ul class="todo">'+e.changements.map(c=>'<li><span>'+esc(c.titre)+' : '+esc((RANKS[c.ancienRang]||{}).label||c.ancienRang)+' → '+esc((RANKS[c.nouveauRang]||{}).label||c.nouveauRang)+(c.maj?' · « '+esc(c.maj)+' »':'')+'</span></li>').join("")+'</ul>':'')+
     (e.nouvelleTitre?'<p class="desc">Nouvelle publiée : « '+esc(e.nouvelleTitre)+' »</p>':'')+'</article>').join(""):'<p class="desc">Aucune évolution pour l\'instant.</p>')+'</section>';
-  if(ui.newsEdit)return h+newsForm(ui.newsEdit==="new"?null:ui.newsEdit.indexOf("from:")===0?draftFromQuest(questById(ui.newsEdit.slice(5))):nouvelles.find(n=>n.id===ui.newsEdit));
+  if(ui.newsEdit)return h+newsForm(ui.newsEdit==="new"?null:ui.newsEdit.indexOf("crieur:")===0?Object.assign(draftFromQuest(questById(ui.newsEdit.slice(7))),((crieur||{}).brouillons||{})[ui.newsEdit.slice(7)]||{}):ui.newsEdit.indexOf("from:")===0?draftFromQuest(questById(ui.newsEdit.slice(5))):nouvelles.find(n=>n.id===ui.newsEdit));
   const sans=quetes.filter(q=>q.rapport&&(q.statut==="terminee"||q.statut==="archivee")&&!nouvelles.some(n=>n.quete===q.id)).sort((a,b)=>tms(b.rapport.termineLe)-tms(a.rapport.termineLe));
   h+='<section class="dmsec"><h2>Missions sans article <span class="n">'+sans.length+'</span></h2>'+(sans.length?'<ul class="todo">'+sans.map(q=>'<li><span><strong>'+esc(q.titre)+'</strong> · '+esc((office(q.bureau)||{}).nom||"")+' · '+esc(RESULTS[q.rapport.resultat]||"")+'</span><button class="mini" data-a="news-from" data-id="'+esc(q.id)+'">Créer une nouvelle</button></li>').join("")+'</ul>':'<p class="desc">Toutes les missions accomplies ont leur article.</p>')+'</section>';
   h+='<section class="dmsec"><h2>Le Crieur : nouvelles publiées <button class="mini" data-a="news-new">Crier une nouvelle</button></h2>'+(nouvelles.length?'<ul class="todo">'+nouvelles.slice().sort((a,b)=>tms(b.date)-tms(a.date)).map(n=>'<li><span><strong>'+esc(n.titre)+'</strong> · '+esc(regionName(n.region))+' · '+esc(fmtDate(n.date))+'</span>'+(ui.confirmNews===n.id?'<span><button class="mini danger" data-a="news-del-yes" data-id="'+esc(n.id)+'">Supprimer</button><button class="mini" data-a="news-del-no">Annuler</button></span>':'<span><button class="mini" data-a="news-edit" data-id="'+esc(n.id)+'">Modifier</button><button class="mini" data-a="news-del" data-id="'+esc(n.id)+'">Retirer</button></span>')+'</li>').join("")+'</ul>':'<p class="desc">Aucune nouvelle publiée.</p>')+'</section>';
@@ -2800,6 +2819,9 @@ document.addEventListener("click",async e=>{
   else if(a==="note-del-yes"){ui.confirmNote=null;await run("Note supprimée",()=>deleteDoc(doc(db,"notesdm",id)));return;}
   else if(a==="news-new"){ui.newsEdit="new";}
   else if(a==="news-from"){ui.dmTab="evol";ui.newsEdit="from:"+id;}
+  else if(a==="crieur-ask"){const mode=b.getAttribute("data-v")||"dm";await run("Demande envoyée",()=>setDoc(doc(db,"prive","crieur"),{demandes:{[id]:{mode:mode,ms:Date.now()}}},{merge:true}));return;}
+  else if(a==="crieur-cancel"){await run("Demande annulée",()=>updateDoc(doc(db,"prive","crieur"),new FieldPath("demandes",id),deleteField()));return;}
+  else if(a==="crieur-read"){ui.dmTab="evol";ui.newsEdit="crieur:"+id;}
   else if(a==="news-edit"){ui.newsEdit=id;}
   else if(a==="news-cancel"){ui.newsEdit=null;}
   else if(a==="news-del"){ui.confirmNews=id;}
@@ -2947,7 +2969,7 @@ document.addEventListener("submit",async e=>{
     ui.complete=null;
     await run("Fin de quête",async()=>{
       const bt=writeBatch(db);
-      bt.set(doc(db,"quetes",q.id),{statut:"terminee",rapport,rapportBrouillon:null,redacteur:null,majLe:serverTimestamp()},{merge:true});
+      bt.set(doc(db,"quetes",q.id),{statut:"terminee",rapport,majLe:serverTimestamp()},{merge:true});
       const seen={};
       C.parts.forEach(x=>{const a=x.aventurier&&aventuriers.find(y=>y.id===x.aventurier);if(!a)return;
         const pen=Object.keys(DEFAULT_MEFAITS).reduce((t,k)=>t+(x[k]||0)*mp[k],0),net=(x.gain||0)-pen;
@@ -2977,12 +2999,14 @@ document.addEventListener("submit",async e=>{
     await run("Note",()=>setDoc(doc(db,"notesdm",id),d,{merge:true}));return;
   }
   if(e.target.id==="newsform"){
-    const titre=v("nw-titre").slice(0,120);if(!titre)return;const ed=ui.newsEdit,isFrom=ed.indexOf("from:")===0,isNew=ed==="new"||isFrom;
+    const titre=v("nw-titre").slice(0,120);if(!titre)return;const ed=ui.newsEdit,isCr=ed.indexOf("crieur:")===0,isFrom=ed.indexOf("from:")===0||isCr,isNew=ed==="new"||isFrom;
     const cur=isNew?null:nouvelles.find(n=>n.id===ed);const id=isNew?doc(collection(db,"nouvelles")).id:ed;
     const chars=[];document.querySelectorAll("#newsform input[data-nwc]").forEach(c=>{if(c.checked)chars.push(c.getAttribute("data-nwc"));});
-    const d={titre,region:v("nw-reg")||"cote",contenu:((document.getElementById("nw-texte")||{}).value||"").slice(0,5000),aventuriers:chars,quete:isFrom?ed.slice(5):((cur&&cur.quete)||"")};
+    const d={titre,region:v("nw-reg")||"cote",contenu:((document.getElementById("nw-texte")||{}).value||"").slice(0,5000),aventuriers:chars,quete:isCr?ed.slice(7):isFrom?ed.slice(5):((cur&&cur.quete)||"")};
     if(isNew)d.date=serverTimestamp();ui.newsEdit=null;
-    await run("Nouvelle publiée",()=>setDoc(doc(db,"nouvelles",id),d,{merge:true}));return;
+    await run("Nouvelle publiée",()=>setDoc(doc(db,"nouvelles",id),d,{merge:true}));
+    if(isFrom&&crieur){const qid=d.quete;if(((crieur.demandes||{})[qid])||((crieur.brouillons||{})[qid]))await updateDoc(doc(db,"prive","crieur"),new FieldPath("demandes",qid),deleteField(),new FieldPath("brouillons",qid),deleteField()).catch(()=>{});}
+    return;
   }
   if(e.target.id==="evolform"){
     const bid=ui.evolve;if(!bid)return;
