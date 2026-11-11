@@ -182,6 +182,24 @@ img{object-position:50% 0}
 @media (prefers-reduced-motion:reduce){.wanted,.wanted:nth-child(even){transform:none}}
 .portrait.emblem{object-fit:contain;background:#f3e9d0}
 .mcard[href]{text-decoration:none}
+/* Modules officiels */
+.ccat.mod-avenir{background:#e2d6b6;color:#4a3d2a}
+.ccat.mod-premices{background:#c08a1e;color:#fff}
+.ccat.mod-encours{background:#7a1f14;color:#fff}
+.ccat.mod-termine{background:#5a4d3c;color:#e8dfc8}
+a.ccat{text-decoration:none}
+.modline{list-style:none;margin:12px 0;padding:0 0 0 22px;border-left:3px solid var(--parch-3);display:flex;flex-direction:column;gap:12px}
+.modline li{position:relative}
+.modline li::before{content:"";position:absolute;left:-31px;top:18px;width:15px;height:15px;border-radius:50%;background:var(--parch-3);border:3px solid var(--parch)}
+.modline li.mod-premices::before{background:#c08a1e}
+.modline li.mod-encours::before{background:#7a1f14}
+.modline li.mod-termine::before{background:#5a4d3c}
+.modcard{display:flex;flex-direction:column;gap:6px;width:100%;text-align:left;background:#f6efdb;border:1px solid var(--parch-3);border-radius:6px;padding:12px 14px;cursor:pointer;font:inherit;color:var(--ink)}
+.modcard strong{font-family:var(--display);font-size:18px}
+.modcard:hover{background:#fff8e4}
+.evmod{border:1px solid var(--parch-3);border-radius:6px;padding:8px 12px;margin-bottom:8px;background:#f6efdb}
+.evmod summary{cursor:pointer}
+.evmod h4{margin:10px 0 4px;font-family:var(--display);font-size:14px}
 /* Mode Partie */
 .partie{background:var(--parch);color:var(--ink);border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:16px}
 .partie h2{font-family:var(--display);margin:4px 0 0;font-size:26px}
@@ -736,7 +754,7 @@ const DEFAULT_SCALE = [
 ];
 
 /* ---------- state ---------- */
-let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], parties = [], pnjs = [], monstres = [], rencontres = [], scenarios = {};
+let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], parties = [], modules = [], pnjs = [], monstres = [], rencontres = [], scenarios = {};
 const loaded = {b:false, q:false, i:false, a:false, w:false, c:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
@@ -820,7 +838,7 @@ function listen(){
 }
 // Données réservées au DM (points, journal, seuils) : lues seulement par un compte admin.
 function listenPrivate(on){
-  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;dossiers={};factions=[];parties=[];pnjs=[];monstres=[];rencontres=[];scenarios={};
+  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;dossiers={};factions=[];parties=[];modules=[];pnjs=[];monstres=[];rencontres=[];scenarios={};
   if(!on)return;
   const err=e=>console.error(e);
   privUnsubs.push(onSnapshot(collection(db,"points"),snap=>{const m={};snap.docs.forEach(d=>{m[d.id]=(d.data().parRegion)||{};});pointsMap=m;render();},err));
@@ -828,7 +846,7 @@ function listenPrivate(on){
   privUnsubs.push(onSnapshot(doc(db,"prive","renommee"),snap=>{priv=snap.exists()?snap.data():null;render();},err));
   const arr=(c,set)=>privUnsubs.push(onSnapshot(collection(db,c),snap=>{set(snap.docs.map(d=>Object.assign({id:d.id},d.data())));render();},err));
   arr("dossiers",l=>{dossiers={};l.forEach(x=>{dossiers[x.id]=x;});});arr("scenarios",l=>{scenarios={};l.forEach(x=>{scenarios[x.id]=x;});});
-  arr("pnj",l=>{pnjs=l;});arr("factions",l=>{factions=l;});arr("parties",l=>{parties=l;});arr("monstres",l=>{monstres=l;});arr("rencontres",l=>{rencontres=l;});
+  arr("pnj",l=>{pnjs=l;});arr("factions",l=>{factions=l;});arr("parties",l=>{parties=l;});arr("modules",l=>{modules=l;});arr("monstres",l=>{monstres=l;});arr("rencontres",l=>{rencontres=l;});
   privUnsubs.push(onSnapshot(collection(db,"notesdm"),snap=>{notesDm=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(collection(db,"evolutions"),snap=>{evols=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","monde"),snap=>{monde=snap.exists()?snap.data():null;render();},err));
@@ -1326,8 +1344,10 @@ const XP_BUDGET={1:[50,75,100],2:[100,150,200],3:[150,225,400],4:[250,375,500],5
 const DIFFS=[["faible","Faible"],["moderee","Modérée"],["elevee","Élevée"]];
 const SIZES=[["TP","Très petite"],["P","Petite"],["M","Moyenne"],["G","Grande"],["TG","Très grande"],["Gig","Gigantesque"]];
 const ATTITUDES=[["","—"],["amical","Amical"],["neutre","Neutre"],["mefiant","Méfiant"],["hostile","Hostile"],["inconnu","Inconnu"]];
+const MOD_STATUS=[["avenir","À venir"],["premices","Signes avant-coureurs"],["encours","En cours"],["termine","Terminé"]];
+const MOD_LBL=Object.fromEntries(MOD_STATUS);
 const ABIL=[["for","FOR"],["dex","DEX"],["con","CON"],["int","INT"],["sag","SAG"],["cha","CHA"]];
-const MAN_SECS=[["perso","Personnages"],["pnj","PNJ"],["factions","Factions"],["monstres","Bestiaire"],["rencontres","Rencontres"],["generateur","Générateur"],["quetes","Quêtes & scénarios"],["notes","Notes & pages"],["atelier","Portraits"]];
+const MAN_SECS=[["perso","Personnages"],["pnj","PNJ"],["factions","Factions"],["monstres","Bestiaire"],["rencontres","Rencontres"],["generateur","Générateur"],["quetes","Quêtes & scénarios"],["modules","Modules officiels"],["notes","Notes & pages"],["atelier","Portraits"]];
 const MAN={
   pnj:{coll:"pnj",nom:"PNJ",fields:[["nom","Nom","text",1],["image","Portrait","image"],["role","Rôle ou occupation","text"],["espece","Espèce","text"],["region","Région","region"],["lieu","Lieu","text"],["faction","Factions (séparées par des virgules)","text"],["outerworlder","Outerworlder (venu d'un autre monde)","check"],["attitude","Attitude envers la Guilde","select",0,ATTITUDES],["apparence","Apparence","textarea"],["voix","Voix et manières","textarea"],["secrets","Secrets","md"],["monstre","Stats (bestiaire)","monsterref"],["quetes","Quêtes liées","questmulti"],["notes","Notes","md"]]},
   monstres:{coll:"monstres",nom:"monstre",fields:[["nom","Nom","text",1],["image","Image","image"],["taille","Taille","select",0,SIZES],["type","Type","text"],["alignement","Alignement","text"],["fp","Facteur de puissance (FP)","select",0,CR_LIST.map(c=>[c,c+" ("+CR_XP[c]+" XP)"])],["ca","Classe d'armure","number"],["pv","Points de vie","text"],["vitesse","Vitesse","text"],
@@ -1336,11 +1356,13 @@ const MAN={
     ["traits","Traits","md"],["actions","Actions","md"],["reactions","Réactions et actions légendaires","md"],["region","Région","region"],["tags","Mots-clés (séparés par des virgules)","text"],["notes","Notes","md"]]},
   factions:{coll:"factions",nom:"faction",fields:[["nom","Nom","text",1],["image","Emblème","image"],["type","Type (guilde, culte, gang, autorité, ordre…)","text"],["regions","Zones d'influence","regionmulti"],["siege","Siège","text"],["chef","Chef (nom d'un PNJ ou description)","text"],["attitude","Attitude envers la Guilde","select",0,ATTITUDES],
     ["presentation","Présentation (pour toi)","md"],["objectifs","Objectifs publics","md"],["secrets","Objectifs secrets et secrets","md"],["allies","Alliés","factionmulti"],["rivaux","Rivaux","factionmulti"],["notes","Notes","md"]]},
+  modules:{coll:"modules",nom:"module",fields:[["nom","Nom du module","text",1],["ordre","Ordre chronologique (1, 2, 3…)","number"],["periode","Période (ex. été 1492 DR)","text"],["statut","Statut","select",0,MOD_STATUS],["regions","Régions touchées","regionmulti"],["heros","Les héros qui le vivent (l'autre groupe)","text"],
+    ["resume","Résumé de l'intrigue (pour toi)","md"],["signes","Signes publics : ce que le peuple voit et entend (rumeurs, Crieur)","md"],["consequences","Conséquences par région (pour les évolutions)","md"],["accroches","Quêtes secondaires pour la Guilde (aider les héros)","md"],["notes","Notes","md"]]},
   rencontres:{coll:"rencontres",nom:"rencontre",fields:[["nom","Nom","text",1],["region","Région","region"],["quete","Quête liée","questref"],["monstres","Monstres","monsterlist"],["terrain","Terrain et ambiance","textarea"],["notes","Tactique et déroulement","md"]]},
   dossiers:{coll:"dossiers",nom:"dossier",fields:[["outerworlder","Outerworlder","select",0,[["","À déterminer"],["oui","Oui"],["non","Non (natif)"]]],["donNom","Don accordé par le Système","text"],["donDesc","Effet du Don","md"],["niveau","Niveau","number"],["ca","CA","number"],["pv","PV max","number"],["percPassive","Perception passive","number"],["accroches","Accroches et liens","md"],["notes","Notes du DM","md"]]},
-  scenarios:{coll:"scenarios",nom:"scénario",fields:[["scenario","Scénario","md"],["rencontres","Rencontres liées","rencmulti"],["pnj","PNJ liés","pnjmulti"],["monstres","Monstres liés","monstermulti"],["notes","Notes","md"]]}
+  scenarios:{coll:"scenarios",nom:"scénario",fields:[["module","Module officiel lié (quête secondaire)","moduleref"],["scenario","Scénario","md"],["rencontres","Rencontres liées","rencmulti"],["pnj","PNJ liés","pnjmulti"],["monstres","Monstres liés","monstermulti"],["notes","Notes","md"]]}
 };
-function manList(t){return t==="factions"?factions:t==="pnj"?pnjs:t==="monstres"?monstres:t==="rencontres"?rencontres:[];}
+function manList(t){return t==="modules"?modules:t==="factions"?factions:t==="pnj"?pnjs:t==="monstres"?monstres:t==="rencontres"?rencontres:[];}
 function byName(l){return l.slice().sort((a,b)=>String(a.nom||"").localeCompare(String(b.nom||""),"fr"));}
 function crXp(fp){return CR_XP[String(fp)]||0;}
 function mod(n){if(n==null||n==="")return "";const m=Math.floor((+n-10)/2);return (m>=0?"+":"")+m;}
@@ -1375,6 +1397,7 @@ function manForm(type,d,title){const S=MAN[type];d=d||{};
     else if(ty==="md")h+='<textarea id="'+id+'" rows="'+(k==="scenario"?14:6)+'" maxlength="40000">'+esc(v||"")+'</textarea>';
     else if(ty==="select")h+='<select id="'+id+'">'+opts.map(o=>'<option value="'+esc(o[0])+'"'+(String(v==null?(k==="fp"?"1":k==="taille"?"M":""):v)===o[0]?' selected':'')+'>'+esc(o[1])+'</option>').join("")+'</select>';
     else if(ty==="region")h+='<select id="'+id+'">'+regionOpts(v)+'</select>';
+    else if(ty==="moduleref")h+='<select id="'+id+'"><option value="">—</option>'+modOrder().map(m=>'<option value="'+esc(m.id)+'"'+(v===m.id?' selected':'')+'>'+esc(m.nom)+'</option>').join("")+'</select>';
     else if(ty==="questref")h+='<select id="'+id+'"><option value="">—</option>'+quetes.map(q=>'<option value="'+esc(q.id)+'"'+(v===q.id?' selected':'')+'>'+esc(q.titre)+'</option>').join("")+'</select>';
     else if(ty==="monsterref")h+='<select id="'+id+'"><option value="">—</option>'+byName(monstres).map(m=>'<option value="'+esc(m.id)+'"'+(v===m.id?' selected':'')+'>'+esc(m.nom)+'</option>').join("")+'</select>';
     else if(ty==="monsterlist")h+=mlEditor();
@@ -1398,7 +1421,7 @@ function readManForm(type){const out={};
 // Liens internes du Manuel : [[Nom]] devient un lien vers la fiche (PNJ, monstre, rencontre, personnage ou quête) qui porte ce nom.
 function manLinks(t){const n=x=>String(x||"").trim().toLowerCase();
   return String(t||"").replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g,(all,name,label)=>{const k=n(name);let sec=null,x=null;
-    if((x=pnjs.find(y=>n(y.nom)===k)))sec="pnj";else if((x=factions.find(y=>n(y.nom)===k)))sec="factions";else if((x=monstres.find(y=>n(y.nom)===k)))sec="monstres";else if((x=rencontres.find(y=>n(y.nom)===k)))sec="rencontres";
+    if((x=pnjs.find(y=>n(y.nom)===k)))sec="pnj";else if((x=factions.find(y=>n(y.nom)===k)))sec="factions";else if((x=modules.find(y=>n(y.nom)===k)))sec="modules";else if((x=monstres.find(y=>n(y.nom)===k)))sec="monstres";else if((x=rencontres.find(y=>n(y.nom)===k)))sec="rencontres";
     else if((x=aventuriers.find(y=>n(y.nom)===k)))sec="perso";else if((x=quetes.find(y=>n(y.titre)===k)))sec="quetes";
     return sec?'['+(label||name).replace(/[\[\]]/g,"")+'](#man/'+sec+'/'+encodeURIComponent(x.id)+')':(label||name);});}
 function mdBlock(t,v){return v?'<h3>'+t+'</h3><div class="wikibody">'+md(manLinks(v))+'</div>':'';}
@@ -1436,6 +1459,10 @@ function manTools(type,id,editLbl){return '<div class="actions"><button class="b
 function backLink(lbl){return '<button class="linkbtn manback" data-a="man-back">← '+lbl+'</button>';}
 function filterQ(l,keys){const q=ui.manQ.trim().toLowerCase();return !q?l:l.filter(x=>keys.map(k=>x[k]||"").join(" ").toLowerCase().indexOf(q)>=0);}
 function searchBar(lbl,newLbl){return '<div class="compbar"><label for="man-q" class="sr">Rechercher</label><input id="man-q" type="search" placeholder="'+lbl+'" value="'+esc(ui.manQ)+'">'+(newLbl?'<button class="btn gold" data-a="man-new">'+newLbl+'</button>':'')+'</div>';}
+function modOrder(){return modules.slice().sort((a,b)=>((a.ordre==null?999:a.ordre)-(b.ordre==null?999:b.ordre))||String(a.nom).localeCompare(String(b.nom),"fr"));}
+function modChip(m){return '<span class="ccat mod-'+esc(m.statut||"avenir")+'">'+esc(MOD_LBL[m.statut]||"À venir")+'</span>';}
+function modsIn(bid,active){return modOrder().filter(m=>((m.regions||[]).indexOf(bid)>=0||(m.regions||[]).indexOf("cote")>=0)&&(!active||m.statut==="premices"||m.statut==="encours"));}
+function modQuests(m){return quetes.filter(q=>(scenarios[q.id]||{}).module===m.id);}
 function factionByName(n){const k=String(n||"").trim().toLowerCase();return factions.find(f=>String(f.nom).toLowerCase()===k);}
 function factionMembers(f){const k=String(f.nom).trim().toLowerCase();return byName(pnjs).filter(p=>String(p.faction||"").split(",").some(x=>x.trim().toLowerCase()===k));}
 function factionChips(p){return String(p.faction||"").split(",").map(f=>f.trim()).filter(f=>f&&!/^aucune/i.test(f)).map(f=>{const F=factionByName(f);return F&&isAdmin?'<a class="ccat" href="#man/factions/'+encodeURIComponent(F.id)+'">'+esc(f)+'</a>':'<span class="ccat">'+esc(f)+'</span>';}).join("")+(p.outerworlder?'<span class="ccat ow">Outerworlder</span>':'');}
@@ -1462,9 +1489,16 @@ function secPerso(){
   return searchBar("Rechercher un personnage…")+(l.length?'<div class="mangrid">'+l.map(a=>{const d=dossiers[a.id]||{};
     return '<button class="mcard" data-a="man-open" data-sec="perso" data-id="'+esc(a.id)+'">'+(a.image?'<img src="'+esc(a.image)+'" alt="">':'<span class="ph" aria-hidden="true">'+esc(String(a.nom).charAt(0))+'</span>')+'<span class="mb"><strong>'+esc(a.nom)+'</strong><span>'+esc([a.classe,d.niveau?'niv. '+d.niveau:''].filter(Boolean).join(" · "))+'</span><span class="ctags">'+(d.outerworlder==="oui"?'<span class="ccat">Outerworlder</span>':'')+(d.donNom?'<span class="ccat rev">Don : '+esc(d.donNom)+'</span>':d.outerworlder!=="non"?'<span class="ccat masq">Don à attribuer</span>':'')+'</span></span></button>';}).join("")+'</div>':'<p class="empty">Aucun personnage.</p>');}
 function secGeneric(type){const S=MAN[type],list=manList(type);
-  if(ui.manEdit)return backLink(MAN_SECS.find(x=>x[0]===type)[1])+manForm(type,ui.manEdit==="new"?(ui.manDraft||null):list.find(x=>x.id===ui.manEdit),ui.manEdit==="new"?({factions:"Nouvelle faction",pnj:"Nouveau PNJ",monstres:"Nouveau monstre",rencontres:"Nouvelle rencontre"}[type]):"Modifier : "+((list.find(x=>x.id===ui.manEdit)||{}).nom||""));
+  if(ui.manEdit)return backLink(MAN_SECS.find(x=>x[0]===type)[1])+manForm(type,ui.manEdit==="new"?(ui.manDraft||null):list.find(x=>x.id===ui.manEdit),ui.manEdit==="new"?({modules:"Nouveau module",factions:"Nouvelle faction",pnj:"Nouveau PNJ",monstres:"Nouveau monstre",rencontres:"Nouvelle rencontre"}[type]):"Modifier : "+((list.find(x=>x.id===ui.manEdit)||{}).nom||""));
   if(ui.manId){const x=list.find(y=>y.id===ui.manId);if(!x)return backLink("Retour")+'<p class="empty">Introuvable.</p>';
     let h=backLink(MAN_SECS.find(s=>s[0]===type)[1])+'<article class="dossier">';
+    if(type==="modules"){const qs=modQuests(x);
+      h+='<div class="ctags">'+modChip(x)+(x.periode?'<span class="creg">'+esc(x.periode)+'</span>':'')+(x.ordre!=null?'<span class="ccat">N° '+esc(x.ordre)+' dans la chronologie</span>':'')+'</div><h2>'+esc(x.nom)+'</h2>'+
+        '<p class="ctags">'+(x.regions||[]).map(r=>'<span class="creg">'+esc(regionName(r))+'</span>').join("")+'</p>'+(x.heros?'<p class="desc"><strong>Les héros :</strong> '+esc(x.heros)+'</p>':'');
+      h+=mdBlock("Résumé de l'intrigue",x.resume)+mdBlock("Signes publics",x.signes)+mdBlock("Conséquences par région",x.consequences)+mdBlock("Quêtes secondaires pour la Guilde",x.accroches);
+      h+='<h3>Quêtes liées à ce module</h3>'+(qs.length?'<ul class="todo">'+qs.map(q=>'<li><span>'+rankSeal(q.rang)+' <strong>'+esc(q.titre)+'</strong> · '+esc((office(q.bureau)||{}).nom||"")+' · '+esc(STATUS[q.statut]||"")+'</span><button class="mini" data-a="man-quest" data-id="'+esc(q.id)+'">Scénario</button></li>').join("")+'</ul>':'<p class="desc">Aucune pour l\'instant. Pour lier une quête : ouvre son scénario (Quêtes & scénarios) et choisis ce module dans « Module officiel lié ».</p>');
+      h+=mdBlock("Notes",x.notes);
+      return h+manTools(type,x.id)+'</article>';}
     if(type==="factions"){const mem=factionMembers(x),qs=quetes.filter(q=>mem.some(p=>(p.quetes||[]).indexOf(q.id)>=0)),fl=ids=>(ids||[]).map(i=>factions.find(f=>f.id===i)).filter(Boolean);
       h+='<div class="sheet-top">'+(x.image?'<img class="portrait emblem" src="'+esc(x.image)+'" alt="Emblème">':'<span class="portrait ph" aria-hidden="true">⚑</span>')+'<div class="sheet-id"><h2>'+esc(x.nom)+'</h2><p class="sheet-sub">'+esc(x.type||"Faction")+'</p><p class="ctags">'+(x.attitude?'<span class="ccat att-'+esc(x.attitude)+'">'+esc(ATT_LBL[x.attitude]||"")+'</span>':'')+(x.regions||[]).map(r=>'<span class="creg">'+esc(regionName(r))+'</span>').join("")+'</p>'+
         (x.siege?'<p class="desc"><strong>Siège :</strong> '+esc(x.siege)+'</p>':'')+(x.chef?'<p class="desc"><strong>Chef :</strong> '+md(manLinks(x.chef)).replace(/^<p>|<\/p>\s*$/g,"")+'</p>':'')+'</div></div>';
@@ -1495,6 +1529,8 @@ function secGeneric(type){const S=MAN[type],list=manList(type);
   if(type==="monstres"){const l=filterQ(byName(monstres),["nom","type","tags","fp"]);
     return searchBar("Rechercher un monstre, un type, un mot-clé…","Nouveau monstre")+(l.length?'<div class="tablebox light"><table class="dmtable"><thead><tr><th scope="col">Nom</th><th scope="col">FP</th><th scope="col">Type</th><th scope="col">CA</th><th scope="col">PV</th><th scope="col">Région</th></tr></thead><tbody>'+
       l.map(m=>'<tr><th scope="row"><button class="linkbtn" data-a="man-open" data-sec="monstres" data-id="'+esc(m.id)+'">'+esc(m.nom)+'</button></th><td>'+esc(m.fp||"—")+'</td><td>'+esc(m.type||"")+'</td><td>'+esc(m.ca==null?"":m.ca)+'</td><td>'+esc(m.pv||"")+'</td><td>'+esc(m.region?regionName(m.region):"")+'</td></tr>').join("")+'</tbody></table></div>':'<p class="empty">Le bestiaire est vide. Ajoute ton premier monstre !</p>');}
+  if(type==="modules"){const l=filterQ(modOrder(),["nom","periode","heros"]);
+    return searchBar("Rechercher un module…","Nouveau module")+'<p class="desc">Les grandes aventures officielles que vit « l\'autre groupe » de héros, dans l\'ordre chronologique. Les quêtes de la Guilde peuvent s\'y rattacher comme quêtes secondaires, et chaque région évolue avec ses modules.</p>'+(l.length?'<ol class="modline">'+l.map(m=>'<li class="mod-'+esc(m.statut||"avenir")+'"><button class="modcard" data-a="man-open" data-sec="modules" data-id="'+esc(m.id)+'"><span class="ctags">'+modChip(m)+(m.periode?'<span class="creg">'+esc(m.periode)+'</span>':'')+'</span><strong>'+esc(m.nom)+'</strong><span class="desc">'+esc((m.regions||[]).map(regionName).join(", "))+' · '+modQuests(m).length+' quête'+(modQuests(m).length>1?'s':'')+' liée'+(modQuests(m).length>1?'s':'')+'</span></button></li>').join("")+'</ol>':'<p class="empty">Aucun module pour l\'instant.</p>');}
   if(type==="factions"){const l=filterQ(byName(factions),["nom","type","siege","chef"]);
     return searchBar("Rechercher une faction…","Nouvelle faction")+(l.length?'<div class="mangrid">'+l.map(f=>'<button class="mcard" data-a="man-open" data-sec="factions" data-id="'+esc(f.id)+'">'+(f.image?'<img src="'+esc(f.image)+'" alt="">':'<span class="ph" aria-hidden="true">⚑</span>')+'<span class="mb"><strong>'+esc(f.nom)+'</strong><span>'+esc([f.type,(f.regions||[]).map(regionName).join(", ")].filter(Boolean).join(" · "))+'</span><span class="ctags">'+(f.attitude?'<span class="ccat att-'+esc(f.attitude)+'">'+esc(ATT_LBL[f.attitude]||"")+'</span>':'')+'<span class="ccat">'+factionMembers(f).length+' membre'+(factionMembers(f).length>1?'s':'')+'</span>'+(revealedEntry(f.id)?'<span class="ccat rev">Révélée</span>':'')+'</span></span></button>').join("")+'</div>':'<p class="empty">Aucune faction pour l\'instant.</p>');}
   if(type==="pnj"){const l=filterQ(byName(pnjs),["nom","role","faction","lieu","espece"]);
@@ -1521,7 +1557,8 @@ function secQuetes(){
   if(ui.manId){const q=questById(ui.manId);if(!q)return backLink("Quêtes")+'<p class="empty">Quête introuvable.</p>';const s=scenarios[q.id]||{};
     if(ui.manEdit)return backLink("Quêtes")+manForm("scenarios",s,"Scénario : "+q.titre);
     const ins=signupsFor(q.id).filter(x=>x.statut!=="refusee");
-    let h=backLink("Quêtes")+'<article class="dossier"><div class="ctags">'+rankSeal(q.rang)+'<span class="stamp st-'+esc(q.statut)+'">'+esc(STATUS[q.statut]||"")+'</span><span class="creg">'+esc((office(q.bureau)||{}).nom||"")+'</span></div><h2>'+esc(q.titre)+'</h2><p class="desc">'+esc(q.description)+'</p>'+(q.maj?'<p class="majline"><strong>Mise à jour :</strong> '+esc(q.maj)+'</p>':'')+
+    const qm=s.module?modules.find(m=>m.id===s.module):null;
+    let h=backLink("Quêtes")+'<article class="dossier"><div class="ctags">'+(qm?'<a class="ccat mod-'+esc(qm.statut||"avenir")+'" href="#man/modules/'+encodeURIComponent(qm.id)+'">Module : '+esc(qm.nom)+'</a>':'')+rankSeal(q.rang)+'<span class="stamp st-'+esc(q.statut)+'">'+esc(STATUS[q.statut]||"")+'</span><span class="creg">'+esc((office(q.bureau)||{}).nom||"")+'</span></div><h2>'+esc(q.titre)+'</h2><p class="desc">'+esc(q.description)+'</p>'+(q.maj?'<p class="majline"><strong>Mise à jour :</strong> '+esc(q.maj)+'</p>':'')+
       '<p class="sbl">'+[q.lieu&&'<strong>Lieu</strong> '+esc(q.lieu),q.recompense&&'<strong>Récompense</strong> '+esc(q.recompense),q.niveau&&'<strong>Niveau</strong> '+esc(q.niveau),q.date&&'<strong>Date</strong> '+esc(q.date)].filter(Boolean).join(" · ")+'</p>'+
       '<p class="sbl"><strong>'+(q.statut==="ouverte"?'Inscrits':'Groupe')+' :</strong> '+(ins.length?ins.map(x=>(x.aventurier?'<button class="linkbtn" data-a="man-open" data-sec="perso" data-id="'+esc(x.aventurier)+'">'+esc(x.nom)+'</button>':esc(x.nom))+(x.statut==="attente"?' <em>(en attente)</em>':'')).join(", "):'personne')+'</p>'+
       '<p><a href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir sur le babillard</a> · <a href="#partie-'+esc(q.id)+'"><strong>▶ Lancer le Mode Partie</strong></a></p>';
@@ -1593,6 +1630,8 @@ function evolveForm(bid){
   const b=office(bid),pend=pendingIn(bid),open=quetes.filter(q=>q.bureau===bid&&q.statut==="ouverte");
   let h='<form class="form dmform" id="evolform"><h2>Le monde réagit : '+esc(b?b.nom:bid)+'</h2>';
   h+='<div class="wide"><h3>Ce que les aventuriers ont accompli</h3>'+(pend.length?'<ul class="todo">'+pend.map(q=>'<li><span><strong>'+esc(q.titre)+'</strong> · '+esc(RESULTS[q.rapport.resultat]||"")+(q.rapport.resume?' : '+esc(String(q.rapport.resume).slice(0,160))+(q.rapport.resume.length>160?'…':''):'')+'</span></li>').join("")+'</ul>':'<p class="desc">Aucune nouvelle quête accomplie depuis la dernière évolution.</p>')+'</div>';
+  const ms=modsIn(bid,false).filter(m=>m.statut!=="termine");
+  if(ms.length)h+='<div class="wide"><h3>Modules officiels dans cette région</h3>'+ms.map(m=>'<details class="evmod"'+(m.statut==="encours"||m.statut==="premices"?' open':'')+'><summary>'+modChip(m)+' <strong>'+esc(m.nom)+'</strong>'+(m.periode?' · '+esc(m.periode):'')+'</summary>'+(m.consequences?'<h4>Conséquences</h4><div class="wikibody">'+md(manLinks(m.consequences))+'</div>':'')+(m.accroches?'<h4>Quêtes secondaires possibles</h4><div class="wikibody">'+md(manLinks(m.accroches))+'</div>':'')+(m.signes?'<h4>Signes publics (pour la nouvelle)</h4><div class="wikibody">'+md(manLinks(m.signes))+'</div>':'')+'</details>').join("")+'<p class="desc">Change le statut d\'un module dans le Manuel (Modules officiels) quand l\'autre groupe avance.</p></div>';
   h+='<label class="wide" for="ev-notes">Notes privées : comment le monde réagit <span class="tip">Visible seulement par toi</span><textarea id="ev-notes" rows="5" maxlength="10000" placeholder="Ex. Le Poing Enflammé remarque le groupe. La contrebande se déplace vers les égouts…"></textarea></label>';
   h+='<fieldset class="wide pick"><legend>Nouvelle publique (facultatif)</legend><label for="ev-ntitre">Titre<input id="ev-ntitre" maxlength="120" placeholder="Ex. Les routes du nord sont plus sûres"></label><label for="ev-ntexte">Article<textarea id="ev-ntexte" rows="3" maxlength="5000"></textarea></label><p class="desc">Aventuriers mentionnés :</p>'+charPicker("evc",[])+'</fieldset>';
   h+='<fieldset class="wide pick"><legend>Quêtes ouvertes à faire évoluer (facultatif)</legend>'+(open.length?open.map(q=>{const s=signupsFor(q.id).filter(x=>x.statut!=="refusee").length;
@@ -1606,8 +1645,8 @@ function dmEvol(){
   if(ui.evolve)return evolveForm(ui.evolve);
   const X=seuilMonde();
   let h='<form class="inline dmseuil" id="seuilform"><label for="ev-seuil">Le monde réagit toutes les<input id="ev-seuil" type="number" min="1" max="50" value="'+X+'"></label><span>quêtes accomplies dans une région.</span><button class="btn ghost" type="submit">Enregistrer</button></form>';
-  h+='<div class="tablebox light"><table class="dmtable"><thead><tr><th scope="col">Comptoir</th><th scope="col">Depuis la dernière évolution</th><th scope="col"></th></tr></thead><tbody>'+bureaux.map(b=>{const n=pendingIn(b.id).length,pc=Math.min(100,Math.round(n/X*100));
-    return '<tr'+(n>=X?' class="due"':'')+'><th scope="row">'+esc(b.nom)+'</th><td><span class="prog" role="img" aria-label="'+n+' sur '+X+'"><i style="width:'+pc+'%"></i></span> '+n+' / '+X+(n>=X?' <strong class="warn">Le monde doit réagir</strong>':'')+'</td><td><button class="mini" data-a="evolve" data-id="'+esc(b.id)+'">Faire évoluer</button></td></tr>';}).join("")+'</tbody></table></div>';
+  h+='<div class="tablebox light"><table class="dmtable"><thead><tr><th scope="col">Comptoir</th><th scope="col">Depuis la dernière évolution</th><th scope="col">Modules en cours</th><th scope="col"></th></tr></thead><tbody>'+bureaux.map(b=>{const n=pendingIn(b.id).length,pc=Math.min(100,Math.round(n/X*100));
+    return '<tr'+(n>=X?' class="due"':'')+'><th scope="row">'+esc(b.nom)+'</th><td><span class="prog" role="img" aria-label="'+n+' sur '+X+'"><i style="width:'+pc+'%"></i></span> '+n+' / '+X+(n>=X?' <strong class="warn">Le monde doit réagir</strong>':'')+'</td><td>'+(modsIn(b.id,true).map(m=>'<a class="ccat mod-'+esc(m.statut)+'" href="#man/modules/'+encodeURIComponent(m.id)+'">'+esc(m.nom)+'</a>').join(" ")||'<span class="desc">—</span>')+'</td><td><button class="mini" data-a="evolve" data-id="'+esc(b.id)+'">Faire évoluer</button></td></tr>';}).join("")+'</tbody></table></div>';
   h+='<section class="dmsec"><h2>Journal des évolutions</h2>'+(evols.length?evols.slice().sort((a,b)=>tms(b.date)-tms(a.date)).map(e=>'<article class="evlog"><div class="ntop"><span class="creg">'+esc(regionName(e.region))+'</span><span class="jd">'+esc(fmtDate(e.date))+'</span></div>'+
     (e.notes?'<div class="wikibody">'+md(e.notes)+'</div>':'<p class="desc">Sans notes.</p>')+
     ((e.changements||[]).length?'<ul class="todo">'+e.changements.map(c=>'<li><span>'+esc(c.titre)+' : '+esc((RANKS[c.ancienRang]||{}).label||c.ancienRang)+' → '+esc((RANKS[c.nouveauRang]||{}).label||c.nouveauRang)+(c.maj?' · « '+esc(c.maj)+' »':'')+'</span></li>').join("")+'</ul>':'')+
