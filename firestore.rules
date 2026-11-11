@@ -62,9 +62,9 @@ service cloud.firestore {
     match /quetes/{id} {
       allow read: if true;
       allow create, update: if isAdmin() && validQuest(request.resource.data);
-      // Le joueur désigné par le DM peut seulement proposer le rapport de mission d'une quête en cours.
+      // Le joueur désigné peut proposer le rapport de mission d'une quête en cours ou terminée.
       allow update: if realAccount()
-        && resource.data.statut == 'encours'
+        && resource.data.statut in ['encours', 'terminee']
         && resource.data.redacteur == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rapportBrouillon', 'majLe'])
         && request.resource.data.rapportBrouillon is map
@@ -72,7 +72,7 @@ service cloud.firestore {
         && request.resource.data.rapportBrouillon.resume.size() <= 4000;
       // Un membre confirmé du groupe peut désigner le rédacteur du rapport parmi les membres confirmés.
       allow update: if realAccount()
-        && resource.data.statut == 'encours'
+        && resource.data.statut in ['encours', 'terminee']
         && get(/databases/$(database)/documents/inscriptions/$(id + '__' + request.auth.uid)).data.statut == 'confirmee'
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['redacteur', 'majLe'])
         && request.resource.data.redacteur is string
