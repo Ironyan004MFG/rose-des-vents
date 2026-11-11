@@ -200,6 +200,17 @@ a.ccat{text-decoration:none}
 .evmod{border:1px solid var(--parch-3);border-radius:6px;padding:8px 12px;margin-bottom:8px;background:#f6efdb}
 .evmod summary{cursor:pointer}
 .evmod h4{margin:10px 0 4px;font-family:var(--display);font-size:14px}
+.repbox{border:1px dashed #a8946a;border-radius:6px;padding:10px 12px;margin:10px 0;background:rgba(255,255,255,.35)}
+.repbox p{margin:0 0 6px}
+.repsel{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.repsel label{display:flex;flex-direction:column;font-size:13px;gap:3px}
+.repsel select{font:inherit;padding:6px 8px;min-height:40px;border-radius:4px;border:1px solid var(--parch-3)}
+.dmrep{border:1px solid var(--parch-3);border-radius:6px;padding:8px 12px;margin:8px 0;background:#f6efdb;color:var(--ink)}
+.dmrep summary{cursor:pointer;font-weight:700}
+.dmrep .wikibody{font-size:15px}
+.ptnotes{display:flex;flex-direction:column;gap:4px;font-size:14px;margin-bottom:10px}
+.ptnotes textarea{font:inherit;font-size:15px;padding:8px;border:1px solid var(--parch-3);border-radius:4px;background:#fff;color:var(--ink)}
+.ptrep{background:#fff;border:1px solid var(--parch-3);border-radius:6px;padding:10px 12px}
 /* Mode Partie */
 .partie{background:var(--parch);color:var(--ink);border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:16px}
 .partie h2{font-family:var(--display);margin:4px 0 0;font-size:26px}
@@ -777,6 +788,14 @@ function normQuest(q){
 }
 function office(id){return bureaux.filter(b=>b.id===id)[0];}
 function questById(id){return quetes.filter(q=>q.id===id)[0];}
+function myConfirmed(q){return !!(user&&!user.isAnonymous&&signupsFor(q.id).some(s=>s.uid===user.uid&&s.statut==="confirmee"));}
+function reportBox(q){
+  if(q.statut!=="encours"||ui.dm||!myConfirmed(q))return "";
+  const grp=signupsFor(q.id).filter(s=>s.statut==="confirmee"&&s.uid&&s.uid!=="dm"&&s.id===q.id+"__"+s.uid),w=grp.find(s=>s.uid===q.redacteur);
+  let h='<div class="repbox"><p><strong>📜 Rapport de mission :</strong> '+(q.rapportBrouillon&&q.rapportBrouillon.resume?'envoyé au DM par '+esc(q.rapportBrouillon.auteur||"le groupe")+' ✓':w?'rédigé par <strong>'+esc(w.nom)+'</strong>'+(w.uid===user.uid?' (toi !)':''):'personne n\'est encore désigné. Choisissez qui l\'écrira.')+'</p>';
+  if(!(q.rapportBrouillon&&q.rapportBrouillon.resume))h+='<div class="repsel"><label for="rw-'+esc(q.id)+'">Rédacteur<select id="rw-'+esc(q.id)+'">'+grp.map(s=>'<option value="'+esc(s.uid)+'"'+(s.uid===(q.redacteur||user.uid)?' selected':'')+'>'+esc(s.nom)+(s.uid===user.uid?' (moi)':'')+'</option>').join("")+'</select></label><button class="btn ghost" data-a="report-assign" data-id="'+esc(q.id)+'">'+(w?'Changer':'Désigner')+'</button></div>';
+  return h+'</div>';
+}
 function signupsFor(id){return inscriptions.filter(s=>s.quete===id).sort((a,b)=>(a.creeMs||0)-(b.creeMs||0));}
 function openCount(id){return quetes.filter(q=>q.bureau===id&&q.statut==="ouverte").length;}
 function charge(q){
@@ -1018,6 +1037,7 @@ function card(q){
   if(q.rapport&&q.statut!=="ouverte"){const r=q.rapport;h+='<dt>Rapport</dt><dd><strong>'+esc(RESULTS[r.resultat]||"")+'</strong>'+(r.date?' · '+esc(r.date):'')+(r.resume?'<br>'+esc(r.resume):'')+'</dd>';}
   if(ui.dm&&q.statut==="encours"&&(q.redacteur||q.rapportBrouillon)){const rs=signupsFor(q.id).find(x=>x.uid===q.redacteur);h+='<dt>Rapport</dt><dd>'+(q.rapportBrouillon&&q.rapportBrouillon.resume?'Proposé par '+esc(q.rapportBrouillon.auteur||"un joueur")+' ✓':'Demandé à '+esc(rs?rs.nom:"un joueur")+', en attente')+'</dd>';}
   h+='<dt>Inscrits</dt><dd>'+signupList(q)+'</dd></dl>'+planLine(q)+'<div class="actions">';
+  h+=reportBox(q);
   if(user&&q.redacteur===user.uid&&q.statut==="encours")h+='<button class="btn gold" data-a="report-write" data-id="'+esc(q.id)+'">'+(q.rapportBrouillon&&q.rapportBrouillon.resume?'Modifier mon rapport de mission':'Écrire le rapport de mission')+'</button>';
   const already=user&&signupsFor(q.id).some(s=>s.uid===user.uid);
   if(q.statut==="ouverte"&&!already)h+='<button class="btn" data-a="join" data-id="'+esc(q.id)+'">Je veux y aller</button>';
@@ -1562,6 +1582,7 @@ function secQuetes(){
       '<p class="sbl">'+[q.lieu&&'<strong>Lieu</strong> '+esc(q.lieu),q.recompense&&'<strong>Récompense</strong> '+esc(q.recompense),q.niveau&&'<strong>Niveau</strong> '+esc(q.niveau),q.date&&'<strong>Date</strong> '+esc(q.date)].filter(Boolean).join(" · ")+'</p>'+
       '<p class="sbl"><strong>'+(q.statut==="ouverte"?'Inscrits':'Groupe')+' :</strong> '+(ins.length?ins.map(x=>(x.aventurier?'<button class="linkbtn" data-a="man-open" data-sec="perso" data-id="'+esc(x.aventurier)+'">'+esc(x.nom)+'</button>':esc(x.nom))+(x.statut==="attente"?' <em>(en attente)</em>':'')).join(", "):'personne')+'</p>'+
       '<p><a href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir sur le babillard</a> · <a href="#partie-'+esc(q.id)+'"><strong>▶ Lancer le Mode Partie</strong></a></p>';
+    if(ptReport(q))h+=ptReportBlock(q,q.statut==="terminee"||q.statut==="archivee");
     const rs=(s.rencontres||[]).map(id=>rencontres.find(r=>r.id===id)).filter(Boolean).concat(rencontres.filter(r=>r.quete===q.id&&(s.rencontres||[]).indexOf(r.id)<0));
     if(rs.length)h+='<h3>Rencontres</h3><ul class="todo">'+rs.map(r=>{const df=diffOf(encXp(r.monstres));return '<li><span>'+esc(r.nom)+' · '+encXp(r.monstres)+' XP · <span class="'+df[1]+'">'+df[0]+'</span></span><button class="mini" data-a="man-open" data-sec="rencontres" data-id="'+esc(r.id)+'">Ouvrir</button></li>';}).join("")+'</ul>';
     const ps=(s.pnj||[]).map(id=>pnjs.find(p=>p.id===id)).filter(Boolean).concat(pnjs.filter(p=>(p.quetes||[]).indexOf(q.id)>=0&&(s.pnj||[]).indexOf(p.id)<0));
@@ -1629,7 +1650,7 @@ function dmTodo(){const it=todoItems();if(!it.length)return '<p class="empty">Ri
 function evolveForm(bid){
   const b=office(bid),pend=pendingIn(bid),open=quetes.filter(q=>q.bureau===bid&&q.statut==="ouverte");
   let h='<form class="form dmform" id="evolform"><h2>Le monde réagit : '+esc(b?b.nom:bid)+'</h2>';
-  h+='<div class="wide"><h3>Ce que les aventuriers ont accompli</h3>'+(pend.length?'<ul class="todo">'+pend.map(q=>'<li><span><strong>'+esc(q.titre)+'</strong> · '+esc(RESULTS[q.rapport.resultat]||"")+(q.rapport.resume?' : '+esc(String(q.rapport.resume).slice(0,160))+(q.rapport.resume.length>160?'…':''):'')+'</span></li>').join("")+'</ul>':'<p class="desc">Aucune nouvelle quête accomplie depuis la dernière évolution.</p>')+'</div>';
+  h+='<div class="wide"><h3>Ce que les aventuriers ont accompli</h3>'+(pend.length?'<ul class="todo">'+pend.map(q=>'<li><span><strong>'+esc(q.titre)+'</strong> · '+esc(RESULTS[q.rapport.resultat]||"")+(q.rapport.resume?' : '+esc(String(q.rapport.resume).slice(0,160))+(q.rapport.resume.length>160?'…':''):'')+'</span>'+ptReportBlock(q,false)+'</li>').join("")+'</ul>':'<p class="desc">Aucune nouvelle quête accomplie depuis la dernière évolution.</p>')+'</div>';
   const ms=modsIn(bid,false).filter(m=>m.statut!=="termine");
   if(ms.length)h+='<div class="wide"><h3>Modules officiels dans cette région</h3>'+ms.map(m=>'<details class="evmod"'+(m.statut==="encours"||m.statut==="premices"?' open':'')+'><summary>'+modChip(m)+' <strong>'+esc(m.nom)+'</strong>'+(m.periode?' · '+esc(m.periode):'')+'</summary>'+(m.consequences?'<h4>Conséquences</h4><div class="wikibody">'+md(manLinks(m.consequences))+'</div>':'')+(m.accroches?'<h4>Quêtes secondaires possibles</h4><div class="wikibody">'+md(manLinks(m.accroches))+'</div>':'')+(m.signes?'<h4>Signes publics (pour la nouvelle)</h4><div class="wikibody">'+md(manLinks(m.signes))+'</div>':'')+'</details>').join("")+'<p class="desc">Change le statut d\'un module dans le Manuel (Modules officiels) quand l\'autre groupe avance.</p></div>';
   h+='<label class="wide" for="ev-notes">Notes privées : comment le monde réagit <span class="tip">Visible seulement par toi</span><textarea id="ev-notes" rows="5" maxlength="10000" placeholder="Ex. Le Poing Enflammé remarque le groupe. La contrebande se déplace vers les égouts…"></textarea></label>';
@@ -1843,7 +1864,7 @@ function render(){
   if(ui.reportWrite){const rq=questById(ui.reportWrite);
     if(rq)h+='<div class="modal-bg" data-a="report-cancel"><form class="modal wide" id="reportform" role="dialog" aria-modal="true" aria-labelledby="rp-t"><h2 id="rp-t">Rapport de mission : « '+esc(rq.titre)+' »</h2>'+
       '<p>Raconte ce que le groupe a vécu. Le DM le relira avant de le publier dans les Chroniques de la Guilde.</p>'+
-      '<label for="r-texte">Rapport<textarea id="r-texte" maxlength="4000" rows="8">'+esc(rq.rapportBrouillon&&rq.rapportBrouillon.resume||"")+'</textarea></label>'+
+      '<label for="r-texte">Rapport<textarea id="r-texte" maxlength="4000" rows="10" placeholder="Quel était l&#39;objectif ? Qu&#39;est-ce qui s&#39;est passé ? Qu&#39;avez-vous découvert ? Qui avez-vous rencontré ? Qu&#39;avez-vous rapporté (butin, indices) ? Comment ça s&#39;est terminé ?">'+esc(rq.rapportBrouillon&&rq.rapportBrouillon.resume||"")+'</textarea></label>'+
       '<div class="actions"><button class="btn" type="submit">Envoyer au DM</button><button class="btn ghost" type="button" data-a="report-cancel">Annuler</button></div></form></div>';}
   if(ui.complete&&ui.dm){const C=ui.complete,cq=questById(C.id);
     if(cq){const bo=office(cq.bureau),mp=mefaitPts();
@@ -1856,6 +1877,7 @@ function render(){
         h+='<div class="row2"><label for="c-date">Date de la session<input id="c-date" maxlength="80" value="'+esc(C.rapport.date)+'"></label>'+
           '<label for="c-res">Résultat<select id="c-res">'+Object.keys(RESULTS).map(k=>'<option value="'+k+'"'+(k===C.rapport.resultat?' selected':'')+'>'+RESULTS[k]+'</option>').join("")+'</select></label></div>'+
           (cq.rapportBrouillon&&cq.rapportBrouillon.resume?'<p class="tip">Rapport proposé par '+esc(cq.rapportBrouillon.auteur||"un joueur")+'. Relis-le et modifie-le au besoin.</p>':'')+
+          ptReportBlock(cq,false)+
           '<label for="c-resume">Rapport de mission (publié dans les Chroniques)<textarea id="c-resume" maxlength="4000" rows="6">'+esc(C.rapport.resume)+'</textarea></label>'+
           (writers.length?'<div class="askrow"><label for="c-writer">Ou faire écrire le rapport par<select id="c-writer">'+writers.map(x=>'<option value="'+esc(x.uid)+'"'+(cq.redacteur===x.uid?' selected':'')+'>'+esc(x.nom)+'</option>').join("")+'</select></label><button class="btn ghost" type="button" data-a="ask-writer">Lui demander le rapport</button></div>':'')+
           '<div class="actions"><button class="btn" type="submit">Suivant : les méfaits</button><button class="btn ghost" type="button" data-a="complete-cancel">Annuler</button></div>';
@@ -1887,7 +1909,7 @@ function render(){
   const sup=document.getElementById("f-super");if(sup&&render.lastForm===formKey)keep["f-super"]=sup.checked;
   render.lastForm=formKey;
   const ptKeep={};let ptFoc=null,ptSel=null;
-  if(pty){document.querySelectorAll(".partie input[id],.partie select[id]").forEach(el=>{if(el.value!=="")ptKeep[el.id]=el.value;});
+  if(pty){document.querySelectorAll(".partie input[id],.partie select[id],.partie textarea[id]").forEach(el=>{if(el.value!=="")ptKeep[el.id]=el.value;});
     const ae=document.activeElement;if(ae&&ae.id&&ae.closest&&ae.closest(".partie")){ptFoc=ae.id;try{ptSel=[ae.selectionStart,ae.selectionEnd];}catch(e){}}}
   app.innerHTML=h+'</div>';
   if(pty){Object.keys(ptKeep).forEach(k=>{const el=document.getElementById(k);if(el)el.value=ptKeep[k];});
@@ -1939,8 +1961,20 @@ const PT_RULES=[
  ["Chute et asphyxie","**Chute** : 1d6 contondants par tranche de 10 pi (max 20d6), puis à terre. **Retenir son souffle** : 1 + modificateur de CON minutes (min 30 s) ; ensuite, 1 niveau d'épuisement par tour."],
  ["Repos","**Repos court** (1 h) : dépense de dés de vie. **Repos long** (8 h) : récupère tous les PV et dés de vie, retire 1 niveau d'épuisement."]];
 
+function ptReport(q){const d=(ui.pt&&ui.pt.id===q.id)?ui.pt:parties.find(p=>p.id===q.id);if(!d)return "";
+  const st=d.stats||{},pcs=(d.liste||[]).filter(c=>c.kind==="pj"),v=Object.keys(st.vaincus||{}).map(k=>[k,st.vaincus[k]]),xp=v.reduce((t,x)=>t+(x[1].xp||0),0),rounds=(st.rounds||0)+(d.round||0);
+  let t="";
+  if(pcs.length)t+="- **Groupe :** "+pcs.map(c=>c.nom+" ("+c.pv+"/"+c.pvMax+" PV)").join(", ")+"\n";
+  if(st.combats)t+="- **Combats :** "+st.combats+(rounds?" ("+rounds+" round"+(rounds>1?"s":"")+" en tout)":"")+"\n";
+  if(v.length)t+="- **Vaincus :** "+v.map(x=>x[0]+(x[1].n>1?" ×"+x[1].n:"")).join(", ")+" · "+xp+" XP"+(pcs.length?" ("+Math.floor(xp/pcs.length)+" par aventurier)":"")+"\n";
+  if((st.ko||[]).length)t+="- **Tombés à 0 PV :** "+st.ko.join(", ")+"\n";
+  if(d.notesDM)t+=(t?"\n":"")+"### Notes du DM\n"+d.notesDM+"\n";
+  const j=d.journal||[];if(j.length)t+=(t?"\n":"")+"### Journal de la partie\n"+j.map(x=>"- "+x.h+" · "+x.t).join("\n")+"\n";
+  return t;}
+function ptReportBlock(q,open){const t=ptReport(q);return t?'<details class="dmrep"'+(open?' open':'')+'><summary>Rapport du DM (privé)</summary><div class="wikibody">'+md(t)+'</div></details>':'';}
 function ptQuest(){return ui.office&&ui.office.indexOf("partie-")===0?questById(ui.office.slice(7)):null;}
-function ptBlank(qid){return {id:qid,round:0,cur:null,liste:[],journal:[],rev:0};}
+function ptBlank(qid){return {id:qid,round:0,cur:null,liste:[],journal:[],rev:0,stats:{combats:0,rounds:0,vaincus:{},ko:[]},notesDM:""};}
+function ptStats(){const P=ui.pt;P.stats=Object.assign({combats:0,rounds:0,vaincus:{},ko:[]},P.stats||{});return P.stats;}
 function ptClone(o){return JSON.parse(JSON.stringify(o));}
 function ptSync(qid){
   const d=parties.find(p=>p.id===qid);
@@ -1996,8 +2030,8 @@ function ptDamage(c,n){
     if(c.kind==="pj"){
       if(before===0){c.ds=c.ds||{s:0,f:0};c.ds.f=Math.min(3,c.ds.f+1);al.push(c.nom+" subit des dégâts à 0 PV : un échec au jet contre la mort (deux si coup critique).");}
       else if(rest-before>=c.pvMax&&c.pvMax>0){al.push("Dégâts massifs : "+c.nom+" meurt sur le coup (dégâts restants ≥ PV max) !");ptLog(c.nom+" meurt sur le coup.");}
-      else{if(!c.conds.some(x=>x.k==="unconscious"))c.conds.push({k:"unconscious",d:0});c.ds={s:0,f:0};c.conc=false;al.push(c.nom+" tombe à 0 PV : inconscient, jets contre la mort à chaque tour.");ptLog(c.nom+" tombe inconscient.");}
-    }else{c.conc=false;ptLog(c.nom+" est vaincu"+(c.xp?" ("+c.xp+" XP)":"")+".");}
+      else{const st=ptStats();if(st.ko.indexOf(c.nom)<0)st.ko.push(c.nom);if(!c.conds.some(x=>x.k==="unconscious"))c.conds.push({k:"unconscious",d:0});c.ds={s:0,f:0};c.conc=false;al.push(c.nom+" tombe à 0 PV : inconscient, jets contre la mort à chaque tour.");ptLog(c.nom+" tombe inconscient.");}
+    }else if(before>0){c.conc=false;ptLog(c.nom+" est vaincu"+(c.xp?" ("+c.xp+" XP)":"")+".");const st=ptStats(),m=monstres.find(x=>x.id===c.ref),k=m?m.nom:c.nom;st.vaincus[k]=st.vaincus[k]||{n:0,xp:0};st.vaincus[k].n++;st.vaincus[k].xp+=(+c.xp||0);}
   }
   if(al.length)ui.ptAlert=al.join(" ");
 }
@@ -2041,7 +2075,7 @@ function ptRow(c){
 }
 function ptSide(q){
   const tab=ui.ptTab||"scenario",s=scenarios[q.id]||{};
-  const tabs=[["scenario","Scénario"],["tests","Tests & DD"],["regles","Règles"],["des","Dés"],["journal","Journal"]];
+  const tabs=[["scenario","Scénario"],["tests","Tests & DD"],["regles","Règles"],["des","Dés"],["journal","Journal"],["bilan","Bilan"]];
   let h='<div class="pttabs" role="tablist">'+tabs.map(t=>'<button role="tab" aria-selected="'+(tab===t[0])+'" class="'+(tab===t[0]?'on':'')+'" data-a="pt-tab" data-v="'+t[0]+'">'+t[1]+'</button>').join("")+'</div><div class="ptpanel">';
   if(tab==="scenario"){
     h+=s.scenario?'<div class="wikibody">'+md(manLinks(s.scenario))+'</div>':'<p class="desc">Aucun scénario pour cette quête. <a href="#man/quetes/'+encodeURIComponent(q.id)+'">L\'écrire dans le manuel</a></p>';
@@ -2063,6 +2097,10 @@ function ptSide(q){
     h+='<div class="ptadv"><button class="'+(ui.ptAdv==="adv"?'on':'')+'" data-a="pt-adv" data-v="adv">Avantage</button><button class="'+(!ui.ptAdv?'on':'')+'" data-a="pt-adv" data-v="">Normal</button><button class="'+(ui.ptAdv==="dis"?'on':'')+'" data-a="pt-adv" data-v="dis">Désavantage</button></div>';
     h+='<form class="ptexpr" id="pt-expr"><input id="pt-expr-in" placeholder="Ex. : 2d6+3 ou d20+5" aria-label="Formule de dés"><button class="btn gold">Lancer</button></form>';
     h+=(ui.ptDice||[]).length?'<ul class="ptrolls">'+ui.ptDice.map((r,i)=>'<li class="'+(i===0?'last':'')+'"><strong>'+r.t+'</strong><span>'+esc(r.e)+' : '+esc(r.d)+'</span></li>').join("")+'</ul>':'<p class="desc">Les avantages et désavantages s\'appliquent aux d20.</p>';
+  }else if(tab==="bilan"){
+    h+='<p class="desc">Ton rapport privé : il se construit tout seul à partir des combats et du journal. Tu le retrouveras en terminant la quête, dans son scénario et dans l\'Évolution du monde.</p>';
+    h+='<label class="ptnotes" for="pt-notes">Notes du DM (décisions, conséquences, fils ouverts, idées pour la suite)<textarea id="pt-notes" class="pt-notes" rows="6" maxlength="10000">'+esc(ui.pt.notesDM||"")+'</textarea></label>';
+    const t=ptReport(q);h+=t?'<div class="ptrep wikibody">'+md(t)+'</div><p><button class="btn ghost" data-a="pt-copyrep">Copier le rapport</button></p>':'<p class="desc">Rien à signaler pour l\'instant.</p>';
   }else{
     h+='<form class="ptexpr" id="pt-note"><input id="pt-note-in" placeholder="Ajouter une note (décision, indice trouvé, butin…)" aria-label="Note de partie"><button class="btn gold">Noter</button></form>';
     const j=(ui.pt.journal||[]).slice().reverse();
@@ -2100,11 +2138,12 @@ async function partyAction(a,id,b,e){
   else if(a==="pt-group"){let n=0;ptSignups(q).forEach(s=>{if(ptAddPC(s))n++;});if(n)ptLog(n+" aventurier"+(n>1?"s":"")+" entre"+(n>1?"nt":"")+" en scène.");}
   else if(a==="pt-enc"){const r=rencontres.find(x=>x.id===id);if(!r)return;(r.monstres||[]).forEach(x=>{const m=monstres.find(y=>y.id===x.id);if(m)for(let i=0;i<(x.nb||1);i++)ptAddMonster(m);});ptLog("Rencontre : "+r.nom+".");}
   else if(a==="pt-rollinit"){ptRollInit(false);}
-  else if(a==="pt-start"){ptRollInit(false);const o=ptOrder().filter(ptAlive);if(!o.length)return;P.round=1;P.cur=o[0].cid;ptLog("⚔ Début du combat — Round 1 —");
+  else if(a==="pt-start"){ptRollInit(false);const o=ptOrder().filter(ptAlive);if(!o.length)return;P.round=1;P.cur=o[0].cid;ptStats().combats++;ptLog("⚔ Début du combat — Round 1 —");
     const miss=P.liste.filter(x=>x.kind==="pj"&&(x.init===""||x.init==null)).map(x=>x.nom);if(miss.length)ui.ptAlert="Initiative à saisir pour : "+miss.join(", ")+".";}
   else if(a==="pt-next"){ptNext(1);}
   else if(a==="pt-prev"){ptNext(-1);}
-  else if(a==="pt-end"){ptLog("Fin du combat après "+P.round+" round"+(P.round>1?"s":"")+".");P.round=0;P.cur=null;}
+  else if(a==="pt-end"){ptLog("Fin du combat après "+P.round+" round"+(P.round>1?"s":"")+".");ptStats().rounds+=(P.round||0);P.round=0;P.cur=null;}
+  else if(a==="pt-copyrep"){try{await navigator.clipboard.writeText(ptReport(q));ui.ptAlert="Rapport du DM copié.";}catch(err){ui.ptAlert="Copie impossible ici : sélectionne le texte à la main.";}ch=false;}
   else if(a==="pt-dmg"&&c){ptDamage(c,amt());}
   else if(a==="pt-heal"&&c){ptHeal(c,amt());}
   else if(a==="pt-tmp"&&c){const n=amt();if(n>0){c.tmp=Math.max(c.tmp||0,n);ptLog(c.nom+" gagne "+n+" PV temporaires.");}}
@@ -2150,7 +2189,8 @@ function partySubmit(e){
   return true;
 }
 function partyChange(e){
-  const t=e.target;if(!ui.pt||!t.classList||!t.classList.contains("pt-in"))return false;const c=ptC(t.getAttribute("data-id"));if(!c)return true;
+  const t=e.target;if(ui.pt&&t.id==="pt-notes"){ui.pt.notesDM=String(t.value).slice(0,10000);ptSave();setTimeout(render,0);return true;}
+  if(!ui.pt||!t.classList||!t.classList.contains("pt-in"))return false;const c=ptC(t.getAttribute("data-id"));if(!c)return true;
   c[t.getAttribute("data-f")]=t.value===""?"":+t.value;ptSave();setTimeout(render,0);return true;
 }
 
@@ -2348,6 +2388,8 @@ document.addEventListener("click",async e=>{
     await run("Disponibilité",()=>updateDoc(doc(db,"planif",id),{[key]:nx?nx:deleteField()}));return;}
   else if(a==="plan-del"){await run("Date retirée",()=>deleteDoc(doc(db,"planif",id)));return;}
   else if(a==="report-write"){ui.reportWrite=id;}
+  else if(a==="report-assign"){const q=questById(id),el=document.getElementById("rw-"+id);if(!q||!el||!el.value)return;
+    await run("Rédacteur",()=>setDoc(doc(db,"quetes",id),{redacteur:el.value,majLe:serverTimestamp()},{merge:true}));return;}
   else if(a==="report-cancel"){if(e.target!==b)return;ui.reportWrite=null;}
   else if(a==="adj-open"){ui.adjust=true;}
   else if(a==="adj-cancel"){ui.adjust=false;}

@@ -70,6 +70,13 @@ service cloud.firestore {
         && request.resource.data.rapportBrouillon is map
         && request.resource.data.rapportBrouillon.resume is string
         && request.resource.data.rapportBrouillon.resume.size() <= 4000;
+      // Un membre confirmé du groupe peut désigner le rédacteur du rapport parmi les membres confirmés.
+      allow update: if realAccount()
+        && resource.data.statut == 'encours'
+        && get(/databases/$(database)/documents/inscriptions/$(id + '__' + request.auth.uid)).data.statut == 'confirmee'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['redacteur', 'majLe'])
+        && request.resource.data.redacteur is string
+        && get(/databases/$(database)/documents/inscriptions/$(id + '__' + request.resource.data.redacteur)).data.statut == 'confirmee';
       allow delete: if isAdmin();
     }
 
