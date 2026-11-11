@@ -267,6 +267,59 @@ a.ccat{text-decoration:none}
 .ptnotes input{font:inherit;padding:8px;border:1px solid var(--parch-3);border-radius:4px;min-height:40px;background:#fff;color:var(--ink)}
 .ptaddbox summary{cursor:pointer;font-family:var(--display);font-size:15px;padding:8px 0}
 @media (max-width:560px){.ptencf{grid-template-columns:1fr}.ptphase .ptstep{margin-left:0}}
+/* Mode Partie v2 */
+.ptcamp{font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;letter-spacing:.03em}
+.ptcamp.allie{background:#dbe8f0;color:#1f4a63}.ptcamp.ennemi{background:#f3d9d4;color:#7a1f14}
+.ptmod{margin-left:auto;background:none;border:1px solid var(--parch-3);border-radius:4px;padding:4px 10px;min-height:32px;font:inherit;font-size:13px;cursor:pointer;color:var(--ink)}
+.ptmod:hover{background:#efe4c6}
+.ptact{width:210px;gap:8px}
+.ptsecchk input{accent-color:#3d7a3a}
+.hpsec{display:flex;flex-direction:column;gap:3px;border-radius:6px;padding:6px;border:1px solid var(--parch-3);background:#fff}
+.hpsec label{font-family:var(--display);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+.hpsec.dmg{border-color:#d9a79f}.hpsec.dmg label{color:#a3271a}
+.hpsec.heal{border-color:#a9c9a6}.hpsec.heal label{color:#2f6a2c}
+.hpsec.tmp{border-color:#a9c0d0}.hpsec.tmp label{color:#2c5d7c}
+.hpsec>div{display:flex;gap:4px}
+.hpsec input{flex:1;min-width:0;font:inherit;font-size:16px;padding:4px 6px;border:1px solid var(--parch-3);border-radius:4px;min-height:36px;box-sizing:border-box;background:#fff;color:var(--ink)}
+.hpsec button{border:none;border-radius:4px;padding:0 10px;min-height:36px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;color:#fff}
+.hpsec.dmg button{background:#a3271a}.hpsec.heal button{background:#3d7a3a}.hpsec.tmp button{background:#2c5d7c}
+.ptdel{border:1px solid #c9b27a;background:none;border-radius:4px;min-height:36px;font-family:var(--display);font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;color:#7a1f14}
+.ptdel:hover{background:#f3d9d4}
+.pteff{display:inline-flex;align-items:center;background:#e4ddf2;border:1px solid #b9a9dc;border-radius:999px;overflow:hidden}
+.pteff.conc{background:#dbe8f0;border-color:#8fb0c6}
+.pteff .ptcx{font-size:13px}
+.pteffpre{display:flex;flex-wrap:wrap;gap:6px}
+.ptefff{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;align-items:end}
+.ptefff select{font:inherit;padding:6px 8px;border:1px solid var(--parch-3);border-radius:4px;min-height:36px;background:#fff;color:var(--ink)}
+.pttour{border-top:1px solid var(--parch-3);padding-top:8px;display:flex;flex-direction:column;gap:8px}
+.pteco{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.pteco label{display:flex;flex-direction:column;gap:2px;font-size:12px;font-weight:700;color:var(--ink-soft)}
+.pteco label.used span{color:#2f6a2c}
+.pteco input{font:inherit;font-size:14px;font-weight:400;padding:6px 8px;border:1px solid var(--parch-3);border-radius:4px;min-height:36px;background:#fff;color:var(--ink)}
+.pteco label.used input{background:#eef5ec;border-color:#a9c9a6}
+.ptbtnrow{display:flex;flex-wrap:wrap;gap:6px}
+.btn.sm{padding:6px 12px;min-height:36px;font-size:12px}
+.btn.crit{border-color:#b8860b;color:#7a5a00}.btn.fail{border-color:#7a1f14;color:#7a1f14}
+.pttgt{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ptadd.tgt{border-style:solid;background:#fff}
+.ptatkd{background:#fff1c2;border:1px solid var(--gold);border-radius:6px;padding:6px 10px;font-size:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ptvictory{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#eef5ec;border:1px solid #a9c9a6;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-weight:700}
+.meffs{grid-column:1/-1;font-size:12px;color:#4b3a7a}
+.ptmini.c-allie{border-left-color:#2c5d7c}.ptmini.c-ennemi{border-left-color:#8a2a1c}
+.ptparole{background:#f6efdb;border:1px solid var(--parch-3);border-radius:8px;padding:10px 12px;margin:12px 0}
+.ptparole.closed{background:none;border:none;padding:0}
+.ptparole .ptmini{align-items:center}
+.ptord{display:flex;gap:4px;padding:4px 6px}
+.ptord button{min-width:36px;min-height:36px;border:1px solid var(--parch-3);background:#fff;border-radius:4px;cursor:pointer}
+.ptord button:disabled{opacity:.35;cursor:default}
+.pttime{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:14px}
+.ptsec{position:relative;padding-left:34px;border-left:3px solid transparent;margin:4px 0}
+.ptsec.done{border-left-color:#a9c9a6}
+.ptsec.done .wikibody{text-decoration:line-through;opacity:.5}
+.ptsecchk{position:absolute;left:4px;top:18px}
+.ptsecchk input{width:22px;height:22px;cursor:pointer}
+.ptlaunch{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}
+@media (max-width:560px){.ptact{width:auto}.pteco{grid-template-columns:1fr}.ptmod{margin-left:0}}
 /* Mode Partie */
 .partie{background:var(--parch);color:var(--ink);border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:16px}
 .partie h2{font-family:var(--display);margin:4px 0 0;font-size:26px}
@@ -1640,6 +1693,7 @@ function secQuetes(){
       '<p><a href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir sur le babillard</a> · <a href="#partie-'+esc(q.id)+'"><strong>▶ Lancer le Mode Partie</strong></a></p>';
     if(ptReport(q))h+=ptReportBlock(q,q.statut==="terminee"||q.statut==="archivee");
     const rs=(s.rencontres||[]).map(id=>rencontres.find(r=>r.id===id)).filter(Boolean).concat(rencontres.filter(r=>r.quete===q.id&&(s.rencontres||[]).indexOf(r.id)<0));
+    if(rs.length)h+='<p class="ptlaunch">'+rs.map(r=>'<button class="btn gold sm" data-a="man-launch" data-id="'+esc(q.id)+'" data-v="'+esc(r.id)+'">⚔ Lancer le combat : '+esc(r.nom)+'</button>').join("")+'</p>';
     if(rs.length)h+='<h3>Rencontres</h3><ul class="todo">'+rs.map(r=>{const df=diffOf(encXp(r.monstres));return '<li><span>'+esc(r.nom)+' · '+encXp(r.monstres)+' XP · <span class="'+df[1]+'">'+df[0]+'</span></span><button class="mini" data-a="man-open" data-sec="rencontres" data-id="'+esc(r.id)+'">Ouvrir</button></li>';}).join("")+'</ul>';
     const ps=(s.pnj||[]).map(id=>pnjs.find(p=>p.id===id)).filter(Boolean).concat(pnjs.filter(p=>(p.quetes||[]).indexOf(q.id)>=0&&(s.pnj||[]).indexOf(p.id)<0));
     if(ps.length)h+='<h3>PNJ</h3><ul class="todo">'+ps.map(p=>'<li><span><strong>'+esc(p.nom)+'</strong>'+(p.role?' · '+esc(p.role):'')+'</span><button class="mini" data-a="man-open" data-sec="pnj" data-id="'+esc(p.id)+'">Fiche</button></li>').join("")+'</ul>';
@@ -2025,7 +2079,7 @@ function ptReport(q){const d=(ui.pt&&ui.pt.id===q.id)?ui.pt:parties.find(p=>p.id
   if(st.combats)t+="- **Combats :** "+st.combats+(rounds?" ("+rounds+" round"+(rounds>1?"s":"")+" en tout)":"")+"\n";
   if(v.length)t+="- **Vaincus :** "+v.map(x=>x[0]+(x[1].n>1?" ×"+x[1].n:"")).join(", ")+" · "+xp+" XP"+(pcs.length?" ("+Math.floor(xp/pcs.length)+" par aventurier)":"")+"\n";
   if((st.ko||[]).length)t+="- **Tombés à 0 PV :** "+st.ko.join(", ")+"\n";
-  (d.combats||[]).forEach(x=>{const vv=Object.keys(x.vaincus||{});t+=(t?"\n":"")+"### Rencontre : "+x.nom+" ("+x.rounds+" round"+(x.rounds>1?"s":"")+(x.xp?", "+x.xp+" XP":"")+")\n"+(vv.length?"- Vaincus : "+vv.map(k=>k+(x.vaincus[k].n>1?" ×"+x.vaincus[k].n:"")).join(", ")+"\n":"")+((x.ko||[]).length?"- Tombés à 0 PV : "+x.ko.join(", ")+"\n":"")+(x.notes?"\n"+x.notes+"\n":"");});
+  (d.combats||[]).forEach(x=>{const vv=Object.keys(x.vaincus||{});t+=(t?"\n":"")+"### Rencontre : "+x.nom+" ("+x.rounds+" round"+(x.rounds>1?"s":"")+(x.xp?", "+x.xp+" XP":"")+")\n"+(vv.length?"- Vaincus : "+vv.map(k=>k+(x.vaincus[k].n>1?" ×"+x.vaincus[k].n:"")).join(", ")+"\n":"")+((x.ko||[]).length?"- Tombés à 0 PV : "+x.ko.join(", ")+"\n":"")+(x.crits&&Object.keys(x.crits).length?"- Coups critiques : "+Object.keys(x.crits).map(k=>k+(x.crits[k]>1?" ×"+x.crits[k]:"")).join(", ")+"\n":"")+(x.fails&&Object.keys(x.fails).length?"- Échecs critiques : "+Object.keys(x.fails).map(k=>k+(x.fails[k]>1?" ×"+x.fails[k]:"")).join(", ")+"\n":"")+(x.notes?"\n"+x.notes+"\n":"");});
   if(d.notesDM)t+=(t?"\n":"")+"### Notes du DM\n"+d.notesDM+"\n";
   const j=d.journal||[];if(j.length)t+=(t?"\n":"")+"### Journal de la partie\n"+j.map(x=>"- "+x.h+" · "+x.t).join("\n")+"\n";
   return t;}
@@ -2065,31 +2119,18 @@ function ptAddMonster(m,label){
 }
 function ptRollInit(all){(ui.pt.liste||[]).forEach(c=>{if(c.kind!=="pj"&&(all||c.init===""||c.init==null)){c.init=ptD(20)+(+c.dex||0);}});}
 function ptAlive(c){return c.kind==="pj"||c.pv>0;}
-function ptEndTurn(c){
-  if(!c)return;
-  (c.conds||[]).forEach(x=>{if(x.d>0){x.d--;if(x.d===0)ptLog(c.nom+" n'est plus "+PT_COND[x.k][1].toLowerCase()+".");}});
-  c.conds=(c.conds||[]).filter(x=>!(x.d===0&&x.timed));
-}
-function ptNext(dir){
-  const o=ptOrder().filter(ptAlive);if(!o.length)return;
-  let i=o.findIndex(c=>c.cid===ui.pt.cur);
-  if(dir>0){ptEndTurn(ptC(ui.pt.cur));i++;if(i>=o.length||i<0){i=0;ui.pt.round=(ui.pt.round||0)+1;ptLog("— Round "+ui.pt.round+" —");}}
-  else{i--;if(i<0){i=o.length-1;ui.pt.round=Math.max(1,(ui.pt.round||1)-1);}}
-  ui.pt.cur=o[i].cid;
-  const c=o[i];if(c.kind==="pj"&&c.pv<=0)ui.ptAlert=c.nom+" est à 0 PV : jet contre la mort (d20, 10+ = succès).";
-}
 function ptDamage(c,n){
   if(!(n>0))return;const before=c.pv;let rest=n;
   if(c.tmp>0){const t=Math.min(c.tmp,rest);c.tmp-=t;rest-=t;}
-  c.pv=Math.max(0,c.pv-rest);ptLog(c.nom+" subit "+n+" dégâts ("+c.pv+"/"+c.pvMax+" PV).");
+  c.pv=Math.max(0,c.pv-rest);const atk=ui.ptAtk&&ui.ptAtk.to===c.cid?ptC(ui.ptAtk.from):null;ptLog((atk?atk.nom+" inflige "+n+" dégâts à "+c.nom:c.nom+" subit "+n+" dégâts")+" ("+c.pv+"/"+c.pvMax+" PV).");if(atk)ui.ptAtk=null;
   const al=[];
-  if(c.conc&&n>0)al.push(c.nom+" : sauvegarde de Concentration (CON) DD "+Math.min(30,Math.max(10,Math.floor(n/2)))+".");
+  if((c.conc||(c.effets||[]).some(e=>e.conc))&&n>0&&c.pv>0)al.push(c.nom+" : sauvegarde de Concentration (CON) DD "+Math.min(30,Math.max(10,Math.floor(n/2)))+".");
   if(c.pv===0){
     if(c.kind==="pj"){
       if(before===0){c.ds=c.ds||{s:0,f:0};c.ds.f=Math.min(3,c.ds.f+1);al.push(c.nom+" subit des dégâts à 0 PV : un échec au jet contre la mort (deux si coup critique).");}
       else if(rest-before>=c.pvMax&&c.pvMax>0){al.push("Dégâts massifs : "+c.nom+" meurt sur le coup (dégâts restants ≥ PV max) !");ptLog(c.nom+" meurt sur le coup.");}
-      else{const st=ptStats();if(st.ko.indexOf(c.nom)<0)st.ko.push(c.nom);ptTally("k",c.nom);if(!c.conds.some(x=>x.k==="unconscious"))c.conds.push({k:"unconscious",d:0});c.ds={s:0,f:0};c.conc=false;al.push(c.nom+" tombe à 0 PV : inconscient, jets contre la mort à chaque tour.");ptLog(c.nom+" tombe inconscient.");}
-    }else if(before>0){c.conc=false;ptLog(c.nom+" est vaincu"+(c.xp?" ("+c.xp+" XP)":"")+".");const st=ptStats(),m=monstres.find(x=>x.id===c.ref),k=m?m.nom:c.nom;st.vaincus[k]=st.vaincus[k]||{n:0,xp:0};st.vaincus[k].n++;st.vaincus[k].xp+=(+c.xp||0);ptTally("v",k,c.xp);}
+      else{const st=ptStats();if(st.ko.indexOf(c.nom)<0)st.ko.push(c.nom);ptTally("k",c.nom);if(!c.conds.some(x=>x.k==="unconscious"))c.conds.push({k:"unconscious",d:0});c.ds={s:0,f:0};ptLoseConc(c,"0 PV");al.push(c.nom+" tombe à 0 PV : inconscient, jets contre la mort à chaque tour.");ptLog(c.nom+" tombe inconscient.");}
+    }else if(before>0){c.conc=false;c.effets=[];ptLog(c.nom+" est vaincu"+(c.xp?" ("+c.xp+" XP)":"")+".");const st=ptStats(),m=monstres.find(x=>x.id===c.ref),k=m?m.nom:c.nom;st.vaincus[k]=st.vaincus[k]||{n:0,xp:0};st.vaincus[k].n++;st.vaincus[k].xp+=(+c.xp||0);ptTally("v",k,c.xp);}
   }
   if(al.length)ui.ptAlert=al.join(" ");
 }
@@ -2116,28 +2157,12 @@ function ptTests(q){
 }
 function ptCondChip(c,x){const k=PT_COND[x.k];if(!k)return "";
   return '<span class="ptcond" title="'+esc(k[3])+'"><button class="ptcx" data-a="pt-cinfo" data-v="'+x.k+'">'+esc(k[1])+(x.k==="exhaustion"?" "+(x.n||1):"")+(x.d>0?' · '+x.d+'r':'')+'</button><button class="ptcx del" data-a="pt-cdel" data-id="'+c.cid+'" data-v="'+x.k+'" aria-label="Retirer '+esc(k[1])+'">✕</button></span>';}
-function ptRow(c){
-  const cur=ui.pt.cur===c.cid,dead=c.kind!=="pj"&&c.pv<=0,down=c.kind==="pj"&&c.pv<=0;
-  const pct=c.pvMax>0?Math.max(0,Math.min(100,Math.round(100*c.pv/c.pvMax))):0,hc=pct>50?"ok":pct>25?"mid":"low";
-  let h='<li class="ptrow'+(cur?' cur':'')+(dead?' dead':'')+(down?' down':'')+' k-'+c.kind+'" id="pt-'+c.cid+'">';
-  h+='<label class="ptinit"><span>Init.</span><input type="number" inputmode="numeric" class="pt-in" data-id="'+c.cid+'" data-f="init" value="'+esc(c.init===""||c.init==null?"":c.init)+'" aria-label="Initiative de '+esc(c.nom)+'"></label>';
-  h+='<div class="ptmain"><div class="ptname">'+(cur?'<span class="ptturn" aria-label="Tour actuel">▶</span>':'')+(c.kind==="monstre"&&monstres.some(m=>m.id===c.ref)?'<button class="ptlink" data-a="pt-sb" data-id="'+esc(c.ref)+'">'+esc(c.nom)+'</button>':'<strong>'+esc(c.nom)+'</strong>')+
-    '<span class="ptca" title="Classe d\'armure">🛡 '+esc(c.ca===""?"—":c.ca)+'</span>'+(c.kind==="pj"&&c.pp!==""&&c.pp!=null?'<span class="ptca" title="Perception passive">👁 '+esc(c.pp)+'</span>':'')+(c.conc?'<span class="ptconc">Concentration</span>':'')+(dead?'<span class="ptdead">Vaincu</span>':'')+'</div>';
-  h+='<div class="pthp"><span class="bar"><span class="'+hc+'" style="width:'+pct+'%"></span></span><span class="num">'+c.pv+' / '+(c.pvMax||"?")+' PV'+(c.tmp>0?' <em>+'+c.tmp+' temp.</em>':'')+'</span></div>';
-  h+='<div class="ptconds">'+(c.conds||[]).map(x=>ptCondChip(c,x)).join("")+'<button class="ptadd" data-a="pt-copen" data-id="'+c.cid+'">+ État</button><button class="ptadd" data-a="pt-conc" data-id="'+c.cid+'">'+(c.conc?'− Concentration':'+ Concentration')+'</button></div>';
-  if(down){const ds=c.ds||{s:0,f:0};h+='<div class="ptds"><span>Jets contre la mort</span><span class="dsg">Succès '+[1,2,3].map(i=>'<button class="dsb s'+(ds.s>=i?' on':'')+'" data-a="pt-ds" data-id="'+c.cid+'" data-v="s'+i+'" aria-label="Succès '+i+'"></button>').join("")+'</span><span class="dsg">Échecs '+[1,2,3].map(i=>'<button class="dsb f'+(ds.f>=i?' on':'')+'" data-a="pt-ds" data-id="'+c.cid+'" data-v="f'+i+'" aria-label="Échec '+i+'"></button>').join("")+'</span>'+(ds.s>=3?'<strong>Stable</strong>':ds.f>=3?'<strong class="low">Mort</strong>':'')+'</div>';}
-  if(ui.ptCond===c.cid){h+='<div class="ptpick"><label>Durée (rounds, vide = jusqu\'à nouvel ordre) <input type="number" min="1" id="pt-cdur" inputmode="numeric"></label><div class="ptpickg">'+PT_CONDS.map(k=>'<button data-a="pt-cadd" data-id="'+c.cid+'" data-v="'+k[0]+'" title="'+esc(k[3])+'">'+esc(k[1])+' <span>'+esc(k[2])+'</span></button>').join("")+'</div><button class="ptadd" data-a="pt-cclose">Fermer</button></div>';}
-  if(ui.ptEditC===c.cid){h+='<div class="ptedit"><label>Nom <input id="pe-nom" value="'+esc(c.nom)+'"></label><label>CA <input id="pe-ca" type="number" value="'+esc(c.ca)+'"></label><label>PV max <input id="pe-pvmax" type="number" value="'+esc(c.pvMax)+'"></label><label>PV actuels <input id="pe-pv" type="number" value="'+esc(c.pv)+'"></label><label>Mod. DEX <input id="pe-dex" type="number" value="'+esc(c.dex||0)+'"></label>'+(c.kind==="pj"?'<label>Perc. passive <input id="pe-pp" type="number" value="'+esc(c.pp)+'"></label>':'')+'<div class="ptbtns"><button class="btn gold" data-a="pt-esave" data-id="'+c.cid+'">Enregistrer</button><button class="btn ghost" data-a="pt-eclose">Annuler</button></div></div>';}
-  h+=ptAbil(c);
-  h+='</div><div class="ptact"><input type="number" min="0" inputmode="numeric" id="hp-'+c.cid+'" placeholder="PV" aria-label="Montant pour '+esc(c.nom)+'"><div class="ptab"><button class="dmg" data-a="pt-dmg" data-id="'+c.cid+'" title="Dégâts">−</button><button class="heal" data-a="pt-heal" data-id="'+c.cid+'" title="Soins">+</button><button data-a="pt-tmp" data-id="'+c.cid+'" title="PV temporaires">T</button></div><div class="ptab"><button data-a="pt-edit" data-id="'+c.cid+'" title="Modifier" aria-label="Modifier '+esc(c.nom)+'">✎</button><button data-a="pt-del" data-id="'+c.cid+'" title="Retirer du combat" aria-label="Retirer '+esc(c.nom)+'">✕</button></div></div></li>';
-  return h;
-}
 function ptSide(q){
   const tab=ui.ptTab||"scenario",s=scenarios[q.id]||{};
   const tabs=[["scenario","Scénario"],["compendium","Compendium"],["tests","Tests & DD"],["regles","Règles"],["des","Dés"],["journal","Journal"],["bilan","Bilan"]];
   let h='<div class="pttabs" role="tablist">'+tabs.map(t=>'<button role="tab" aria-selected="'+(tab===t[0])+'" class="'+(tab===t[0]?'on':'')+'" data-a="pt-tab" data-v="'+t[0]+'">'+t[1]+'</button>').join("")+'</div><div class="ptpanel">';
   if(tab==="scenario"){
-    h+=s.scenario?'<div class="wikibody">'+md(manLinks(s.scenario))+'</div>':'<p class="desc">Aucun scénario pour cette quête. <a href="#man/quetes/'+encodeURIComponent(q.id)+'">L\'écrire dans le manuel</a></p>';
+    h+=s.scenario?ptScenario(q):'<p class="desc">Aucun scénario pour cette quête. <a href="#man/quetes/'+encodeURIComponent(q.id)+'">L\'écrire dans le manuel</a></p>';
     const ps=(s.pnj||[]).map(id=>pnjs.find(p=>p.id===id)).filter(Boolean).concat(pnjs.filter(p=>(p.quetes||[]).indexOf(q.id)>=0&&(s.pnj||[]).indexOf(p.id)<0));
     if(ps.length)h+='<h3>PNJ de la quête</h3>'+ps.map(p=>'<details class="ptpnj"><summary>'+(p.image?'<img src="'+esc(p.image)+'" alt="">':'')+'<strong>'+esc(p.nom)+'</strong>'+(p.role?' · '+esc(p.role):'')+'</summary>'+(p.voix?'<p><strong>Voix :</strong> '+esc(p.voix)+'</p>':'')+(p.apparence?'<p><strong>Apparence :</strong> '+esc(p.apparence)+'</p>':'')+(p.secrets?'<div class="wikibody"><strong>Secrets :</strong> '+md(manLinks(p.secrets))+'</div>':'')+(p.monstre?'<button class="ptadd" data-a="pt-sb" data-id="'+esc(p.monstre)+'">Bloc de stats</button>':'')+'</details>').join("");
     if(s.notes)h+=mdBlock("Notes",s.notes);
@@ -2171,7 +2196,7 @@ function ptSide(q){
 }
 function ptTally(kind,name,xp){const C=ui.pt.combat;if(!C)return;C.vaincus=C.vaincus||{};C.ko=C.ko||[];
   if(kind==="v"){C.vaincus[name]=C.vaincus[name]||{n:0,xp:0};C.vaincus[name].n++;C.vaincus[name].xp+=(+xp||0);}else if(C.ko.indexOf(name)<0)C.ko.push(name);}
-function ptMonOf(c){return c.kind==="monstre"?monstres.find(m=>m.id===c.ref):null;}
+function ptMonOf(c){return c.kind==="monstre"?monstres.find(m=>m.id===c.ref):c.mon?monstres.find(m=>m.id===c.mon):null;}
 function ptAbil(c){const m=ptMonOf(c);if(!m)return "";const t=[m.traits&&"**Traits**\n\n"+m.traits,m.actions&&"**Actions**\n\n"+m.actions,m.reactions&&"**Réactions et actions légendaires**\n\n"+m.reactions].filter(Boolean).join("\n\n");
   return '<details class="ptabil"'+(ui.pt.cur===c.cid?' open':'')+'><summary>Capacités de '+esc(m.nom)+' <span class="desc">(vitesse '+esc(m.vitesse||"—")+')</span></summary>'+(t?'<div class="wikibody">'+md(t)+'</div>':'<p class="desc">Aucune capacité saisie.</p>')+'<button class="ptadd" data-a="pt-sb" data-id="'+esc(m.id)+'">Bloc de stats complet</button></details>';}
 function ptIds(){return (ui.pt.liste||[]).map(c=>c.cid);}
@@ -2183,14 +2208,115 @@ function ptJoin(before){const P=ui.pt;if(!P.combat||P.combat.phase!=="combat")re
   const miss=nw.filter(c=>c.init===""||c.init==null);
   if(miss.length){ui.ptSel=miss[0].cid;ui.ptAlert="Inscris l'initiative de "+miss.map(c=>c.nom).join(", ")+" (case Init. de sa fiche).";}
   else ui.ptSel=nw[0].cid;}
+const PT_DUR=[["debut","Jusqu'au début de son prochain tour"],["fin","Jusqu'à la fin de son prochain tour"],["r1","1 round"],["m1","1 minute (10 rounds)"],["m10","10 minutes"],["h1","1 heure"],["h8","8 heures"],["rn","Nombre de rounds…"],["indef","Sans durée (je le retire moi-même)"]];
+const PT_EFF_PRE=[["Rage","m10",0],["Bénédiction","m1",1],["Bouclier","debut",0],["Esquive","debut",0],["Hâte","m1",1],["Bouclier de la foi","m10",1],["Marque du chasseur","h1",1],["Invisibilité","h1",1],["Aide","h8",0],["Flou","m1",1]];
+function ptCamp(c){return c.camp||(c.kind==="pj"?"allie":"ennemi");}
+function ptFoesUp(){return (ui.pt.liste||[]).some(c=>ptCamp(c)==="ennemi"&&c.pv>0);}
+function ptDurTxt(e){if(e.type==="debut")return "jusqu'au début de son tour";if(e.type==="fin")return "jusqu'à la fin de son tour";if(e.type==="indef")return "";const r=+e.r||0;return r>=10?Math.floor(r/10)+" min"+(r%10?" "+r%10+" r":""):r+" r";}
+function ptLoseConc(c,why){if(!c.conc&&!(c.effets||[]).some(e=>e.conc))return;c.conc=false;const gone=(c.effets||[]).filter(e=>e.conc);c.effets=(c.effets||[]).filter(e=>!e.conc);
+  const t=c.nom+" perd sa concentration"+(why?" ("+why+")":"")+(gone.length?" : "+gone.map(e=>e.nom).join(", ")+" prend fin":"")+".";ptLog(t);ui.ptAlert=t;}
+function ptEffExpire(c,e){ptLog("⏳ "+e.nom+" ("+c.nom+") prend fin.");ui.ptAlert="⏳ "+e.nom+" de "+c.nom+" prend fin.";if(e.conc&&!(c.effets||[]).some(x=>x!==e&&x.conc))c.conc=false;}
+function ptEffChip(c,e){return '<span class="pteff'+(e.conc?' conc':'')+'" title="'+esc(e.nom+(e.conc?" (concentration)":""))+'"><span class="ptcx">✨ '+esc(e.nom)+(ptDurTxt(e)?' · '+esc(ptDurTxt(e)):'')+(e.conc?' · C':'')+'</span><button class="ptcx del" data-a="pt-edel" data-id="'+c.cid+'" data-v="'+esc(e.id)+'" aria-label="Retirer '+esc(e.nom)+'">✕</button></span>';}
+function ptEffForm(c){
+  return '<div class="ptpick"><div class="pteffpre">'+PT_EFF_PRE.map((p,i)=>'<button class="ptadd" data-a="pt-epre" data-id="'+c.cid+'" data-v="'+i+'">'+esc(p[0])+'</button>').join("")+'</div>'+
+    '<div class="ptefff"><label>Effet ou sort<input id="ef-nom" maxlength="60" placeholder="Ex. Rage, Bénédiction, Toile d\'araignée"></label><label>Durée<select id="ef-dur">'+PT_DUR.map(d=>'<option value="'+d[0]+'">'+esc(d[1])+'</option>').join("")+'</select></label><label>Rounds<input id="ef-n" type="number" min="1" inputmode="numeric" placeholder="si « Nombre de rounds »"></label>'+
+    '<label class="ptchk" for="ef-conc"><input type="checkbox" id="ef-conc"><span>Concentration</span></label></div><div class="ptbtns"><button class="btn gold" data-a="pt-eadd" data-id="'+c.cid+'">Ajouter l\'effet</button><button class="btn ghost" data-a="pt-eclose2">Fermer</button></div></div>';
+}
+function ptAtkPicker(c){
+  const others=ptOrder().filter(x=>x.cid!==c.cid&&(x.pv>0||x.kind==="pj")),grp=k=>others.filter(x=>ptCamp(x)===k);
+  const btn=x=>'<button class="ptadd tgt" data-a="pt-atkto" data-id="'+c.cid+'" data-v="'+x.cid+'">'+esc(x.nom)+' <span class="desc">'+x.pv+'/'+(x.pvMax||"?")+' · 🛡 '+esc(x.ca===""?"—":x.ca)+'</span></button>';
+  return '<div class="ptpick"><strong>Qui '+esc(c.nom)+' attaque-t-il ?</strong>'+(grp("ennemi").length?'<div class="pttgt"><span class="ptlbl">Ennemis</span>'+grp("ennemi").map(btn).join("")+'</div>':'')+(grp("allie").length?'<div class="pttgt"><span class="ptlbl">Alliés</span>'+grp("allie").map(btn).join("")+'</div>':'')+'<button class="ptadd" data-a="pt-atkx">Annuler</button></div>';
+}
+function ptRow(c){
+  const P=ui.pt,cur=P.cur===c.cid,dead=c.kind!=="pj"&&c.pv<=0,down=c.kind==="pj"&&c.pv<=0,fight=!!(P.combat&&P.combat.phase==="combat"),camp=ptCamp(c);
+  const pct=c.pvMax>0?Math.max(0,Math.min(100,Math.round(100*c.pv/c.pvMax))):0,hc=pct>50?"ok":pct>25?"mid":"low";
+  let h='<li class="ptrow'+(cur&&fight?' cur':'')+(dead?' dead':'')+(down?' down':'')+' k-'+c.kind+' c-'+camp+'" id="pt-'+c.cid+'">';
+  h+='<label class="ptinit"><span>Init.</span><input type="number" inputmode="numeric" class="pt-in" data-id="'+c.cid+'" data-f="init" value="'+esc(c.init===""||c.init==null?"":c.init)+'" aria-label="Initiative de '+esc(c.nom)+'"></label>';
+  h+='<div class="ptmain"><div class="ptname">'+(cur&&fight?'<span class="ptturn" aria-label="Tour actuel">▶</span>':'')+(c.kind==="monstre"&&monstres.some(m=>m.id===c.ref)?'<button class="ptlink" data-a="pt-sb" data-id="'+esc(c.ref)+'">'+esc(c.nom)+'</button>':'<strong>'+esc(c.nom)+'</strong>')+
+    '<span class="ptcamp '+camp+'">'+(camp==="allie"?'Allié':'Ennemi')+'</span><span class="ptca" title="Classe d\'armure">🛡 '+esc(c.ca===""?"—":c.ca)+'</span>'+(c.kind==="pj"&&c.pp!==""&&c.pp!=null?'<span class="ptca" title="Perception passive">👁 '+esc(c.pp)+'</span>':'')+(c.conc?'<span class="ptconc">Concentration</span>':'')+(dead?'<span class="ptdead">Vaincu</span>':'')+
+    '<button class="ptmod" data-a="pt-edit" data-id="'+c.cid+'">✎ Modifier</button></div>';
+  h+='<div class="pthp"><span class="bar"><span class="'+hc+'" style="width:'+pct+'%"></span></span><span class="num">'+c.pv+' / '+(c.pvMax||"?")+' PV'+(c.tmp>0?' <em>+'+c.tmp+' temp.</em>':'')+'</span></div>';
+  if(ui.ptEditC===c.cid){h+='<div class="ptedit"><label>Nom <input id="pe-nom" value="'+esc(c.nom)+'"></label><label>CA <input id="pe-ca" type="number" value="'+esc(c.ca)+'"></label><label>PV max <input id="pe-pvmax" type="number" value="'+esc(c.pvMax)+'"></label><label>PV actuels <input id="pe-pv" type="number" value="'+esc(c.pv)+'"></label><label>Mod. DEX <input id="pe-dex" type="number" value="'+esc(c.dex||0)+'"></label>'+(c.kind==="pj"?'<label>Perc. passive <input id="pe-pp" type="number" value="'+esc(c.pp)+'"></label>':'')+'<label>Camp <select id="pe-camp"><option value="allie"'+(camp==="allie"?' selected':'')+'>Allié</option><option value="ennemi"'+(camp==="ennemi"?' selected':'')+'>Ennemi</option></select></label><div class="ptbtns"><button class="btn gold" data-a="pt-esave" data-id="'+c.cid+'">Enregistrer</button><button class="btn ghost" data-a="pt-eclose">Annuler</button></div></div>';}
+  const atk=ui.ptAtk&&ui.ptAtk.to===c.cid?ptC(ui.ptAtk.from):null;
+  if(atk)h+='<div class="ptatkd">⚔ Attaqué par <strong>'+esc(atk.nom)+'</strong> : inscris les dégâts à droite, ou <button class="ptadd" data-a="pt-miss" data-id="'+c.cid+'">Raté</button></div>';
+  h+='<div class="ptconds">'+(c.conds||[]).map(x=>ptCondChip(c,x)).join("")+(c.effets||[]).map(e=>ptEffChip(c,e)).join("")+'<button class="ptadd" data-a="pt-copen" data-id="'+c.cid+'">+ État</button><button class="ptadd" data-a="pt-eopen" data-id="'+c.cid+'">+ Effet ou sort</button><button class="ptadd" data-a="pt-conc" data-id="'+c.cid+'">'+(c.conc?'− Concentration':'+ Concentration')+'</button></div>';
+  if(down){const ds=c.ds||{s:0,f:0};h+='<div class="ptds"><span>Jets contre la mort</span><span class="dsg">Succès '+[1,2,3].map(i=>'<button class="dsb s'+(ds.s>=i?' on':'')+'" data-a="pt-ds" data-id="'+c.cid+'" data-v="s'+i+'" aria-label="Succès '+i+'"></button>').join("")+'</span><span class="dsg">Échecs '+[1,2,3].map(i=>'<button class="dsb f'+(ds.f>=i?' on':'')+'" data-a="pt-ds" data-id="'+c.cid+'" data-v="f'+i+'" aria-label="Échec '+i+'"></button>').join("")+'</span>'+(ds.s>=3?'<strong>Stable</strong>':ds.f>=3?'<strong class="low">Mort</strong>':'')+'</div>';}
+  if(ui.ptCond===c.cid){h+='<div class="ptpick"><label>Durée (rounds, vide = jusqu\'à nouvel ordre) <input type="number" min="1" id="pt-cdur" inputmode="numeric"></label><div class="ptpickg">'+PT_CONDS.map(k=>'<button data-a="pt-cadd" data-id="'+c.cid+'" data-v="'+k[0]+'" title="'+esc(k[3])+'">'+esc(k[1])+' <span>'+esc(k[2])+'</span></button>').join("")+'</div><button class="ptadd" data-a="pt-cclose">Fermer</button></div>';}
+  if(ui.ptEff===c.cid)h+=ptEffForm(c);
+  if(fight&&!dead){
+    const tr=c.tr||{};
+    h+='<div class="pttour"'+(cur?'':' data-other="1"')+'>'+(cur?'<div class="pteco">'+[["a","Action"],["b","Action bonus"],["r","Réaction"]].map(f=>'<label class="'+(tr[f[0]]?'used':'')+'"><span>'+f[1]+(tr[f[0]]?' ✓':'')+'</span><input class="pt-tr" id="tr-'+f[0]+'-'+c.cid+'" data-id="'+c.cid+'" data-f="'+f[0]+'" maxlength="120" value="'+esc(tr[f[0]]||"")+'" placeholder="'+(f[0]==="a"?'Ex. Attaque à la dague':f[0]==="b"?'Ex. Se cacher':'Ex. Attaque d\'opportunité')+'"></label>').join("")+'</div>':'')+
+      '<div class="ptbtnrow"><button class="btn gold sm" data-a="pt-atk" data-id="'+c.cid+'">⚔ Attaque</button><button class="btn ghost sm crit" data-a="pt-crit" data-id="'+c.cid+'">✨ Coup critique !</button><button class="btn ghost sm fail" data-a="pt-fumble" data-id="'+c.cid+'">💀 Échec critique</button>'+(cur?'':'<button class="btn ghost sm" data-a="pt-react" data-id="'+c.cid+'">↩ Réaction</button>')+'</div></div>';
+    if(ui.ptAtkOpen===c.cid)h+=ptAtkPicker(c);
+  }
+  h+=ptAbil(c);
+  h+='</div><div class="ptact">'+
+    '<div class="hpsec dmg"><label for="dmg-'+c.cid+'">Dégâts</label><div><input type="number" min="0" inputmode="numeric" id="dmg-'+c.cid+'" placeholder="0"><button data-a="pt-dmg" data-id="'+c.cid+'">Appliquer</button></div></div>'+
+    '<div class="hpsec heal"><label for="heal-'+c.cid+'">Soins</label><div><input type="number" min="0" inputmode="numeric" id="heal-'+c.cid+'" placeholder="0"><button data-a="pt-heal" data-id="'+c.cid+'">Appliquer</button></div></div>'+
+    '<div class="hpsec tmp"><label for="tmp-'+c.cid+'">PV temporaires</label><div><input type="number" min="0" inputmode="numeric" id="tmp-'+c.cid+'" placeholder="0"><button data-a="pt-tmp" data-id="'+c.cid+'">Donner</button></div></div>'+
+    '<button class="ptdel" data-a="pt-del" data-id="'+c.cid+'">Retirer</button></div></li>';
+  return h;
+}
+function ptStartTurn(c){
+  if(!c)return;if(c.tr)c.tr.r="";
+  const gone=(c.effets||[]).filter(e=>e.type==="debut");if(gone.length){gone.forEach(e=>ptEffExpire(c,e));c.effets=c.effets.filter(e=>e.type!=="debut");}
+}
+function ptNext(dir){
+  const o=ptOrder().filter(ptAlive);if(!o.length)return;
+  let i=o.findIndex(c=>c.cid===ui.pt.cur);ui.ptAtk=null;ui.ptAtkOpen=null;
+  if(dir>0){ptEndTurn(ptC(ui.pt.cur));i++;if(i>=o.length||i<0){i=0;ui.pt.round=(ui.pt.round||0)+1;ptLog("— Round "+ui.pt.round+" —");}}
+  else{i--;if(i<0){i=o.length-1;ui.pt.round=Math.max(1,(ui.pt.round||1)-1);}}
+  ui.pt.cur=o[i].cid;const c=o[i];
+  if(dir>0)ptStartTurn(c);
+  if(c.kind==="pj"&&c.pv<=0)ui.ptAlert=c.nom+" est à 0 PV : jet contre la mort (d20, 10+ = succès).";
+  if(ui.ptSel===c.cid)ui.ptSel=null;
+}
+function ptEndTurn(c){
+  if(!c)return;
+  (c.conds||[]).forEach(x=>{if(x.d>0){x.d--;if(x.d===0)ptLog(c.nom+" n'est plus "+PT_COND[x.k][1].toLowerCase()+".");}});
+  c.conds=(c.conds||[]).filter(x=>!(x.d===0&&x.timed));
+  const keep=[];(c.effets||[]).forEach(e=>{if(e.type==="rounds"||e.type==="fin"){e.r=(+e.r||0)-1;if(e.r<=0){ptEffExpire(c,e);return;}}keep.push(e);});c.effets=keep;
+  if(c.tr){c.tr.a="";c.tr.b="";}
+}
+function ptParole(){
+  const P=ui.pt,pr=P.parole||(P.parole={ordre:[],cur:null}),allies=ptOrder().filter(c=>ptCamp(c)==="allie");
+  pr.ordre=pr.ordre.filter(id=>allies.some(c=>c.cid===id));allies.forEach(c=>{if(pr.ordre.indexOf(c.cid)<0)pr.ordre.push(c.cid);});
+  if(!ui.ptParOpen)return '<div class="ptparole closed"><button class="btn ghost" data-a="pt-paropen">🗣 Ordre de parole</button></div>';
+  let h='<div class="ptparole"><div class="ptlbl">🗣 Ordre de parole <button class="ptx" data-a="pt-parclose" aria-label="Fermer l\'ordre de parole">✕</button></div>';
+  if(!pr.ordre.length)return h+'<p class="desc">Ajoute d\'abord les personnages du groupe.</p></div>';
+  h+='<ol class="ptminis parole">'+pr.ordre.map((id,i)=>{const c=ptC(id);return '<li class="ptmini'+(pr.cur===id?' cur':'')+'"><span class="ptminit-v">'+(i+1)+'</span><span class="ptmname"><span class="nm">'+(pr.cur===id?'🗣 ':'')+esc(c.nom)+'</span></span><span class="ptord"><button data-a="pt-parup" data-id="'+id+'" aria-label="Monter '+esc(c.nom)+'"'+(i?'':' disabled')+'>▲</button><button data-a="pt-pardn" data-id="'+id+'" aria-label="Descendre '+esc(c.nom)+'"'+(i<pr.ordre.length-1?'':' disabled')+'>▼</button></span></li>';}).join("")+'</ol>';
+  return h+'<div class="ptbar">'+(pr.cur?'<button class="btn gold" data-a="pt-parnext">Passer au suivant ▶</button><button class="btn ghost" data-a="pt-parstop">Arrêter</button>':'<button class="btn gold" data-a="pt-parnext">Donner la parole au premier</button>')+'</div></div>';
+}
+function ptStartEnc(q,rid,nom,grp){
+  const P=ui.pt,r=rencontres.find(x=>x.id===rid);nom=(r?r.nom:nom||"").slice(0,80)||"Rencontre";
+  P.liste.forEach(c=>{c.init="";c.tr={};});
+  P.combat={id:ptUid(),nom:nom,ref:rid||"",phase:"init",notes:"",log:[],vaincus:{},ko:[]};P.round=0;P.cur=null;ui.ptSel=null;ui.ptAtk=null;
+  ptLog("Rencontre : "+nom+".");
+  if(grp)ptSignups(q).forEach(s=>ptAddPC(s));
+  if(r)(r.monstres||[]).forEach(x=>{const m=monstres.find(y=>y.id===x.id);if(m)for(let i=0;i<(x.nb||1);i++)ptAddMonster(m);});
+}
+function ptAddPnj(p){const m=p.monstre?monstres.find(x=>x.id===p.monstre):null,pv=m?ptPvAvg(m.pv):0;
+  ui.pt.liste.push({cid:ptUid(),kind:"pnj",ref:p.id,nom:p.nom,camp:"allie",ca:m&&m.ca!=null?+m.ca:"",pvMax:pv,pv:pv,tmp:0,init:"",dex:m?ptDexMod(m.dex):0,xp:0,conds:[],conc:false,mon:m?m.id:""});}
+function ptScenario(q){
+  const s=scenarios[q.id]||{},txt=String(s.scenario||""),P=ui.pt,faits=P.faits||[],encs=ptEncounters(q),used={};
+  const parts=txt.split(/\n(?=##\s)/);let h='';
+  const encBtn=r=>'<button class="btn gold sm" data-a="pt-launch" data-id="'+esc(r.id)+'">⚔ Lancer le combat : '+esc(r.nom)+'</button>';
+  parts.forEach((sec,i)=>{const isH=/^##\s/.test(sec);const here=encs.filter(r=>sec.indexOf(r.nom)>=0);here.forEach(r=>{used[r.id]=1;});
+    if(!isH){if(sec.trim())h+='<div class="wikibody">'+md(manLinks(sec))+'</div>'+(here.length?'<p class="ptlaunch">'+here.map(encBtn).join("")+'</p>':'');return;}
+    const done=faits.indexOf(i)>=0;
+    h+='<section class="ptsec'+(done?' done':'')+'"><label class="ptsecchk"><input type="checkbox" class="pt-sec" data-i="'+i+'"'+(done?' checked':'')+'><span class="sr">Marquer cette étape comme faite</span></label><div class="wikibody">'+md(manLinks(sec))+'</div>'+(here.length?'<p class="ptlaunch">'+here.map(encBtn).join("")+'</p>':'')+'</section>';});
+  const rest=encs.filter(r=>!used[r.id]);
+  if(rest.length)h+='<h3>Combats de la quête</h3><p class="ptlaunch">'+rest.map(encBtn).join("")+'</p>';
+  return h;
+}
 function ptMini(c,phase){
   const cur=ui.pt.cur===c.cid,sel=ui.ptSel===c.cid,dead=c.kind!=="pj"&&c.pv<=0,down=c.kind==="pj"&&c.pv<=0;
   const pct=c.pvMax>0?Math.max(0,Math.min(100,Math.round(100*c.pv/c.pvMax))):0,hc=pct>50?"ok":pct>25?"mid":"low";
-  let h='<li class="ptmini'+(cur?' cur':'')+(sel?' sel':'')+(dead?' dead':'')+(down?' down':'')+' k-'+c.kind+'">';
+  let h='<li class="ptmini'+(cur&&ui.pt.combat&&ui.pt.combat.phase==="combat"?' cur':'')+(sel?' sel':'')+(dead?' dead':'')+(down?' down':'')+' k-'+c.kind+' c-'+ptCamp(c)+'">';
   if(phase==="init")h+='<label class="ptminit"><span class="sr">Initiative de '+esc(c.nom)+'</span><input type="number" inputmode="numeric" class="pt-in" data-id="'+c.cid+'" data-f="init" value="'+esc(c.init===""||c.init==null?"":c.init)+'" placeholder="—"></label>'+(c.kind!=="pj"?'<button class="ptdie" data-a="pt-roll1" data-id="'+c.cid+'" title="Lancer d20'+((+c.dex||0)>=0?'+':'')+(+c.dex||0)+'" aria-label="Lancer l\'initiative de '+esc(c.nom)+'">🎲</button>':'<span class="ptdie ph"></span>');
   else h+='<span class="ptminit-v">'+esc(c.init===""||c.init==null?"—":c.init)+'</span>';
   h+='<button class="ptmname" data-a="pt-sel" data-id="'+c.cid+'"><span class="nm">'+(cur?'▶ ':'')+esc(c.nom)+(c.conc?' <span class="ptconc">C</span>':'')+'</span><span class="minibar"><span class="'+hc+'" style="width:'+pct+'%"></span></span><span class="mhp">'+c.pv+'/'+(c.pvMax||"?")+(c.tmp>0?' +'+c.tmp:'')+' · 🛡 '+esc(c.ca===""?"—":c.ca)+'</span>'+
-    ((c.conds||[]).length?'<span class="mconds">'+c.conds.map(x=>esc((PT_COND[x.k]||[,""])[1])+(x.k==="exhaustion"?" "+(x.n||1):"")+(x.d>0?" ("+x.d+")":"")).join(" · ")+'</span>':'')+'</button></li>';
+    ((c.effets||[]).length?'<span class="meffs">'+c.effets.map(e=>'✨ '+esc(e.nom)+(ptDurTxt(e)?' ('+esc(ptDurTxt(e))+')':'')).join(" · ")+'</span>':'')+((c.conds||[]).length?'<span class="mconds">'+c.conds.map(x=>esc((PT_COND[x.k]||[,""])[1])+(x.k==="exhaustion"?" "+(x.n||1):"")+(x.d>0?" ("+x.d+")":"")).join(" · ")+'</span>':'')+'</button></li>';
   return h;
 }
 function ptStartBox(q){
@@ -2210,7 +2336,9 @@ function ptAddBox(q,open){
   if(absent.length)h+='<form class="ptexpr" id="pt-pj"><select id="pt-pj-sel" aria-label="Personnage du registre"><option value="">Un aventurier en particulier…</option>'+absent.map(a=>'<option value="'+esc(a.id)+'">'+esc(a.nom)+(a.joueur?' ('+esc(a.joueur)+')':'')+'</option>').join("")+'</select><button class="btn ghost">Ajouter</button></form>';
   h+='<p><button class="btn ghost" data-a="pt-group"'+(sg.length?'':' disabled')+'>👥 Le groupe ('+sg.length+')</button>'+encs.map(r=>'<button class="btn ghost" data-a="pt-enc" data-id="'+esc(r.id)+'">👹 '+esc(r.nom)+'</button>').join("")+'</p>';
   h+='<form class="ptexpr" id="pt-mon"><select id="pt-mon-sel" aria-label="Monstre du bestiaire"><option value="">Monstre du bestiaire…</option>'+byName(monstres).map(m=>'<option value="'+esc(m.id)+'">'+esc(m.nom)+' (FP '+esc(m.fp||"?")+')</option>').join("")+'</select><input id="pt-mon-nb" type="number" min="1" max="20" value="1" aria-label="Nombre"><button class="btn ghost">Ajouter</button></form>';
-  h+='<form class="ptexpr" id="pt-cus"><input id="pt-cus-nom" placeholder="Autre (nom)" aria-label="Nom"><input id="pt-cus-ca" type="number" placeholder="CA" aria-label="CA"><input id="pt-cus-pv" type="number" placeholder="PV" aria-label="PV"><button class="btn ghost">Ajouter</button></form>';
+  h+='<form class="ptexpr" id="pt-cus"><input id="pt-cus-nom" placeholder="Autre (nom)" aria-label="Nom"><input id="pt-cus-ca" type="number" placeholder="CA" aria-label="CA"><input id="pt-cus-pv" type="number" placeholder="PV" aria-label="PV"><select id="pt-cus-camp" aria-label="Camp"><option value="ennemi">Ennemi</option><option value="allie">Allié</option></select><button class="btn ghost">Ajouter</button></form>';
+  const pn=byName(pnjs).filter(x=>!P.liste.some(c=>c.ref===x.id));
+  if(pn.length)h+='<form class="ptexpr" id="pt-pnjf"><select id="pt-pnj-sel" aria-label="PNJ du manuel"><option value="">Un PNJ qui accompagne le groupe…</option>'+pn.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.nom)+(x.role?' · '+esc(x.role):'')+'</option>').join("")+'</select><button class="btn ghost">Ajouter</button></form>';
   if(ui.pt.liste.length)h+='<p><button class="linkbtn" data-a="pt-clean">Retirer les monstres vaincus</button> · <button class="linkbtn" data-a="pt-reset">Tout effacer</button></p>';
   return h+'</details>';
 }
@@ -2219,7 +2347,11 @@ function ptCombatCol(q){
   const P=ui.pt,C=P.combat,o=ptOrder();let h='';
   if(!C){
     h+=ptStartBox(q);
-    if(o.length)h+='<h3>Combattants présents</h3><ol class="ptminis">'+o.map(c=>ptMini(c,"")).join("")+'</ol>';
+    const al=o.filter(c=>ptCamp(c)==="allie"),en=o.filter(c=>ptCamp(c)!=="allie");
+    h+='<h3>Personnages du groupe</h3>'+(al.length?'<ol class="ptminis">'+al.map(c=>ptMini(c,"")).join("")+'</ol>':'<p class="desc">Ajoute le groupe ou un PNJ qui l\'accompagne avec « Ajouter un combattant » plus bas.</p>');
+    if(en.length)h+='<h3>Autres créatures</h3><ol class="ptminis">'+en.map(c=>ptMini(c,"")).join("")+'</ol>';
+    if(o.some(c=>(c.effets||[]).length))h+='<p class="pttime"><span>Effets en cours : faire passer le temps</span><button class="ptadd" data-a="pt-time" data-v="10">⏩ 1 minute</button><button class="ptadd" data-a="pt-time" data-v="100">⏩ 10 minutes</button><button class="ptadd" data-a="pt-time" data-v="600">⏩ 1 heure</button></p>';
+    h+=ptParole();
     if(ui.ptSel&&ptC(ui.ptSel))h+='<div class="ptselcard"><div class="ptlbl">Fiche ouverte <button class="ptx" data-a="pt-selx" aria-label="Fermer la fiche">✕</button></div><ol class="ptlist">'+ptRow(ptC(ui.ptSel))+'</ol></div>';
     h+=ptAddBox(q,false);
     const hist=P.combats||[];
@@ -2237,7 +2369,7 @@ function ptCombatCol(q){
   }
   const cur=ptC(P.cur),sel=ui.ptSel&&ui.ptSel!==P.cur?ptC(ui.ptSel):null;
   h+='<div class="ptphase"><span class="ptlbl">Rencontre</span><strong>'+esc(C.nom)+'</strong><span class="ptround sm"><span>Round</span><strong>'+P.round+'</strong></span></div>';
-  h+='<div class="ptbar"><button class="btn ghost" data-a="pt-prev">◀ Précédent</button><button class="btn gold" data-a="pt-next">Tour suivant ▶</button><button class="btn ghost" data-a="pt-close">Clore la rencontre</button></div>';
+  h+=ptFoesUp()?'<div class="ptbar"><button class="btn ghost" data-a="pt-prev">◀ Précédent</button><button class="btn gold" data-a="pt-next">Tour suivant ▶</button><button class="btn ghost" data-a="pt-close">Clore la rencontre</button></div>':'<div class="ptvictory"><span>🏁 Plus aucun ennemi debout.</span><button class="btn gold" data-a="pt-close">Clore la rencontre</button></div>';
   if(cur)h+='<div class="ptturncard"><div class="ptlbl">C\'est le tour de</div><ol class="ptlist">'+ptRow(cur)+'</ol></div>';
   if(sel)h+='<div class="ptselcard"><div class="ptlbl">Fiche ouverte <button class="ptx" data-a="pt-selx" aria-label="Fermer la fiche">✕</button></div><ol class="ptlist">'+ptRow(sel)+'</ol></div>';
   h+='<h3>Ordre d\'initiative <span class="desc">(touche un nom pour ouvrir sa fiche)</span></h3><ol class="ptminis">'+o.map(c=>ptMini(c,"")).join("")+'</ol>';
@@ -2247,7 +2379,7 @@ function ptCombatCol(q){
 function ptCloseModal(){
   const P=ui.pt,C=P.combat;if(!C)return "";const v=Object.keys(C.vaincus||{}).map(k=>[k,C.vaincus[k]]),xp=v.reduce((t,x)=>t+(x[1].xp||0),0);
   let h='<div class="modal-bg" data-a="pt-close-cancel"><form class="modal wide" id="pt-closeform" role="dialog" aria-modal="true" aria-labelledby="ptc-t"><h2 id="ptc-t">Clore « '+esc(C.nom)+' »</h2>';
-  h+='<p class="sbl"><strong>'+(P.round||0)+'</strong> round'+((P.round||0)>1?'s':'')+(v.length?' · Vaincus : '+esc(v.map(x=>x[0]+(x[1].n>1?" ×"+x[1].n:"")).join(", "))+' ('+xp+' XP)':'')+((C.ko||[]).length?' · Tombés : '+esc(C.ko.join(", ")):'')+'</p>';
+  h+='<p class="sbl"><strong>'+(P.round||0)+'</strong> round'+((P.round||0)>1?'s':'')+(v.length?' · Vaincus : '+esc(v.map(x=>x[0]+(x[1].n>1?" ×"+x[1].n:"")).join(", "))+' ('+xp+' XP)':'')+((C.ko||[]).length?' · Tombés : '+esc(C.ko.join(", ")):'')+(C.crits?' · Critiques : '+esc(Object.keys(C.crits).map(k=>k+(C.crits[k]>1?" ×"+C.crits[k]:"")).join(", ")):'')+(C.fails?' · Échecs critiques : '+esc(Object.keys(C.fails).map(k=>k+(C.fails[k]>1?" ×"+C.fails[k]:"")).join(", ")):'')+'</p>';
   h+=(C.log||[]).length?'<details class="aide"><summary>Journal du combat ('+C.log.length+' entrées)</summary><ul class="ptjournal">'+C.log.map(l=>'<li><span>'+esc(l.h)+'</span>'+esc(l.t)+'</li>').join("")+'</ul></details>':'';
   h+='<label for="pt-close-notes">Tes notes de combat : veux-tu ajouter quelque chose avant de fermer ?<textarea id="pt-close-notes" rows="7" maxlength="5000">'+esc(C.notes||"")+'</textarea></label>';
   h+='<label class="ptchk" for="pt-close-clean"><input type="checkbox" id="pt-close-clean" checked><span>Retirer les monstres vaincus du tableau</span></label>';
@@ -2268,6 +2400,7 @@ function partyView(){
   if(!isAdmin)return '<p class="empty">Le Mode Partie est réservé au DM.</p>';
   const q=ptQuest();if(!q)return '<p class="empty">Quête introuvable.</p>';
   ptSync(q.id);const P=ui.pt,o=ptOrder(),b=office(q.bureau)||{};
+  if(ui.ptLaunch){const rid=ui.ptLaunch;ui.ptLaunch=null;if(P.combat)ui.ptAlert="Clos d'abord la rencontre « "+P.combat.nom+" ».";else{ptStartEnc(q,rid,"",true);ptSave();}}
   const xp=P.liste.filter(c=>c.kind==="monstre"&&c.pv<=0).reduce((t,c)=>t+(+c.xp||0),0),npj=P.liste.filter(c=>c.kind==="pj").length;
   let h='<section class="partie"><div class="pthead"><div><p class="ctags">'+rankSeal(q.rang)+'<span class="creg">'+esc(b.nom||"")+'</span></p><h2>'+esc(q.titre)+'</h2></div><div class="ptround">'+(P.combat&&P.combat.phase==="combat"?'<span>Round</span><strong>'+P.round+'</strong>':P.combat?'<span>Initiative</span><strong>🎲</strong>':'<span>Hors combat</span>')+'</div></div>';
   if(ui.ptAlert)h+='<div class="ptalert" role="alert"><span>⚠ '+esc(ui.ptAlert)+'</span><button data-a="pt-aok" aria-label="Fermer l\'alerte">OK</button></div>';
@@ -2280,11 +2413,35 @@ function partyView(){
 }
 async function partyAction(a,id,b,e){
   const q=ptQuest();if(!q||!ui.pt)return;const P=ui.pt,c=id?ptC(id):null,v=b.getAttribute("data-v")||"";
-  const amt=()=>{const el=document.getElementById("hp-"+id);const n=Math.round(+(el&&el.value)||0);if(el)el.value="";return n;};
+  const amt=(k)=>{const el=document.getElementById(k+"-"+id);const n=Math.round(+(el&&el.value)||0);if(el)el.value="";return n;};
   let ch=true;
   if(a==="pt-tab"){ui.ptTab=v;ch=false;}
   else if(a==="pt-sel"){ui.ptSel=ui.ptSel===id?null:id;ui.ptCond=null;ui.ptEditC=null;render();const el=document.getElementById("pt-"+(ui.ptSel===P.cur?P.cur:ui.ptSel));if(el&&ui.ptSel)el.scrollIntoView({block:"nearest",behavior:"smooth"});return;}
   else if(a==="pt-selx"){ui.ptSel=null;ch=false;}
+  else if(a==="pt-eopen"){ui.ptEff=ui.ptEff===id?null:id;ui.ptCond=null;ui.ptEditC=null;ch=false;}
+  else if(a==="pt-eclose2"){ui.ptEff=null;ch=false;}
+  else if(a==="pt-epre"){const pr=PT_EFF_PRE[+v];if(pr){const n=document.getElementById("ef-nom"),d=document.getElementById("ef-dur"),k=document.getElementById("ef-conc");if(n)n.value=pr[0];if(d)d.value=pr[1];if(k)k.checked=!!pr[2];}return;}
+  else if(a==="pt-eadd"&&c){const g=k=>document.getElementById(k),nom=String(g("ef-nom").value||"").trim().slice(0,60);if(!nom){g("ef-nom").focus();return;}
+    const dv=g("ef-dur").value,cc=g("ef-conc").checked,R={r1:1,m1:10,m10:100,h1:600,h8:4800}[dv];
+    const e={id:ptUid(),nom:nom,conc:cc,type:dv==="debut"?"debut":dv==="fin"?"fin":dv==="indef"?"indef":"rounds",r:dv==="fin"?(P.cur===c.cid?2:1):dv==="rn"?Math.max(1,Math.round(+g("ef-n").value||1)):(R||0)};
+    if(cc&&(c.conc||(c.effets||[]).some(x=>x.conc)))ptLoseConc(c,"nouveau sort de concentration");
+    (c.effets=c.effets||[]).push(e);if(cc)c.conc=true;ptLog("✨ "+c.nom+" : "+nom+(ptDurTxt(e)?" ("+ptDurTxt(e)+")":"")+(cc?", concentration":"")+".");ui.ptEff=null;}
+  else if(a==="pt-edel"&&c){const e=(c.effets||[]).find(x=>x.id===v);c.effets=(c.effets||[]).filter(x=>x.id!==v);if(e){ptLog(e.nom+" ("+c.nom+") prend fin.");if(e.conc&&!c.effets.some(x=>x.conc))c.conc=false;}}
+  else if(a==="pt-atk"){ui.ptAtkOpen=ui.ptAtkOpen===id?null:id;ch=false;}
+  else if(a==="pt-atkx"){ui.ptAtkOpen=null;ch=false;}
+  else if(a==="pt-atkto"&&c){const t=ptC(v);if(!t)return;ui.ptAtk={from:c.cid,to:t.cid};ptLog("⚔ "+c.nom+" attaque "+t.nom+".");if(t.cid!==P.cur)ui.ptSel=t.cid;ui.ptAtkOpen=null;
+    render();const el=document.getElementById("pt-"+t.cid);if(el)el.scrollIntoView({block:"nearest",behavior:"smooth"});const inp=document.getElementById("dmg-"+t.cid);if(inp)inp.focus({preventScroll:true});ptSave();return;}
+  else if(a==="pt-miss"){const f=ui.ptAtk&&ptC(ui.ptAtk.from),t=ui.ptAtk&&ptC(ui.ptAtk.to);if(f&&t)ptLog(f.nom+" rate "+t.nom+".");ui.ptAtk=null;}
+  else if(a==="pt-crit"&&c){const t=ui.ptAtk&&ui.ptAtk.from===c.cid?ptC(ui.ptAtk.to):null;ptLog("✨ Coup critique de "+c.nom+(t?" contre "+t.nom:"")+" !");const C=P.combat;if(C){C.crits=C.crits||{};C.crits[c.nom]=(C.crits[c.nom]||0)+1;}}
+  else if(a==="pt-fumble"&&c){ptLog("💀 Échec critique pour "+c.nom+" !");const C=P.combat;if(C){C.fails=C.fails||{};C.fails[c.nom]=(C.fails[c.nom]||0)+1;}}
+  else if(a==="pt-react"&&c){c.tr=c.tr||{};c.tr.r="utilisée";ptLog("↩ "+c.nom+" utilise sa réaction.");}
+  else if(a==="pt-paropen"){ui.ptParOpen=true;ch=false;}
+  else if(a==="pt-parclose"){ui.ptParOpen=false;ch=false;}
+  else if(a==="pt-parup"||a==="pt-pardn"){const o=(P.parole||{}).ordre||[],i=o.indexOf(id),j=a==="pt-parup"?i-1:i+1;if(i<0||j<0||j>=o.length)return;o.splice(i,1);o.splice(j,0,id);}
+  else if(a==="pt-parnext"){const pr=P.parole||{ordre:[]},o=pr.ordre;if(!o.length)return;const i=o.indexOf(pr.cur);pr.cur=o[(i+1)%o.length];}
+  else if(a==="pt-parstop"){if(P.parole)P.parole.cur=null;}
+  else if(a==="pt-launch"){if(P.combat){ui.ptAlert="Clos d'abord la rencontre « "+P.combat.nom+" ».";ch=false;}else{ptStartEnc(q,id,"",true);ui.ptTab=ui.ptTab||"scenario";render();window.scrollTo({top:0,behavior:"smooth"});ptSave();return;}}
+  else if(a==="pt-time"){const n=+v;(P.liste||[]).forEach(x=>{const keep=[];(x.effets||[]).forEach(e=>{if(e.type==="rounds"){e.r-=n;if(e.r<=0){ptEffExpire(x,e);return;}}else if(e.type==="debut"||e.type==="fin"){ptEffExpire(x,e);return;}keep.push(e);});x.effets=keep;});ptLog("⏩ "+(n>=100?n/10+" minutes passent":n/10+" minute passe")+".");}
   else if(a==="pt-roll1"&&c){c.init=ptD(20)+(+c.dex||0);}
   else if(a==="pt-fight"){if(!P.combat)return;const o=ptOrder().filter(ptAlive);if(!o.length)return;P.combat.phase="combat";P.round=1;P.cur=o[0].cid;ui.ptSel=null;ptStats().combats++;ptLog("⚔ Début du combat — Round 1 —");
     const miss=P.liste.filter(x=>x.init===""||x.init==null).map(x=>x.nom);if(miss.length)ui.ptAlert="Sans initiative (placés en fin de tour) : "+miss.join(", ")+". Tu peux encore la saisir sur leur fiche.";}
@@ -2300,25 +2457,25 @@ async function partyAction(a,id,b,e){
   else if(a==="pt-prev"){ptNext(-1);}
   else if(a==="pt-end"){ptLog("Fin du combat après "+P.round+" round"+(P.round>1?"s":"")+".");ptStats().rounds+=(P.round||0);P.round=0;P.cur=null;}
   else if(a==="pt-copyrep"){try{await navigator.clipboard.writeText(ptReport(q));ui.ptAlert="Rapport du DM copié.";}catch(err){ui.ptAlert="Copie impossible ici : sélectionne le texte à la main.";}ch=false;}
-  else if(a==="pt-dmg"&&c){ptDamage(c,amt());}
-  else if(a==="pt-heal"&&c){ptHeal(c,amt());}
-  else if(a==="pt-tmp"&&c){const n=amt();if(n>0){c.tmp=Math.max(c.tmp||0,n);ptLog(c.nom+" gagne "+n+" PV temporaires.");}}
+  else if(a==="pt-dmg"&&c){ptDamage(c,amt("dmg"));}
+  else if(a==="pt-heal"&&c){ptHeal(c,amt("heal"));}
+  else if(a==="pt-tmp"&&c){const n=amt("tmp");if(n>0){c.tmp=Math.max(c.tmp||0,n);ptLog(c.nom+" gagne "+n+" PV temporaires.");}}
   else if(a==="pt-del"&&c){P.liste=P.liste.filter(x=>x.cid!==id);if(P.cur===id)P.cur=null;}
   else if(a==="pt-edit"){document.querySelectorAll('[id^="pe-"]').forEach(el=>{el.value="";});ui.ptEditC=id;ui.ptCond=null;ch=false;}
   else if(a==="pt-eclose"){ui.ptEditC=null;ch=false;}
   else if(a==="pt-esave"&&c){const g=k=>{const el=document.getElementById(k);return el?el.value:"";};
-    c.nom=g("pe-nom").trim().slice(0,60)||c.nom;c.ca=g("pe-ca")===""?"":+g("pe-ca");c.pvMax=Math.max(0,+g("pe-pvmax")||0);c.pv=Math.max(0,Math.min(c.pvMax||Infinity,+g("pe-pv")||0));c.dex=+g("pe-dex")||0;if(c.kind==="pj")c.pp=g("pe-pp")===""?"":+g("pe-pp");ui.ptEditC=null;}
+    c.nom=g("pe-nom").trim().slice(0,60)||c.nom;c.ca=g("pe-ca")===""?"":+g("pe-ca");c.pvMax=Math.max(0,+g("pe-pvmax")||0);c.pv=Math.max(0,Math.min(c.pvMax||Infinity,+g("pe-pv")||0));c.dex=+g("pe-dex")||0;if(c.kind==="pj")c.pp=g("pe-pp")===""?"":+g("pe-pp");c.camp=g("pe-camp")||ptCamp(c);ui.ptEditC=null;}
   else if(a==="pt-copen"){ui.ptCond=ui.ptCond===id?null:id;ui.ptEditC=null;ch=false;}
   else if(a==="pt-cclose"){ui.ptCond=null;ch=false;}
   else if(a==="pt-cadd"&&c){const el=document.getElementById("pt-cdur"),d=Math.max(0,Math.round(+(el&&el.value)||0));if(el)el.value="";
     const ex=c.conds.find(x=>x.k===v);
     if(v==="exhaustion"){if(ex)ex.n=Math.min(6,(ex.n||1)+1);else c.conds.push({k:v,d:0,n:1});const n=(c.conds.find(x=>x.k===v)||{}).n;ptLog(c.nom+" : épuisement niveau "+n+".");if(n>=6)ui.ptAlert=c.nom+" atteint le niveau 6 d'épuisement : mort.";}
     else if(ex){ex.d=d;ex.timed=d>0;}else{c.conds.push({k:v,d:d,timed:d>0});ptLog(c.nom+" est "+PT_COND[v][1].toLowerCase()+(d?" ("+d+" rounds)":"")+".");}
-    if(["incapacitated","paralyzed","petrified","stunned","unconscious"].indexOf(v)>=0&&c.conc){c.conc=false;ui.ptAlert=c.nom+" perd sa concentration ("+PT_COND[v][1].toLowerCase()+").";}
+    if(["incapacitated","paralyzed","petrified","stunned","unconscious"].indexOf(v)>=0)ptLoseConc(c,PT_COND[v][1].toLowerCase());
     ui.ptCond=null;}
   else if(a==="pt-cdel"&&c){const ex=c.conds.find(x=>x.k===v);if(ex&&v==="exhaustion"&&(ex.n||1)>1)ex.n--;else c.conds=c.conds.filter(x=>x.k!==v);}
   else if(a==="pt-cinfo"){ui.ptTab="regles";ui.ptInfo=v;ch=false;render();const el=document.getElementById("cond-"+v);if(el)el.scrollIntoView({block:"center",behavior:"smooth"});return;}
-  else if(a==="pt-conc"&&c){c.conc=!c.conc;if(c.conc)ptLog(c.nom+" se concentre sur un sort.");}
+  else if(a==="pt-conc"&&c){if(c.conc)ptLoseConc(c,"");else{c.conc=true;ptLog(c.nom+" se concentre sur un sort.");}}
   else if(a==="pt-ds"&&c){const t=v[0],n=+v.slice(1);c.ds=c.ds||{s:0,f:0};c.ds[t]=c.ds[t]===n?n-1:n;
     if(c.ds.s>=3)ptLog(c.nom+" est stabilisé.");if(c.ds.f>=3){ptLog(c.nom+" meurt.");ui.ptAlert=c.nom+" a raté trois jets contre la mort.";}}
   else if(a==="pt-sb"){ui.ptSb=id;ch=false;}
@@ -2337,19 +2494,13 @@ async function partyAction(a,id,b,e){
 }
 function partySubmit(e){
   const f=e.target;if(!ui.pt||!f.id||f.id.indexOf("pt-")!==0)return false;e.preventDefault();const P=ui.pt,q=ptQuest;
-  if(f.id==="pt-encform"){const rid=document.getElementById("pt-enc-sel").value,r=rencontres.find(x=>x.id===rid),grp=document.getElementById("pt-enc-grp").checked;
-    const nom=(r?r.nom:document.getElementById("pt-enc-nom").value.trim()).slice(0,80)||"Rencontre";
-    P.liste.forEach(c=>{c.init="";});
-    P.combat={id:ptUid(),nom:nom,ref:rid||"",phase:"init",notes:"",log:[],vaincus:{},ko:[]};P.round=0;P.cur=null;ui.ptSel=null;
-    ptLog("Rencontre : "+nom+".");
-    if(grp)ptSignups(q()).forEach(s=>ptAddPC(s));
-    if(r)(r.monstres||[]).forEach(x=>{const m=monstres.find(y=>y.id===x.id);if(m)for(let i=0;i<(x.nb||1);i++)ptAddMonster(m);});
-    ptSave();render();window.scrollTo({top:0,behavior:"smooth"});return true;}
+  if(f.id==="pt-encform"){ptStartEnc(q(),document.getElementById("pt-enc-sel").value,document.getElementById("pt-enc-nom").value.trim(),document.getElementById("pt-enc-grp").checked);ptSave();render();window.scrollTo({top:0,behavior:"smooth"});return true;}
+  if(f.id==="pt-pnjf"){const pn=pnjs.find(x=>x.id===document.getElementById("pt-pnj-sel").value);if(!pn)return true;const bf=ptIds();ptAddPnj(pn);ptLog(pn.nom+" accompagne le groupe.");ptJoin(bf);ui.ptAddOpen=true;ptSave();render();return true;}
   if(f.id==="pt-closeform"){const C=P.combat;if(!C)return true;ui.ptAddOpen=false;C.notes=String(document.getElementById("pt-close-notes").value).slice(0,5000);const clean=document.getElementById("pt-close-clean").checked;
     const v=C.vaincus||{},xp=Object.keys(v).reduce((t,k)=>t+(v[k].xp||0),0);
     ptLog("Fin de la rencontre « "+C.nom+" » après "+(P.round||0)+" round"+((P.round||0)>1?"s":"")+".");
     ptStats().rounds+=(P.round||0);
-    const d=new Date();(P.combats=P.combats||[]).push({nom:C.nom,notes:C.notes,rounds:P.round||0,xp:xp,vaincus:v,ko:C.ko||[],log:C.log||[],h:String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")});
+    const d=new Date();(P.combats=P.combats||[]).push({nom:C.nom,notes:C.notes,rounds:P.round||0,xp:xp,vaincus:v,ko:C.ko||[],crits:C.crits||{},fails:C.fails||{},log:C.log||[],h:String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")});
     if(clean)P.liste=P.liste.filter(x=>x.kind==="pj"||x.pv>0);
     P.combat=null;P.round=0;P.cur=null;ui.ptClose=false;ui.ptSel=null;ptSave();render();return true;}
   if(f.id==="pt-expr"){const el=document.getElementById("pt-expr-in"),r=ptRoll(el.value);if(r){(ui.ptDice=ui.ptDice||[]).unshift(r);ui.ptDice=ui.ptDice.slice(0,12);}render();const n=document.getElementById("pt-expr-in");if(n){n.value=el.value;n.focus();}return true;}
@@ -2357,11 +2508,14 @@ function partySubmit(e){
   if(f.id==="pt-pj"){const a=aventuriers.find(x=>x.id===document.getElementById("pt-pj-sel").value);if(!a)return true;const bf=ptIds();ptAddPC({aventurier:a.id,nom:a.nom});ptLog(a.nom+" entre en scène.");ptJoin(bf);ui.ptAddOpen=true;ptSave();render();return true;}
   if(f.id==="pt-mon"){const m=monstres.find(x=>x.id===document.getElementById("pt-mon-sel").value);if(!m)return true;const bf=ptIds();const nb=Math.max(1,Math.min(20,+document.getElementById("pt-mon-nb").value||1));for(let i=0;i<nb;i++)ptAddMonster(m);ptLog(nb+" × "+m.nom+" entre"+(nb>1?"nt":"")+" en scène.");ptJoin(bf);ui.ptAddOpen=true;ptSave();render();return true;}
   if(f.id==="pt-cus"){const nom=document.getElementById("pt-cus-nom").value.trim().slice(0,60);if(!nom)return true;const pv=Math.max(1,+document.getElementById("pt-cus-pv").value||1),ca=document.getElementById("pt-cus-ca").value;
-    ["pt-cus-nom","pt-cus-ca","pt-cus-pv"].forEach(k=>{document.getElementById(k).value="";});const bf=ptIds();P.liste.push({cid:ptUid(),kind:"pnj",ref:"",nom:nom,ca:ca===""?"":+ca,pvMax:pv,pv:pv,tmp:0,init:"",dex:0,xp:0,conds:[],conc:false});ptJoin(bf);ui.ptAddOpen=true;ptSave();render();return true;}
+    ["pt-cus-nom","pt-cus-ca","pt-cus-pv"].forEach(k=>{document.getElementById(k).value="";});const cmp=(document.getElementById("pt-cus-camp")||{}).value||"ennemi";const bf=ptIds();P.liste.push({cid:ptUid(),kind:"pnj",camp:cmp,ref:"",nom:nom,ca:ca===""?"":+ca,pvMax:pv,pv:pv,tmp:0,init:"",dex:0,xp:0,conds:[],conc:false});ptJoin(bf);ui.ptAddOpen=true;ptSave();render();return true;}
   return true;
 }
 function partyChange(e){
-  const t=e.target;if(ui.pt&&t.id==="pt-cnotes"&&ui.pt.combat){ui.pt.combat.notes=String(t.value).slice(0,5000);ptSave();return true;}
+  const t=e.target;
+  if(ui.pt&&t.classList&&t.classList.contains("pt-tr")){const c=ptC(t.getAttribute("data-id"));if(!c)return true;const f=t.getAttribute("data-f"),v=String(t.value).trim().slice(0,120);c.tr=c.tr||{};const old=c.tr[f]||"";c.tr[f]=v;if(v&&v!==old)ptLog(c.nom+" · "+({a:"Action",b:"Action bonus",r:"Réaction"}[f])+" : "+v);ptSave();setTimeout(render,0);return true;}
+  if(ui.pt&&t.classList&&t.classList.contains("pt-sec")){const i=+t.getAttribute("data-i"),F=ui.pt.faits=ui.pt.faits||[],k=F.indexOf(i);if(t.checked&&k<0)F.push(i);if(!t.checked&&k>=0)F.splice(k,1);ptSave();setTimeout(render,0);return true;}
+  if(ui.pt&&t.id==="pt-cnotes"&&ui.pt.combat){ui.pt.combat.notes=String(t.value).slice(0,5000);ptSave();return true;}
   if(ui.pt&&t.id==="pt-notes"){ui.pt.notesDM=String(t.value).slice(0,10000);ptSave();setTimeout(render,0);return true;}
   if(!ui.pt||!t.classList||!t.classList.contains("pt-in"))return false;const c=ptC(t.getAttribute("data-id"));if(!c)return true;
   c[t.getAttribute("data-f")]=t.value===""?"":+t.value;ptSave();setTimeout(render,0);return true;
@@ -2561,6 +2715,7 @@ document.addEventListener("click",async e=>{
     await run("Disponibilité",()=>updateDoc(doc(db,"planif",id),{[key]:nx?nx:deleteField()}));return;}
   else if(a==="plan-del"){await run("Date retirée",()=>deleteDoc(doc(db,"planif",id)));return;}
   else if(a==="report-write"){ui.reportWrite=id;}
+  else if(a==="man-launch"){ui.ptLaunch=b.getAttribute("data-v");location.hash="#partie-"+id;return;}
   else if(a==="report-assign"){const q=questById(id),el=document.getElementById("rw-"+id);if(!q||!el||!el.value)return;
     await run("Rédacteur",()=>setDoc(doc(db,"quetes",id),{redacteur:el.value,majLe:serverTimestamp()},{merge:true}));return;}
   else if(a==="report-cancel"){if(e.target!==b)return;ui.reportWrite=null;}
