@@ -359,6 +359,12 @@ textarea.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px}
 .atkopt.r-hit{background:#dcebd6;border-color:#a9c9a6;color:#1f4a1a}
 .atkopt.r-crit{background:#fff1c2;border-color:var(--gold);color:#6b4d0a}
 .atkres{display:flex;flex-direction:column;gap:8px}
+.atktgt{background:#fff;border:1px solid var(--parch-3);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
+.atktn{font-size:16px}
+.atktgt .pthp .bar{max-width:none;height:12px}
+.atkdone{background:#a3271a;color:#fff;border-radius:6px;padding:8px 10px;font-size:15px;text-align:center}
+.atkdone strong{font-size:18px}
+.atkdone span{display:block;font-size:12px;opacity:.85;margin-top:2px}
 .atkres>strong{font-family:var(--display);letter-spacing:.06em}
 .atkres.r-fumble>strong{color:#7a1410}.atkres.r-hit>strong{color:#1f4a1a}.atkres.r-crit>strong{color:#6b4d0a}
 .atkres label{display:flex;flex-direction:column;gap:3px;font-size:13px}
@@ -2319,10 +2325,10 @@ function ptDamage(c,n,quiet){
   }
   if(al.length)ui.ptAlert=al.join(" ");
 }
-function ptHeal(c,n){
+function ptHeal(c,n,quiet){
   if(!(n>0))return;const was=c.pv;c.pv=Math.min(c.pvMax||Infinity,c.pv+n);
   if(was===0&&c.pv>0){c.conds=(c.conds||[]).filter(x=>x.k!=="unconscious");c.ds={s:0,f:0};ptLog(c.nom+" reprend connaissance.");}
-  ptLog(c.nom+" récupère "+n+" PV ("+c.pv+"/"+c.pvMax+").");
+  if(!quiet)ptLog(c.nom+" récupère "+n+" PV ("+c.pv+"/"+c.pvMax+").");
 }
 function ptRoll(expr){
   const s=String(expr||"").toLowerCase().replace(/\s+/g,"").replace(/^d/,"1d");const re=/([+-]?)(\d*)d(\d+)|([+-]?)(\d+)/g;let m,total=0,parts=[],ok=false;
@@ -2409,14 +2415,20 @@ function ptEffForm(c){
     '<div class="ptefff"><label>Effet ou sort<input id="ef-nom" maxlength="60" placeholder="Ex. Rage, Bénédiction, Toile d\'araignée"></label><label>Durée<select id="ef-dur">'+PT_DUR.map(d=>'<option value="'+d[0]+'">'+esc(d[1])+'</option>').join("")+'</select></label><label>Rounds<input id="ef-n" type="number" min="1" inputmode="numeric" placeholder="si « Nombre de rounds »"></label>'+
     '<label class="ptchk" for="ef-conc"><input type="checkbox" id="ef-conc"><span>Concentration</span></label></div><div class="ptbtns"><button class="btn gold" data-a="pt-eadd" data-id="'+c.cid+'">Ajouter l\'effet</button><button class="btn ghost" data-a="pt-eclose2">Fermer</button></div></div>';
 }
+// Appliquer fixe le TOTAL de l'attaque, en aperçu seulement : la vraie fiche n'est touchée qu'au moment de Conclure.
+function ptAtkSet(A,t,n){A.dmg=n;}
+function ptAtkPreview(t,n){const tmp=+t.tmp||0,u=Math.min(tmp,n);return {tmp:tmp-u,pv:Math.max(0,(+t.pv||0)-(n-u))};}
 const PT_RES=[["fumble","💀 Échec critique"],["miss","Raté"],["hit","Touché"],["crit","✨ Coup critique"]];
 function ptAtkResult(c,t){const A=ui.ptA,lab=(PT_RES.find(r=>r[0]===A.res)||[])[1]||"";
-  const dmg='<div class="hpsec dmg"><label for="atk-dmg">Dégâts</label><div><input type="number" min="0" inputmode="numeric" id="atk-dmg" placeholder="0"><button data-a="pt-atkapply" data-id="'+c.cid+'">Appliquer</button></div>'+(A.dmg?'<span class="desc">Déjà appliqués : '+A.dmg+' ('+t.pv+'/'+(t.pvMax||"?")+' PV)</span>':'')+'</div>';
+  const dmg='<div class="hpsec dmg"><label for="atk-dmg">Dégâts totaux de l\'attaque</label><div><input type="number" min="0" inputmode="numeric" id="atk-dmg" placeholder="0"><button data-a="pt-atkapply" data-id="'+c.cid+'">Appliquer</button></div>'+'</div>';
+  const pv=ptAtkPreview(t,A.dmg||0),pct=t.pvMax>0?Math.max(0,Math.min(100,Math.round(100*pv.pv/t.pvMax))):0,hc=pct>50?"ok":pct>25?"mid":"low";
+  const tgt='<div class="atktgt"><div class="atktn">🎯 <strong>'+esc(t.nom)+'</strong>'+(pv.pv<=0?' <em class="muted">(tomberait à 0 PV)</em>':'')+'</div><div class="pthp"><span class="bar"><span class="'+hc+'" style="width:'+pct+'%"></span></span><span class="num">'+pv.pv+' / '+(t.pvMax||"?")+' PV'+(pv.tmp>0?' <em>+'+pv.tmp+' temp.</em>':'')+'</span></div>'+(A.dmg?'<span class="desc">Aperçu : sa fiche passe de '+t.pv+' à '+pv.pv+' PV en concluant.</span>':'')+'</div>'+
+    (A.dmg?'<div class="atkdone">Total de cette attaque : <strong>'+A.dmg+' dégât'+(A.dmg>1?'s':'')+'</strong><span>Appliquer un autre nombre remplace ce total. Rien n\'est retiré de sa fiche avant Conclure.</span></div>':'');
   let h='<div class="atkres r-'+A.res+'"><strong>'+lab+'</strong>';
   if(A.res==="fumble")h+='<label for="atk-cons">Conséquence (facultatif)<textarea id="atk-cons" rows="2" maxlength="300" placeholder="Ex. Lâche son arme"></textarea></label>';
   if(A.res==="crit")h+='<label for="atk-desc">Description du coup critique<textarea id="atk-desc" rows="2" maxlength="300" placeholder="Ex. Tranche la queue du rat-garou"></textarea></label>';
-  if(A.res==="hit"||A.res==="crit")h+=dmg;
-  return h+'<div class="ptbtns"><button class="btn gold sm" data-a="pt-atkdone" data-id="'+c.cid+'">Conclure</button>'+(A.dmg?'':'<button class="btn ghost sm" data-a="pt-atkback" data-id="'+c.cid+'">Annuler</button>')+'</div></div>';}
+  if(A.res==="hit"||A.res==="crit")h+=tgt+dmg;
+  return h+'<div class="ptbtns"><button class="btn gold sm" data-a="pt-atkdone" data-id="'+c.cid+'">Conclure</button>'+'<button class="btn ghost sm" data-a="pt-atkback" data-id="'+c.cid+'">Annuler</button>'+'</div></div>';}
 function ptAtkPicker(c){
   const A=ui.ptA&&ui.ptA.from===c.cid?ui.ptA:null;
   const me=ptCamp(c),others=ptOrder().filter(x=>x.cid!==c.cid&&(x.pv>0||x.kind==="pj"||(A&&A.to===x.cid))),grp=k=>others.filter(x=>k==="adv"?ptCamp(x)!==me:ptCamp(x)===me);
@@ -2792,10 +2804,11 @@ async function partyAction(a,id,b,e){
   else if(a==="pt-atkx"){ui.ptAtkOpen=null;ui.ptA=null;ch=false;}
   else if(a==="pt-atkun"){if(ui.ptA){ui.ptA.to=null;ui.ptA.res=null;}ch=false;}
   else if(a==="pt-atkres"){if(ui.ptA&&ui.ptA.to)ui.ptA.res=v;ch=false;}
-  else if(a==="pt-atkback"){if(ui.ptA&&!ui.ptA.dmg)ui.ptA.res=null;ch=false;}
-  else if(a==="pt-atkapply"){const A=ui.ptA,t=A&&ptC(A.to),el=document.getElementById("atk-dmg"),n=Math.round(+(el&&el.value)||0);if(!t||!(n>0))return;if(el)el.value="";ptDamage(t,n,true);A.dmg+=n;}
+  else if(a==="pt-atkback"){if(ui.ptA){ui.ptA.res=null;ui.ptA.dmg=0;}ch=false;}
+  else if(a==="pt-atkapply"){const A=ui.ptA,t=A&&ptC(A.to),el=document.getElementById("atk-dmg"),raw=el?String(el.value).trim():"",n=Math.max(0,Math.round(+raw||0));if(!t||raw==="")return;if(el)el.value="";ptAtkSet(A,t,n);}
   else if(a==="pt-atkdone"){const A=ui.ptA,f=A&&ptC(A.from),t=A&&ptC(A.to);if(!f||!t)return;const txt=id2=>{const el=document.getElementById(id2);return el?String(el.value).trim().slice(0,300):"";};
-    const el=document.getElementById("atk-dmg"),n=Math.round(+(el&&el.value)||0);if(n>0&&(A.res==="hit"||A.res==="crit")){if(el)el.value="";ptDamage(t,n,true);A.dmg+=n;}
+    const el=document.getElementById("atk-dmg"),raw=el?String(el.value).trim():"";if(raw!==""&&(A.res==="hit"||A.res==="crit")){if(el)el.value="";ptAtkSet(A,t,Math.max(0,Math.round(+raw||0)));}
+    if(A.dmg>0&&(A.res==="hit"||A.res==="crit"))ptDamage(t,A.dmg,true);
     const dm=A.dmg?" : "+A.dmg+" dégâts ("+t.pv+"/"+(t.pvMax||"?")+" PV)":"",C=P.combat;
     if(A.res==="fumble"){const k=txt("atk-cons");ptLog("💀 Échec critique de "+f.nom+" contre "+t.nom+(k?" : "+k:"")+".");if(C){C.fails=C.fails||{};C.fails[f.nom]=(C.fails[f.nom]||0)+1;}}
     else if(A.res==="miss")ptLog("⚔ "+f.nom+" rate "+t.nom+".");
