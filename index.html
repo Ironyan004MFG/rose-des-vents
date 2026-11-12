@@ -2321,7 +2321,7 @@ function ptReportBlock(q,open,edit){if(edit){const C=ui.complete,t=ptReport(q,tr
       '<label for="c-dmnotes">Notes DM additionnelles<textarea id="c-dmnotes" rows="4" maxlength="10000" placeholder="Ce qui ne figure pas au journal : décisions du groupe, PNJ rencontrés, promesses, indices trouvés…">'+esc(nv)+'</textarea></label></details>';}
   const t=ptReport(q);return t?'<details class="dmrep"'+(open?' open':'')+'><summary>Rapport du DM (privé)</summary><div class="wikibody">'+md(t)+'</div></details>':'';}
 function ptQuest(){return ui.office&&ui.office.indexOf("partie-")===0?questById(ui.office.slice(7)):null;}
-function ptBlank(qid){return {id:qid,round:0,cur:null,liste:[],objectifs:[],objSub:{},journal:[],rev:0,combat:null,combats:[],stats:{combats:0,rounds:0,vaincus:{},ko:[]},notesDM:""};}
+function ptBlank(qid){return {id:qid,round:0,cur:null,liste:[],objectifs:[],objSub:{},morts:{},journal:[],rev:0,combat:null,combats:[],stats:{combats:0,rounds:0,vaincus:{},ko:[]},notesDM:""};}
 function ptStats(){const P=ui.pt;P.stats=Object.assign({combats:0,rounds:0,vaincus:{},ko:[]},P.stats||{});return P.stats;}
 function ptClone(o){return JSON.parse(JSON.stringify(o));}
 function ptSync(qid){
@@ -2330,7 +2330,17 @@ function ptSync(qid){
   if(d&&d.rev&&d.rev!==ui.ptRev&&Date.now()-(ui.ptEditMs||0)>4000){ui.pt=Object.assign(ptBlank(qid),ptClone(d));ui.ptRev=d.rev;}
 }
 let ptTimer=null;
+// Objectifs d'élimination : chaque ennemi vaincu coche l'élément correspondant (même nom, sans le numéro).
+function objBase(n){return String(n||"").replace(/\s+\d+$/,"").trim().toLowerCase();}
+function ptObjSync(){const P=ui.pt,q=P&&questById(P.id);if(!q)return;const ob=objsOf(q);if(!ob.some(o=>o.sub.length))return;
+  P.morts=P.morts||{};(P.liste||[]).forEach(c=>{if(c.kind!=="pj"&&c.pv<=0&&!P.morts[c.cid])P.morts[c.cid]=c.nom;});
+  const cnt={};Object.keys(P.morts).forEach(k=>{const b=objBase(P.morts[k]);cnt[b]=(cnt[b]||0)+1;});
+  const S=P.objSub=P.objSub||{},F=P.objectifs=P.objectifs||[];
+  ob.forEach(o=>{if(!o.sub.length)return;const L=S[o.i]=S[o.i]||[],seen={};
+    o.sub.forEach((x,k)=>{const b=objBase(x);seen[b]=(seen[b]||0)+1;if(seen[b]<=(cnt[b]||0)&&L.indexOf(k)<0){L.push(k);ptLog("✔ "+x+" (objectif : "+o.txt+")");}});
+    if(o.sub.every((_,k)=>L.indexOf(k)>=0)&&F.indexOf(o.i)<0){F.push(o.i);ptLog("🎯 Objectif rempli : "+o.txt);}});}
 function ptSave(){
+  try{ptObjSync();}catch(e){console.error(e);}
   ui.ptEditMs=Date.now();ui.pt.rev=Date.now();ui.ptRev=ui.pt.rev;
   clearTimeout(ptTimer);const st=ptClone(ui.pt),qid=st.id;delete st.id;
   ptTimer=setTimeout(()=>{setDoc(doc(db,"parties",qid),Object.assign(st,{majLe:serverTimestamp()})).catch(e=>{console.error(e);save={state:"error",msg:errText(e)};render();});},500);
