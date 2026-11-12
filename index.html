@@ -87,7 +87,7 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .gplaque .gp-name{font-family:var(--display);font-size:20px;font-weight:700;line-height:1.15;overflow-wrap:anywhere;text-shadow:0 1px 0 rgba(255,255,255,.3),0 -1px 0 rgba(0,0,0,.35)}
 .gplaque .gp-r{font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
 .gplaque .gp-stamp{width:40px;height:40px;flex:none;transform:rotate(-14deg);opacity:.85}
-.xpline{margin:4px 0 2px;font-size:15px}.xpbar{height:6px;border-radius:3px;background:rgba(0,0,0,.12);overflow:hidden;max-width:360px}.xpbar i{display:block;height:100%;background:linear-gradient(90deg,#b8862f,#e3c06c)}
+.xpline{margin:4px 0 2px;font-size:15px}.xprow{display:flex;align-items:center;gap:10px;max-width:420px}.xpbar{flex:1;height:8px;border-radius:4px;background:rgba(0,0,0,.12);overflow:hidden}.xpnext{flex:none;font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}.xpbar i{display:block;height:100%;background:linear-gradient(90deg,#b8862f,#e3c06c)}
 .xpbox{margin:14px 0 6px;padding:10px 14px;border:1px solid var(--parch-3,#d9c9a0);border-radius:6px}.xpbox legend{font-family:var(--display);font-size:13px;letter-spacing:.12em;text-transform:uppercase;padding:0 6px}.xpbox label{display:inline-flex;flex-direction:column;max-width:240px}.xpbox ul{margin:6px 0 0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:6px}.xpbox li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}.xpbox li .xpp{flex-direction:row;align-items:center;gap:6px;font-size:14px}.xpbox li .xpp input{width:90px}
 .xphist{list-style:none;margin:6px 0;padding:0;max-width:560px;font-size:15px}.xphist li{display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.1)}.xphist .d{flex:none;width:92px;color:var(--ink-soft);font-size:13.5px;font-variant-numeric:tabular-nums}.xphist .t{flex:1;min-width:0}.xphist .x{flex:none;font-weight:700;font-variant-numeric:tabular-nums}.xphist .bp{display:block;font-size:13px;color:var(--ink-soft)}.xpline .nx{color:var(--ink-soft);font-size:14px}
 .ptxpgain{margin:4px 0 0;font-size:14px;color:var(--ink-soft)}
@@ -1512,7 +1512,7 @@ function charXp(a){return a&&typeof a.xp==="number"?a.xp:XP_LEVELS[dosLevel(a)-1
 function charLevel(a){return a&&typeof a.xp==="number"?levelOf(a.xp):dosLevel(a);}
 function xpLine(a){const x=charXp(a),l=levelOf(x),nx=XP_LEVELS[l],pv=XP_LEVELS[l-1],pc=nx?Math.round(100*(x-pv)/(nx-pv)):100;
   const f=n=>n.toLocaleString("fr-CA");
-  return '<p class="xpline"><strong>Niveau '+l+'</strong> · '+(nx?f(x)+' / '+f(nx)+' XP <span class="nx">→ niveau '+(l+1)+', encore '+f(nx-x)+' XP</span>':f(x)+' XP <span class="nx">(niveau maximum)</span>')+'</p><div class="xpbar" aria-hidden="true"><i style="width:'+pc+'%"></i></div>';}
+  return '<p class="xpline">'+f(x)+(nx?' / '+f(nx):'')+' XP</p><div class="xprow"><div class="xpbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pc+'" aria-label="Progression vers le niveau '+(nx?l+1:l)+'"><i style="width:'+pc+'%"></i></div><span class="xpnext">'+(nx?'Niv '+(l+1):'Niv max')+'</span></div>';}
 // Historique d'XP (sur la fiche, en lecture seule pour le joueur) : une ligne par quête ou ajustement.
 function xpHist(a){const L=(a.xpLog||[]).slice().sort((x,y)=>(y.ms||0)-(x.ms||0));if(!L.length)return '<p class="desc">Aucun gain d\'XP pour le moment.</p>';
   return '<ul class="xphist">'+L.map(e=>{const tot=(+e.xp||0)+(+e.bonus||0);return '<li><span class="d">'+(e.ms?new Date(e.ms).toLocaleDateString("fr-CA",{day:"numeric",month:"short",year:"numeric"}):'')+'</span><span class="t">'+esc(e.t||"")+(e.bonus?'<span class="bp">dont bonus perso : +'+(+e.bonus).toLocaleString("fr-CA")+' XP</span>':'')+'</span><span class="x">'+(tot>=0?'+':'')+tot.toLocaleString("fr-CA")+' XP</span></li>';}).join("")+'</ul>';}
@@ -1628,9 +1628,9 @@ function sheetView(id){
   if(ui.sheetEdit===a.id&&(mine||ui.dm))return '<div class="sheetwrap">'+sheetForm(a)+'</div>';
   let h='<article class="sheet">';
   h+='<div class="sheet-top">'+(a.image?'<img class="portrait" src="'+esc(a.image)+'" alt="Portrait de '+esc(a.nom)+'">':'<span class="portrait ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+
-    '<div class="sheet-id"><h2>'+esc(a.nom)+'</h2><p class="sheet-sub">'+esc([a.espece,a.classe].filter(Boolean).join(" · ")||"Aventurier")+'</p>'+(a.joueur?'<p class="sheet-pl">Joué par '+esc(a.joueur)+'</p>':'')+'</div></div>';
+    '<div class="sheet-id"><h2>'+esc(a.nom)+'</h2><p class="sheet-sub">'+esc([a.espece,a.classe,"Niveau "+charLevel(a)].filter(Boolean).join(" · "))+'</p>'+(a.joueur?'<p class="sheet-pl">Joué par '+esc(a.joueur)+'</p>':'')+'</div></div>';
   h+=gPlaque(a);
-  if(mine||ui.dm)h+='<h3>Expérience</h3>'+xpLine(a)+'<details class="crrep" open><summary>Historique d\'XP</summary>'+xpHist(a)+'</details>';
+  if(mine||ui.dm)h+='<h3>Expérience</h3>'+xpLine(a)+'<details class="crrep"><summary>Historique d\'XP</summary>'+xpHist(a)+'</details>';
   if(ui.dm&&isAdmin){const cap=meritCap(a),nx=examReady(a);
     h+='<p class="gmerit">Mérite '+merit(a)+(cap?' / '+cap:'')+' · niveau '+charLevel(a)+(gNext(grank(a))&&promoCfg()[gNext(grank(a))]?' / '+promoCfg()[gNext(grank(a))].niv:'')+(nx?' · <strong>éligible à l\'examen '+esc(GRANK_LBL[nx])+'</strong>':'')+' <em>(DM)</em></p>'+
       '<form class="grankform" id="grankform" data-id="'+esc(a.id)+'"><label for="g-rank">Rang de Guilde<select id="g-rank">'+GRANKS.map(k=>'<option value="'+k+'"'+(k===grank(a)?' selected':'')+'>'+esc(GRANK_LBL[k])+'</option>').join("")+'</select></label><label for="g-st">Étoiles<input id="g-st" type="number" min="0" max="'+STAR_MAX+'" value="'+stars(a)+'"></label><label for="g-xp">XP<input id="g-xp" type="number" min="0" max="999999" value="'+charXp(a)+'"></label><button class="mini" type="submit">Changer</button></form>';}
