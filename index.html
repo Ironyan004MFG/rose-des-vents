@@ -369,6 +369,8 @@ form .csqpick label.pickrow{min-height:0;padding:4px 8px;display:flex;flex-direc
 form .csqpick label.pickrow input{flex:none;width:18px;height:18px;margin-top:2px}
 .csqkept{border-left:3px solid #a3271a;padding:4px 10px;margin:.6em 0;background:rgba(163,39,26,.05)}
 .csqkept h4{margin:0 0 4px}
+.dmrep label{display:block;margin-top:10px}.dmrep textarea{width:100%;box-sizing:border-box}
+.repprev{background:#fff;border:1px solid var(--parch-3);border-radius:6px;padding:8px 10px;max-height:220px;overflow:auto}
 .atktgt{background:#fff;border:1px solid var(--parch-3);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
 .atktn{font-size:16px}
 .atktgt .pthp .bar{max-width:none;height:12px}
@@ -1935,6 +1937,7 @@ function todoItems(){
   quetes.filter(q=>q.statut==="ouverte").forEach(q=>{const s=signupsFor(q.id),att=s.filter(x=>x.statut==="attente").length;if(!att)return;const pb=planBest(q),b=office(q.bureau);
     it.push({k:"group",t:'<strong>'+esc(q.titre)+'</strong> ('+esc(b?b.nom:"")+') : '+att+' demande'+(att>1?'s':'')+' en attente'+(pb?' · meilleure date : '+esc(fmtPlan(pb)):''),act:'<a class="mini" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir</a>'});});
   quetes.filter(q=>q.statut==="encours"&&q.rapportBrouillon&&q.rapportBrouillon.resume).forEach(q=>it.push({k:"report",t:'<strong>'+esc(q.titre)+'</strong> : rapport reçu de '+esc(q.rapportBrouillon.auteur||"un joueur"),act:'<a class="mini" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Terminer</a>'}));
+  quetes.filter(q=>(q.statut==="terminee"||q.statut==="archivee")&&q.rapportBrouillon&&q.rapportBrouillon.resume&&q.rapport&&q.rapportBrouillon.resume!==q.rapport.resume).forEach(q=>it.push({k:"report",t:'<strong>'+esc(q.titre)+'</strong> : rapport de mission reçu de '+esc(q.rapportBrouillon.auteur||"un joueur")+'<details class="crrep"><summary>Lire</summary><div class="wikibody">'+esc(q.rapportBrouillon.resume).replace(/\n/g,"<br>")+'</div></details>',act:'<button class="mini" data-a="report-publish" data-id="'+esc(q.id)+'">Publier dans les Chroniques</button>'}));
   quetes.filter(q=>q.statut==="encours"&&!(q.rapportBrouillon&&q.rapportBrouillon.resume)).forEach(q=>it.push({k:"run",t:'<strong>'+esc(q.titre)+'</strong> : en cours'+(q.date?' · '+esc(q.date):''),act:'<a class="mini" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir</a>'}));
   quetes.filter(q=>q.rapport&&(q.statut==="terminee"||q.statut==="archivee")&&!nouvelles.some(n=>n.quete===q.id)).sort((a,b)=>tms(b.rapport.termineLe)-tms(a.rapport.termineLe)).forEach(q=>{
     const C=crieur||{},dem=(C.demandes||{})[q.id],br=(C.brouillons||{})[q.id],pj=q.rapportBrouillon&&q.rapportBrouillon.resume,dmr=ptReport(q)||(q.rapport&&q.rapport.resume)||"";
@@ -2180,13 +2183,13 @@ function render(){
       h+='<div class="modal-bg" data-a="complete-cancel"><form class="modal wide" id="completeform" data-step="'+C.step+'" role="dialog" aria-modal="true" aria-labelledby="cp-t"><h2 id="cp-t">Terminer « '+esc(cq.titre)+' »</h2>'+
         '<ol class="steps">'+steps.map((t,i)=>'<li'+(i+1===C.step?' aria-current="step"':'')+(i+1<C.step?' class="done"':'')+'>'+t+'</li>').join("")+'</ol>';
       if(C.step===1){
-        const writers=C.parts.filter(x=>x.uid&&x.uid!=="dm");
+        const writers=C.parts.filter(x=>x.uid&&x.uid!=="dm"),dr=cq.rapportBrouillon&&cq.rapportBrouillon.resume,wsel=C.writer!==undefined?C.writer:(cq.redacteur||"");
         h+='<div class="row2"><label for="c-date">Date de la session<input id="c-date" maxlength="80" value="'+esc(C.rapport.date)+'"></label>'+
           '<label for="c-res">Résultat<select id="c-res">'+Object.keys(RESULTS).map(k=>'<option value="'+k+'"'+(k===C.rapport.resultat?' selected':'')+'>'+RESULTS[k]+'</option>').join("")+'</select></label></div>'+
-          (cq.rapportBrouillon&&cq.rapportBrouillon.resume?'<p class="tip">Rapport proposé par '+esc(cq.rapportBrouillon.auteur||"un joueur")+'. Relis-le et modifie-le au besoin.</p>':'')+
-          ptReportBlock(cq,false)+
-          '<label for="c-resume">Rapport de mission (publié dans les Chroniques)<textarea id="c-resume" maxlength="4000" rows="6">'+esc(C.rapport.resume)+'</textarea></label>'+
-          (writers.length?'<div class="askrow"><label for="c-writer">Ou faire écrire le rapport par<select id="c-writer">'+writers.map(x=>'<option value="'+esc(x.uid)+'"'+(cq.redacteur===x.uid?' selected':'')+'>'+esc(x.nom)+'</option>').join("")+'</select></label><button class="btn ghost" type="button" data-a="ask-writer">Lui demander le rapport</button></div>':'')+
+          ptReportBlock(cq,true,true)+csqPick(cq,C)+
+          '<fieldset class="pick"><legend>Rapport de mission (Chroniques)</legend>'+
+          (dr?'<p class="desc">Rapport reçu de <strong>'+esc(cq.rapportBrouillon.auteur||"un joueur")+'</strong>. Il sera publié dans les Chroniques.</p><div class="wikibody repprev">'+esc(dr).replace(/\n/g,"<br>")+'</div>':
+            (writers.length?'<label for="c-writer">Auteur du rapport<select id="c-writer"><option value="">Personne pour l\'instant</option>'+writers.map(x=>'<option value="'+esc(x.uid)+'"'+(wsel===x.uid?' selected':'')+'>'+esc(x.nom)+'</option>').join("")+'</select></label><p class="desc">L\'auteur verra un bouton « Écrire le rapport de mission » sur la quête. Son rapport t\'attendra dans À traiter, pour publication.</p>':'<p class="desc">Aucun joueur inscrit avec un compte : pas d\'auteur à désigner.</p>'))+'</fieldset>'+
           '<div class="actions"><button class="btn" type="submit">Suivant : méfaits et bienfaits</button><button class="btn ghost" type="button" data-a="complete-cancel">Annuler</button></div>';
       } else if(C.step===2){
         const bl=bienLabels(),bN=bienN(),bR=bienR(),mN=mefaitN();
@@ -2209,7 +2212,7 @@ function render(){
             const before=a?renown(a,cq.bureau):51,after=a?codeOf(ptsN(a,cq.bureau)+t.n,pts(a,cq.bureau)+t.r):51,sg=v=>(v>0?'+':'')+v;
             return '<tr><th scope="row">'+esc(x.nom)+(a?'':' <em>(hors registre)</em>')+'</th><td data-l="Fin de quête" class="gains"><label class="sr" for="b-gainn'+i+'">Notoriété pour '+esc(x.nom)+'</label><input class="cnt" id="b-gainn'+i+'" type="number" step="1" value="'+t.gN+'"'+(a?'':' disabled')+' title="Notoriété"><label class="sr" for="b-gain'+i+'">Réputation pour '+esc(x.nom)+'</label><input class="cnt" id="b-gain'+i+'" type="number" step="1" value="'+t.gR+'"'+(a?'':' disabled')+' title="Réputation"></td>'+
               '<td class="num nw" data-l="Méfaits">'+(t.pen?'N +'+t.mefN+'<br>R −'+t.pen:'—')+'</td><td class="num nw" data-l="Bienfaits">'+(t.bnN||t.bnR?'N +'+t.bnN+'<br>R +'+t.bnR:'—')+'</td><td class="num nw" data-l="Total"><strong>N '+sg(t.n)+'<br>R '+sg(t.r)+'</strong></td><td data-l="Résultat">'+(a?chip(before)+(after!==before?' → '+chip(after):''):'—')+'</td></tr>';}).join("")+
-          '</tbody></table></div>'+csqPick(cq,C)+
+          '</tbody></table></div>'+
           '<div class="actions"><button class="btn" type="submit">Terminer la quête</button><button class="btn ghost" type="button" data-a="step-recalc">Recalculer</button><button class="btn ghost" type="button" data-a="step-back">Retour</button></div>';
       }
       h+='</form></div>';}}
@@ -2217,7 +2220,7 @@ function render(){
   const app=document.getElementById("app");
   const formKey=ui.editing+"|"+ui.signup+"|"+ui.addName+"|"+ui.advForm+"|"+ui.scaleEdit+"|"+ui.wikiEdit+"|"+(ui.complete?ui.complete.id+ui.complete.step:"")+"|"+ui.confirmGroup+"|"+ui.plan+"|"+ui.dmTab+"|"+ui.manSec+"|"+ui.manId+"|"+ui.manEdit+"|"+ui.evolve+"|"+ui.noteEdit+"|"+ui.newsEdit+"|"+ui.reportWrite+"|"+ui.adjust+"|"+ui.sheetEdit+"|"+ui.compEdit;
   const keep={}; if(render.lastForm===formKey)["f-titre","f-bureau","f-type","f-rang","f-statut","f-lieu","f-recompense","f-niveau","f-jmin","f-jmax","f-date","f-desc","f-maj","ev-notes","ev-ntitre","ev-ntexte","ev-seuil","n-titre","n-cat","n-reg","n-contenu","n-search","nw-titre","nw-reg","nw-texte","f-name","f-addname","f-advnom","f-advjoueur","w-titre","w-ordre","w-contenu","f-pts","c-date","c-res","c-resume","g-date","r-texte","pl-date","pl-heure","c2-titre","c2-cat","c2-reg","c2-quete","c2-contenu","c-search","p-nom","p-espece","p-classe","p-desc","p-bg","p-don"].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.type==="checkbox"?el.checked:el.value;});
-  if(render.lastForm===formKey)document.querySelectorAll('#manform [id^="mf-"]:not([type=file]),#manform input[data-mm],#genform [id^="gen-"]').forEach(el=>{keep[el.id]=el.type==="checkbox"?el.checked:el.value;});
+  if(render.lastForm===formKey)document.querySelectorAll('#manform [id^="mf-"]:not([type=file]),#manform input[data-mm],#genform [id^="gen-"],#completeform [id^="csq-"],#c-dmnotes,#c-writer').forEach(el=>{keep[el.id]=el.type==="checkbox"?el.checked:el.value;});
   const sup=document.getElementById("f-super");if(sup&&render.lastForm===formKey)keep["f-super"]=sup.checked;
   render.lastForm=formKey;
   const ptKeep={};let ptFoc=null,ptSel=null;
@@ -2274,7 +2277,7 @@ const PT_RULES=[
  ["Chute et asphyxie","**Chute** : 1d6 contondants par tranche de 10 pi (max 20d6), puis à terre. **Retenir son souffle** : 1 + modificateur de CON minutes (min 30 s) ; ensuite, 1 niveau d'épuisement par tour."],
  ["Repos","**Repos court** (1 h) : dépense de dés de vie. **Repos long** (8 h) : récupère tous les PV et dés de vie, retire 1 niveau d'épuisement."]];
 
-function ptReport(q){const d=(ui.pt&&ui.pt.id===q.id)?ui.pt:parties.find(p=>p.id===q.id);if(!d)return "";
+function ptReport(q,noNotes){const d=(ui.pt&&ui.pt.id===q.id)?ui.pt:parties.find(p=>p.id===q.id);if(!d)return "";
   const st=d.stats||{},pcs=(d.liste||[]).filter(c=>c.kind==="pj"),v=Object.keys(st.vaincus||{}).map(k=>[k,st.vaincus[k]]),xp=v.reduce((t,x)=>t+(x[1].xp||0),0),rounds=(st.rounds||0)+(d.round||0);
   let t="";
   if(pcs.length)t+="- **Groupe :** "+pcs.map(c=>c.nom+" ("+c.pv+"/"+c.pvMax+" PV)").join(", ")+"\n";
@@ -2282,10 +2285,14 @@ function ptReport(q){const d=(ui.pt&&ui.pt.id===q.id)?ui.pt:parties.find(p=>p.id
   if(v.length)t+="- **Vaincus :** "+v.map(x=>x[0]+(x[1].n>1?" ×"+x[1].n:"")).join(", ")+" · "+xp+" XP"+(pcs.length?" ("+Math.floor(xp/pcs.length)+" par aventurier)":"")+"\n";
   if((st.ko||[]).length)t+="- **Tombés à 0 PV :** "+st.ko.join(", ")+"\n";
   (d.combats||[]).forEach(x=>{const vv=Object.keys(x.vaincus||{});t+=(t?"\n":"")+"### Rencontre : "+x.nom+" ("+x.rounds+" round"+(x.rounds>1?"s":"")+(x.xp?", "+x.xp+" XP":"")+")\n"+(vv.length?"- Vaincus : "+vv.map(k=>k+(x.vaincus[k].n>1?" ×"+x.vaincus[k].n:"")).join(", ")+"\n":"")+((x.ko||[]).length?"- Tombés à 0 PV : "+x.ko.join(", ")+"\n":"")+(x.crits&&Object.keys(x.crits).length?"- Coups critiques : "+Object.keys(x.crits).map(k=>k+(x.crits[k]>1?" ×"+x.crits[k]:"")).join(", ")+"\n":"")+((x.butin||[]).length?"- Butin : "+x.butin.join(", ")+"\n":"")+(x.fails&&Object.keys(x.fails).length?"- Échecs critiques : "+Object.keys(x.fails).map(k=>k+(x.fails[k]>1?" ×"+x.fails[k]:"")).join(", ")+"\n":"")+(x.notes?"\n"+x.notes+"\n":"");});
-  if(d.notesDM)t+=(t?"\n":"")+"### Notes du DM\n"+d.notesDM+"\n";
+  if(d.notesDM&&!noNotes)t+=(t?"\n":"")+"### Notes du DM\n"+d.notesDM+"\n";
   const j=d.journal||[];if(j.length)t+=(t?"\n":"")+"### Journal de la partie\n"+j.map(x=>"- "+x.h+" · "+x.t).join("\n")+"\n";
   return t;}
-function ptReportBlock(q,open){const t=ptReport(q);return t?'<details class="dmrep"'+(open?' open':'')+'><summary>Rapport du DM (privé)</summary><div class="wikibody">'+md(t)+'</div></details>':'';}
+function ptNotesDM(q){const d=(ui.pt&&ui.pt.id===q.id)?ui.pt:parties.find(p=>p.id===q.id);return (d&&d.notesDM)||"";}
+function ptReportBlock(q,open,edit){if(edit){const C=ui.complete,t=ptReport(q,true),nv=C&&C.notesDM!=null?C.notesDM:ptNotesDM(q);
+    return '<details class="dmrep" open><summary>Rapport du DM (privé)</summary>'+(t?'<div class="wikibody">'+md(t)+'</div>':'<p class="desc">Aucune donnée du Mode Partie pour cette quête.</p>')+
+      '<label for="c-dmnotes">Notes DM additionnelles<textarea id="c-dmnotes" rows="4" maxlength="10000" placeholder="Ce qui ne figure pas au journal : décisions du groupe, PNJ rencontrés, promesses, indices trouvés…">'+esc(nv)+'</textarea></label></details>';}
+  const t=ptReport(q);return t?'<details class="dmrep"'+(open?' open':'')+'><summary>Rapport du DM (privé)</summary><div class="wikibody">'+md(t)+'</div></details>':'';}
 function ptQuest(){return ui.office&&ui.office.indexOf("partie-")===0?questById(ui.office.slice(7)):null;}
 function ptBlank(qid){return {id:qid,round:0,cur:null,liste:[],journal:[],rev:0,combat:null,combats:[],stats:{combats:0,rounds:0,vaincus:{},ko:[]},notesDM:""};}
 function ptStats(){const P=ui.pt;P.stats=Object.assign({combats:0,rounds:0,vaincus:{},ko:[]},P.stats||{});return P.stats;}
@@ -2987,18 +2994,18 @@ async function migrate(){
 function v0(id){const el=document.getElementById(id);return el?el.value.trim():"";}
 function csqPick(q,C){const all=csqParse((scenarios[q.id]||{}).consequences),res=C.rapport.resultat,sel=C.csq||[];
   const row=c=>'<label class="pickrow" for="csq-'+c.i+'"><input type="checkbox" id="csq-'+c.i+'" data-csq="'+c.i+'"'+(sel.indexOf(c.txt)>=0?' checked':'')+'><span>'+csqTags(c)+' '+esc(c.txt)+'</span></label>';
-  const fit=all.filter(c=>!c.q||c.q.indexOf(res)>=0),other=all.filter(c=>c.q&&c.q.indexOf(res)<0);
+  const ord=c=>c.q?Math.min.apply(null,c.q.map(k=>["reussite","partielle","echec"].indexOf(k))):3,list=all.slice().sort((a,b)=>ord(a)-ord(b)||a.i-b.i);
   return '<fieldset class="pick csqpick"><legend>Conséquences pour le monde</legend><p class="desc">Coche ce qui arrive. C\'est gardé dans ton rapport DM (jamais montré aux joueurs) et ça t\'attendra dans Évolution du monde.</p>'+
-    (fit.length?fit.map(row).join(""):'<p class="desc">Aucune conséquence prévue pour ce résultat dans le scénario.</p>')+
-    (other.length?'<details><summary>Autres conséquences du scénario ('+other.length+')</summary>'+other.map(row).join("")+'</details>':'')+
+    (list.length?list.map(row).join(""):'<p class="desc">Aucune conséquence prévue dans le scénario.</p>')+
     '<label for="csq-autre">Autre conséquence (facultatif)<textarea id="csq-autre" rows="2" maxlength="1000" placeholder="Ex. Le lieutenant Garrow a vu le visage de Bob.">'+esc(C.csqx||"")+'</textarea></label></fieldset>';}
 function readStep(){
   const C=ui.complete;if(!C)return;
-  if(C.step===1){const r0=C.rapport&&C.rapport.resultat;C.rapport={date:v0("c-date").slice(0,80),resultat:v0("c-res")||"reussite",resume:((document.getElementById("c-resume")||{}).value||"").slice(0,4000)};if(r0&&r0!==C.rapport.resultat)C.parts.forEach(x=>{x.gain=null;x.gainN=null;});}
+  if(C.step===1){const r0=C.rapport&&C.rapport.resultat;C.rapport={date:v0("c-date").slice(0,80),resultat:v0("c-res")||"reussite",resume:C.rapport.resume||""};
+    const nd=document.getElementById("c-dmnotes");if(nd)C.notesDM=String(nd.value).slice(0,10000);const wr=document.getElementById("c-writer");if(wr)C.writer=wr.value;
+    const all=csqParse((scenarios[C.id]||{}).consequences);C.csq=Array.from(document.querySelectorAll('#completeform input[data-csq]')).filter(c=>c.checked).map(c=>(all[+c.getAttribute("data-csq")]||{}).txt).filter(Boolean);
+    const ax=document.getElementById("csq-autre");if(ax)C.csqx=String(ax.value).trim().slice(0,1000);if(r0&&r0!==C.rapport.resultat)C.parts.forEach(x=>{x.gain=null;x.gainN=null;});}
   if(C.step===2){C.parts.forEach((x,i)=>{x.aventurier=v0("m-adv"+i)||null;Object.keys(DEFAULT_MEFAITS).concat(BIENFAITS).forEach(k=>{x[k]=Math.max(0,Math.round(+v0("m-"+k+i)||0));});});}
-  if(C.step===3){const all=csqParse((scenarios[C.id]||{}).consequences);C.csq=Array.from(document.querySelectorAll('#completeform input[data-csq]')).filter(c=>c.checked).map(c=>(all[+c.getAttribute("data-csq")]||{}).txt).filter(Boolean);
-    const ax=document.getElementById("csq-autre");if(ax)C.csqx=String(ax.value).trim().slice(0,1000);
-    C.parts.forEach((x,i)=>{const el=document.getElementById("b-gain"+i),en=document.getElementById("b-gainn"+i);if(el&&!el.disabled)x.gain=Math.round(+el.value||0);if(en&&!en.disabled)x.gainN=Math.round(+en.value||0);});}
+  if(C.step===3){C.parts.forEach((x,i)=>{const el=document.getElementById("b-gain"+i),en=document.getElementById("b-gainn"+i);if(el&&!el.disabled)x.gain=Math.round(+el.value||0);if(en&&!en.disabled)x.gainN=Math.round(+en.value||0);});}
 }
 document.addEventListener("click",async e=>{
   const ml=e.target.closest&&e.target.closest('a[href^="#man/"]');
@@ -3139,6 +3146,7 @@ document.addEventListener("click",async e=>{
     await run("Disponibilité",()=>updateDoc(doc(db,"planif",id),{[key]:nx?nx:deleteField()}));return;}
   else if(a==="plan-del"){await run("Date retirée",()=>deleteDoc(doc(db,"planif",id)));return;}
   else if(a==="report-write"){ui.reportWrite=id;}
+  else if(a==="report-publish"){const q=questById(id);if(!q||!q.rapportBrouillon)return;await run("Rapport publié",()=>updateDoc(doc(db,"quetes",id),new FieldPath("rapport","resume"),String(q.rapportBrouillon.resume).slice(0,4000),"majLe",serverTimestamp()));return;}
   else if(a==="rel-new"){ui.relEdit="new";}
   else if(a==="rel-newfor"){ui.manSec="relations";ui.manId=null;ui.relF=id;ui.relEdit="new";location.hash="#man/relations";}
   else if(a==="rel-edit"){ui.relEdit=id;}
@@ -3289,6 +3297,8 @@ document.addEventListener("submit",async e=>{
     await run("Fin de quête",async()=>{
       const bt=writeBatch(db);
       bt.set(doc(db,"quetes",q.id),{statut:"terminee",rapport,majLe:serverTimestamp()},{merge:true});
+      if(C.notesDM!=null&&C.notesDM!==ptNotesDM(q))bt.set(doc(db,"parties",q.id),{notesDM:C.notesDM},{merge:true});
+      if(C.writer)bt.set(doc(db,"quetes",q.id),{redacteur:C.writer},{merge:true});
       bt.set(doc(db,"scenarios",q.id),{monde:{resultat:C.rapport.resultat,liste:C.csq||[],autre:C.csqx||"",le:serverTimestamp()}},{merge:true});
       const seen={};
       C.parts.forEach(x=>{const a=x.aventurier&&aventuriers.find(y=>y.id===x.aventurier);if(!a)return;
