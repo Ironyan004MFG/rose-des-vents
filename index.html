@@ -385,7 +385,8 @@ ul.modlist{list-style:none;padding:0;display:grid;gap:6px}.modprog{font-size:13p
 .evoprop.neg{border-color:#a3271a;background:#f8e8e4}
 ul.evomaj{margin:6px 0;padding-left:18px}
 ul.agelist{list-style:none;margin:0;padding:0;display:grid;gap:3px;min-width:180px}
-ul.agelist li{display:grid;grid-template-columns:minmax(0,1fr) 60px auto;gap:6px;align-items:center;font-size:13px}
+ul.agelist li{display:grid;grid-template-columns:minmax(0,1fr) 54px 28px;gap:6px;align-items:center;font-size:13px}
+ul.agelist .prog{width:54px;height:8px}ul.agelist .desc{text-align:right;font-size:13px}
 .agen{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .prog.near i{background:#c98a1a}.prog.over i{background:#a3271a}
 .evotab{background:#fff;border:1px dashed var(--parch-3);border-radius:6px;padding:6px 10px}
@@ -661,6 +662,13 @@ a.mini{text-decoration:none;display:inline-block}
 .warn{color:var(--danger)}
 .dmseuil{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;margin-bottom:14px}
 .dmseuil input{width:80px}
+.evsets{display:grid;gap:6px;margin:0 0 16px;padding:10px 14px;border:1px solid var(--line);border-radius:8px}
+.evsets .subh{margin:0 0 4px}
+label.evset{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px;text-transform:none;letter-spacing:normal;font-family:inherit;font-size:15px;color:inherit}
+label.evset input{width:70px;text-align:center}
+label.evset span:first-child{min-width:260px}
+label.evset span:last-child{color:var(--ink-soft);font-size:14px}
+.evsets .actions{margin-top:4px}
 .prog{display:inline-block;width:110px;height:10px;border-radius:5px;background:#d9c9a0;vertical-align:middle;overflow:hidden}
 .prog i{display:block;height:100%;background:var(--gold)}
 .dmtable tr.due{background:#fbe7c6}
@@ -2062,7 +2070,14 @@ function evolveForm(bid){
 function dmEvol(){
   if(ui.evolve)return evolveForm(ui.evolve);
   const X=seuilMonde();
-  let h='<form class="inline dmseuil" id="seuilform"><label for="ev-seuil">Le monde réagit toutes les<input id="ev-seuil" type="number" min="1" max="50" value="'+X+'"></label><span>quêtes accomplies dans une région.</span><label for="ev-agemax">Une quête ignorée s\'aggrave à l\'âge<input id="ev-agemax" type="number" min="1" max="50" step="0.5" value="'+ageMax()+'"></label><label for="ev-aggr">Crise régionale après<input id="ev-aggr" type="number" min="1" max="20" value="'+aggravSeuil()+'"></label><span>quêtes aggravées.</span><label for="ev-modpas">Les modules avancent toutes les<input id="ev-modpas" type="number" min="1" max="20" value="'+modPas()+'"></label><span>missions.</span><label for="ev-carte">La carte évolue après<input id="ev-carte" type="number" min="1" max="20" value="'+carteSeuil()+'"></label><span>évolutions de région du même sens.</span><button class="btn ghost" type="submit">Enregistrer</button></form>';
+  const row=(id,a,val,b,extra)=>'<label class="evset" for="'+id+'"><span>'+a+'</span><input id="'+id+'" type="number" '+extra+' value="'+val+'"><span>'+b+'</span></label>';
+  let h='<form id="seuilform" class="evsets"><h3 class="subh">Réglages</h3>'+
+    row("ev-seuil","Une région évolue après",X,"missions accomplies dans la région",'min="1" max="50"')+
+    row("ev-agemax","Une quête ignorée s\'aggrave à l\'âge",ageMax(),"(1 par mission dans sa région, ½ ailleurs)",'min="1" max="50" step="0.5"')+
+    row("ev-aggr","Crise régionale après",aggravSeuil(),"quêtes aggravées dans la région",'min="1" max="20"')+
+    row("ev-modpas","Les modules avancent toutes les",modPas(),"missions de la Guilde",'min="1" max="20"')+
+    row("ev-carte","Toute la carte évolue après",carteSeuil(),"évolutions de région du même sens",'min="1" max="20"')+
+    '<div class="actions"><button class="btn ghost" type="submit">Enregistrer</button></div></form>';
   h+='<div class="tablebox light"><table class="dmtable"><thead><tr><th scope="col">Comptoir</th><th scope="col">Depuis la dernière évolution</th><th scope="col">Quêtes ouvertes (âge)</th><th scope="col">Aggravations</th><th scope="col">Modules en cours</th><th scope="col"></th></tr></thead><tbody>'+bureaux.map(b=>{const n=pendingIn(b.id).length,pc=Math.min(100,Math.round(n/X*100));
     return '<tr'+(n>=X?' class="due"':'')+'><th scope="row">'+esc(b.nom)+'</th><td><span class="prog" role="img" aria-label="'+n+' sur '+X+'"><i style="width:'+pc+'%"></i></span> '+n+' / '+X+(n>=X?' <strong class="warn">Le monde doit réagir</strong>':'')+'</td><td>'+agesCell(b.id)+'</td><td>'+(aggravIn(b.id)>=aggravSeuil()?'<strong class="warn">':'')+aggravIn(b.id)+' / '+aggravSeuil()+(aggravIn(b.id)>=aggravSeuil()?' · crise</strong>':'')+'</td><td>'+(modsIn(b.id,true).map(m=>'<a class="ccat mod-'+esc(m.statut)+'" href="#man/modules/'+encodeURIComponent(m.id)+'">'+esc(m.nom)+(modParse(m).etapes.length?' · '+Math.min(modEtape(m)+1,modParse(m).etapes.length)+'/'+modParse(m).etapes.length:'')+'</a>').join(" ")||'<span class="desc">—</span>')+'</td><td><button class="mini" data-a="evolve" data-id="'+esc(b.id)+'">Faire évoluer</button></td></tr>';}).join("")+'</tbody></table></div>';
   {const k=carteCount(),n=carteSeuil(),cd=carteDue();h+='<div class="cartest'+(cd?' due '+cd:'')+'"><strong>Toute la carte</strong><span>Évolutions positives : '+k.pos+' / '+n+'</span><span>Crises régionales : '+k.neg+' / '+n+'</span>'+(cd?'<strong class="warn">'+(cd==="negatif"?'Le monde s\'assombrit':'Le monde s\'éclaire')+'</strong>':'<span class="desc">Une évolution de la carte remet ces compteurs à zéro.</span>')+'</div>';}
