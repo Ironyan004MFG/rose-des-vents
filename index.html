@@ -1421,13 +1421,15 @@ function renownView(){
       '<button class="btn gold" type="submit">Appliquer</button><button class="btn board" type="button" data-a="adj-cancel">Annuler</button></form>'
       :'<div class="actions"><button class="btn board" data-a="adj-open">Ajuster des points à la main</button></div>';
   }
-  h+='<div class="tablebox"><table class="roster"><thead><tr><th scope="col">Aventurier</th>'+bureaux.map(b=>'<th scope="col">'+esc(b.nom)+'</th>').join("")+(ui.dm?'<th scope="col"><span class="sr">Actions</span></th>':'')+'</tr></thead><tbody>'+
+  if(!shown().length)h+='<p class="hint">Aucun aventurier joueur au registre pour l\'instant.'+(ui.dm&&aventuriers.some(a=>a.pnj)?' Tes personnages DM sont cachés : Espace DM › Outils › <strong>Afficher personnages DM</strong>.':'')+'</p>';
+  else h+='<div class="tablebox"><table class="roster"><thead><tr><th scope="col">Aventurier</th>'+bureaux.map(b=>'<th scope="col">'+esc(b.nom)+'</th>').join("")+(ui.dm?'<th scope="col"><span class="sr">Actions</span></th>':'')+'</tr></thead><tbody>'+
     shown().map(a=>'<tr><th scope="row"><a class="plink row" href="#perso-'+esc(a.id)+'">'+(a.image?'<img class="av" src="'+esc(a.image)+'" alt="">':'<span class="av ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+'<span>'+esc(a.nom)+(a.pnj?' <em class="muted">(personnage DM)</em>':'')+(a.joueur?'<span class="pl">'+esc(a.joueur)+'</span>':'')+'</span></a></th>'+
       bureaux.map(b=>{const c=renown(a,b.id);if(!ui.dm)return '<td>'+(c!==51?chip(c):'<span class="muted">Inconnu</span>')+'</td>';
         return '<td>'+(c!==51?chip(c):'<span class="muted">Inconnu</span>')+'<span class="ptsline">'+c+' · R '+ptsLabel(pts(a,b.id))+' · N '+ptsLabel(ptsN(a,b.id))+'</span></td>';}).join("")+
       (ui.dm?'<td>'+(ui.confirmAdv===a.id?'<button class="btn danger sm" data-a="adv-del-yes" data-id="'+esc(a.id)+'">Confirmer</button> <button class="btn board sm" data-a="adv-del-no">Annuler</button>':'<button class="btn board sm" data-a="adv-del" data-id="'+esc(a.id)+'">Retirer</button>')+'</td>':'')+'</tr>').join("")+
     '</tbody></table></div>';
-  if(rangs.length)h+='<h3 class="subh">Historique</h3><ul class="journal">'+rangs.slice(0,30).map(r=>{const b=office(r.bureau);const d=r.date&&r.date.toDate?r.date.toDate().toLocaleDateString("fr-CA",{day:"numeric",month:"short",year:"numeric"}):"";
+  const vis=new Set(shown().map(a=>a.id)),rh=rangs.filter(r=>vis.has(r.aventurier));
+  if(rh.length)h+='<h3 class="subh">Historique</h3><ul class="journal">'+rh.slice(0,30).map(r=>{const b=office(r.bureau);const d=r.date&&r.date.toDate?r.date.toDate().toLocaleDateString("fr-CA",{day:"numeric",month:"short",year:"numeric"}):"";
       return '<li><span class="jd">'+esc(d)+'</span><span><strong>'+esc(r.nom||"")+'</strong> est désormais '+chip(r.nouveau)+(b?' à '+esc(b.nom):'')+'</span></li>';}).join("")+'</ul>';
   if(ui.dm&&journal.length)h+='<h3 class="subh">Journal des points (DM seulement)</h3><ul class="journal">'+journal.slice(0,30).map(j=>{const b=office(j.bureau);const d=j.date&&j.date.toDate?j.date.toDate().toLocaleDateString("fr-CA",{day:"numeric",month:"short",year:"numeric"}):"";
       return '<li><span class="jd">'+esc(d)+'</span><span><strong>'+esc(j.nom||"")+'</strong> : réputation '+ptsLabel(j.points||0)+(typeof j.notoriete==="number"?', notoriété '+ptsLabel(j.notoriete):'')+(b?' à '+esc(b.nom):'')+(j.raison?' · '+esc(j.raison):'')+'</span></li>';}).join("")+'</ul>';
