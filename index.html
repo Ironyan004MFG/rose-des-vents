@@ -83,10 +83,13 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .gplaque.gm-bois{background:repeating-linear-gradient(100deg,rgba(0,0,0,.08) 0 3px,transparent 3px 11px),linear-gradient(135deg,var(--m1),var(--m2) 55%,var(--m1))}
 .gplaque .gp-rose{width:46px;height:46px;flex:none;filter:drop-shadow(0 1px 0 rgba(255,255,255,.35)) drop-shadow(0 -1px 0 rgba(0,0,0,.3))}
 .gplaque .gp-txt{display:flex;flex-direction:column;min-width:0;flex:1}
-.gplaque .gp-g{font-family:var(--display);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gplaque .gp-g{font-family:var(--display);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;opacity:.8;line-height:1.3}
 .gplaque .gp-name{font-family:var(--display);font-size:20px;font-weight:700;line-height:1.15;overflow-wrap:anywhere;text-shadow:0 1px 0 rgba(255,255,255,.3),0 -1px 0 rgba(0,0,0,.35)}
 .gplaque .gp-r{font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
 .gplaque .gp-stamp{width:40px;height:40px;flex:none;transform:rotate(-14deg);opacity:.85}
+.xpline{margin:4px 0 2px;font-size:15px}.xpbar{height:6px;border-radius:3px;background:rgba(0,0,0,.12);overflow:hidden;max-width:360px}.xpbar i{display:block;height:100%;background:linear-gradient(90deg,#b8862f,#e3c06c)}
+.xpbox{margin:14px 0 6px;padding:10px 14px;border:1px solid var(--parch-3,#d9c9a0);border-radius:6px}.xpbox legend{font-family:var(--display);font-size:13px;letter-spacing:.12em;text-transform:uppercase;padding:0 6px}.xpbox label{display:inline-flex;flex-direction:column;max-width:240px}.xpbox ul{margin:6px 0 0;padding-left:18px}
+.ptxp{margin:4px 0 0;font-size:14px;color:var(--ink-soft)}
 .gmerit{font-size:13px;color:var(--muted,#8a7d6a);margin:2px 0 0}
 .pickrow.off{cursor:not-allowed}.pickrow.off .av,.pickrow.off strong,.pickrow.off .gchip{opacity:.55}.pickrow .why,.pickrow .desc{display:block;font-family:var(--body);font-size:14px;text-transform:none;letter-spacing:normal;font-weight:400}.pickrow .why{color:#9b2c22}
 .kind{font-family:var(--display);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
@@ -1039,6 +1042,8 @@ const RANKS = {cuivre:{label:"Cuivre",c:"var(--r-cuivre)"},fer:{label:"Fer",c:"v
 const GRANKS = ["bois","cuivre","fer","argent","or","mithral","rose"];
 const GRANK_LBL = {bois:"Bois",cuivre:"Cuivre",fer:"Fer",argent:"Argent",or:"Or",mithral:"Mithril",rose:"Rose des Vents"};
 const STAR_DEF = 40, STAR_MAX = 3;
+// Seuils d'XP de D&D 5.5e (index = niveau - 1)
+const XP_LEVELS = [0,300,900,2700,6500,14000,23000,34000,48000,64000,85000,100000,120000,140000,165000,195000,225000,265000,305000,355000];
 const PROMO_DEF = {fer:{m:6,niv:3},argent:{m:12,niv:5},or:{m:24,niv:9},mithral:{m:40,niv:13}};
 const MERIT_W = {cuivre:1,fer:2,argent:3,or:5,mithral:8};
 const STATUS = {ouverte:"Ouverte",encours:"En cours",terminee:"Terminée",archivee:"Archivée"};
@@ -1077,7 +1082,7 @@ const DEFAULT_SCALE = [
 
 /* ---------- state ---------- */
 let evoPriv=null;
-let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, notoMap = {}, meritMap = {}, remisesMap = {}, relations = [], priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], parties = [], modules = [], butins = [], crieur = null, pnjs = [], monstres = [], rencontres = [], scenarios = {};
+let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, notoMap = {}, meritMap = {}, remisesMap = {}, niveauVuMap = {}, relations = [], priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], parties = [], modules = [], butins = [], crieur = null, pnjs = [], monstres = [], rencontres = [], scenarios = {};
 const loaded = {b:false, q:false, i:false, a:false, w:false, c:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
@@ -1170,10 +1175,10 @@ function listen(){
 }
 // Données réservées au DM (points, journal, seuils) : lues seulement par un compte admin.
 function listenPrivate(on){
-  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};notoMap={};meritMap={};remisesMap={};relations=[];journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;evoPriv=null;dossiers={};factions=[];parties=[];modules=[];butins=[];crieur=null;pnjs=[];monstres=[];rencontres=[];scenarios={};
+  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};notoMap={};meritMap={};remisesMap={};niveauVuMap={};relations=[];journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;evoPriv=null;dossiers={};factions=[];parties=[];modules=[];butins=[];crieur=null;pnjs=[];monstres=[];rencontres=[];scenarios={};
   if(!on)return;
   const err=e=>console.error(e);
-  privUnsubs.push(onSnapshot(collection(db,"points"),snap=>{const m={};const nm={};const mm={},rm={};snap.docs.forEach(d=>{m[d.id]=(d.data().parRegion)||{};nm[d.id]=(d.data().notoriete)||{};if(typeof d.data().merite==="number")mm[d.id]=d.data().merite;if(typeof d.data().remises==="number")rm[d.id]=d.data().remises;});pointsMap=m;notoMap=nm;meritMap=mm;remisesMap=rm;render();},err));
+  privUnsubs.push(onSnapshot(collection(db,"points"),snap=>{const m={};const nm={};const mm={},rm={},nv={};snap.docs.forEach(d=>{m[d.id]=(d.data().parRegion)||{};nm[d.id]=(d.data().notoriete)||{};if(typeof d.data().merite==="number")mm[d.id]=d.data().merite;if(typeof d.data().remises==="number")rm[d.id]=d.data().remises;if(typeof d.data().niveauVu==="number")nv[d.id]=d.data().niveauVu;});pointsMap=m;notoMap=nm;meritMap=mm;remisesMap=rm;niveauVuMap=nv;render();},err));
   privUnsubs.push(onSnapshot(query(collection(db,"journal"),orderBy("date","desc"),limit(60)),snap=>{journal=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","renommee"),snap=>{priv=snap.exists()?snap.data():null;render();},err));
   const arr=(c,set)=>privUnsubs.push(onSnapshot(collection(db,c),snap=>{set(snap.docs.map(d=>Object.assign({id:d.id},d.data())));render();},err));
@@ -1499,7 +1504,16 @@ function starM(){const p=(priv&&priv.promo)||{};return (p.etoile&&+p.etoile.m)||
 function stars(a){return Math.max(0,Math.min(STAR_MAX,+(a&&a.etoiles)||0));}
 function meritCap(a){const r=grank(a);if(r==="mithral")return stars(a)<STAR_MAX?starM():0;if(r==="rose")return 0;const nx=gNext(r),c=nx&&promoCfg()[nx];return c?c.m:0;}
 function meritGain(q,res){const w=meritW()[q.rang]||1;return res==="reussite"?w:res==="partielle"?w/2:0;}
-function charLevel(a){return Math.max(1,Math.min(20,+(dossiers[a.id]||{}).niveau||1));}
+function levelOf(xp){let l=1;XP_LEVELS.forEach((t,i)=>{if(xp>=t)l=i+1;});return l;}
+function dosLevel(a){return Math.max(1,Math.min(20,+(dossiers[a.id]||{}).niveau||1));}
+// L'XP (publique, écrite par le DM) fait foi ; sans XP, on part du niveau du dossier.
+function charXp(a){return a&&typeof a.xp==="number"?a.xp:XP_LEVELS[dosLevel(a)-1];}
+function charLevel(a){return a&&typeof a.xp==="number"?levelOf(a.xp):dosLevel(a);}
+function xpLine(a){const x=charXp(a),l=levelOf(x),nx=XP_LEVELS[l],pv=XP_LEVELS[l-1],pc=nx?Math.round(100*(x-pv)/(nx-pv)):100;
+  return '<p class="xpline"><strong>Niveau '+l+'</strong> · '+x.toLocaleString("fr-CA")+' XP'+(nx?' <span class="muted">(niveau '+(l+1)+' à '+nx.toLocaleString("fr-CA")+' XP)</span>':'')+'</p><div class="xpbar" aria-hidden="true"><i style="width:'+pc+'%"></i></div>';}
+// XP de la partie : total des ennemis vaincus (Mode Partie), toujours DIVISÉ entre les participants.
+function ptXpTotal(qid){const d=(ui.pt&&ui.pt.id===qid)?ui.pt:parties.find(p=>p.id===qid);const v=(d&&d.stats&&d.stats.vaincus)||{};return Object.keys(v).reduce((t,k)=>t+(+v[k].xp||0),0);}
+function xpShare(total,n){return n>0?Math.floor(total/n):0;}
 function examReady(a){const r=grank(a);if(r==="mithral"||r==="rose")return null;const nx=gNext(r),c=nx&&promoCfg()[nx];return c&&merit(a)>=c.m&&charLevel(a)>=c.niv?nx:null;}
 function gRose(){return '<svg viewBox="-110 -110 220 220" aria-hidden="true">'+rose(104,'rgba(0,0,0,.35)')+'</svg>';}
 function gChip(a){const r=typeof a==="string"?a:grank(a),st=typeof a==="string"?0:stars(a);return '<span class="gchip gm-'+r+'" title="Rang de Guilde">'+gRose()+esc(GRANK_LBL[r]||r)+(st?' '+"★".repeat(st):'')+'</span>';}
@@ -1611,9 +1625,10 @@ function sheetView(id){
   h+='<div class="sheet-top">'+(a.image?'<img class="portrait" src="'+esc(a.image)+'" alt="Portrait de '+esc(a.nom)+'">':'<span class="portrait ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+
     '<div class="sheet-id"><h2>'+esc(a.nom)+'</h2><p class="sheet-sub">'+esc([a.espece,a.classe].filter(Boolean).join(" · ")||"Aventurier")+'</p>'+(a.joueur?'<p class="sheet-pl">Joué par '+esc(a.joueur)+'</p>':'')+'</div></div>';
   h+=gPlaque(a);
+  if(mine||ui.dm)h+=xpLine(a);
   if(ui.dm&&isAdmin){const cap=meritCap(a),nx=examReady(a);
     h+='<p class="gmerit">Mérite '+merit(a)+(cap?' / '+cap:'')+' · niveau '+charLevel(a)+(gNext(grank(a))&&promoCfg()[gNext(grank(a))]?' / '+promoCfg()[gNext(grank(a))].niv:'')+(nx?' · <strong>éligible à l\'examen '+esc(GRANK_LBL[nx])+'</strong>':'')+' <em>(DM)</em></p>'+
-      '<form class="grankform" id="grankform" data-id="'+esc(a.id)+'"><label for="g-rank">Rang de Guilde<select id="g-rank">'+GRANKS.map(k=>'<option value="'+k+'"'+(k===grank(a)?' selected':'')+'>'+esc(GRANK_LBL[k])+'</option>').join("")+'</select></label><label for="g-st">Étoiles<input id="g-st" type="number" min="0" max="'+STAR_MAX+'" value="'+stars(a)+'"></label><button class="mini" type="submit">Changer</button></form>';}
+      '<form class="grankform" id="grankform" data-id="'+esc(a.id)+'"><label for="g-rank">Rang de Guilde<select id="g-rank">'+GRANKS.map(k=>'<option value="'+k+'"'+(k===grank(a)?' selected':'')+'>'+esc(GRANK_LBL[k])+'</option>').join("")+'</select></label><label for="g-st">Étoiles<input id="g-st" type="number" min="0" max="'+STAR_MAX+'" value="'+stars(a)+'"></label><label for="g-xp">XP<input id="g-xp" type="number" min="0" max="999999" value="'+charXp(a)+'"></label><button class="mini" type="submit">Changer</button></form>';}
   if(a.description)h+='<h3>Description</h3><p class="desc">'+esc(a.description)+'</p>';
   if(a.background)h+='<h3>Background</h3><p class="desc">'+esc(a.background)+'</p>';
   const known=bureaux.filter(b=>renown(a,b.id)!==51);
@@ -1814,7 +1829,7 @@ function byName(l){return l.slice().sort((a,b)=>String(a.nom||"").localeCompare(
 function crXp(fp){return CR_XP[String(fp)]||0;}
 function mod(n){if(n==null||n==="")return "";const m=Math.floor((+n-10)/2);return (m>=0?"+":"")+m;}
 function encXp(list){return (list||[]).reduce((s,r)=>{const m=monstres.find(x=>x.id===r.id);return s+(m?crXp(m.fp)*(+r.nb||0):0);},0);}
-function partyLevels(){const P=ui.party;if(P.mode==="chars"){return P.ids.map(id=>{const d=dossiers[id]||{};return Math.max(1,Math.min(20,+d.niveau||1));});}
+function partyLevels(){const P=ui.party;if(P.mode==="chars"){return P.ids.map(id=>{const a=aventuriers.find(x=>x.id===id);return a?charLevel(a):Math.max(1,Math.min(20,+(dossiers[id]||{}).niveau||1));});}
   return Array.from({length:Math.max(1,Math.min(12,+P.nb||1))},()=>Math.max(1,Math.min(20,+P.niv||1)));}
 function budgets(){const l=partyLevels();return [0,1,2].map(i=>l.reduce((s,v)=>s+XP_BUDGET[v][i],0));}
 function diffOf(xp){const b=budgets();if(!xp)return ["—",""];if(xp<=b[0])return ["Faible","d-low"];if(xp<=b[1])return ["Modérée","d-mod"];if(xp<=b[2])return ["Élevée","d-high"];return ["Au-delà d'élevée","d-deadly"];}
@@ -2096,6 +2111,7 @@ function todoItems(){
   dueRegions().forEach(b=>it.push({k:"evol",t:'<strong>'+esc(b.nom)+'</strong> : évolution '+SENS_L[regionSens(b.id)]+' de la région ('+pendingIn(b.id).length+(pendingIn(b.id).length>1?' quêtes accomplies':' quête accomplie')+(aggravIn(b.id)?', '+aggravIn(b.id)+' aggravation'+(aggravIn(b.id)>1?'s':''):', aucune aggravation')+')'+evoWait("region",b.id),act:'<button class="mini" data-a="evolve" data-id="'+esc(b.id)+'">Faire évoluer moi-même</button>'}));
   criseRegions().forEach(b=>it.push({k:"evol",t:'<strong>'+esc(b.nom)+'</strong> : <strong class="warn">crise régionale</strong> ('+aggravIn(b.id)+' quêtes aggravées)'+evoWait("crise",b.id),act:''}));
   agedIn().forEach(q=>{const b=office(q.bureau);it.push({k:"evol",t:'<strong>'+esc(q.titre)+'</strong> ('+esc(b?b.nom:"")+') : quête ignorée, âge '+fmtAge(ageOf(q))+' / '+ageMax()+', elle va s\'aggraver'+evoWait("maj",q.id),act:''});});
+  ranked().forEach(a=>{if(typeof a.xp!=="number")return;const l=levelOf(a.xp),vu=niveauVuMap[a.id]||1;if(l>vu)it.push({k:"niveau",t:'<strong>'+esc(a.nom)+'</strong> atteint le <strong>niveau '+l+'</strong> ('+a.xp.toLocaleString("fr-CA")+' XP) : à annoncer au joueur.',act:'<button class="mini" data-a="lvl-seen" data-id="'+esc(a.id)+'" data-v="'+l+'">Annoncé</button><a class="mini" href="#perso-'+esc(a.id)+'">Fiche</a>'});});
   ranked().forEach(a=>{const nx=examReady(a),sl='<a class="mini" href="#perso-'+esc(a.id)+'">Fiche</a>';
     if(nx)it.push({k:"guilde",t:'<strong>'+esc(a.nom)+'</strong> ('+esc(GRANK_LBL[grank(a)])+') est éligible à l\'<strong>examen '+esc(GRANK_LBL[nx])+'</strong>. Crée une quête de type Examen, de rang '+esc(GRANK_LBL[nx])+', ou demande-la à Claude.',act:sl});
     const due=stars(a)-(remisesMap[a.id]||0);if(due>0)it.push({k:"guilde",t:'<strong>'+esc(a.nom)+'</strong> a gagné '+(due>1?due+' étoiles':'une étoile')+' de Mithril : récompense à remettre.',act:'<button class="mini" data-a="star-given" data-id="'+esc(a.id)+'">Récompense remise</button>'+sl});
@@ -2119,7 +2135,7 @@ function todoItems(){
   aventuriers.filter(a=>{const d=dossiers[a.id]||{};return !a.pnj&&a.proprietaire&&d.outerworlder!=="non"&&!d.donNom;}).forEach(a=>{const d=dossiers[a.id]||{};it.push({k:"don",t:'<strong>'+esc(a.nom)+'</strong> : '+(d.outerworlder==="oui"?'Outerworlder sans Don':'Outerworlder ? Don à attribuer ou personnage natif à indiquer'),act:'<button class="mini" data-a="man-open" data-sec="perso" data-id="'+esc(a.id)+'">Dossier</button>'});});
   return it;
 }
-const TODO_GROUPS=[["evol","Le monde doit réagir"],["guilde","Rangs de Guilde"],["fiche","Fiches à compléter"],["report","Rapports de mission reçus"],["crieur","Articles du Crieur"],["group","Groupes à former"],["run","Missions en cours"],["comp","Compendium en revue"],["don","Dons à attribuer"]];
+const TODO_GROUPS=[["evol","Le monde doit réagir"],["niveau","Niveaux atteints"],["guilde","Rangs de Guilde"],["fiche","Fiches à compléter"],["report","Rapports de mission reçus"],["crieur","Articles du Crieur"],["group","Groupes à former"],["run","Missions en cours"],["comp","Compendium en revue"],["don","Dons à attribuer"]];
 function dmTodo(){const it=todoItems();if(!it.length)return '<p class="empty">Rien à traiter. Le monde est calme… pour l\'instant.</p>';
   return TODO_GROUPS.map(g=>{const l=it.filter(x=>x.k===g[0]);if(!l.length)return "";return '<section class="dmsec"><h2>'+g[1]+' <span class="n">'+l.length+'</span></h2><ul class="todo">'+l.map(x=>'<li><span>'+x.t+'</span>'+x.act+'</li>').join("")+'</ul></section>';}).join("");}
 function evolveForm(bid){
@@ -2394,7 +2410,7 @@ function render(){
             const before=a?renown(a,cq.bureau):51,after=a?codeOf(ptsN(a,cq.bureau)+t.n,pts(a,cq.bureau)+t.r):51,sg=v=>(v>0?'+':'')+v;
             return '<tr><th scope="row">'+esc(x.nom)+(a?'':' <em>(hors registre)</em>')+'</th><td data-l="Fin de quête" class="gains"><label class="sr" for="b-gainn'+i+'">Notoriété pour '+esc(x.nom)+'</label><input class="cnt" id="b-gainn'+i+'" type="number" step="1" value="'+t.gN+'"'+(a?'':' disabled')+' title="Notoriété"><label class="sr" for="b-gain'+i+'">Réputation pour '+esc(x.nom)+'</label><input class="cnt" id="b-gain'+i+'" type="number" step="1" value="'+t.gR+'"'+(a?'':' disabled')+' title="Réputation"></td>'+
               '<td class="num nw" data-l="Méfaits">'+(t.pen?'N +'+t.mefN+'<br>R −'+t.pen:'—')+'</td><td class="num nw" data-l="Bienfaits">'+(t.bnN||t.bnR?'N +'+t.bnN+'<br>R +'+t.bnR:'—')+'</td><td class="num nw" data-l="Total"><strong>N '+sg(t.n)+'<br>R '+sg(t.r)+'</strong></td><td data-l="Résultat">'+(a?chip(before)+(after!==before?' → '+chip(after):''):'—')+'</td></tr>';}).join("")+
-          '</tbody></table></div>'+
+          '</tbody></table></div>'+xpBilan(cq,C)+
           '<div class="actions"><button class="btn" type="submit">Terminer la quête</button><button class="btn ghost" type="button" data-a="step-recalc">Recalculer</button><button class="btn ghost" type="button" data-a="step-back">Retour</button></div>';
       }
       h+='</form></div>';}}
@@ -3037,7 +3053,7 @@ function partyView(){
   ptSync(q.id);const P=ui.pt,o=ptOrder(),b=office(q.bureau)||{};
   if(ui.ptLaunch){const rid=ui.ptLaunch;ui.ptLaunch=null;if(P.combat)ui.ptAlert="Clos d'abord la rencontre « "+P.combat.nom+" ».";else{ptStartEnc(q,rid,"",true);ptSave();}}
   const xp=P.liste.filter(c=>c.kind==="monstre"&&c.pv<=0).reduce((t,c)=>t+(+c.xp||0),0),npj=P.liste.filter(c=>c.kind==="pj").length;
-  let h='<section class="partie"><div class="pthead"><div><p class="ctags">'+rankSeal(q.rang)+'<span class="creg">'+esc(b.nom||"")+'</span></p><h2>'+esc(q.titre)+'</h2></div><div class="ptround">'+(P.combat&&P.combat.phase==="combat"?'<span>Round</span><strong>'+P.round+'</strong>':P.combat?'<span>Initiative</span><strong>🎲</strong>':'<span>Hors combat</span>')+'</div></div>';
+  let h='<section class="partie"><div class="pthead"><div><p class="ctags">'+rankSeal(q.rang)+'<span class="creg">'+esc(b.nom||"")+'</span></p><h2>'+esc(q.titre)+'</h2>'+(function(){const t=ptXpTotal(q.id),n=signupsFor(q.id).filter(x=>x.statut==="confirmee").length||P.liste.filter(c=>c.kind==="pj").length;return t?'<p class="ptxp">✦ '+t.toLocaleString("fr-CA")+' XP gagnés'+(n?' · '+xpShare(t,n).toLocaleString("fr-CA")+' par aventurier ('+n+')':'')+'</p>':'';})()+'</div><div class="ptround">'+(P.combat&&P.combat.phase==="combat"?'<span>Round</span><strong>'+P.round+'</strong>':P.combat?'<span>Initiative</span><strong>🎲</strong>':'<span>Hors combat</span>')+'</div></div>';
   if(ui.ptAlert)h+='<div class="ptalert" role="alert"><span>⚠ '+esc(ui.ptAlert)+'</span><button data-a="pt-aok" aria-label="Fermer l\'alerte">OK</button></div>';
   h+='<div class="ptgrid"><div class="ptcombat">'+ptCombatCol(q);
   h+='</div><div class="ptside">'+ptSide(q)+'</div></div>';
@@ -3254,6 +3270,12 @@ function csqPick(q,C){const win=csqWin(q),all=csqParse((scenarios[q.id]||{}).con
   return '<fieldset class="pick csqpick"><legend>'+(objsOf(q).length?'Autres conséquences':'Conséquences pour le monde')+'</legend><p class="desc">Coche ce qui arrive. C\'est gardé dans ton rapport DM (jamais montré aux joueurs) et ça t\'attendra dans Évolution du monde.</p>'+
     (list.length?list.map(row).join(""):'<p class="desc">Aucune conséquence prévue dans le scénario.</p>')+
     '<label for="csq-autre">Autre conséquence (facultatif)<textarea id="csq-autre" rows="2" maxlength="1000" placeholder="Ex. Le lieutenant Garrow a vu le visage de Bob.">'+esc(C.csqx||"")+'</textarea></label></fieldset>';}
+function xpBilan(q,C){const cb=ptXpTotal(q.id),bn=+C.xpBonus||0,n=C.parts.length,sh=xpShare(cb+bn,n);
+  return '<fieldset class="xpbox"><legend>Expérience</legend><p>Ennemis vaincus (Mode Partie) : <strong>'+cb.toLocaleString("fr-CA")+' XP</strong></p>'+
+    '<label for="b-xpb">XP de quête (bonus total, facultatif)<input id="b-xpb" type="number" min="0" max="999999" step="1" value="'+bn+'"></label>'+
+    '<p>Total '+(cb+bn).toLocaleString("fr-CA")+' XP ÷ '+n+' participant'+(n>1?'s':'')+' = <strong>'+sh.toLocaleString("fr-CA")+' XP chacun</strong> <span class="desc">(Recalculer pour mettre à jour)</span></p>'+
+    '<ul>'+C.parts.map(x=>{const a=aventuriers.find(y=>y.id===x.aventurier);if(!a)return '<li>'+esc(x.nom)+' <em>(hors registre)</em></li>';const x0=charXp(a),l0=levelOf(x0),l1=levelOf(x0+sh);
+      return '<li>'+esc(x.nom)+' : '+x0.toLocaleString("fr-CA")+' → '+(x0+sh).toLocaleString("fr-CA")+' XP'+(l1>l0?' · <strong>niveau '+l1+' !</strong>':' · niveau '+l0)+'</li>';}).join("")+'</ul></fieldset>';}
 function readStep(){
   const C=ui.complete;if(!C)return;
   if(C.step===1){const r0=C.rapport&&C.rapport.resultat,ob=objsOf(questById(C.id)||{id:""});
@@ -3263,7 +3285,7 @@ function readStep(){
     const all=csqParse((scenarios[C.id]||{}).consequences);C.csq=Array.from(document.querySelectorAll('#completeform input[data-csq]')).filter(c=>c.checked).map(c=>(all[+c.getAttribute("data-csq")]||{}).txt).filter(Boolean);
     const ax=document.getElementById("csq-autre");if(ax)C.csqx=String(ax.value).trim().slice(0,1000);if(r0&&r0!==C.rapport.resultat)C.parts.forEach(x=>{x.gain=null;x.gainN=null;});}
   if(C.step===2){C.parts.forEach((x,i)=>{x.aventurier=v0("m-adv"+i)||null;Object.keys(DEFAULT_MEFAITS).concat(BIENFAITS).forEach(k=>{x[k]=Math.max(0,Math.round(+v0("m-"+k+i)||0));});});}
-  if(C.step===3){C.parts.forEach((x,i)=>{const el=document.getElementById("b-gain"+i),en=document.getElementById("b-gainn"+i);if(el&&!el.disabled)x.gain=Math.round(+el.value||0);if(en&&!en.disabled)x.gainN=Math.round(+en.value||0);});}
+  if(C.step===3){const xb=document.getElementById("b-xpb");if(xb)C.xpBonus=Math.max(0,Math.round(+xb.value||0));C.parts.forEach((x,i)=>{const el=document.getElementById("b-gain"+i),en=document.getElementById("b-gainn"+i);if(el&&!el.disabled)x.gain=Math.round(+el.value||0);if(en&&!en.disabled)x.gainN=Math.round(+en.value||0);});}
 }
 document.addEventListener("click",async e=>{
   const ml=e.target.closest&&e.target.closest('a[href^="#man/"]');
@@ -3278,6 +3300,7 @@ document.addEventListener("click",async e=>{
     else if(isAdmin){ui.dm=true;}
     else{dmLogin();return;}
   }
+  else if(a==="lvl-seen"){const lv=+b.getAttribute("data-v")||1;await run("Niveau",()=>setDoc(doc(db,"points",id),{niveauVu:lv},{merge:true}));return;}
   else if(a==="star-given"){await run("Récompense",()=>setDoc(doc(db,"points",id),{remises:(remisesMap[id]||0)+1},{merge:true}));return;}
   else if(a==="showpnj"){ui.showPnj=!ui.showPnj;store("rdv-showpnj",ui.showPnj);render();return;}
   else if(a==="logout"){ui.dm=false;ui.authMsg="";ui.sheetEdit=null;await signOut(auth);}
@@ -3579,7 +3602,9 @@ document.addEventListener("submit",async e=>{
   if(e.target.id==="grankform"){
     const id=e.target.getAttribute("data-id"),a=aventuriers.find(x=>x.id===id);if(!a||!isAdmin)return;
     const nr=v("g-rank"),st=Math.max(0,Math.min(STAR_MAX,Math.round(+v("g-st")||0)));if(GRANKS.indexOf(nr)<0)return;
-    await run("Rang de Guilde",async()=>{const bt=writeBatch(db);bt.set(doc(db,"aventuriers",id),{rangGuilde:nr,etoiles:st,majLe:serverTimestamp()},{merge:true});
+    const xp=Math.max(0,Math.min(999999,Math.round(+v("g-xp")||0)));
+    await run("Rang de Guilde",async()=>{const bt=writeBatch(db);bt.set(doc(db,"aventuriers",id),{rangGuilde:nr,etoiles:st,xp:xp,majLe:serverTimestamp()},{merge:true});
+      if(levelOf(xp)!==charLevel(a)){bt.set(doc(db,"dossiers",id),{niveau:levelOf(xp)},{merge:true});bt.set(doc(db,"points",id),{niveauVu:levelOf(xp)},{merge:true});}
       if(nr!==grank(a)){bt.set(doc(db,"points",id),{merite:0},{merge:true});bt.set(doc(collection(db,"journal")),{aventurier:id,nom:a.nom,bureau:"",points:0,notoriete:0,raison:"Rang de Guilde : "+GRANK_LBL[grank(a)]+" → "+GRANK_LBL[nr]+" (DM)",quete:"",date:serverTimestamp()});}
       await bt.commit();});return;
   }
@@ -3615,6 +3640,12 @@ document.addEventListener("submit",async e=>{
         bt.set(doc(collection(db,"journal")),{aventurier:a.id,nom:a.nom,bureau:q.bureau,points:net,notoriete:netN,raison:"Quête : "+q.titre+" ("+(RESULTS[C.rapport.resultat]||"")+" : N +"+t.gN+", R "+(t.gR>=0?"+":"")+t.gR+(det?" ; "+det:"")+")",quete:q.id,date:serverTimestamp()});});
       Object.keys(seen).forEach(id=>{if(seen[id].r||seen[id].n)addPoints(bt,aventuriers.find(y=>y.id===id),q.bureau,seen[id].r,seen[id].n);});
       Object.keys(seen).forEach(id=>{const a=aventuriers.find(y=>y.id===id);if(a)gQuestEnd(bt,a,q,C.rapport.resultat);});
+      {const sh=xpShare(ptXpTotal(q.id)+(+C.xpBonus||0),C.parts.length),done={};
+        if(sh>0)C.parts.forEach(x=>{const a=x.aventurier&&aventuriers.find(y=>y.id===x.aventurier);if(!a||done[a.id])return;done[a.id]=1;
+          const x0=charXp(a),x1=x0+sh,l0=levelOf(x0),l1=levelOf(x1);
+          bt.update(doc(db,"aventuriers",a.id),"xp",x1,"majLe",serverTimestamp());
+          if(l1>l0){bt.set(doc(db,"dossiers",a.id),{niveau:l1},{merge:true});
+            bt.set(doc(collection(db,"journal")),{aventurier:a.id,nom:a.nom,bureau:q.bureau,points:0,notoriete:0,raison:"Niveau "+l1+" atteint ("+x1+" XP)",quete:q.id,date:serverTimestamp()});}});}
       await bt.commit();
     });return;
   }
