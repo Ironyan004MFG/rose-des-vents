@@ -961,6 +961,7 @@ const ui = {artKind:"pnj", artAll:false, artInstr:false, artCopied:null, manSec:
 /* ---------- helpers ---------- */
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k)||"null");localStorage.setItem(k,JSON.stringify(v));}catch(e){return null;}}
+ui.showPnj=!!store("rdv-showpnj");
 function parsePlayers(s){const n=String(s||"").match(/\d+/g);if(!n)return {min:null,max:null};const a=n.map(Number);return {min:a[0],max:a.length>1?a[a.length-1]:(/\+/.test(s)?null:a[0])};}
 function normQuest(q){
   const out={};QUEST_KEYS.forEach(k=>{if(q[k]!==undefined)out[k]=q[k];});
@@ -1081,6 +1082,8 @@ getRedirectResult(auth).catch(e=>{ui.authMsg=errText(e);render();});
 
 // Aventuriers qui comptent dans la renommée (les PNJ comme Pax sont hors classement)
 function ranked(){return aventuriers.filter(a=>!a.pnj);}
+// Liste affichée : les personnages du DM (PNJ) s'ajoutent seulement en mode DM, si l'outil est activé.
+function shown(){return ui.dm&&ui.showPnj?ranked().concat(aventuriers.filter(a=>a.pnj)):ranked();}
 function myChars(){return user&&!user.isAnonymous?aventuriers.filter(a=>a.proprietaire===user.uid):[];}
 async function login(intent){
   ui.loginIntent=intent;
@@ -1269,7 +1272,7 @@ function wantedPoster(a,bid){const c=renown(a,bid),r=Math.min(9,cR(c)),nn=cN(c),
     '<span class="wnom">'+esc(face===0&&nn===1?"Individu inconnu":a.nom)+'</span>'+(ident?'<span class="wid">'+esc(ident)+'</span>':'')+
     (face===0&&a.description?'<span class="wdesc">« '+esc(String(a.description).slice(0,110))+(String(a.description).length>110?'…':'')+' »</span>':'')+
     '<span class="wcrime">'+esc(W.crime)+(b?' de '+esc(b.nom):'')+'</span><span class="wprime">Prime : '+esc(W.prime)+'</span><span class="wfoot">Par ordre du Guet'+(b?' de '+esc(b.nom):'')+'</span></a>';}
-function wantedSection(bid){const l=ranked().filter(a=>cR(renown(a,bid))>=6).sort((x,y)=>cR(renown(y,bid))-cR(renown(x,bid))||cN(renown(y,bid))-cN(renown(x,bid))||String(x.nom).localeCompare(String(y.nom),"fr"));
+function wantedSection(bid){const l=shown().filter(a=>cR(renown(a,bid))>=6).sort((x,y)=>cR(renown(y,bid))-cR(renown(x,bid))||cN(renown(y,bid))-cN(renown(x,bid))||String(x.nom).localeCompare(String(y.nom),"fr"));
   if(!l.length)return "";return '<section class="wantedwrap" aria-label="Avis de recherche"><h2>Avis de recherche</h2><div class="wantedgrid">'+l.map(a=>wantedPoster(a,bid)).join("")+'</div></section>';}
 function boardView(){
   const mine=quetes.filter(q=>q.bureau===ui.office);
@@ -1360,7 +1363,7 @@ function matrixTable(dm){const T=titresMap(),N=notoList(),Rl=repuList();
     Rl.map(r=>'<tr><th scope="row">'+repChip(r.r)+'</th>'+N.map(n=>{const c=r.r*10+n.n,t=T[String(c)];return '<td class="mx rr'+r.r+'">'+(dm?'<span class="mxc">'+c+'</span>':'')+(t?'<span class="mxt">'+esc(t)+'</span>':'')+'</td>';}).join("")+'</tr>').join("")+'</tbody></table></div>';}
 function renAxes(c){c=legacyCode(c);return '<span class="renaxes">'+esc(nTitre(cN(c)))+' · '+esc(rTitre(cR(c)))+'</span>';}
 function reputationSection(bid,nom){
-  const list=ranked().sort((x,y)=>(cN(renown(y,bid))-cN(renown(x,bid)))||(cR(renown(x,bid))-cR(renown(y,bid)))||(ui.dm?pts(y,bid)-pts(x,bid):0)||String(x.nom).localeCompare(String(y.nom),"fr"));
+  const list=shown().sort((x,y)=>(cN(renown(y,bid))-cN(renown(x,bid)))||(cR(renown(x,bid))-cR(renown(y,bid)))||(ui.dm?pts(y,bid)-pts(x,bid):0)||String(x.nom).localeCompare(String(y.nom),"fr"));
   let h='<section class="rep" aria-label="Réputation"><h2>Réputation à '+esc(nom)+'</h2>';
   if(!list.length)return h+'<p class="hint">Aucun aventurier n\'est encore inscrit au registre. <a href="#renommee">Voir le registre de renommée</a></p></section>';
   h+='<ul class="replist">'+list.map(a=>{const n=renown(a,bid),p=pts(a,bid);return '<li><span class="who">'+esc(a.nom)+(a.joueur?' <em>('+esc(a.joueur)+')</em>':'')+(ui.dm?'<span class="pts">'+n+' · R '+ptsLabel(p)+' · N '+ptsLabel(ptsN(a,bid))+'</span>':'')+'</span>'+chip(n)+'</li>';}).join("")+'</ul>';
@@ -1401,7 +1404,7 @@ function renownView(){
       :'<div class="actions"><button class="btn board" data-a="adj-open">Ajuster des points à la main</button></div>';
   }
   h+='<div class="tablebox"><table class="roster"><thead><tr><th scope="col">Aventurier</th>'+bureaux.map(b=>'<th scope="col">'+esc(b.nom)+'</th>').join("")+(ui.dm?'<th scope="col"><span class="sr">Actions</span></th>':'')+'</tr></thead><tbody>'+
-    (ui.dm?ranked().concat(aventuriers.filter(a=>a.pnj)):ranked()).map(a=>'<tr><th scope="row"><a class="plink row" href="#perso-'+esc(a.id)+'">'+(a.image?'<img class="av" src="'+esc(a.image)+'" alt="">':'<span class="av ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+'<span>'+esc(a.nom)+(a.pnj?' <em class="muted">(PNJ, visible du DM seulement)</em>':'')+(a.joueur?'<span class="pl">'+esc(a.joueur)+'</span>':'')+'</span></a></th>'+
+    shown().map(a=>'<tr><th scope="row"><a class="plink row" href="#perso-'+esc(a.id)+'">'+(a.image?'<img class="av" src="'+esc(a.image)+'" alt="">':'<span class="av ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+'<span>'+esc(a.nom)+(a.pnj?' <em class="muted">(personnage DM)</em>':'')+(a.joueur?'<span class="pl">'+esc(a.joueur)+'</span>':'')+'</span></a></th>'+
       bureaux.map(b=>{const c=renown(a,b.id);if(!ui.dm)return '<td>'+(c!==51?chip(c):'<span class="muted">Inconnu</span>')+'</td>';
         return '<td>'+(c!==51?chip(c):'<span class="muted">Inconnu</span>')+'<span class="ptsline">'+c+' · R '+ptsLabel(pts(a,b.id))+' · N '+ptsLabel(ptsN(a,b.id))+'</span></td>';}).join("")+
       (ui.dm?'<td>'+(ui.confirmAdv===a.id?'<button class="btn danger sm" data-a="adv-del-yes" data-id="'+esc(a.id)+'">Confirmer</button> <button class="btn board sm" data-a="adv-del-no">Annuler</button>':'<button class="btn board sm" data-a="adv-del" data-id="'+esc(a.id)+'">Retirer</button>')+'</td>':'')+'</tr>').join("")+
@@ -1974,7 +1977,7 @@ function dmSpaceView(){
 function galleryView(){
   if(!loaded.a)return '<p class="hint">Chargement…</p>';
   if(!aventuriers.length)return '<p class="empty">Aucun aventurier n\'est encore inscrit à la Guilde. Connecte-toi et crée ta fiche pour être le premier !</p>';
-  return '<div class="gallery">'+ranked().map(a=>{
+  return '<div class="gallery">'+shown().map(a=>{
     let best=null;bureaux.forEach(b=>{const n=renown(a,b.id);if(n!==51&&(!best||cN(n)>cN(best.n)||(cN(n)===cN(best.n)&&cR(n)<cR(best.n))))best={n,b};});
     const qn=questsOf(a).length;
     return '<a class="gcard" href="#perso-'+esc(a.id)+'">'+(a.image?'<img class="gimg" src="'+esc(a.image)+'" alt="">':'<span class="gimg ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+
@@ -2056,6 +2059,7 @@ function dmTools(){
       '<div class="actions"><button class="btn gold" data-a="import-apply"'+(p.add.length+p.upd.length+p.del.length?'':' disabled')+'>Appliquer</button><button class="btn ghost" data-a="import-cancel">Annuler</button></div></div>';}
   h+='</section>';
   if(loaded.b&&loaded.q&&(miss.b.length||miss.q.length))h+='<section class="dmsec"><h2>Données intégrées</h2><p class="desc">Le site contient des comptoirs et des quêtes d\'exemple qui ne sont pas encore dans la base.</p><div class="actions"><button class="btn ghost" data-a="migrate">Migrer les données intégrées ('+miss.b.length+' comptoirs, '+miss.q.length+' quêtes)</button></div></section>';
+  h+='<section class="dmsec"><h2>Personnages DM</h2><p class="desc">Tes fiches PNJ jouables (Pax, personnages de test) sont cachées partout : registre de renommée, galerie, comptoirs, avis de recherche. Affiche-les pour les voir en mode DM ; les joueurs ne les voient jamais.</p><div class="actions"><button class="btn ghost" data-a="showpnj" aria-pressed="'+(ui.showPnj?'true':'false')+'">'+(ui.showPnj?'Cacher personnages DM':'Afficher personnages DM')+'</button></div></section>';
   h+='<section class="dmsec"><h2>Session</h2><p class="desc">Connecté : '+esc(user&&(user.displayName||user.email)||"")+'</p><div class="actions"><button class="btn ghost" data-a="dm">Quitter le mode DM</button><button class="btn ghost" data-a="logout">Déconnexion</button></div></section>';
   return h;
 }
@@ -2914,6 +2918,7 @@ document.addEventListener("click",async e=>{
     else if(isAdmin){ui.dm=true;}
     else{dmLogin();return;}
   }
+  else if(a==="showpnj"){ui.showPnj=!ui.showPnj;store("rdv-showpnj",ui.showPnj);render();return;}
   else if(a==="logout"){ui.dm=false;ui.authMsg="";ui.sheetEdit=null;await signOut(auth);}
   else if(a==="auth-ok"){ui.authMsg="";}
   else if(a==="join"){
