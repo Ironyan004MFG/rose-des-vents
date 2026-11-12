@@ -88,7 +88,7 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .gplaque .gp-r{font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
 .gplaque .gp-stamp{width:40px;height:40px;flex:none;transform:rotate(-14deg);opacity:.85}
 .xpline{margin:4px 0 2px;font-size:15px}.xpbar{height:6px;border-radius:3px;background:rgba(0,0,0,.12);overflow:hidden;max-width:360px}.xpbar i{display:block;height:100%;background:linear-gradient(90deg,#b8862f,#e3c06c)}
-.xpbox{margin:14px 0 6px;padding:10px 14px;border:1px solid var(--parch-3,#d9c9a0);border-radius:6px}.xpbox legend{font-family:var(--display);font-size:13px;letter-spacing:.12em;text-transform:uppercase;padding:0 6px}.xpbox label{display:inline-flex;flex-direction:column;max-width:240px}.xpbox ul{margin:6px 0 0;padding-left:18px}
+.xpbox{margin:14px 0 6px;padding:10px 14px;border:1px solid var(--parch-3,#d9c9a0);border-radius:6px}.xpbox legend{font-family:var(--display);font-size:13px;letter-spacing:.12em;text-transform:uppercase;padding:0 6px}.xpbox label{display:inline-flex;flex-direction:column;max-width:240px}.xpbox ul{margin:6px 0 0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:6px}.xpbox li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}.xpbox li .xpp{flex-direction:row;align-items:center;gap:6px;font-size:14px}.xpbox li .xpp input{width:90px}
 .ptxp{margin:4px 0 0;font-size:14px;color:var(--ink-soft)}
 .gmerit{font-size:13px;color:var(--muted,#8a7d6a);margin:2px 0 0}
 .pickrow.off{cursor:not-allowed}.pickrow.off .av,.pickrow.off strong,.pickrow.off .gchip{opacity:.55}.pickrow .why,.pickrow .desc{display:block;font-family:var(--body);font-size:14px;text-transform:none;letter-spacing:normal;font-weight:400}.pickrow .why{color:#9b2c22}
@@ -3274,8 +3274,9 @@ function xpBilan(q,C){const cb=ptXpTotal(q.id),bn=+C.xpBonus||0,n=C.parts.length
   return '<fieldset class="xpbox"><legend>Expérience</legend><p>Ennemis vaincus (Mode Partie) : <strong>'+cb.toLocaleString("fr-CA")+' XP</strong></p>'+
     '<label for="b-xpb">XP de quête (bonus total, facultatif)<input id="b-xpb" type="number" min="0" max="999999" step="1" value="'+bn+'"></label>'+
     '<p>Total '+(cb+bn).toLocaleString("fr-CA")+' XP ÷ '+n+' participant'+(n>1?'s':'')+' = <strong>'+sh.toLocaleString("fr-CA")+' XP chacun</strong> <span class="desc">(Recalculer pour mettre à jour)</span></p>'+
-    '<ul>'+C.parts.map(x=>{const a=aventuriers.find(y=>y.id===x.aventurier);if(!a)return '<li>'+esc(x.nom)+' <em>(hors registre)</em></li>';const x0=charXp(a),l0=levelOf(x0),l1=levelOf(x0+sh);
-      return '<li>'+esc(x.nom)+' : '+x0.toLocaleString("fr-CA")+' → '+(x0+sh).toLocaleString("fr-CA")+' XP'+(l1>l0?' · <strong>niveau '+l1+' !</strong>':' · niveau '+l0)+'</li>';}).join("")+'</ul></fieldset>';}
+    '<p class="desc">Bonus perso : XP donnée à un seul joueur (beau roleplay, idée brillante…). Elle n\'est pas divisée.</p>'+
+    '<ul>'+C.parts.map((x,i)=>{const a=aventuriers.find(y=>y.id===x.aventurier);if(!a)return '<li>'+esc(x.nom)+' <em>(hors registre)</em></li>';const bp=+x.xpPerso||0,x0=charXp(a),x1=x0+sh+bp,l0=levelOf(x0),l1=levelOf(x1);
+      return '<li><span>'+esc(x.nom)+' : '+x0.toLocaleString("fr-CA")+' → <strong>'+x1.toLocaleString("fr-CA")+' XP</strong>'+(bp?' <span class="desc">(dont '+bp.toLocaleString("fr-CA")+' de bonus perso)</span>':'')+(l1>l0?' · <strong>niveau '+l1+' !</strong>':' · niveau '+l0)+'</span><label class="xpp" for="b-xpp'+i+'">Bonus perso<input id="b-xpp'+i+'" type="number" min="0" max="99999" step="1" value="'+bp+'"></label></li>';}).join("")+'</ul></fieldset>';}
 function readStep(){
   const C=ui.complete;if(!C)return;
   if(C.step===1){const r0=C.rapport&&C.rapport.resultat,ob=objsOf(questById(C.id)||{id:""});
@@ -3285,7 +3286,7 @@ function readStep(){
     const all=csqParse((scenarios[C.id]||{}).consequences);C.csq=Array.from(document.querySelectorAll('#completeform input[data-csq]')).filter(c=>c.checked).map(c=>(all[+c.getAttribute("data-csq")]||{}).txt).filter(Boolean);
     const ax=document.getElementById("csq-autre");if(ax)C.csqx=String(ax.value).trim().slice(0,1000);if(r0&&r0!==C.rapport.resultat)C.parts.forEach(x=>{x.gain=null;x.gainN=null;});}
   if(C.step===2){C.parts.forEach((x,i)=>{x.aventurier=v0("m-adv"+i)||null;Object.keys(DEFAULT_MEFAITS).concat(BIENFAITS).forEach(k=>{x[k]=Math.max(0,Math.round(+v0("m-"+k+i)||0));});});}
-  if(C.step===3){const xb=document.getElementById("b-xpb");if(xb)C.xpBonus=Math.max(0,Math.round(+xb.value||0));C.parts.forEach((x,i)=>{const el=document.getElementById("b-gain"+i),en=document.getElementById("b-gainn"+i);if(el&&!el.disabled)x.gain=Math.round(+el.value||0);if(en&&!en.disabled)x.gainN=Math.round(+en.value||0);});}
+  if(C.step===3){const xb=document.getElementById("b-xpb");if(xb)C.xpBonus=Math.max(0,Math.round(+xb.value||0));C.parts.forEach((x,i)=>{const e=document.getElementById("b-xpp"+i);if(e)x.xpPerso=Math.max(0,Math.round(+e.value||0));});C.parts.forEach((x,i)=>{const el=document.getElementById("b-gain"+i),en=document.getElementById("b-gainn"+i);if(el&&!el.disabled)x.gain=Math.round(+el.value||0);if(en&&!en.disabled)x.gainN=Math.round(+en.value||0);});}
 }
 document.addEventListener("click",async e=>{
   const ml=e.target.closest&&e.target.closest('a[href^="#man/"]');
@@ -3641,8 +3642,9 @@ document.addEventListener("submit",async e=>{
       Object.keys(seen).forEach(id=>{if(seen[id].r||seen[id].n)addPoints(bt,aventuriers.find(y=>y.id===id),q.bureau,seen[id].r,seen[id].n);});
       Object.keys(seen).forEach(id=>{const a=aventuriers.find(y=>y.id===id);if(a)gQuestEnd(bt,a,q,C.rapport.resultat);});
       {const sh=xpShare(ptXpTotal(q.id)+(+C.xpBonus||0),C.parts.length),done={};
-        if(sh>0)C.parts.forEach(x=>{const a=x.aventurier&&aventuriers.find(y=>y.id===x.aventurier);if(!a||done[a.id])return;done[a.id]=1;
-          const x0=charXp(a),x1=x0+sh,l0=levelOf(x0),l1=levelOf(x1);
+        C.parts.forEach(x=>{const a=x.aventurier&&aventuriers.find(y=>y.id===x.aventurier);if(!a||done[a.id])return;done[a.id]=1;
+          const bp=+x.xpPerso||0;if(!sh&&!bp)return;const x0=charXp(a),x1=x0+sh+bp,l0=levelOf(x0),l1=levelOf(x1);
+          if(bp)bt.set(doc(collection(db,"journal")),{aventurier:a.id,nom:a.nom,bureau:q.bureau,points:0,notoriete:0,raison:"Bonus d'XP perso : +"+bp+" XP",quete:q.id,date:serverTimestamp()});
           bt.update(doc(db,"aventuriers",a.id),"xp",x1,"majLe",serverTimestamp());
           if(l1>l0){bt.set(doc(db,"dossiers",a.id),{niveau:l1},{merge:true});
             bt.set(doc(collection(db,"journal")),{aventurier:a.id,nom:a.nom,bureau:q.bureau,points:0,notoriete:0,raison:"Niveau "+l1+" atteint ("+x1+" XP)",quete:q.id,date:serverTimestamp()});}});}
