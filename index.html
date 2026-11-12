@@ -1126,7 +1126,7 @@ function listen(){
     loaded.b=true;net={state:snap.metadata.fromCache&&!navigator.onLine?"hors-ligne":"ok",msg:""};render();
   },onErr);
   onSnapshot(collection(db,"quetes"),snap=>{
-    quetes=snap.docs.map(d=>{const x=d.data();return Object.assign({id:d.id},normQuest(x),{rapport:x.rapport||null,redacteur:x.redacteur||null,rapportBrouillon:x.rapportBrouillon||null});});loaded.q=true;render();
+    quetes=snap.docs.map(d=>{const x=d.data();return Object.assign({id:d.id},normQuest(x),{creeLe:x.creeLe||null,rapport:x.rapport||null,redacteur:x.redacteur||null,rapportBrouillon:x.rapportBrouillon||null});});loaded.q=true;render();
   },onErr);
   onSnapshot(collection(db,"inscriptions"),snap=>{
     inscriptions=snap.docs.map(d=>{const x=d.data();return Object.assign({id:d.id},x,{creeMs:x.creeLe&&x.creeLe.toMillis?x.creeLe.toMillis():Date.now()});});loaded.i=true;render();
@@ -3315,7 +3315,7 @@ document.addEventListener("click",async e=>{
     const applyMaj=(bt,m)=>{const q=questById(m.quete);if(!q)return;const up={majLe:serverTimestamp()};["rang","recompense","maj","titre","description","lieu","niveau"].forEach(k=>{if(m[k]!=null&&m[k]!=="")up[k]=m[k];});bt.set(doc(db,"quetes",q.id),up,{merge:true});
       const sc={};["scenario","objectifs","consequences"].forEach(k=>{if(m[k])sc[k]=m[k];});if(Object.keys(sc).length)bt.set(doc(db,"scenarios",q.id),sc,{merge:true});};
     await run("Évolution appliquée",async()=>{const bt=writeBatch(db);
-      if(p.type==="maj"){applyMaj(bt,p);const q=questById(p.quete);if(p.aggravation&&q)bt.set(doc(db,"prive","monde"),{reset:{[q.id]:now},regions:{[q.bureau]:{aggrav:{[q.id+"_"+now]:now}}}},{merge:true});}
+      if(p.type==="maj"){applyMaj(bt,p);const q=questById(p.quete);if(p.aggravation&&q)bt.set(doc(db,"prive","monde"),{reset:{[q.id]:now},regions:{[q.bureau]:{aggrav:{[q.id+"_"+now]:Math.min(now,p.ms||now)}}}},{merge:true});}
       else if(p.type==="module"){const mo=modules.find(x=>x.id===p.module);if(mo){(p.majs||[]).forEach(m=>applyMaj(bt,m));let nid=null;
           if(p.nouvelleTitre){nid=doc(collection(db,"nouvelles")).id;bt.set(doc(db,"nouvelles",nid),{titre:p.nouvelleTitre,contenu:p.nouvelleTexte||"",region:(mo.regions||[]).length===1?mo.regions[0]:"",aventuriers:[],quete:"",date:serverTimestamp()});}
           if(p.fin){bt.set(doc(db,"modules",mo.id),{statut:"termine",fin:p.fin,finMs:now,etape:modParse(mo).etapes.length},{merge:true});
