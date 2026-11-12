@@ -2421,7 +2421,7 @@ function ptAtkResult(c,t){const A=ui.ptA,lab=(PT_RES.find(r=>r[0]===A.res)||[])[
   const dmg='<div class="hpsec dmg"><label for="atk-dmg">Dégâts totaux de l\'attaque</label><div><input type="number" min="0" inputmode="numeric" id="atk-dmg" placeholder="0"><button data-a="pt-atkapply" data-id="'+c.cid+'">Appliquer</button></div>'+'</div>';
   const pv=ptAtkPreview(t,A.dmg||0),pct=t.pvMax>0?Math.max(0,Math.min(100,Math.round(100*pv.pv/t.pvMax))):0,hc=pct>50?"ok":pct>25?"mid":"low";
   const tgt='<div class="atktgt"><div class="atktn">🎯 <strong>'+esc(t.nom)+'</strong>'+(pv.pv<=0?' <em class="muted">(tomberait à 0 PV)</em>':'')+'</div><div class="pthp"><span class="bar"><span class="'+hc+'" style="width:'+pct+'%"></span></span><span class="num">'+pv.pv+' / '+(t.pvMax||"?")+' PV'+(pv.tmp>0?' <em>+'+pv.tmp+' temp.</em>':'')+'</span></div>'+(A.dmg?'<span class="desc">Aperçu : sa fiche passe de '+t.pv+' à '+pv.pv+' PV en concluant.</span>':'')+'</div>'+
-    (A.dmg?'<div class="atkdone" title="Total de cette attaque">'+A.dmg+' dégât'+(A.dmg>1?'s':'')+'</div>':'');
+    (A.dmg?'<div class="atkdone" title="Total de cette attaque">Total : '+A.dmg+' dégât'+(A.dmg>1?'s':'')+'</div>':'');
   let h='<div class="atkres r-'+A.res+'"><strong>'+lab+'</strong>';
   if(A.res==="fumble")h+='<label for="atk-cons">Conséquence (facultatif)<textarea id="atk-cons" rows="2" maxlength="300" placeholder="Ex. Lâche son arme"></textarea></label>';
   if(A.res==="crit")h+='<label for="atk-desc">Description du coup critique<textarea id="atk-desc" rows="2" maxlength="300" placeholder="Ex. Tranche la queue du rat-garou"></textarea></label>';
