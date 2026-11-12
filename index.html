@@ -2562,7 +2562,7 @@ function csqText(q){const m=(scenarios[q.id]||{}).monde;if(!m)return "";return (
 function ptScenario(q){
   const s=scenarios[q.id]||{},txt=String(s.scenario||""),P=ui.pt,faits=P.faits||[],encs=ptEncounters(q),used={};
   const ob=objsOf(q),od=P.objectifs||[];
-  let oh=ob.length?'<section class="ptobj"><h3>Objectifs <span class="desc">(secrets · '+od.filter(i=>i<ob.length).length+' / '+ob.length+')</span></h3>'+ob.map(o=>'<label class="ptobjrow'+(od.indexOf(o.i)>=0?' done':'')+'" for="pobj-'+o.i+'"><input type="checkbox" class="pt-obj" id="pobj-'+o.i+'" data-i="'+o.i+'"'+(od.indexOf(o.i)>=0?' checked':'')+'><span><strong>'+esc(o.txt)+'</strong>'+(o.csq?'<span class="desc">Sinon : '+esc(o.csq)+'</span>':'')+'</span></label>').join("")+'</section>':'';
+  let oh=ob.length?'<section class="ptobj"><h3>Objectifs <span class="desc">(secrets · '+od.filter(i=>i<ob.length).length+' / '+ob.length+')</span></h3>'+ob.map(o=>'<label class="ptobjrow'+(od.indexOf(o.i)>=0?' done':'')+'" for="pobj-'+o.i+'"><input type="checkbox" class="pt-obj" id="pobj-'+o.i+'" data-i="'+o.i+'"'+(od.indexOf(o.i)>=0?' checked':'')+'><span><strong>'+esc(o.txt)+'</strong>'+'</span></label>').join("")+'</section>':'';
   const parts=txt.split(/\n(?=##\s)/);let h=oh;
   const encBtn=r=>'<button class="btn gold sm" data-a="pt-launch" data-id="'+esc(r.id)+'">⚔ Lancer le combat : '+esc(r.nom)+'</button>';
   parts.forEach((sec,i)=>{const isH=/^##\s/.test(sec);const here=encs.filter(r=>sec.indexOf(r.nom)>=0);here.forEach(r=>{used[r.id]=1;});
@@ -2571,7 +2571,6 @@ function ptScenario(q){
     h+='<section class="ptsec'+(done?' done':'')+'"><label class="ptsecchk"><input type="checkbox" class="pt-sec" data-i="'+i+'"'+(done?' checked':'')+'><span class="sr">Marquer cette étape comme faite</span></label><div class="wikibody">'+md(manLinks(sec))+'</div>'+(here.length?'<p class="ptlaunch">'+here.map(encBtn).join("")+'</p>':'')+'</section>';});
   const rest=encs.filter(r=>!used[r.id]);
   if(rest.length)h+='<h3>Combats de la quête</h3><p class="ptlaunch">'+rest.map(encBtn).join("")+'</p>';
-  const cl=csqList(q);if(cl)h+='<details class="csqbox"><summary>Conséquences possibles pour le monde</summary>'+cl+'<p class="desc">Tu cocheras celles qui arrivent au bilan, en terminant la quête.</p></details>';
   return h;
 }
 function ptMini(c,phase){
