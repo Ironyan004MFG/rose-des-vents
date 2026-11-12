@@ -371,6 +371,7 @@ form .csqpick label.pickrow input{flex:none;width:18px;height:18px;margin-top:2p
 .csqkept h4{margin:0 0 4px}
 .objres{display:flex;flex-direction:column;gap:4px;justify-content:flex-end}
 .objres .stamp{align-self:flex-start}
+.winpick{opacity:.6}.winpick.on{opacity:1;border-color:#a9c9a6;background:rgba(61,122,58,.08)}.winrow{margin:4px 0}
 .objcsq{display:block;font-size:13px;margin-top:2px;color:#2f6a2c}.objcsq.miss{color:#a3271a}
 .ptobj{border:1px solid var(--gold);background:rgba(216,182,92,.12);border-radius:8px;padding:8px 12px;margin:0 0 14px}
 .ptobj h3{margin:0 0 6px}
@@ -2230,7 +2231,7 @@ function render(){
         const g0=questGain(cq,C.rapport.resultat),wn=C.writer&&(C.parts.find(x=>x.uid===C.writer)||{}).nom,dr=cq.rapportBrouillon&&cq.rapportBrouillon.resume;
         h+='<div class="recap"><h3>Résumé</h3><dl><dt>Résultat</dt><dd>'+esc(RESULTS[C.rapport.resultat]||"")+(C.rapport.date?' · '+esc(C.rapport.date):'')+'</dd>'+
           (objsOf(cq).length?'<dt>Objectifs</dt><dd><ul>'+objsOf(cq).map(o=>'<li>'+((C.obj||[]).indexOf(o.i)>=0?'✅ ':'❌ ')+esc(o.txt)+'</li>').join("")+'</ul></dd>':'')+
-          '<dt>Conséquences pour le monde</dt><dd>'+((C.csq||[]).length||C.csqx||objsOf(cq).some(o=>(C.obj||[]).indexOf(o.i)<0&&o.csq)?'<ul>'+objsOf(cq).filter(o=>(C.obj||[]).indexOf(o.i)<0&&o.csq).map(o=>'<li>'+esc(o.csq)+'</li>').join("")+(C.csq||[]).map(t=>'<li>'+esc(t)+'</li>').join("")+(C.csqx?'<li><em>'+esc(C.csqx)+'</em></li>':'')+'</ul>':'<span class="desc">Aucune</span>')+'</dd>'+
+          '<dt>Conséquences pour le monde</dt><dd>'+((C.csq||[]).length||C.csqx||objsOf(cq).some(o=>(C.obj||[]).indexOf(o.i)<0&&o.csq)||(C.rapport.resultat==="reussite"&&csqWin(cq).length)?'<ul>'+objsOf(cq).filter(o=>(C.obj||[]).indexOf(o.i)<0&&o.csq).map(o=>'<li>'+esc(o.csq)+'</li>').join("")+(C.rapport.resultat==="reussite"?csqWin(cq).map(c=>'<li>'+esc(c.txt)+'</li>').join(""):'')+(C.csq||[]).map(t=>'<li>'+esc(t)+'</li>').join("")+(C.csqx?'<li><em>'+esc(C.csqx)+'</em></li>':'')+'</ul>':'<span class="desc">Aucune</span>')+'</dd>'+
           '<dt>Rapport de mission</dt><dd>'+(dr?'Reçu de '+esc(cq.rapportBrouillon.auteur||"un joueur")+', publié dans les Chroniques':wn?'Demandé à '+esc(wn):'<span class="desc">Aucun auteur désigné</span>')+'</dd>'+
           (C.notesDM&&C.notesDM!==ptNotesDM(cq)?'<dt>Notes DM</dt><dd>Ajoutées au rapport privé</dd>':'')+'</dl></div>';
         h+='<p>Renommée à '+esc(bo?bo.nom:"la région")+'. Quête '+esc((RANKS[cq.rang]||RANKS.inconnu).label)+' (×'+questMult(cq)+'), '+esc((RESULTS[C.rapport.resultat]||"").toLowerCase())+' : <strong>+'+g0.n+' notoriété</strong>, <strong>'+(g0.r>=0?'+':'')+g0.r+' réputation</strong> proposés. Ajuste au besoin ; les méfaits et bienfaits s\'ajoutent.</p>'+
@@ -3049,10 +3050,12 @@ async function migrate(){
 }
 
 function v0(id){const el=document.getElementById(id);return el?el.value.trim():"";}
+function csqWin(q){return objsOf(q).length?csqParse((scenarios[q.id]||{}).consequences).filter(c=>c.q&&c.q.length===1&&c.q[0]==="reussite"):[];}
 function objPick(q,C){const ob=objsOf(q);if(!ob.length)return "";const sel=C.obj||[];
   return '<fieldset class="pick csqpick objpick"><legend>Objectifs</legend><p class="desc">Ils déterminent le résultat : tous remplis = Réussite, certains = Réussite partielle, aucun = Échec. Un objectif raté ajoute sa conséquence.</p>'+
-    ob.map(o=>{const on=sel.indexOf(o.i)>=0;return '<label class="pickrow" for="cobj-'+o.i+'"><input type="checkbox" class="c-obj" id="cobj-'+o.i+'" data-i="'+o.i+'"'+(on?' checked':'')+'><span><strong>'+esc(o.txt)+'</strong>'+(o.csq?'<span class="objcsq'+(on?'':' miss')+'">'+(on?'Évité : ':'Conséquence : ')+esc(o.csq)+'</span>':'')+'</span></label>';}).join("")+'</fieldset>';}
-function csqPick(q,C){const all=csqParse((scenarios[q.id]||{}).consequences),res=C.rapport.resultat,sel=C.csq||[];
+    ob.map(o=>{const on=sel.indexOf(o.i)>=0;return '<label class="pickrow" for="cobj-'+o.i+'"><input type="checkbox" class="c-obj" id="cobj-'+o.i+'" data-i="'+o.i+'"'+(on?' checked':'')+'><span><strong>'+esc(o.txt)+'</strong>'+(o.csq?'<span class="objcsq'+(on?'':' miss')+'">'+(on?'Évité : ':'Conséquence : ')+esc(o.csq)+'</span>':'')+'</span></label>';}).join("")+'</fieldset>'+
+    (csqWin(q).length?'<fieldset class="pick csqpick winpick'+(C.rapport.resultat==="reussite"?' on':'')+'"><legend>Si tous les objectifs sont remplis</legend>'+csqWin(q).map(c=>'<p class="winrow">'+(C.rapport.resultat==="reussite"?'✅ ':'⬜ ')+esc(c.txt)+'</p>').join("")+'<p class="desc">'+(C.rapport.resultat==="reussite"?'Réussite : cette conséquence s\'applique.':'Elle ne s\'applique qu\'en cas de réussite complète.')+'</p></fieldset>':'');}
+function csqPick(q,C){const win=csqWin(q),all=csqParse((scenarios[q.id]||{}).consequences).filter(c=>win.indexOf(c)<0&&!win.some(w=>w.i===c.i)),res=C.rapport.resultat,sel=C.csq||[];
   const row=c=>'<label class="pickrow" for="csq-'+c.i+'"><input type="checkbox" id="csq-'+c.i+'" data-csq="'+c.i+'"'+(sel.indexOf(c.txt)>=0?' checked':'')+'><span>'+csqTags(c)+' '+esc(c.txt)+'</span></label>';
   const ord=c=>c.q?Math.min.apply(null,c.q.map(k=>["reussite","partielle","echec"].indexOf(k))):3,list=all.slice().sort((a,b)=>ord(a)-ord(b)||a.i-b.i);
   return '<fieldset class="pick csqpick"><legend>'+(objsOf(q).length?'Autres conséquences':'Conséquences pour le monde')+'</legend><p class="desc">Coche ce qui arrive. C\'est gardé dans ton rapport DM (jamais montré aux joueurs) et ça t\'attendra dans Évolution du monde.</p>'+
@@ -3363,7 +3366,7 @@ document.addEventListener("submit",async e=>{
       bt.set(doc(db,"quetes",q.id),{statut:"terminee",rapport,majLe:serverTimestamp()},{merge:true});
       if(C.notesDM!=null&&C.notesDM!==ptNotesDM(q))bt.set(doc(db,"parties",q.id),{notesDM:C.notesDM},{merge:true});
       if(C.writer)bt.set(doc(db,"quetes",q.id),{redacteur:C.writer},{merge:true});
-      const obm=objsOf(q).filter(o=>(C.obj||[]).indexOf(o.i)<0&&o.csq).map(o=>o.csq);
+      const obm=objsOf(q).filter(o=>(C.obj||[]).indexOf(o.i)<0&&o.csq).map(o=>o.csq).concat(C.rapport.resultat==="reussite"?csqWin(q).map(c=>c.txt):[]);
       bt.set(doc(db,"scenarios",q.id),{monde:{resultat:C.rapport.resultat,objectifs:objsOf(q).map(o=>({txt:o.txt,ok:(C.obj||[]).indexOf(o.i)>=0})),liste:obm.concat(C.csq||[]),autre:C.csqx||"",le:serverTimestamp()}},{merge:true});
       const seen={};
       C.parts.forEach(x=>{const a=x.aventurier&&aventuriers.find(y=>y.id===x.aventurier);if(!a)return;
