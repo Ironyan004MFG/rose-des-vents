@@ -371,7 +371,13 @@ form .csqpick label.pickrow input{flex:none;width:18px;height:18px;margin-top:2p
 .csqkept h4{margin:0 0 4px}
 .objres{display:flex;flex-direction:column;gap:4px;justify-content:flex-end}
 .objres .stamp{align-self:flex-start}
-.winpick{opacity:.6}.winpick.on{opacity:1;border-color:#a9c9a6;background:rgba(61,122,58,.08)}.winrow{margin:4px 0}
+.winbox{margin:12px 0;padding:10px 14px;border:2px solid var(--gold);border-radius:8px;background:#fbf3d8}
+.winbox .winhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.winbox .wint{font-size:18px}
+.winbox strong{font-family:var(--display);letter-spacing:.06em;font-size:14px;text-transform:uppercase;color:#6b4d0a}
+.winbox .winst{margin-left:auto;font-size:13px;color:#6b4d0a}
+.winbox .winrow{margin:6px 0 0;font-size:16px}
+.winbox.on{border-color:#3d7a3a;background:#e6f2e1}.winbox.on strong,.winbox.on .winst{color:#1f4a1a}.winbox.on .winst{font-weight:700}
 .objcsq{display:block;font-size:13px;margin-top:2px;color:#2f6a2c}.objcsq.miss{color:#a3271a}
 .ptobj{border:1px solid var(--gold);background:rgba(216,182,92,.12);border-radius:8px;padding:8px 12px;margin:0 0 14px}
 .ptobj h3{margin:0 0 6px}
@@ -3052,9 +3058,8 @@ async function migrate(){
 function v0(id){const el=document.getElementById(id);return el?el.value.trim():"";}
 function csqWin(q){return objsOf(q).length?csqParse((scenarios[q.id]||{}).consequences).filter(c=>c.q&&c.q.length===1&&c.q[0]==="reussite"):[];}
 function objPick(q,C){const ob=objsOf(q);if(!ob.length)return "";const sel=C.obj||[];
-  return '<fieldset class="pick csqpick objpick"><legend>Objectifs</legend><p class="desc">Ils déterminent le résultat : tous remplis = Réussite, certains = Réussite partielle, aucun = Échec. Un objectif raté ajoute sa conséquence.</p>'+
-    ob.map(o=>{const on=sel.indexOf(o.i)>=0;return '<label class="pickrow" for="cobj-'+o.i+'"><input type="checkbox" class="c-obj" id="cobj-'+o.i+'" data-i="'+o.i+'"'+(on?' checked':'')+'><span><strong>'+esc(o.txt)+'</strong>'+(o.csq?'<span class="objcsq'+(on?'':' miss')+'">'+(on?'Évité : ':'Conséquence : ')+esc(o.csq)+'</span>':'')+'</span></label>';}).join("")+'</fieldset>'+
-    (csqWin(q).length?'<fieldset class="pick csqpick winpick'+(C.rapport.resultat==="reussite"?' on':'')+'"><legend>Si tous les objectifs sont remplis</legend>'+csqWin(q).map(c=>'<p class="winrow">'+(C.rapport.resultat==="reussite"?'✅ ':'⬜ ')+esc(c.txt)+'</p>').join("")+'<p class="desc">'+(C.rapport.resultat==="reussite"?'Réussite : cette conséquence s\'applique.':'Elle ne s\'applique qu\'en cas de réussite complète.')+'</p></fieldset>':'');}
+  return     (csqWin(q).length?'<div class="winbox'+(C.rapport.resultat==="reussite"?' on':'')+'"><div class="winhead"><span class="wint">🎯</span><strong>Objectif : réussite complète</strong><span class="winst">'+(C.rapport.resultat==="reussite"?'✅ Atteint':(C.obj||[]).length+' / '+objsOf(q).length+' objectifs')+'</span></div>'+csqWin(q).map(c=>'<p class="winrow">'+esc(c.txt)+'</p>').join("")+'</div>':'')+'<fieldset class="pick csqpick objpick"><legend>Objectifs</legend><p class="desc">Ils déterminent le résultat : tous remplis = Réussite, certains = Réussite partielle, aucun = Échec. Un objectif raté ajoute sa conséquence.</p>'+
+    ob.map(o=>{const on=sel.indexOf(o.i)>=0;return '<label class="pickrow" for="cobj-'+o.i+'"><input type="checkbox" class="c-obj" id="cobj-'+o.i+'" data-i="'+o.i+'"'+(on?' checked':'')+'><span><strong>'+esc(o.txt)+'</strong>'+(o.csq?'<span class="objcsq'+(on?'':' miss')+'">'+(on?'Évité : ':'Conséquence : ')+esc(o.csq)+'</span>':'')+'</span></label>';}).join("")+'</fieldset>';}
 function csqPick(q,C){const win=csqWin(q),all=csqParse((scenarios[q.id]||{}).consequences).filter(c=>win.indexOf(c)<0&&!win.some(w=>w.i===c.i)),res=C.rapport.resultat,sel=C.csq||[];
   const row=c=>'<label class="pickrow" for="csq-'+c.i+'"><input type="checkbox" id="csq-'+c.i+'" data-csq="'+c.i+'"'+(sel.indexOf(c.txt)>=0?' checked':'')+'><span>'+csqTags(c)+' '+esc(c.txt)+'</span></label>';
   const ord=c=>c.q?Math.min.apply(null,c.q.map(k=>["reussite","partielle","echec"].indexOf(k))):3,list=all.slice().sort((a,b)=>ord(a)-ord(b)||a.i-b.i);
