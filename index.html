@@ -359,6 +359,11 @@ textarea.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px}
 .atkopt.r-hit{background:#dcebd6;border-color:#a9c9a6;color:#1f4a1a}
 .atkopt.r-crit{background:#fff1c2;border-color:var(--gold);color:#6b4d0a}
 .atkres{display:flex;flex-direction:column;gap:8px}
+.atktgt{background:#fff;border:1px solid var(--parch-3);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
+.atktn{font-size:16px}
+.atktgt .pthp .bar{max-width:none;height:12px}
+.atkdone{background:#a3271a;color:#fff;border-radius:6px;padding:8px 10px;font-size:15px;text-align:center}
+.atkdone strong{font-size:18px}
 .atkres>strong{font-family:var(--display);letter-spacing:.06em}
 .atkres.r-fumble>strong{color:#7a1410}.atkres.r-hit>strong{color:#1f4a1a}.atkres.r-crit>strong{color:#6b4d0a}
 .atkres label{display:flex;flex-direction:column;gap:3px;font-size:13px}
@@ -2397,11 +2402,14 @@ function ptEffForm(c){
 }
 const PT_RES=[["fumble","💀 Échec critique"],["miss","Raté"],["hit","Touché"],["crit","✨ Coup critique"]];
 function ptAtkResult(c,t){const A=ui.ptA,lab=(PT_RES.find(r=>r[0]===A.res)||[])[1]||"";
-  const dmg='<div class="hpsec dmg"><label for="atk-dmg">Dégâts</label><div><input type="number" min="0" inputmode="numeric" id="atk-dmg" placeholder="0"><button data-a="pt-atkapply" data-id="'+c.cid+'">Appliquer</button></div>'+(A.dmg?'<span class="desc">Déjà appliqués : '+A.dmg+' ('+t.pv+'/'+(t.pvMax||"?")+' PV)</span>':'')+'</div>';
+  const dmg='<div class="hpsec dmg"><label for="atk-dmg">Dégâts</label><div><input type="number" min="0" inputmode="numeric" id="atk-dmg" placeholder="0"><button data-a="pt-atkapply" data-id="'+c.cid+'">Appliquer</button></div>'+'</div>';
+  const pct=t.pvMax>0?Math.max(0,Math.min(100,Math.round(100*t.pv/t.pvMax))):0,hc=pct>50?"ok":pct>25?"mid":"low";
+  const tgt='<div class="atktgt"><div class="atktn">🎯 <strong>'+esc(t.nom)+'</strong>'+(t.pv<=0?' <em class="muted">(à terre)</em>':'')+'</div><div class="pthp"><span class="bar"><span class="'+hc+'" style="width:'+pct+'%"></span></span><span class="num">'+t.pv+' / '+(t.pvMax||"?")+' PV'+(t.tmp>0?' <em>+'+t.tmp+' temp.</em>':'')+'</span></div></div>'+
+    (A.dmg?'<div class="atkdone">⚠ Cette attaque a déjà infligé <strong>'+A.dmg+' dégât'+(A.dmg>1?'s':'')+'</strong></div>':'');
   let h='<div class="atkres r-'+A.res+'"><strong>'+lab+'</strong>';
   if(A.res==="fumble")h+='<label for="atk-cons">Conséquence (facultatif)<textarea id="atk-cons" rows="2" maxlength="300" placeholder="Ex. Lâche son arme"></textarea></label>';
   if(A.res==="crit")h+='<label for="atk-desc">Description du coup critique<textarea id="atk-desc" rows="2" maxlength="300" placeholder="Ex. Tranche la queue du rat-garou"></textarea></label>';
-  if(A.res==="hit"||A.res==="crit")h+=dmg;
+  if(A.res==="hit"||A.res==="crit")h+=tgt+dmg;
   return h+'<div class="ptbtns"><button class="btn gold sm" data-a="pt-atkdone" data-id="'+c.cid+'">Conclure</button>'+(A.dmg?'':'<button class="btn ghost sm" data-a="pt-atkback" data-id="'+c.cid+'">Annuler</button>')+'</div></div>';}
 function ptAtkPicker(c){
   const A=ui.ptA&&ui.ptA.from===c.cid?ui.ptA:null;
