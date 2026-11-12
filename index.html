@@ -331,8 +331,11 @@ textarea.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px}
 .hpsec.heal{border-color:#a9c9a6}.hpsec.heal label{color:#2f6a2c}
 .hpsec.tmp{border-color:#a9c0d0}.hpsec.tmp label{color:#2c5d7c}
 .hpsec>div{display:flex;gap:4px}
-.hpsec input{flex:1;min-width:0;font:inherit;font-size:16px;padding:4px 6px;border:1px solid var(--parch-3);border-radius:4px;min-height:36px;box-sizing:border-box;background:#fff;color:var(--ink)}
-.hpsec button{border:none;border-radius:4px;padding:0 10px;min-height:36px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;color:#fff}
+.hpsec{container-type:inline-size}
+@container (max-width:200px){.hpsec>div{flex-direction:column}.hpsec>div>input{flex:none;width:100%}.hpsec>div>button{flex:none}}
+.hpsec input{flex:1 1 auto;width:0;min-width:56px;text-align:center;-moz-appearance:textfield;appearance:textfield;font:inherit;font-size:16px;padding:4px 6px;border:1px solid var(--parch-3);border-radius:4px;min-height:36px;box-sizing:border-box;background:#fff;color:var(--ink)}
+.hpsec input::-webkit-outer-spin-button,.hpsec input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.hpsec button{flex:1 0 auto;white-space:nowrap;border:none;border-radius:4px;padding:0 10px;min-height:36px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;color:#fff}
 .hpsec.dmg button{background:#a3271a}.hpsec.heal button{background:#3d7a3a}.hpsec.tmp button{background:#2c5d7c}
 .ptdel{border:1px solid #c9b27a;background:none;border-radius:4px;min-height:36px;font-family:var(--display);font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;color:#7a1f14}
 .ptdel:hover{background:#f3d9d4}
