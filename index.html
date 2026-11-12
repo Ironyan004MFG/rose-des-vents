@@ -378,7 +378,7 @@ ul.csqitems{list-style:none;padding:0;margin:0 0 10px;display:grid;gap:6px}
 .modbal{display:inline-flex;gap:2px;vertical-align:middle;margin:0 4px}.modbal i{width:10px;height:10px;border-radius:2px;background:#d8cba6}.modbal i.zero{background:#bfb39a}
 .modbal i.on.neg{background:#a3271a}.modbal i.on.pos{background:#3d7a3a}.modbal i.on.zero{background:#3a2f1f}
 ol.modsteps{padding-left:22px}ol.modsteps li.past{opacity:.6}ol.modsteps li.cur>details>summary{font-weight:700;color:#6b4d0a}
-ul.modlist{list-style:none;padding:0;display:grid;gap:6px}.modprog{font-size:13px}
+ul.modlist{list-style:none;padding:0;display:grid;gap:6px}ul.modlist a{color:var(--ink);font-weight:700}.modprog{font-size:13px}
 .cartest{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;margin:12px 0;padding:10px 14px;border:1px solid var(--line);border-radius:8px}
 .ccat.sens-negatif{background:#a3271a;color:#fff}.ccat.sens-positif{background:#3d7a3a;color:#fff}
 .cartest.due.negatif{border:2px solid #a3271a}.cartest.due.positif{border:2px solid #3d7a3a}
@@ -2027,7 +2027,7 @@ function todoItems(){
   modOrder().forEach(m=>{const d=modDue(m);if(!d)return;const P=modParse(m),bal=modBalance(m);
     it.push({k:"evol",t:'<strong>'+esc(m.nom)+'</strong> : '+(d==="fin"?'<strong class="warn">fin du module</strong> ('+({positive:"positive",normale:"normale",negative:"négative"})[modFinOf(bal)]+', balance '+(bal>0?'+':'')+bal+')':'passe à l\'étape '+(modEtape(m)+2)+' / '+P.etapes.length+' : '+esc((P.etapes[modEtape(m)+1]||{}).titre||""))+evoWait("module",m.id),act:''});});
   {const cd=carteDue();if(cd)it.push({k:"evol",t:'<strong>Toute la carte</strong> : '+(cd==="negatif"?'<strong class="warn">le monde s\'assombrit</strong> ('+carteCount().neg+' crises régionales)':'<strong>le monde s\'éclaire</strong> ('+carteCount().pos+' évolutions positives)')+evoWait("carte",cd),act:''});}
-  dueRegions().forEach(b=>it.push({k:"evol",t:'<strong>'+esc(b.nom)+'</strong> : évolution '+SENS_L[regionSens(b.id)]+' de la région ('+pendingIn(b.id).length+' quêtes accomplies'+(aggravIn(b.id)?', '+aggravIn(b.id)+' aggravation'+(aggravIn(b.id)>1?'s':''):', aucune aggravation')+')'+evoWait("region",b.id),act:'<button class="mini" data-a="evolve" data-id="'+esc(b.id)+'">Faire évoluer moi-même</button>'}));
+  dueRegions().forEach(b=>it.push({k:"evol",t:'<strong>'+esc(b.nom)+'</strong> : évolution '+SENS_L[regionSens(b.id)]+' de la région ('+pendingIn(b.id).length+(pendingIn(b.id).length>1?' quêtes accomplies':' quête accomplie')+(aggravIn(b.id)?', '+aggravIn(b.id)+' aggravation'+(aggravIn(b.id)>1?'s':''):', aucune aggravation')+')'+evoWait("region",b.id),act:'<button class="mini" data-a="evolve" data-id="'+esc(b.id)+'">Faire évoluer moi-même</button>'}));
   criseRegions().forEach(b=>it.push({k:"evol",t:'<strong>'+esc(b.nom)+'</strong> : <strong class="warn">crise régionale</strong> ('+aggravIn(b.id)+' quêtes aggravées)'+evoWait("crise",b.id),act:''}));
   agedIn().forEach(q=>{const b=office(q.bureau);it.push({k:"evol",t:'<strong>'+esc(q.titre)+'</strong> ('+esc(b?b.nom:"")+') : quête ignorée, âge '+fmtAge(ageOf(q))+' / '+ageMax()+', elle va s\'aggraver'+evoWait("maj",q.id),act:''});});
   quetes.filter(q=>q.statut==="ouverte").forEach(q=>{const s=signupsFor(q.id),att=s.filter(x=>x.statut==="attente").length;if(!att)return;const pb=planBest(q),b=office(q.bureau);
@@ -3327,7 +3327,7 @@ document.addEventListener("click",async e=>{
         if(p.nouvelleTitre){nid=doc(collection(db,"nouvelles")).id;bt.set(doc(db,"nouvelles",nid),{titre:p.nouvelleTitre,contenu:p.nouvelleTexte||"",region:"",aventuriers:[],quete:"",date:serverTimestamp()});}
         bt.set(doc(collection(db,"evolutions")),{region:"carte",sens:p.sens||"positif",date:serverTimestamp(),quetes:[],notes:p.notes||"",changements:(p.majs||[]).map(m=>{const q=questById(m.quete)||{};return {quete:m.quete,titre:q.titre||"",ancienRang:q.rang||"",nouveauRang:m.rang||q.rang||"",maj:m.maj||""};}),nouvelle:nid,nouvelleTitre:p.nouvelleTitre||"",par:"claude"});
         const up={carteMs:now};if(p.sens==="negatif"){const R={};quetes.filter(q=>q.statut==="ouverte").forEach(q=>R[q.id]=now);up.reset=R;}bt.set(doc(db,"prive","monde"),up,{merge:true});}
-      else{const bid=p.region,sens=p.sens==="negatif"?"negatif":regionSens(bid);(p.majs||[]).forEach(m=>applyMaj(bt,m));let nid=null;
+      else{const bid=p.region,sens=p.sens==="negatif"||p.sens==="positif"||p.sens==="mixte"?p.sens:regionSens(bid);(p.majs||[]).forEach(m=>applyMaj(bt,m));let nid=null;
         if(p.nouvelleTitre){nid=doc(collection(db,"nouvelles")).id;bt.set(doc(db,"nouvelles",nid),{titre:p.nouvelleTitre,contenu:p.nouvelleTexte||"",region:bid,aventuriers:[],quete:"",date:serverTimestamp()});}
         bt.set(doc(collection(db,"evolutions")),{region:bid,sens:sens,date:serverTimestamp(),quetes:pendingIn(bid).map(q=>q.id),notes:(p.notes||""),changements:(p.majs||[]).map(m=>{const q=questById(m.quete)||{};return {quete:m.quete,titre:q.titre||"",ancienRang:q.rang||"",nouveauRang:m.rang||q.rang||"",maj:m.maj||""};}),nouvelle:nid,nouvelleTitre:p.nouvelleTitre||"",par:"claude"});
         const up={regions:{[bid]:{vues:doneIn(bid).map(q=>q.id),criseMs:now}}};if(sens==="negatif"){const R={};quetes.filter(q=>q.bureau===bid&&q.statut==="ouverte").forEach(q=>R[q.id]=now);up.reset=R;}
