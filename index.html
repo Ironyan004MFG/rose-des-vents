@@ -505,9 +505,9 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 @media (max-width:560px){
   .partie{padding:12px;border-radius:0;margin:0 -16px}
   .ptrow{grid-template-columns:52px minmax(0,1fr);padding:8px}
-  .ptact{grid-column:1/-1;width:auto;flex-direction:row;flex-wrap:wrap}
-  .ptact input{flex:1 1 80px;width:auto}
-  .ptact .ptab{flex:1 1 auto}
+  .ptact{grid-column:1/-1;width:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .ptact>*{min-width:0}
+  .ptact>:not(.hpsec){grid-column:1/-1}
   .ptinit input{font-size:18px}
   .ptbar .btn{flex:1}
 }
@@ -840,7 +840,17 @@ td.bien,th.bien{background:rgba(61,122,58,.06)}
 table.bilan td.gains,table.bilan td.nw{white-space:nowrap}
 table.bilan td.gains input{width:56px;margin-right:4px}
 .renaxes{display:block;font-size:12px;color:var(--ink-soft);margin-top:2px}
-.axes{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.axes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.axes>div{min-width:0}
+.mxlist{display:none}
+.mxlist details{border:1px solid var(--line);border-radius:8px;margin:0 0 6px;background:var(--board-2)}
+.mxlist summary{padding:8px 10px;cursor:pointer;display:flex;align-items:center;gap:8px;list-style:none}
+.mxlist summary::-webkit-details-marker{display:none}
+.mxlist summary::after{content:"▾";margin-left:auto;opacity:.6}
+.mxlist ul{list-style:none;margin:0;padding:0 8px 8px;display:grid;gap:4px}
+.mxlist li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:6px 8px;border-radius:5px;font-size:14px}
+.mxlist li .mxn{font-family:var(--display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;opacity:.75;white-space:nowrap}
+.mxlist li .mxt{text-align:right}
 table.matrix{border-collapse:separate;border-spacing:3px;width:100%;font-size:12px}
 table.matrix th{font-family:var(--display);font-size:11px;letter-spacing:.06em;text-align:center;padding:4px}
 table.matrix td.mx{padding:6px 4px;border-radius:4px;text-align:center;vertical-align:middle;min-width:80px}
@@ -849,14 +859,16 @@ table.matrix td.mx{padding:6px 4px;border-radius:4px;text-align:center;vertical-
 table.matrix.edit input{width:100%;box-sizing:border-box;font:inherit;font-size:12px;padding:3px;border-radius:3px;border:1px solid rgba(0,0,0,.2);background:rgba(255,255,255,.85);color:#222}
 .rellist{list-style:none;padding:0;margin:4px 0;display:flex;flex-direction:column;gap:4px}
 .wanted.w4{filter:saturate(1.2)}
-@media (max-width:760px){.axes{grid-template-columns:1fr}}
+@media (max-width:760px){.axes{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:640px){.mxwrap>.tablebox{display:none}.mxlist{display:block}table.scale td{padding:6px 8px}}
 .rnp1{background:#efe2bb;color:#4a3a14}.rnp2{background:#ead39a;color:#3f300d}.rnp3{background:#e3c172;color:#33270a}
 .rnp4{background:#d8ab4c;color:#2a1f06}.rnp5{background:#c99327;color:#1c1404}.rnp6{background:#f6ecd0;color:#7a4f00;border-color:#c99327;box-shadow:0 0 0 2px #c99327 inset}
 .rnm1{background:#ead0c3;color:#5e2a1c}.rnm2{background:#d9927d;color:#3f130a}.rnm3{background:#9b2c22;color:#fff3ee}
 .reg,.rep{display:flex;flex-direction:column;gap:12px}
 .reg h2,.rep h2{font-family:var(--display);font-size:20px;letter-spacing:.08em;color:var(--gold);margin:0}
-.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--board-2)}
+.tablebox{position:relative;overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--board-2)}
 .tablebox table{border-collapse:collapse;width:100%;min-width:560px}
+table.scale,.tablebox table.scale{min-width:0}
 .tablebox th,.tablebox td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle;font-size:15.5px}
 .tablebox thead th{font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--on-board-muted);white-space:nowrap}
 .tablebox td.num{font-family:var(--display);font-variant-numeric:tabular-nums;color:var(--on-board-muted);width:60px}
@@ -1377,8 +1389,9 @@ function addPoints(bt,a,bid,dR,dN){
   }
 }
 function matrixTable(dm){const T=titresMap(),N=notoList(),Rl=repuList();
-  return '<div class="tablebox"><table class="matrix"><thead><tr><th scope="col"><span class="sr">Réputation</span></th>'+N.map(n=>'<th scope="col">'+esc(n.titre)+'</th>').join("")+'</tr></thead><tbody>'+
-    Rl.map(r=>'<tr><th scope="row">'+repChip(r.r)+'</th>'+N.map(n=>{const c=r.r*10+n.n,t=T[String(c)];return '<td class="mx rr'+r.r+'">'+(dm?'<span class="mxc">'+c+'</span>':'')+(t?'<span class="mxt">'+esc(t)+'</span>':'')+'</td>';}).join("")+'</tr>').join("")+'</tbody></table></div>';}
+  return '<div class="mxwrap"><div class="tablebox"><table class="matrix"><thead><tr><th scope="col"><span class="sr">Réputation</span></th>'+N.map(n=>'<th scope="col">'+esc(n.titre)+'</th>').join("")+'</tr></thead><tbody>'+
+    Rl.map(r=>'<tr><th scope="row">'+repChip(r.r)+'</th>'+N.map(n=>{const c=r.r*10+n.n,t=T[String(c)];return '<td class="mx rr'+r.r+'">'+(dm?'<span class="mxc">'+c+'</span>':'')+(t?'<span class="mxt">'+esc(t)+'</span>':'')+'</td>';}).join("")+'</tr>').join("")+'</tbody></table></div>'+
+    '<div class="mxlist">'+Rl.map(r=>'<details'+(r.r===5?' open':'')+'><summary>'+repChip(r.r)+'</summary><ul>'+N.map(n=>{const c=r.r*10+n.n,t=T[String(c)];return '<li class="mx rr'+r.r+'"><span class="mxn">'+esc(n.titre)+(dm?' · '+c:'')+'</span><span class="mxt">'+esc(t||"—")+'</span></li>';}).join("")+'</ul></details>').join("")+'</div></div>';}
 function renAxes(c){c=legacyCode(c);return '<span class="renaxes">'+esc(nTitre(cN(c)))+' · '+esc(rTitre(cR(c)))+'</span>';}
 function reputationSection(bid,nom){
   const list=shown().sort((x,y)=>(cN(renown(y,bid))-cN(renown(x,bid)))||(cR(renown(x,bid))-cR(renown(y,bid)))||(ui.dm?pts(y,bid)-pts(x,bid):0)||String(x.nom).localeCompare(String(y.nom),"fr"));
@@ -2315,7 +2328,8 @@ function ptRoll(expr){
   const s=String(expr||"").toLowerCase().replace(/\s+/g,"").replace(/^d/,"1d");const re=/([+-]?)(\d*)d(\d+)|([+-]?)(\d+)/g;let m,total=0,parts=[],ok=false;
   while((m=re.exec(s))){ok=true;
     if(m[3]){const n=Math.min(50,+(m[2]||1)),f=+m[3],sg=m[1]==="-"?-1:1;
-      if(n===1&&f===20&&ui.ptAdv){const a=ptD(20),b=ptD(20),v=ui.ptAdv==="adv"?Math.max(a,b):Math.min(a,b);total+=sg*v;parts.push((ui.ptAdv==="adv"?"avantage ":"désavantage ")+"["+a+", "+b+"]");}
+      if(ui.ptAdv){const r1=[],r2=[];for(let i=0;i<n;i++){r1.push(ptD(f));r2.push(ptD(f));}const s1=r1.reduce((x,y)=>x+y,0),s2=r2.reduce((x,y)=>x+y,0),v=ui.ptAdv==="adv"?Math.max(s1,s2):Math.min(s1,s2);total+=sg*v;
+        const sh=(r,t)=>n===1?String(t):"("+r.join("+")+"="+t+")";parts.push((sg<0?"−":"")+n+"d"+f+" "+(ui.ptAdv==="adv"?"avantage":"désavantage")+" ["+sh(r1,s1)+", "+sh(r2,s2)+"]");}
       else{const r=[];for(let i=0;i<n;i++)r.push(ptD(f));total+=sg*r.reduce((x,y)=>x+y,0);parts.push((sg<0?"−":"")+n+"d"+f+" ["+r.join(", ")+"]");}}
     else if(m[5]){const v=(m[4]==="-"?-1:1)*+m[5];total+=v;parts.push((v<0?"−":"+")+Math.abs(v));}}
   if(!ok)return null;return {e:expr,t:total,d:parts.join(" ")};
