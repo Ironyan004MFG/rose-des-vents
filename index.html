@@ -359,6 +359,16 @@ textarea.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px}
 .atkopt.r-hit{background:#dcebd6;border-color:#a9c9a6;color:#1f4a1a}
 .atkopt.r-crit{background:#fff1c2;border-color:var(--gold);color:#6b4d0a}
 .atkres{display:flex;flex-direction:column;gap:8px}
+.csqt{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:1px 7px;border-radius:999px;background:#ece7dc;color:#4a4136;margin-right:3px;vertical-align:1px}
+.csqt.t-reussite{background:#dcebd6;color:#1f4a1a}.csqt.t-partielle{background:#fff1c2;color:#6b4d0a}.csqt.t-echec{background:#f3dcd8;color:#7a1410}
+ul.csql{list-style:none;padding:0;margin:.5em 0;display:grid;gap:6px}
+.csqbox{margin:1em 0;border:1px solid var(--parch-3);border-radius:6px;padding:6px 10px;background:rgba(255,255,255,.4)}
+.csqbox summary{cursor:pointer;font-weight:700}
+.csqpick{margin:1em 0}.csqpick textarea{width:100%}
+form .csqpick label.pickrow{min-height:0;padding:4px 8px;display:flex;flex-direction:row;align-items:flex-start;gap:10px;text-transform:none;letter-spacing:normal;font-family:inherit;font-size:15px;font-weight:400;color:inherit;margin:6px 0}
+form .csqpick label.pickrow input{flex:none;width:18px;height:18px;margin-top:2px}
+.csqkept{border-left:3px solid #a3271a;padding:4px 10px;margin:.6em 0;background:rgba(163,39,26,.05)}
+.csqkept h4{margin:0 0 4px}
 .atktgt{background:#fff;border:1px solid var(--parch-3);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
 .atktn{font-size:16px}
 .atktgt .pthp .bar{max-width:none;height:12px}
@@ -1657,7 +1667,7 @@ const MAN={
     ["resume","Résumé de l'intrigue (pour toi)","md"],["signes","Signes publics : ce que le peuple voit et entend (rumeurs, Crieur)","md"],["consequences","Conséquences par région (pour les évolutions)","md"],["accroches","Quêtes secondaires pour la Guilde (aider les héros)","md"],["notes","Notes","md"]]},
   rencontres:{coll:"rencontres",nom:"rencontre",fields:[["nom","Nom","text",1],["region","Région","region"],["quete","Quête liée","questref"],["monstres","Monstres","monsterlist"],["terrain","Terrain et ambiance","textarea"],["notes","Tactique et déroulement","md"],["butin","Butin prévu (une ligne par objet, ex. « Épée courte (10 po) »)","textarea"]]},
   dossiers:{coll:"dossiers",nom:"dossier",fields:[["outerworlder","Outerworlder","select",0,[["","À déterminer"],["oui","Oui"],["non","Non (natif)"]]],["donNom","Don accordé par le Système","text"],["donDesc","Effet du Don","md"],["niveau","Niveau","number"],["ca","CA","number"],["pv","PV max","number"],["percPassive","Perception passive","number"],["accroches","Accroches et liens","md"],["notes","Notes du DM","md"]]},
-  scenarios:{coll:"scenarios",nom:"scénario",fields:[["module","Module officiel lié (quête secondaire)","moduleref"],["scenario","Scénario","md"],["rencontres","Rencontres liées","rencmulti"],["pnj","PNJ liés","pnjmulti"],["monstres","Monstres liés","monstermulti"],["butinQuete","Objets de quête","questloot"],["notes","Notes","md"]]}
+  scenarios:{coll:"scenarios",nom:"scénario",fields:[["module","Module officiel lié (quête secondaire)","moduleref"],["scenario","Scénario","md"],["consequences","Conséquences possibles pour le monde","consq"],["rencontres","Rencontres liées","rencmulti"],["pnj","PNJ liés","pnjmulti"],["monstres","Monstres liés","monstermulti"],["butinQuete","Objets de quête","questloot"],["notes","Notes","md"]]}
 };
 function manList(t){return t==="modules"?modules:t==="factions"?factions:t==="pnj"?pnjs:t==="monstres"?monstres:t==="rencontres"?rencontres:[];}
 function byName(l){return l.slice().sort((a,b)=>String(a.nom||"").localeCompare(String(b.nom||""),"fr"));}
@@ -1684,7 +1694,7 @@ function mlEditor(){const rows=ui.manML||[];
 function manForm(type,d,title){const S=MAN[type];d=d||{};
   let h='<form class="form dmform" id="manform" data-type="'+type+'"><h2>'+esc(title)+'</h2>';
   S.fields.forEach(f=>{const [k,lab,ty,req,opts]=f,v=d[k],id="mf-"+k;
-    const wide=["textarea","md","image","monsterlist","questmulti","rencmulti","pnjmulti","monstermulti"].indexOf(ty)>=0||k==="nom"||k==="titre";
+    const wide=["textarea","md","consq","image","monsterlist","questmulti","rencmulti","pnjmulti","monstermulti"].indexOf(ty)>=0||k==="nom"||k==="titre";
     if(ty==="image"){const img=ui.manImg!==undefined?ui.manImg:(v||"");h+='<div class="wide imgrow">'+(img?'<img class="portrait sm" src="'+esc(img)+'" alt="">':'<span class="portrait sm ph" aria-hidden="true">?</span>')+'<label for="mf-img">'+lab+' (facultatif)<input id="mf-img" type="file" accept="image/*"></label>'+(img?'<button class="btn ghost" type="button" data-a="mimg-clear">Retirer</button>':'')+'</div>';return;}
     h+=ty==="monsterlist"||ty.indexOf("multi")>0?'<fieldset class="wide pick"><legend>'+lab+'</legend>':'<label class="'+(ty==="check"?'pickrow ':'')+(wide?'wide':'')+(ABIL.some(x=>x[0]===k)?' abil':'')+'" for="'+id+'">'+lab+(ty==="md"?' <span class="tip">## Titre, **gras**, - liste, [[Nom]] = lien vers une fiche</span>':'');
     if(ty==="text")h+='<input id="'+id+'" maxlength="'+(k==="nom"?100:300)+'"'+(req?' required':'')+' value="'+esc(v||"")+'">';
@@ -1694,6 +1704,7 @@ function manForm(type,d,title){const S=MAN[type];d=d||{};
     else if(ty==="questloot")h+='<span class="tip">Une ligne par objet : Porteur &gt; Objet | valeur | chances | rareté | max. Porteur : un ou plusieurs monstres ou PNJ, séparés par des virgules. Devant l\'objet : « ! » garanti une fois, « + » garanti sur chaque porteur, « * » au hasard une fois, rien = au hasard sans maximum. « max 10 » arrête après 10 objets récoltés. Ces objets ne s\'ajoutent aux tables que pendant cette quête.</span><textarea id="'+id+'" rows="4" maxlength="3000" class="mono" placeholder="Skratch &gt; !Clé de bronze naine&#10;Gobelin guerrier, Gobelin sbire &gt; +Écusson de la tribu | | | | max 10&#10;Grenouille géante &gt; Herbe des marais | | 40">'+esc(v||"")+'</textarea>';
     else if(ty==="loottable")h+='<span class="tip">Une ligne par butin possible : Objet | valeur | chances | rareté. Raretés : Médiocre, Classique, Inhabituel, Rare, Épique, Légendaire (sans chance indiquée, la rareté la fixe : Légendaire = très rare). « Rien | | 20 » = chance de ne rien trouver. « Pièces | | 15 » = des pièces selon le FP. Une ligne qui commence par ! est un objet de quête : garanti, mais une seule fois. Une ligne qui commence par * est un objet unique : il tombe au hasard, une seule fois (ensuite sa chance devient « Rien »).</span><textarea id="'+id+'" rows="8" maxlength="4000" class="mono" placeholder="Pièces | | 15&#10;Cimeterre ébréché | 1 po | | Médiocre&#10;Collier de dents de loup | 2 pa | | Classique&#10;Dague du chef de clan | 25 po | | Rare&#10;!Lettre du commanditaire&#10;Rien | | 20">'+esc(v||"")+'</textarea>';
     else if(ty==="md")h+='<textarea id="'+id+'" rows="'+(k==="scenario"?14:6)+'" maxlength="40000">'+esc(v||"")+'</textarea>';
+    else if(ty==="consq")h+='<span class="tip">Une ligne par conséquence. Commence par « Réussite : », « Partielle : », « Échec : » (ou plusieurs : « Partielle, Échec : »). Sans préfixe, elle vaut pour tous les résultats. À la fin de la quête, tu coches celles qui arrivent.</span><textarea id="'+id+'" rows="6" maxlength="10000" placeholder="Échec : Des goules rôdent dans la Haute-Ville.&#10;Partielle, Échec : Garrow s\'enfuit et jure de se venger.&#10;Réussite : Frère Aldo devient un allié.">'+esc(v||"")+'</textarea>';
     else if(ty==="select")h+='<select id="'+id+'">'+opts.map(o=>'<option value="'+esc(o[0])+'"'+(String(v==null?(k==="fp"?"1":k==="taille"?"M":""):v)===o[0]?' selected':'')+'>'+esc(o[1])+'</option>').join("")+'</select>';
     else if(ty==="region")h+='<select id="'+id+'">'+regionOpts(v)+'</select>';
     else if(ty==="moduleref")h+='<select id="'+id+'"><option value="">—</option>'+modOrder().map(m=>'<option value="'+esc(m.id)+'"'+(v===m.id?' selected':'')+'>'+esc(m.nom)+'</option>').join("")+'</select>';
@@ -1865,6 +1876,8 @@ function secQuetes(){
       '<p><a href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir sur le babillard</a> · <a href="#partie-'+esc(q.id)+'"><strong>▶ Lancer le Mode Partie</strong></a></p>';
     const qls=ltQuestStatus(q);if(qls.length)h+='<h3>Objets de quête</h3><ul class="lootlist">'+qls.map(x=>'<li><span>'+rarName({nom:x.e.nom,quete:x.e.garanti,rar:x.e.rar})+' <span class="desc">· porté par '+esc(x.who)+' · '+esc(x.how)+(x.e.unique?'':' · '+x.n+' obtenu'+(x.n>1?'s':''))+'</span></span>'+(x.pris&&x.e.unique?'<span><span class="ccat">Déjà obtenu</span> <button class="mini" data-a="lt-reset" data-coll="scenarios" data-id="'+esc(q.id)+'" data-v="'+esc(x.e.nom)+'">Remettre en jeu</button></span>':'')+'</li>').join("")+'</ul>';
     if(ptReport(q))h+=ptReportBlock(q,q.statut==="terminee"||q.statut==="archivee");
+    h+=csqKept(q);
+    {const cl=csqList(q);if(cl)h+='<details class="csqbox"><summary>Conséquences possibles pour le monde</summary>'+cl+'</details>';}
     const rs=(s.rencontres||[]).map(id=>rencontres.find(r=>r.id===id)).filter(Boolean).concat(rencontres.filter(r=>r.quete===q.id&&(s.rencontres||[]).indexOf(r.id)<0));
     if(rs.length)h+='<p class="ptlaunch">'+rs.map(r=>'<button class="btn gold sm" data-a="man-launch" data-id="'+esc(q.id)+'" data-v="'+esc(r.id)+'">⚔ Lancer le combat : '+esc(r.nom)+'</button>').join("")+'</p>';
     if(rs.length)h+='<h3>Rencontres</h3><ul class="todo">'+rs.map(r=>{const df=diffOf(encXp(r.monstres));return '<li><span>'+esc(r.nom)+' · '+encXp(r.monstres)+' XP · <span class="'+df[1]+'">'+df[0]+'</span></span><button class="mini" data-a="man-open" data-sec="rencontres" data-id="'+esc(r.id)+'">Ouvrir</button></li>';}).join("")+'</ul>';
@@ -1943,7 +1956,7 @@ function dmTodo(){const it=todoItems();if(!it.length)return '<p class="empty">Ri
 function evolveForm(bid){
   const b=office(bid),pend=pendingIn(bid),open=quetes.filter(q=>q.bureau===bid&&q.statut==="ouverte");
   let h='<form class="form dmform" id="evolform"><h2>Le monde réagit : '+esc(b?b.nom:bid)+'</h2>';
-  h+='<div class="wide"><h3>Ce que les aventuriers ont accompli</h3>'+(pend.length?'<ul class="todo">'+pend.map(q=>'<li><span><strong>'+esc(q.titre)+'</strong> · '+esc(RESULTS[q.rapport.resultat]||"")+(q.rapport.resume?' : '+esc(String(q.rapport.resume).slice(0,160))+(q.rapport.resume.length>160?'…':''):'')+'</span>'+ptReportBlock(q,false)+'</li>').join("")+'</ul>':'<p class="desc">Aucune nouvelle quête accomplie depuis la dernière évolution.</p>')+'</div>';
+  h+='<div class="wide"><h3>Ce que les aventuriers ont accompli</h3>'+(pend.length?'<ul class="todo">'+pend.map(q=>'<li><span><strong>'+esc(q.titre)+'</strong> · '+esc(RESULTS[q.rapport.resultat]||"")+(q.rapport.resume?' : '+esc(String(q.rapport.resume).slice(0,160))+(q.rapport.resume.length>160?'…':''):'')+'</span>'+ptReportBlock(q,false)+csqKept(q)+'</li>').join("")+'</ul>'+(pend.some(q=>csqText(q))?'<p><button class="btn ghost sm" type="button" data-a="csq-notes" data-id="'+esc(bid)+'">Copier les conséquences retenues dans les notes</button></p>':''):'<p class="desc">Aucune nouvelle quête accomplie depuis la dernière évolution.</p>')+'</div>';
   const ms=modsIn(bid,false).filter(m=>m.statut!=="termine");
   if(ms.length)h+='<div class="wide"><h3>Modules officiels dans cette région</h3>'+ms.map(m=>'<details class="evmod"'+(m.statut==="encours"||m.statut==="premices"?' open':'')+'><summary>'+modChip(m)+' <strong>'+esc(m.nom)+'</strong>'+(m.periode?' · '+esc(m.periode):'')+'</summary>'+(m.consequences?'<h4>Conséquences</h4><div class="wikibody">'+md(manLinks(m.consequences))+'</div>':'')+(m.accroches?'<h4>Quêtes secondaires possibles</h4><div class="wikibody">'+md(manLinks(m.accroches))+'</div>':'')+(m.signes?'<h4>Signes publics (pour la nouvelle)</h4><div class="wikibody">'+md(manLinks(m.signes))+'</div>':'')+'</details>').join("")+'<p class="desc">Change le statut d\'un module dans le Manuel (Modules officiels) quand l\'autre groupe avance.</p></div>';
   h+='<label class="wide" for="ev-notes">Notes privées : comment le monde réagit <span class="tip">Visible seulement par toi</span><textarea id="ev-notes" rows="5" maxlength="10000" placeholder="Ex. Le Poing Enflammé remarque le groupe. La contrebande se déplace vers les égouts…"></textarea></label>';
@@ -2196,7 +2209,7 @@ function render(){
             const before=a?renown(a,cq.bureau):51,after=a?codeOf(ptsN(a,cq.bureau)+t.n,pts(a,cq.bureau)+t.r):51,sg=v=>(v>0?'+':'')+v;
             return '<tr><th scope="row">'+esc(x.nom)+(a?'':' <em>(hors registre)</em>')+'</th><td data-l="Fin de quête" class="gains"><label class="sr" for="b-gainn'+i+'">Notoriété pour '+esc(x.nom)+'</label><input class="cnt" id="b-gainn'+i+'" type="number" step="1" value="'+t.gN+'"'+(a?'':' disabled')+' title="Notoriété"><label class="sr" for="b-gain'+i+'">Réputation pour '+esc(x.nom)+'</label><input class="cnt" id="b-gain'+i+'" type="number" step="1" value="'+t.gR+'"'+(a?'':' disabled')+' title="Réputation"></td>'+
               '<td class="num nw" data-l="Méfaits">'+(t.pen?'N +'+t.mefN+'<br>R −'+t.pen:'—')+'</td><td class="num nw" data-l="Bienfaits">'+(t.bnN||t.bnR?'N +'+t.bnN+'<br>R +'+t.bnR:'—')+'</td><td class="num nw" data-l="Total"><strong>N '+sg(t.n)+'<br>R '+sg(t.r)+'</strong></td><td data-l="Résultat">'+(a?chip(before)+(after!==before?' → '+chip(after):''):'—')+'</td></tr>';}).join("")+
-          '</tbody></table></div>'+
+          '</tbody></table></div>'+csqPick(cq,C)+
           '<div class="actions"><button class="btn" type="submit">Terminer la quête</button><button class="btn ghost" type="button" data-a="step-recalc">Recalculer</button><button class="btn ghost" type="button" data-a="step-back">Retour</button></div>';
       }
       h+='</form></div>';}}
@@ -2505,6 +2518,17 @@ function ptStartEnc(q,rid,nom,grp){
 }
 function ptAddPnj(p){const m=p.monstre?monstres.find(x=>x.id===p.monstre):null,pv=m?ptPvAvg(m.pv):0;
   ui.pt.liste.push({cid:ptUid(),kind:"pnj",ref:p.id,nom:p.nom,camp:"allie",ca:m&&m.ca!=null?+m.ca:"",pvMax:pv,pv:pv,tmp:0,init:"",dex:m?ptDexMod(m.dex):0,xp:0,conds:[],conc:false,mon:m?m.id:""});}
+/* ---------- conséquences pour le monde ---------- */
+const CSQ_K={"réussite":"reussite",reussite:"reussite",partielle:"partielle","réussite partielle":"partielle","échec":"echec",echec:"echec",toujours:"*",tous:"*"};
+const CSQ_L={reussite:"Réussite",partielle:"Partielle",echec:"Échec"};
+function csqParse(t){return String(t||"").split(/\n+/).map(l=>l.replace(/^\s*[-*•]\s*/,"").trim()).filter(Boolean).map((l,i)=>{const m=l.match(/^([^:]{2,40}):\s*(.+)$/);let q=null,txt=l;
+  if(m){const ks=m[1].split(/,|\/| et /).map(x=>CSQ_K[x.trim().toLowerCase()]);if(ks.length&&ks.every(Boolean)){txt=m[2];q=ks.indexOf("*")>=0?null:ks;}}return {i:i,txt:txt,q:q};});}
+function csqTags(c){return c.q?c.q.map(k=>'<span class="csqt t-'+k+'">'+CSQ_L[k]+'</span>').join(""):'<span class="csqt">Tous</span>';}
+function csqList(q){const l=csqParse((scenarios[q.id]||{}).consequences);return l.length?'<ul class="csql">'+l.map(c=>'<li>'+csqTags(c)+' '+esc(c.txt)+'</li>').join("")+'</ul>':'';}
+// Conséquences retenues au bilan (privé : dans le scénario)
+function csqKept(q){const m=(scenarios[q.id]||{}).monde;if(!m||!((m.liste||[]).length||m.autre))return "";
+  return '<div class="csqkept"><h4>Conséquences retenues ('+esc((RESULTS[m.resultat]||"").toLowerCase())+')</h4><ul>'+(m.liste||[]).map(t=>'<li>'+esc(t)+'</li>').join("")+(m.autre?'<li><em>'+esc(m.autre)+'</em></li>':'')+'</ul></div>';}
+function csqText(q){const m=(scenarios[q.id]||{}).monde;if(!m)return "";return ((m.liste||[]).concat(m.autre?[m.autre]:[])).map(t=>"- "+q.titre+" : "+t).join("\n");}
 function ptScenario(q){
   const s=scenarios[q.id]||{},txt=String(s.scenario||""),P=ui.pt,faits=P.faits||[],encs=ptEncounters(q),used={};
   const parts=txt.split(/\n(?=##\s)/);let h='';
@@ -2515,6 +2539,7 @@ function ptScenario(q){
     h+='<section class="ptsec'+(done?' done':'')+'"><label class="ptsecchk"><input type="checkbox" class="pt-sec" data-i="'+i+'"'+(done?' checked':'')+'><span class="sr">Marquer cette étape comme faite</span></label><div class="wikibody">'+md(manLinks(sec))+'</div>'+(here.length?'<p class="ptlaunch">'+here.map(encBtn).join("")+'</p>':'')+'</section>';});
   const rest=encs.filter(r=>!used[r.id]);
   if(rest.length)h+='<h3>Combats de la quête</h3><p class="ptlaunch">'+rest.map(encBtn).join("")+'</p>';
+  const cl=csqList(q);if(cl)h+='<details class="csqbox"><summary>Conséquences possibles pour le monde</summary>'+cl+'<p class="desc">Tu cocheras celles qui arrivent au bilan, en terminant la quête.</p></details>';
   return h;
 }
 function ptMini(c,phase){
@@ -2960,11 +2985,20 @@ async function migrate(){
 }
 
 function v0(id){const el=document.getElementById(id);return el?el.value.trim():"";}
+function csqPick(q,C){const all=csqParse((scenarios[q.id]||{}).consequences),res=C.rapport.resultat,sel=C.csq||[];
+  const row=c=>'<label class="pickrow" for="csq-'+c.i+'"><input type="checkbox" id="csq-'+c.i+'" data-csq="'+c.i+'"'+(sel.indexOf(c.txt)>=0?' checked':'')+'><span>'+csqTags(c)+' '+esc(c.txt)+'</span></label>';
+  const fit=all.filter(c=>!c.q||c.q.indexOf(res)>=0),other=all.filter(c=>c.q&&c.q.indexOf(res)<0);
+  return '<fieldset class="pick csqpick"><legend>Conséquences pour le monde</legend><p class="desc">Coche ce qui arrive. C\'est gardé dans ton rapport DM (jamais montré aux joueurs) et ça t\'attendra dans Évolution du monde.</p>'+
+    (fit.length?fit.map(row).join(""):'<p class="desc">Aucune conséquence prévue pour ce résultat dans le scénario.</p>')+
+    (other.length?'<details><summary>Autres conséquences du scénario ('+other.length+')</summary>'+other.map(row).join("")+'</details>':'')+
+    '<label for="csq-autre">Autre conséquence (facultatif)<textarea id="csq-autre" rows="2" maxlength="1000" placeholder="Ex. Le lieutenant Garrow a vu le visage de Bob.">'+esc(C.csqx||"")+'</textarea></label></fieldset>';}
 function readStep(){
   const C=ui.complete;if(!C)return;
   if(C.step===1){const r0=C.rapport&&C.rapport.resultat;C.rapport={date:v0("c-date").slice(0,80),resultat:v0("c-res")||"reussite",resume:((document.getElementById("c-resume")||{}).value||"").slice(0,4000)};if(r0&&r0!==C.rapport.resultat)C.parts.forEach(x=>{x.gain=null;x.gainN=null;});}
   if(C.step===2){C.parts.forEach((x,i)=>{x.aventurier=v0("m-adv"+i)||null;Object.keys(DEFAULT_MEFAITS).concat(BIENFAITS).forEach(k=>{x[k]=Math.max(0,Math.round(+v0("m-"+k+i)||0));});});}
-  if(C.step===3){C.parts.forEach((x,i)=>{const el=document.getElementById("b-gain"+i),en=document.getElementById("b-gainn"+i);if(el&&!el.disabled)x.gain=Math.round(+el.value||0);if(en&&!en.disabled)x.gainN=Math.round(+en.value||0);});}
+  if(C.step===3){const all=csqParse((scenarios[C.id]||{}).consequences);C.csq=Array.from(document.querySelectorAll('#completeform input[data-csq]')).filter(c=>c.checked).map(c=>(all[+c.getAttribute("data-csq")]||{}).txt).filter(Boolean);
+    const ax=document.getElementById("csq-autre");if(ax)C.csqx=String(ax.value).trim().slice(0,1000);
+    C.parts.forEach((x,i)=>{const el=document.getElementById("b-gain"+i),en=document.getElementById("b-gainn"+i);if(el&&!el.disabled)x.gain=Math.round(+el.value||0);if(en&&!en.disabled)x.gainN=Math.round(+en.value||0);});}
 }
 document.addEventListener("click",async e=>{
   const ml=e.target.closest&&e.target.closest('a[href^="#man/"]');
@@ -3078,6 +3112,7 @@ document.addEventListener("click",async e=>{
   else if(a==="gen-again"){ui.gen.res=genEncounter();}
   else if(a==="gen-save"){const r=ui.gen.res;if(!r||!r.list)return;ui.manSec="rencontres";ui.manId=null;ui.manEdit="new";ui.manML=r.list.map(x=>({id:x.id,nb:x.nb}));ui.manDraft={nom:"Rencontre générée",region:ui.gen.region};}
   else if(a==="dmtab"){ui.dmTab=b.getAttribute("data-v");ui.evolve=null;ui.noteEdit=null;ui.newsEdit=null;}
+  else if(a==="csq-notes"){const t=pendingIn(id).map(csqText).filter(Boolean).join("\n"),el=document.getElementById("ev-notes");if(el&&t){el.value=(el.value.trim()?el.value.trim()+"\n":"")+t;el.focus();}return;}
   else if(a==="evolve"){ui.dmTab="evol";ui.evolve=id;if(location.hash!=="#dm"){location.hash="#dm";}}
   else if(a==="evolve-cancel"){ui.evolve=null;}
   else if(a==="gaz-all"){ui.gazAll=!ui.gazAll;}
@@ -3254,6 +3289,7 @@ document.addEventListener("submit",async e=>{
     await run("Fin de quête",async()=>{
       const bt=writeBatch(db);
       bt.set(doc(db,"quetes",q.id),{statut:"terminee",rapport,majLe:serverTimestamp()},{merge:true});
+      bt.set(doc(db,"scenarios",q.id),{monde:{resultat:C.rapport.resultat,liste:C.csq||[],autre:C.csqx||"",le:serverTimestamp()}},{merge:true});
       const seen={};
       C.parts.forEach(x=>{const a=x.aventurier&&aventuriers.find(y=>y.id===x.aventurier);if(!a)return;
         const t=partTotals(q,C.rapport.resultat,x),net=t.r,netN=t.n,bl=bienLabels();
