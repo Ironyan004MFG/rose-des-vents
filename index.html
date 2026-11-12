@@ -373,6 +373,9 @@ ul.csqitems{list-style:none;padding:0;margin:0 0 10px;display:grid;gap:6px}
 .csqitem{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-left:3px solid #a3271a;border-radius:6px}
 .csqitem .desc{grid-column:1;font-size:13px}.csqitem .csqact{grid-column:2;grid-row:1/3;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
 .csqitem.done{border-left-color:#3d7a3a;opacity:.85}
+.evoprop{border:2px solid var(--gold);border-radius:8px;padding:10px 14px;margin:0 0 12px;background:#fbf3d8;color:var(--ink)}
+.evoprop h3{margin:6px 0}
+.evotab{background:#fff;border:1px dashed var(--parch-3);border-radius:6px;padding:6px 10px}
 @media (max-width:640px){.csqitem{grid-template-columns:1fr}.csqitem .csqact{grid-column:1;grid-row:auto;justify-content:flex-start}}
 .objres{display:flex;flex-direction:column;gap:4px;justify-content:flex-end}
 .objres .stamp{align-self:flex-start}
@@ -1029,6 +1032,7 @@ const DEFAULT_SCALE = [
 ];
 
 /* ---------- state ---------- */
+let evoPriv=null;
 let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, notoMap = {}, relations = [], priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], parties = [], modules = [], butins = [], crieur = null, pnjs = [], monstres = [], rencontres = [], scenarios = {};
 const loaded = {b:false, q:false, i:false, a:false, w:false, c:false};
 let user = null, isAdmin = false, adminChecked = false;
@@ -1122,7 +1126,7 @@ function listen(){
 }
 // Données réservées au DM (points, journal, seuils) : lues seulement par un compte admin.
 function listenPrivate(on){
-  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};notoMap={};relations=[];journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;dossiers={};factions=[];parties=[];modules=[];butins=[];crieur=null;pnjs=[];monstres=[];rencontres=[];scenarios={};
+  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};notoMap={};relations=[];journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;evoPriv=null;dossiers={};factions=[];parties=[];modules=[];butins=[];crieur=null;pnjs=[];monstres=[];rencontres=[];scenarios={};
   if(!on)return;
   const err=e=>console.error(e);
   privUnsubs.push(onSnapshot(collection(db,"points"),snap=>{const m={};const nm={};snap.docs.forEach(d=>{m[d.id]=(d.data().parRegion)||{};nm[d.id]=(d.data().notoriete)||{};});pointsMap=m;notoMap=nm;render();},err));
@@ -1135,6 +1139,7 @@ function listenPrivate(on){
   privUnsubs.push(onSnapshot(collection(db,"evolutions"),snap=>{evols=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","monde"),snap=>{monde=snap.exists()?snap.data():null;render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","crieur"),snap=>{crieur=snap.exists()?snap.data():null;render();},err));
+  privUnsubs.push(onSnapshot(doc(db,"prive","evolution"),snap=>{evoPriv=snap.exists()?snap.data():null;render();},err));
   privUnsubs.push(onSnapshot(collection(db,"compendium"),snap=>{compAll=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
 }
 window.addEventListener("offline",()=>{net={state:"hors-ligne",msg:""};render();});
@@ -2600,13 +2605,24 @@ function csqKept(q){const m=(scenarios[q.id]||{}).monde;if(!m||!((m.liste||[]).l
 function csqItems(q){const m=(scenarios[q.id]||{}).monde;if(!m)return [];const su=m.suites||{};
   return (m.liste||[]).concat(m.autre?[m.autre]:[]).map((t,k)=>({q:q,k:k,txt:t,suite:su[k]||null}));}
 function csqAll(){return quetes.filter(q=>q.statut==="terminee"||q.statut==="archivee").flatMap(csqItems);}
+function evoProps(){const P=(evoPriv&&evoPriv.propositions)||{};return Object.keys(P).map(k=>Object.assign({pid:k},P[k]));}
+function csqProposed(x){return evoProps().some(p=>(p.sources||[]).some(r=>r.q===x.q.id&&+r.k===x.k));}
 function csqRow(x){const s=x.suite,lq=s&&s.quete&&questById(s.quete);
   return '<li class="csqitem'+(s?' done':'')+'"><span class="csqtxt">'+esc(x.txt)+'</span><span class="desc">'+esc(x.q.titre)+'</span><span class="csqact">'+
-    (s?(lq?'<a class="ccat" href="#'+esc(lq.bureau)+'">'+(s.type==="rumeur"?'Rumeur':'Quête')+' : '+esc(lq.titre)+'</a>':(s.regle?'✓ Réglée':'Suivie'))+' <button class="mini" data-a="csq-undo" data-id="'+esc(x.q.id)+'" data-v="'+x.k+'">Rouvrir</button>':
-      '<button class="mini" data-a="csq-rumor" data-id="'+esc(x.q.id)+'" data-v="'+x.k+'">→ Rumeur</button><button class="mini" data-a="csq-quest" data-id="'+esc(x.q.id)+'" data-v="'+x.k+'">→ Quête</button><button class="mini" data-a="csq-done" data-id="'+esc(x.q.id)+'" data-v="'+x.k+'">✓ Réglée</button>')+'</span></li>';}
+    (s?(lq?'<a class="ccat" href="#'+esc(lq.bureau)+'">'+(s.type==="rumeur"?'Rumeur':'Quête')+' : '+esc(lq.titre)+'</a>':'✓ Réglée hors-jeu')+(lq?'':' <button class="mini" data-a="csq-undo" data-id="'+esc(x.q.id)+'" data-v="'+x.k+'">Rouvrir</button>'):
+      '<span class="desc">'+(csqProposed(x)?'Proposition prête ↑':'À intégrer')+'</span><button class="mini" data-a="csq-done" data-id="'+esc(x.q.id)+'" data-v="'+x.k+'">✓ Réglée hors-jeu</button>')+'</span></li>';}
+function evoPropCard(p){const b=office(p.region);
+  return '<article class="evoprop"><div class="ntop"><span class="creg">'+esc(b?b.nom:p.region||"")+'</span><span class="ccat">'+(p.type==="rumeur"?'Rumeur':'Quête'+(p.rang&&RANKS[p.rang]?' · '+esc(RANKS[p.rang].label):''))+'</span></div>'+
+    '<h3>'+esc(p.titre||"")+'</h3>'+(p.texteJoueurs?'<p class="desc"><strong>Au tableau (ce que voient les joueurs) :</strong></p><div class="wikibody evotab">'+md(p.texteJoueurs)+'</div><p class="desc"><strong>Pour toi :</strong></p>':'')+'<div class="wikibody">'+md(p.description||"")+'</div>'+
+    (p.pourquoi?'<p class="desc"><strong>Pourquoi :</strong> '+esc(p.pourquoi)+'</p>':'')+
+    ((p.sources||[]).length?'<p class="desc"><strong>Conséquences intégrées :</strong> '+(p.sources||[]).map(r=>{const q=questById(r.q),x=q&&csqItems(q)[+r.k];return x?esc(x.txt):"";}).filter(Boolean).join(" · ")+'</p>':'')+
+    (p.scenario?'<details class="csqbox"><summary>Scénario proposé</summary><div class="wikibody">'+md(p.scenario)+'</div></details>':'')+
+    '<div class="actions">'+(ui.evoDel===p.pid?'<button class="btn danger sm" data-a="evo-rej-yes" data-id="'+esc(p.pid)+'">Confirmer le rejet</button><button class="btn ghost sm" data-a="evo-rej-no">Annuler</button>':'<button class="btn gold sm" data-a="evo-pub" data-id="'+esc(p.pid)+'">Publier au tableau</button><button class="btn ghost sm" data-a="evo-rej" data-id="'+esc(p.pid)+'">Rejeter</button>')+'</div></article>';}
 function csqSection(){const all=csqAll(),todo=all.filter(x=>!x.suite),done=all.filter(x=>x.suite);if(!all.length)return "";
   const byReg=l=>bureaux.map(b=>{const r=l.filter(x=>x.q.bureau===b.id);return r.length?'<h3 class="subh">'+esc(b.nom)+'</h3><ul class="csqitems">'+r.map(csqRow).join("")+'</ul>':'';}).join("");
-  return '<section class="dmsec"><h2>Conséquences à suivre <span class="desc">('+todo.length+')</span></h2><p class="desc">Les conséquences retenues en fin de quête. Transforme-les en rumeur ou en nouvelle quête au tableau (formulaire prérempli, à retoucher), ou marque-les comme réglées.</p>'+
+  const pr=evoProps();
+  return (pr.length?'<section class="dmsec"><h2>Propositions de Claude <span class="desc">('+pr.length+')</span></h2><p class="desc">Des rumeurs et des quêtes écrites à partir des conséquences, des journaux, des rapports et des modules en cours. Publie-les au tableau ou rejette-les.</p>'+pr.map(evoPropCard).join("")+'</section>':'')+
+    '<section class="dmsec"><h2>Conséquences à suivre <span class="desc">('+todo.length+')</span></h2><p class="desc">Les conséquences retenues en fin de quête. Je les intègre au monde (rumeurs, quêtes) quand tu me demandes « fais évoluer le monde ». Coche seulement celles qui se sont réglées hors-jeu.</p>'+
     (todo.length?byReg(todo):'<p class="desc">Tout est suivi. Le monde est à jour.</p>')+(done.length?'<details class="csqbox"><summary>Déjà suivies ('+done.length+')</summary>'+byReg(done)+'</details>':'')+'</section>';}
 function csqText(q){const m=(scenarios[q.id]||{}).monde;if(!m)return "";return ((m.liste||[]).concat(m.autre?[m.autre]:[])).map(t=>"- "+q.titre+" : "+t).join("\n");}
 function ptObjectifs(q){const ob=objsOf(q),P=ui.pt,od=P.objectifs||[],sd=P.objSub||{};
@@ -3208,9 +3224,17 @@ document.addEventListener("click",async e=>{
   else if(a==="gen-again"){ui.gen.res=genEncounter();}
   else if(a==="gen-save"){const r=ui.gen.res;if(!r||!r.list)return;ui.manSec="rencontres";ui.manId=null;ui.manEdit="new";ui.manML=r.list.map(x=>({id:x.id,nb:x.nb}));ui.manDraft={nom:"Rencontre générée",region:ui.gen.region};}
   else if(a==="dmtab"){ui.dmTab=b.getAttribute("data-v");ui.evolve=null;ui.noteEdit=null;ui.newsEdit=null;}
-  else if(a==="csq-rumor"||a==="csq-quest"){const k=+b.getAttribute("data-v"),q=questById(id),x=q&&csqItems(q)[k];if(!x)return;
-    ui.questDraft=a==="csq-rumor"?{bureau:q.bureau,type:"Rumeur",rang:"inconnu",titre:"",description:x.txt,csqRef:{q:q.id,k:k}}:{bureau:q.bureau,type:"Contrat",titre:"",description:x.txt,csqRef:{q:q.id,k:k}};
-    ui.confirmDel=null;if(ui.office===q.bureau){ui.editing="new";render();}else{ui.pendingEdit="new";location.hash="#"+q.bureau;}setTimeout(()=>{const t=document.getElementById("f-titre");if(t){t.scrollIntoView({block:"center"});t.focus();}},200);return;}
+  else if(a==="evo-rej"){ui.evoDel=id;}
+  else if(a==="evo-rej-no"){ui.evoDel=null;}
+  else if(a==="evo-rej-yes"){ui.evoDel=null;await run("Proposition rejetée",()=>updateDoc(doc(db,"prive","evolution"),new FieldPath("propositions",id),deleteField()));return;}
+  else if(a==="evo-pub"){const p=evoProps().find(x=>x.pid===id);if(!p)return;const qid="q"+Date.now().toString(36);
+    const q=normQuest({bureau:p.region,titre:p.titre||"Rumeur",type:p.type==="rumeur"?"Rumeur":(p.typeQuete||"Contrat"),rang:p.type==="rumeur"?"inconnu":(p.rang||"cuivre"),statut:"ouverte",lieu:p.lieu||"",recompense:p.recompense||"",niveau:p.niveau||"",
+      joueursMin:p.joueursMin==null?null:+p.joueursMin,joueursMax:p.joueursMax==null?null:+p.joueursMax,supercharged:false,date:"",description:p.texteJoueurs||p.description||""});
+    q.joueurs=q.joueursMin!=null&&q.joueursMax!=null?(q.joueursMin===q.joueursMax?String(q.joueursMin):q.joueursMin+" à "+q.joueursMax):"?";
+    await run("Publié au tableau",async()=>{const bt=writeBatch(db);bt.set(doc(db,"quetes",qid),Object.assign(q,{creeLe:serverTimestamp(),majLe:serverTimestamp()}));
+      if(p.scenario||p.objectifs||p.consequences)bt.set(doc(db,"scenarios",qid),{scenario:p.scenario||"",objectifs:p.objectifs||"",consequences:p.consequences||""},{merge:true});
+      (p.sources||[]).forEach(r=>bt.set(doc(db,"scenarios",r.q),{monde:{suites:{[String(r.k)]:{quete:qid,type:p.type==="rumeur"?"rumeur":"quete"}}}},{merge:true}));
+      bt.update(doc(db,"prive","evolution"),new FieldPath("propositions",id),deleteField());await bt.commit();});return;}
   else if(a==="csq-done"){await run("Conséquence réglée",()=>setDoc(doc(db,"scenarios",id),{monde:{suites:{[b.getAttribute("data-v")]:{regle:true}}}},{merge:true}));return;}
   else if(a==="csq-undo"){await run("Conséquence rouverte",()=>updateDoc(doc(db,"scenarios",id),new FieldPath("monde","suites",String(b.getAttribute("data-v"))),deleteField()));return;}
   else if(a==="csq-notes"){const t=pendingIn(id).map(csqText).filter(Boolean).join("\n"),el=document.getElementById("ev-notes");if(el&&t){el.value=(el.value.trim()?el.value.trim()+"\n":"")+t;el.focus();}return;}
