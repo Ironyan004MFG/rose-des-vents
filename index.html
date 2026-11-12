@@ -73,6 +73,22 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .note-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .seal{display:inline-flex;align-items:center;gap:7px;font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
 .seal i{width:16px;height:16px;border-radius:50%;display:inline-block;box-shadow:inset 0 0 0 2px rgba(0,0,0,.25)}
+/* Rangs de Guilde : matériau de la plaque */
+.gm-bois{--m1:#6e4628;--m2:#a8733f;--mi:#f3e2c6}.gm-cuivre{--m1:#8a4a22;--m2:#d08a52;--mi:#fff1e2}.gm-fer{--m1:#4e585e;--m2:#97a3aa;--mi:#f1f4f6}.gm-argent{--m1:#9aa5ab;--m2:#eef2f4;--mi:#2a3236}.gm-or{--m1:#a07a22;--m2:#f0d488;--mi:#3a2a08}.gm-mithral{--m1:#3f9893;--m2:#c9f2ef;--mi:#0f2e2c}.gm-rose{--m1:#23262f;--m2:#5d6678;--mi:#f1d48a}
+.gplaque .gp-stars{color:#f1d48a;letter-spacing:.1em;text-shadow:0 1px 1px rgba(0,0,0,.5)}.gm-mithral .gp-stars{color:#0f2e2c;text-shadow:0 1px 0 rgba(255,255,255,.5)}
+.grankform{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:6px 0}.grankform label{display:flex;flex-direction:column;font-size:13px}
+.gchip{display:inline-flex;align-items:center;gap:6px;font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:2px 8px 2px 3px;border-radius:4px;background:linear-gradient(135deg,var(--m1),var(--m2) 60%,var(--m1));color:var(--mi);border:1px solid rgba(0,0,0,.35);box-shadow:inset 0 1px 0 rgba(255,255,255,.35);vertical-align:middle;white-space:nowrap}
+.gchip svg{width:14px;height:14px}
+.gplaque{position:relative;display:flex;align-items:center;gap:14px;max-width:360px;margin:6px 0 4px;padding:12px 18px 12px 12px;border-radius:8px;background:linear-gradient(135deg,var(--m1),var(--m2) 55%,var(--m1));color:var(--mi);border:1px solid rgba(0,0,0,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -2px 0 rgba(0,0,0,.25),inset 0 0 0 4px rgba(0,0,0,.08),0 3px 8px rgba(0,0,0,.35)}
+.gplaque.gm-bois{background:repeating-linear-gradient(100deg,rgba(0,0,0,.08) 0 3px,transparent 3px 11px),linear-gradient(135deg,var(--m1),var(--m2) 55%,var(--m1))}
+.gplaque .gp-rose{width:46px;height:46px;flex:none;filter:drop-shadow(0 1px 0 rgba(255,255,255,.35)) drop-shadow(0 -1px 0 rgba(0,0,0,.3))}
+.gplaque .gp-txt{display:flex;flex-direction:column;min-width:0;flex:1}
+.gplaque .gp-g{font-family:var(--display);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gplaque .gp-name{font-family:var(--display);font-size:20px;font-weight:700;line-height:1.15;overflow-wrap:anywhere;text-shadow:0 1px 0 rgba(255,255,255,.3),0 -1px 0 rgba(0,0,0,.35)}
+.gplaque .gp-r{font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+.gplaque .gp-stamp{width:40px;height:40px;flex:none;transform:rotate(-14deg);opacity:.85}
+.gmerit{font-size:13px;color:var(--muted,#8a7d6a);margin:2px 0 0}
+.pickrow.off{cursor:not-allowed}.pickrow.off .av,.pickrow.off strong,.pickrow.off .gchip{opacity:.55}.pickrow .why,.pickrow .desc{display:block;font-family:var(--body);font-size:14px;text-transform:none;letter-spacing:normal;font-weight:400}.pickrow .why{color:#9b2c22}
 .kind{font-family:var(--display);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
 .note h2{font-family:var(--display);font-size:21px;line-height:1.2;margin:0;text-wrap:balance}
 .desc{margin:0;white-space:pre-line}
@@ -1019,8 +1035,14 @@ if (new URLSearchParams(location.search).has("emu")) {
 
 /* ---------- constants ---------- */
 const RANKS = {cuivre:{label:"Cuivre",c:"var(--r-cuivre)"},fer:{label:"Fer",c:"var(--r-fer)"},argent:{label:"Argent",c:"var(--r-argent)"},or:{label:"Or",c:"var(--r-or)"},mithral:{label:"Mithril",c:"var(--r-mithral)"},inconnu:{label:"Rang inconnu",c:"#3a3128"}};
+// Rangs de Guilde (un seul rang pour tous les comptoirs). Bois = rang d'essai.
+const GRANKS = ["bois","cuivre","fer","argent","or","mithral","rose"];
+const GRANK_LBL = {bois:"Bois",cuivre:"Cuivre",fer:"Fer",argent:"Argent",or:"Or",mithral:"Mithril",rose:"Rose des Vents"};
+const STAR_DEF = 40, STAR_MAX = 3;
+const PROMO_DEF = {fer:{m:6,niv:3},argent:{m:12,niv:5},or:{m:24,niv:9},mithral:{m:40,niv:13}};
+const MERIT_W = {cuivre:1,fer:2,argent:3,or:5,mithral:8};
 const STATUS = {ouverte:"Ouverte",encours:"En cours",terminee:"Terminée",archivee:"Archivée"};
-const TYPES = ["Contrat","Recherche","Exploration","Prime","Escorte","Rumeur"];
+const TYPES = ["Contrat","Recherche","Exploration","Prime","Escorte","Rumeur","Examen"];
 const QUEST_KEYS = ["bureau","titre","type","rang","statut","lieu","recompense","niveau","joueurs","joueursMin","joueursMax","supercharged","date","description","maj"];
 const BASE_CATS = ["PNJ","Créatures","Lieux","Indices & rumeurs","Objets","Factions"];
 const DEFAULT_MEFAITS = {mineur:2,moyen:5,grave:10};
@@ -1055,7 +1077,7 @@ const DEFAULT_SCALE = [
 
 /* ---------- state ---------- */
 let evoPriv=null;
-let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, notoMap = {}, relations = [], priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], parties = [], modules = [], butins = [], crieur = null, pnjs = [], monstres = [], rencontres = [], scenarios = {};
+let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, notoMap = {}, meritMap = {}, remisesMap = {}, relations = [], priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], parties = [], modules = [], butins = [], crieur = null, pnjs = [], monstres = [], rencontres = [], scenarios = {};
 const loaded = {b:false, q:false, i:false, a:false, w:false, c:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
@@ -1148,10 +1170,10 @@ function listen(){
 }
 // Données réservées au DM (points, journal, seuils) : lues seulement par un compte admin.
 function listenPrivate(on){
-  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};notoMap={};relations=[];journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;evoPriv=null;dossiers={};factions=[];parties=[];modules=[];butins=[];crieur=null;pnjs=[];monstres=[];rencontres=[];scenarios={};
+  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};notoMap={};meritMap={};remisesMap={};relations=[];journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;evoPriv=null;dossiers={};factions=[];parties=[];modules=[];butins=[];crieur=null;pnjs=[];monstres=[];rencontres=[];scenarios={};
   if(!on)return;
   const err=e=>console.error(e);
-  privUnsubs.push(onSnapshot(collection(db,"points"),snap=>{const m={};const nm={};snap.docs.forEach(d=>{m[d.id]=(d.data().parRegion)||{};nm[d.id]=(d.data().notoriete)||{};});pointsMap=m;notoMap=nm;render();},err));
+  privUnsubs.push(onSnapshot(collection(db,"points"),snap=>{const m={};const nm={};const mm={},rm={};snap.docs.forEach(d=>{m[d.id]=(d.data().parRegion)||{};nm[d.id]=(d.data().notoriete)||{};if(typeof d.data().merite==="number")mm[d.id]=d.data().merite;if(typeof d.data().remises==="number")rm[d.id]=d.data().remises;});pointsMap=m;notoMap=nm;meritMap=mm;remisesMap=rm;render();},err));
   privUnsubs.push(onSnapshot(query(collection(db,"journal"),orderBy("date","desc"),limit(60)),snap=>{journal=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","renommee"),snap=>{priv=snap.exists()?snap.data():null;render();},err));
   const arr=(c,set)=>privUnsubs.push(onSnapshot(collection(db,c),snap=>{set(snap.docs.map(d=>Object.assign({id:d.id},d.data())));render();},err));
@@ -1270,7 +1292,8 @@ function signupList(q){
   if(!list.length)return "<em>Personne encore</em>";
   return '<span class="names">'+list.map(s=>{
     const mine=user&&s.uid===user.uid&&s.statut!=="refusee"&&q.statut==="ouverte";
-    let h='<span class="name st-'+esc(s.statut)+'">'+(s.aventurier&&aventuriers.some(a=>a.id===s.aventurier)?'<a class="plink" href="#perso-'+esc(s.aventurier)+'">'+esc(s.nom)+'</a>':esc(s.nom));
+    const sa=s.aventurier&&aventuriers.find(a=>a.id===s.aventurier);
+    let h='<span class="name st-'+esc(s.statut)+'">'+(sa?'<a class="plink" href="#perso-'+esc(s.aventurier)+'">'+esc(s.nom)+'</a> '+gChip(sa):esc(s.nom));
     if(s.statut==="attente")h+=' <em>(en attente)</em>';
     if(s.statut==="refusee")h+=' <em>(non retenue)</em>';
     if(ui.dm){
@@ -1463,6 +1486,42 @@ function addPoints(bt,a,bid,dR,dN){
     if(newC!==oldC)bt.set(doc(collection(db,"rangs")),{aventurier:a.id,nom:a.nom,bureau:bid,ancien:oldC,nouveau:newC,date:serverTimestamp()});
   }
 }
+/* ---------- rangs de Guilde ---------- */
+function promoCfg(){const p=(priv&&priv.promo)||{},o={};Object.keys(PROMO_DEF).forEach(k=>{o[k]=Object.assign({},PROMO_DEF[k],p[k]||{});});return o;}
+function meritW(){return Object.assign({},MERIT_W,(priv&&priv.meritW)||{});}
+function grank(a){return a&&GRANKS.indexOf(a.rangGuilde)>=0?a.rangGuilde:"bois";}
+function gIdx(r){return GRANKS.indexOf(r);}
+function gNext(r){return GRANKS[GRANKS.indexOf(r)+1]||null;}
+function merit(a){return meritMap[a.id]||0;}
+// Le mérite ne se cumule pas : il plafonne au seuil du rang suivant et repart à 0 à chaque promotion.
+// Au rang Mithril, chaque tranche de mérite donne une étoile (max 3) ; ensuite, seul un acte héroïque mène à la Rose des Vents.
+function starM(){const p=(priv&&priv.promo)||{};return (p.etoile&&+p.etoile.m)||STAR_DEF;}
+function stars(a){return Math.max(0,Math.min(STAR_MAX,+(a&&a.etoiles)||0));}
+function meritCap(a){const r=grank(a);if(r==="mithral")return stars(a)<STAR_MAX?starM():0;if(r==="rose")return 0;const nx=gNext(r),c=nx&&promoCfg()[nx];return c?c.m:0;}
+function meritGain(q,res){const w=meritW()[q.rang]||1;return res==="reussite"?w:res==="partielle"?w/2:0;}
+function charLevel(a){return Math.max(1,Math.min(20,+(dossiers[a.id]||{}).niveau||1));}
+function examReady(a){const r=grank(a);if(r==="mithral"||r==="rose")return null;const nx=gNext(r),c=nx&&promoCfg()[nx];return c&&merit(a)>=c.m&&charLevel(a)>=c.niv?nx:null;}
+function gRose(){return '<svg viewBox="-110 -110 220 220" aria-hidden="true">'+rose(104,'rgba(0,0,0,.35)')+'</svg>';}
+function gChip(a){const r=typeof a==="string"?a:grank(a),st=typeof a==="string"?0:stars(a);return '<span class="gchip gm-'+r+'" title="Rang de Guilde">'+gRose()+esc(GRANK_LBL[r]||r)+(st?' '+"★".repeat(st):'')+'</span>';}
+// Mise à jour du rang de Guilde en fin de quête (mérite caché dans points/<id>).
+function gQuestEnd(bt,a,q,res){
+  const r=grank(a);let nr=null;
+  if(r==="bois"&&(res==="reussite"||res==="partielle"))nr="cuivre";
+  else if(q.type==="Examen"&&res==="reussite"&&gNext(r)===q.rang)nr=q.rang;
+  if(nr){bt.update(doc(db,"aventuriers",a.id),"rangGuilde",nr,"majLe",serverTimestamp());bt.set(doc(db,"points",a.id),{merite:0},{merge:true});meritMap[a.id]=0;
+    bt.set(doc(collection(db,"journal")),{aventurier:a.id,nom:a.nom,bureau:q.bureau,points:0,notoriete:0,raison:"Rang de Guilde : "+GRANK_LBL[r]+" → "+GRANK_LBL[nr],quete:q.id,date:serverTimestamp()});return;}
+  const cap=meritCap(a),g=meritGain(q,res);if(!cap||!g)return;
+  let m=merit(a)+g;
+  if(r==="mithral"&&m>=cap){const st=stars(a)+1;bt.update(doc(db,"aventuriers",a.id),"etoiles",st,"majLe",serverTimestamp());m=0;
+    bt.set(doc(collection(db,"journal")),{aventurier:a.id,nom:a.nom,bureau:q.bureau,points:0,notoriete:0,raison:"Étoile de Mithril n° "+st,quete:q.id,date:serverTimestamp()});}
+  else m=Math.min(cap,m);
+  bt.set(doc(db,"points",a.id),{merite:m},{merge:true});meritMap[a.id]=m;}
+function gStamp(){return '<svg class="gp-stamp" viewBox="-50 -50 100 100" aria-hidden="true"><circle r="44" fill="none" stroke="currentColor" stroke-width="4"/><circle r="36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3"/><polygon points="0,-26 6,-6 26,0 6,6 0,26 -6,6 -26,0 -6,-6" fill="currentColor"/><circle r="5" fill="none" stroke="currentColor" stroke-width="2"/></svg>';}
+function gPlaque(a){const r=grank(a);return '<div class="gplaque gm-'+r+'" role="img" aria-label="Plaque de Guilde : '+esc(a.nom)+', rang '+esc(GRANK_LBL[r])+'"><span class="gp-rose">'+gRose()+'</span><span class="gp-txt"><span class="gp-g">Guilde de la Rose des Vents</span><span class="gp-name">'+esc(a.nom)+'</span><span class="gp-r">'+(r==="rose"?'Conseil de la Rose':'Rang '+esc(GRANK_LBL[r])+(r==="bois"?' · à l\'essai':''))+(stars(a)?' <span class="gp-stars" aria-label="'+stars(a)+' étoile'+(stars(a)>1?'s':'')+'">'+"★".repeat(stars(a))+'</span>':'')+'</span></span>'+gStamp()+'</div>';}
+// Inscription : rang de la quête ≤ rang du personnage + 1, sinon il faut un chaperon inscrit qui a au moins le rang de la quête.
+function joinCheck(a,q){const qi=gIdx(q.rang);if(qi<0)return {ok:true};const ci=gIdx(grank(a));if(qi<=ci+1)return {ok:true};
+  const chap=signupsFor(q.id).filter(s=>s.statut!=="refusee"&&s.aventurier!==a.id).map(s=>aventuriers.find(x=>x.id===s.aventurier)).filter(Boolean).find(x=>gIdx(grank(x))>=qi);
+  return chap?{ok:true,chap:chap}:{ok:false,why:"Quête "+GRANK_LBL[q.rang]+" : il faut un chaperon de rang "+GRANK_LBL[q.rang]+" ou plus déjà inscrit."};}
 function matrixTable(dm){const T=titresMap(),N=notoList(),Rl=repuList();
   return '<div class="mxwrap"><div class="tablebox"><table class="matrix"><thead><tr><th scope="col"><span class="sr">Réputation</span></th>'+N.map(n=>'<th scope="col">'+esc(n.titre)+'</th>').join("")+'</tr></thead><tbody>'+
     Rl.map(r=>'<tr><th scope="row">'+repChip(r.r)+'</th>'+N.map(n=>{const c=r.r*10+n.n,t=T[String(c)];return '<td class="mx rr'+r.r+'">'+(dm?'<span class="mxc">'+c+'</span>':'')+(t?'<span class="mxt">'+esc(t)+'</span>':'')+'</td>';}).join("")+'</tr>').join("")+'</tbody></table></div>'+
@@ -1487,6 +1546,8 @@ function renownView(){
       '<fieldset class="mefset"><legend>Fin de quête (avant multiplicateur) : notoriété / réputation</legend>'+Object.keys(RES_PTS).map(k=>'<label for="rs-n-'+k+'">'+esc(RESULTS[k])+' N<input id="rs-n-'+k+'" type="number" value="'+resPts()[k].n+'"></label><label for="rs-r-'+k+'">R<input id="rs-r-'+k+'" type="number" value="'+resPts()[k].r+'"></label>').join("")+'</fieldset>'+
       '<fieldset class="mefset"><legend>Méfaits : notoriété gagnée / réputation perdue</legend>'+Object.keys(DEFAULT_MEFAITS).map(k=>'<label for="mfn-'+k+'">'+MEFAIT_LABELS[k]+' N +<input id="mfn-'+k+'" type="number" min="0" max="999" value="'+mefaitN()[k]+'"></label><label for="mf-'+k+'">R −<input id="mf-'+k+'" type="number" min="0" max="999" value="'+mefaitPts()[k]+'"></label>').join("")+'</fieldset>'+
       '<fieldset class="mefset"><legend>Bienfaits : nom, notoriété gagnée, réputation gagnée</legend>'+BIENFAITS.map(k=>'<label for="bl-'+k+'">Nom<input id="bl-'+k+'" maxlength="40" value="'+esc(bienLabels()[k])+'"></label><label for="bn-'+k+'">N +<input id="bn-'+k+'" type="number" min="0" max="999" value="'+bienN()[k]+'"></label><label for="br-'+k+'">R +<input id="br-'+k+'" type="number" min="0" max="999" value="'+bienR()[k]+'"></label>').join("")+'</fieldset>'+
+      '<fieldset class="mefset"><legend>Rangs de Guilde : mérite par mission (selon le rang de la quête, moitié en partielle)</legend>'+["cuivre","fer","argent","or","mithral"].map(k=>'<label for="mw-'+k+'">'+esc(RANKS[k].label)+'<input id="mw-'+k+'" type="number" min="0" max="99" step="0.5" value="'+meritW()[k]+'"></label>').join("")+'</fieldset>'+
+      '<fieldset class="mefset"><legend>Rangs de Guilde : mérite et niveau minimum pour l\'examen</legend>'+Object.keys(PROMO_DEF).map(k=>'<label for="pm-'+k+'">'+esc(GRANK_LBL[k])+' mérite<input id="pm-'+k+'" type="number" min="1" max="999" value="'+promoCfg()[k].m+'"></label><label for="pn-'+k+'">niv.<input id="pn-'+k+'" type="number" min="1" max="20" value="'+promoCfg()[k].niv+'"></label>').join("")+'<label for="pm-etoile">Étoile de Mithril<input id="pm-etoile" type="number" min="1" max="999" value="'+starM()+'"></label></fieldset>'+
       '<div class="actions"><button class="btn gold" type="submit">Enregistrer</button><button class="btn board" type="button" data-a="scale-cancel">Annuler</button></div></form>';
   } else {
     h+='<div class="axes"><div><h3 class="subh">Notoriété</h3><div class="tablebox"><table class="scale"><tbody>'+N.map(s=>'<tr><td><span class="rn rr5 rnn'+s.n+'">'+esc(s.titre)+'</span></td>'+(ui.dm?'<td class="num">'+seuilN(s.n)+'+</td>':'')+'<td>'+esc(s.effet)+'</td></tr>').join("")+'</tbody></table></div></div>'+
@@ -1511,7 +1572,7 @@ function renownView(){
   }
   if(!shown().length)h+='<p class="hint">Aucun aventurier joueur au registre pour l\'instant.'+(ui.dm&&aventuriers.some(a=>a.pnj)?' Tes personnages DM sont cachés : Espace DM › Outils › <strong>Afficher personnages DM</strong>.':'')+'</p>';
   else h+='<div class="tablebox"><table class="roster"><thead><tr><th scope="col">Aventurier</th>'+bureaux.map(b=>'<th scope="col">'+esc(b.nom)+'</th>').join("")+(ui.dm?'<th scope="col"><span class="sr">Actions</span></th>':'')+'</tr></thead><tbody>'+
-    shown().map(a=>'<tr><th scope="row"><a class="plink row" href="#perso-'+esc(a.id)+'">'+(a.image?'<img class="av" src="'+esc(a.image)+'" alt="">':'<span class="av ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+'<span>'+esc(a.nom)+(a.pnj?' <em class="muted">(personnage DM)</em>':'')+(a.joueur?'<span class="pl">'+esc(a.joueur)+'</span>':'')+'</span></a></th>'+
+    shown().map(a=>'<tr><th scope="row"><a class="plink row" href="#perso-'+esc(a.id)+'">'+(a.image?'<img class="av" src="'+esc(a.image)+'" alt="">':'<span class="av ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+'<span>'+esc(a.nom)+' '+gChip(a)+(a.pnj?' <em class="muted">(personnage DM)</em>':'')+(a.joueur?'<span class="pl">'+esc(a.joueur)+'</span>':'')+'</span></a></th>'+
       bureaux.map(b=>{const c=renown(a,b.id);if(!ui.dm)return '<td>'+(c!==51?chip(c):'<span class="muted">Inconnu</span>')+'</td>';
         return '<td>'+(c!==51?chip(c):'<span class="muted">Inconnu</span>')+'<span class="ptsline">'+c+' · R '+ptsLabel(pts(a,b.id))+' · N '+ptsLabel(ptsN(a,b.id))+'</span></td>';}).join("")+
       (ui.dm?'<td>'+(ui.confirmAdv===a.id?'<button class="btn danger sm" data-a="adv-del-yes" data-id="'+esc(a.id)+'">Confirmer</button> <button class="btn board sm" data-a="adv-del-no">Annuler</button>':'<button class="btn board sm" data-a="adv-del" data-id="'+esc(a.id)+'">Retirer</button>')+'</td>':'')+'</tr>').join("")+
@@ -1549,6 +1610,10 @@ function sheetView(id){
   let h='<article class="sheet">';
   h+='<div class="sheet-top">'+(a.image?'<img class="portrait" src="'+esc(a.image)+'" alt="Portrait de '+esc(a.nom)+'">':'<span class="portrait ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+
     '<div class="sheet-id"><h2>'+esc(a.nom)+'</h2><p class="sheet-sub">'+esc([a.espece,a.classe].filter(Boolean).join(" · ")||"Aventurier")+'</p>'+(a.joueur?'<p class="sheet-pl">Joué par '+esc(a.joueur)+'</p>':'')+'</div></div>';
+  h+=gPlaque(a);
+  if(ui.dm&&isAdmin){const cap=meritCap(a),nx=examReady(a);
+    h+='<p class="gmerit">Mérite '+merit(a)+(cap?' / '+cap:'')+' · niveau '+charLevel(a)+(gNext(grank(a))&&promoCfg()[gNext(grank(a))]?' / '+promoCfg()[gNext(grank(a))].niv:'')+(nx?' · <strong>éligible à l\'examen '+esc(GRANK_LBL[nx])+'</strong>':'')+' <em>(DM)</em></p>'+
+      '<form class="grankform" id="grankform" data-id="'+esc(a.id)+'"><label for="g-rank">Rang de Guilde<select id="g-rank">'+GRANKS.map(k=>'<option value="'+k+'"'+(k===grank(a)?' selected':'')+'>'+esc(GRANK_LBL[k])+'</option>').join("")+'</select></label><label for="g-st">Étoiles<input id="g-st" type="number" min="0" max="'+STAR_MAX+'" value="'+stars(a)+'"></label><button class="mini" type="submit">Changer</button></form>';}
   if(a.description)h+='<h3>Description</h3><p class="desc">'+esc(a.description)+'</p>';
   if(a.background)h+='<h3>Background</h3><p class="desc">'+esc(a.background)+'</p>';
   const known=bureaux.filter(b=>renown(a,b.id)!==51);
@@ -2031,6 +2096,10 @@ function todoItems(){
   dueRegions().forEach(b=>it.push({k:"evol",t:'<strong>'+esc(b.nom)+'</strong> : évolution '+SENS_L[regionSens(b.id)]+' de la région ('+pendingIn(b.id).length+(pendingIn(b.id).length>1?' quêtes accomplies':' quête accomplie')+(aggravIn(b.id)?', '+aggravIn(b.id)+' aggravation'+(aggravIn(b.id)>1?'s':''):', aucune aggravation')+')'+evoWait("region",b.id),act:'<button class="mini" data-a="evolve" data-id="'+esc(b.id)+'">Faire évoluer moi-même</button>'}));
   criseRegions().forEach(b=>it.push({k:"evol",t:'<strong>'+esc(b.nom)+'</strong> : <strong class="warn">crise régionale</strong> ('+aggravIn(b.id)+' quêtes aggravées)'+evoWait("crise",b.id),act:''}));
   agedIn().forEach(q=>{const b=office(q.bureau);it.push({k:"evol",t:'<strong>'+esc(q.titre)+'</strong> ('+esc(b?b.nom:"")+') : quête ignorée, âge '+fmtAge(ageOf(q))+' / '+ageMax()+', elle va s\'aggraver'+evoWait("maj",q.id),act:''});});
+  ranked().forEach(a=>{const nx=examReady(a),sl='<a class="mini" href="#perso-'+esc(a.id)+'">Fiche</a>';
+    if(nx)it.push({k:"guilde",t:'<strong>'+esc(a.nom)+'</strong> ('+esc(GRANK_LBL[grank(a)])+') est éligible à l\'<strong>examen '+esc(GRANK_LBL[nx])+'</strong>. Crée une quête de type Examen, de rang '+esc(GRANK_LBL[nx])+', ou demande-la à Claude.',act:sl});
+    const due=stars(a)-(remisesMap[a.id]||0);if(due>0)it.push({k:"guilde",t:'<strong>'+esc(a.nom)+'</strong> a gagné '+(due>1?due+' étoiles':'une étoile')+' de Mithril : récompense à remettre.',act:'<button class="mini" data-a="star-given" data-id="'+esc(a.id)+'">Récompense remise</button>'+sl});
+    if(grank(a)==="mithral"&&stars(a)>=STAR_MAX)it.push({k:"guilde",t:'<strong>'+esc(a.nom)+'</strong> a ses 3 étoiles : un acte héroïque peut lui ouvrir le <strong>Conseil de la Rose</strong>.',act:sl});});
   quetes.filter(q=>q.statut==="ouverte").forEach(q=>{const s=signupsFor(q.id),att=s.filter(x=>x.statut==="attente").length;if(!att)return;const pb=planBest(q),b=office(q.bureau);
     it.push({k:"group",t:'<strong>'+esc(q.titre)+'</strong> ('+esc(b?b.nom:"")+') : '+att+' demande'+(att>1?'s':'')+' en attente'+(pb?' · meilleure date : '+esc(fmtPlan(pb)):''),act:'<a class="mini" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir</a>'});});
   quetes.filter(q=>q.statut==="encours"&&q.rapportBrouillon&&q.rapportBrouillon.resume).forEach(q=>it.push({k:"report",t:'<strong>'+esc(q.titre)+'</strong> : rapport reçu de '+esc(q.rapportBrouillon.auteur||"un joueur"),act:'<a class="mini" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Terminer</a>'}));
@@ -2050,7 +2119,7 @@ function todoItems(){
   aventuriers.filter(a=>{const d=dossiers[a.id]||{};return !a.pnj&&a.proprietaire&&d.outerworlder!=="non"&&!d.donNom;}).forEach(a=>{const d=dossiers[a.id]||{};it.push({k:"don",t:'<strong>'+esc(a.nom)+'</strong> : '+(d.outerworlder==="oui"?'Outerworlder sans Don':'Outerworlder ? Don à attribuer ou personnage natif à indiquer'),act:'<button class="mini" data-a="man-open" data-sec="perso" data-id="'+esc(a.id)+'">Dossier</button>'});});
   return it;
 }
-const TODO_GROUPS=[["evol","Le monde doit réagir"],["fiche","Fiches à compléter"],["report","Rapports de mission reçus"],["crieur","Articles du Crieur"],["group","Groupes à former"],["run","Missions en cours"],["comp","Compendium en revue"],["don","Dons à attribuer"]];
+const TODO_GROUPS=[["evol","Le monde doit réagir"],["guilde","Rangs de Guilde"],["fiche","Fiches à compléter"],["report","Rapports de mission reçus"],["crieur","Articles du Crieur"],["group","Groupes à former"],["run","Missions en cours"],["comp","Compendium en revue"],["don","Dons à attribuer"]];
 function dmTodo(){const it=todoItems();if(!it.length)return '<p class="empty">Rien à traiter. Le monde est calme… pour l\'instant.</p>';
   return TODO_GROUPS.map(g=>{const l=it.filter(x=>x.k===g[0]);if(!l.length)return "";return '<section class="dmsec"><h2>'+g[1]+' <span class="n">'+l.length+'</span></h2><ul class="todo">'+l.map(x=>'<li><span>'+x.t+'</span>'+x.act+'</li>').join("")+'</ul></section>';}).join("");}
 function evolveForm(bid){
@@ -2143,7 +2212,7 @@ function galleryView(){
     return '<a class="gcard" href="#perso-'+esc(a.id)+'">'+(a.image?'<img class="gimg" src="'+esc(a.image)+'" alt="">':'<span class="gimg ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+
       '<span class="gbody"><strong class="gname">'+esc(a.nom)+'</strong><span class="sheet-sub">'+esc([a.espece,a.classe].filter(Boolean).join(" · ")||"Aventurier")+'</span>'+
       (a.joueur?'<span class="gpl">Joué par '+esc(a.joueur)+'</span>':'')+
-      '<span class="gmeta">'+(best?chip(best.n)+' <em>à '+esc(best.b.nom)+'</em>':'<span class="muted">Inconnu partout</span>')+'</span>'+
+      '<span class="gmeta">'+gChip(a)+'</span><span class="gmeta">'+(best?chip(best.n)+' <em>à '+esc(best.b.nom)+'</em>':'<span class="muted">Inconnu partout</span>')+'</span>'+
       (qn?'<span class="gpl">'+qn+' quête'+(qn>1?'s':'')+' accomplie'+(qn>1?'s':'')+'</span>':'')+'</span></a>';}).join("")+'</div>';
 }
 
@@ -2262,9 +2331,9 @@ function render(){
     (isAdmin?' · <a href="#dm">Espace DM</a>':'')+' · <button class="linkbtn" data-a="dm">'+(ui.dm?"Quitter le mode DM":"Mode DM")+'</button></span></footer>';
   if(ui.signup){const sq=questById(ui.signup),mine=myChars();
     if(sq)h+='<div class="modal-bg" data-a="sign-cancel"><form class="modal" id="signform" role="dialog" aria-modal="true" aria-labelledby="sg-t"><h2 id="sg-t">S\'inscrire à « '+esc(sq.titre)+' »</h2>'+
-      (mine.length?'<fieldset class="pick"><legend>Quel personnage part en mission ?</legend>'+mine.map((a,i)=>'<label class="pickrow" for="pk-'+i+'"><input type="radio" name="perso" id="pk-'+i+'" value="'+esc(a.id)+'"'+(i===0?' checked':'')+'>'+(a.image?'<img class="av" src="'+esc(a.image)+'" alt="">':'<span class="av ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+'<span><strong>'+esc(a.nom)+'</strong> <em>'+esc([a.espece,a.classe].filter(Boolean).join(" · "))+'</em></span></label>').join("")+'</fieldset>'+
+      (mine.length?'<fieldset class="pick"><legend>Quel personnage part en mission ?</legend>'+mine.map((a,i)=>{const jc=joinCheck(a,sq),first=mine.findIndex(x=>joinCheck(x,sq).ok);return '<label class="pickrow'+(jc.ok?'':' off')+'" for="pk-'+i+'"><input type="radio" name="perso" id="pk-'+i+'" value="'+esc(a.id)+'"'+(i===first?' checked':'')+(jc.ok?'':' disabled')+'>'+(a.image?'<img class="av" src="'+esc(a.image)+'" alt="">':'<span class="av ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+'<span><strong>'+esc(a.nom)+'</strong> '+gChip(a)+' <em>'+esc([a.espece,a.classe].filter(Boolean).join(" · "))+'</em>'+(jc.chap?'<span class="desc">Chaperon : '+esc(jc.chap.nom)+' ('+esc(GRANK_LBL[grank(jc.chap)])+')</span>':'')+(jc.ok?'':'<span class="why">'+esc(jc.why)+'</span>')+'</span></label>';}).join("")+'</fieldset>'+
         '<p>Ta demande apparaîtra « en attente » pour tout le monde. Le DM la confirme quand le groupe et la date sont fixés.</p>'+
-        '<div class="actions"><button class="btn" type="submit"'+(ui.busy?" disabled":"")+'>'+(ui.busy?"Envoi…":"M\'inscrire")+'</button><button class="btn ghost" type="button" data-a="sign-cancel">Annuler</button></div>'
+        '<div class="actions"><button class="btn" type="submit"'+(ui.busy||!mine.some(x=>joinCheck(x,sq).ok)?" disabled":"")+'>'+(ui.busy?"Envoi…":"M\'inscrire")+'</button><button class="btn ghost" type="button" data-a="sign-cancel">Annuler</button></div>'
        :'<p>Tu n\'as pas encore de personnage. Crée ta fiche, puis reviens t\'inscrire.</p><div class="actions"><a class="btn" href="#personnages" data-a="sign-tosheet">Créer ma fiche</a><button class="btn ghost" type="button" data-a="sign-cancel">Annuler</button></div>')+
       '</form></div>';}
   if(ui.promptSheet&&user&&!user.isAnonymous&&!isAdmin&&loaded.a&&!myChars().length&&!ui.signup){
@@ -3209,6 +3278,7 @@ document.addEventListener("click",async e=>{
     else if(isAdmin){ui.dm=true;}
     else{dmLogin();return;}
   }
+  else if(a==="star-given"){await run("Récompense",()=>setDoc(doc(db,"points",id),{remises:(remisesMap[id]||0)+1},{merge:true}));return;}
   else if(a==="showpnj"){ui.showPnj=!ui.showPnj;store("rdv-showpnj",ui.showPnj);render();return;}
   else if(a==="logout"){ui.dm=false;ui.authMsg="";ui.sheetEdit=null;await signOut(auth);}
   else if(a==="auth-ok"){ui.authMsg="";}
@@ -3478,11 +3548,12 @@ document.addEventListener("submit",async e=>{
     try{
       const uid=auth.currentUser.uid;
       if(signupsFor(qid).some(s=>s.uid===uid))throw {code:"already"};
+      {const jc=joinCheck(ch,questById(qid));if(!jc.ok)throw {code:"rank",why:jc.why};}
       await setDoc(doc(db,"inscriptions",qid+"__"+uid),{quete:qid,uid,aventurier:ch.id,nom:String(ch.nom).slice(0,40),statut:"attente",creeLe:serverTimestamp()});
       ui.signupMsg={id:qid,text:"Demande envoyée ! Elle est visible par tous, en attente de la confirmation du DM."};
     }catch(err){
       console.error(err);
-      ui.signupMsg={id:qid,err:true,text:err.code==="already"?"Tu es déjà inscrit à cette quête.":(String(err.code||"").indexOf("permission-denied")>=0?"Inscription refusée : la quête n'est peut-être plus ouverte, ou tu as déjà une demande.":errText(err))};
+      ui.signupMsg={id:qid,err:true,text:err.code==="rank"?err.why:err.code==="already"?"Tu es déjà inscrit à cette quête.":(String(err.code||"").indexOf("permission-denied")>=0?"Inscription refusée : la quête n'est peut-être plus ouverte, ou tu as déjà une demande.":errText(err))};
     }
     ui.busy=false;ui.signup=null;render();return;
   }
@@ -3504,6 +3575,13 @@ document.addEventListener("submit",async e=>{
     ui.sheetEdit=null;ui.sheetImg=undefined;
     const ok=await run("Fiche",()=>isNew?setDoc(doc(db,"aventuriers",id),Object.assign(data,{proprietaire:user.uid,joueur:String(user.displayName||"").slice(0,60),creeLe:serverTimestamp()})):setDoc(doc(db,"aventuriers",id),data,{merge:true}));
     if(ok)location.hash="#perso-"+id;return;
+  }
+  if(e.target.id==="grankform"){
+    const id=e.target.getAttribute("data-id"),a=aventuriers.find(x=>x.id===id);if(!a||!isAdmin)return;
+    const nr=v("g-rank"),st=Math.max(0,Math.min(STAR_MAX,Math.round(+v("g-st")||0)));if(GRANKS.indexOf(nr)<0)return;
+    await run("Rang de Guilde",async()=>{const bt=writeBatch(db);bt.set(doc(db,"aventuriers",id),{rangGuilde:nr,etoiles:st,majLe:serverTimestamp()},{merge:true});
+      if(nr!==grank(a)){bt.set(doc(db,"points",id),{merite:0},{merge:true});bt.set(doc(collection(db,"journal")),{aventurier:id,nom:a.nom,bureau:"",points:0,notoriete:0,raison:"Rang de Guilde : "+GRANK_LBL[grank(a)]+" → "+GRANK_LBL[nr]+" (DM)",quete:"",date:serverTimestamp()});}
+      await bt.commit();});return;
   }
   if(e.target.id==="donform"){
     const id=e.target.getAttribute("data-id");await run("Don",()=>setDoc(doc(db,"aventuriers",id),{don:v("p-don").slice(0,500),majLe:serverTimestamp()},{merge:true}));return;
@@ -3536,6 +3614,7 @@ document.addEventListener("submit",async e=>{
         seen[a.id]=seen[a.id]||{r:0,n:0};seen[a.id].r+=net;seen[a.id].n+=netN;
         bt.set(doc(collection(db,"journal")),{aventurier:a.id,nom:a.nom,bureau:q.bureau,points:net,notoriete:netN,raison:"Quête : "+q.titre+" ("+(RESULTS[C.rapport.resultat]||"")+" : N +"+t.gN+", R "+(t.gR>=0?"+":"")+t.gR+(det?" ; "+det:"")+")",quete:q.id,date:serverTimestamp()});});
       Object.keys(seen).forEach(id=>{if(seen[id].r||seen[id].n)addPoints(bt,aventuriers.find(y=>y.id===id),q.bureau,seen[id].r,seen[id].n);});
+      Object.keys(seen).forEach(id=>{const a=aventuriers.find(y=>y.id===id);if(a)gQuestEnd(bt,a,q,C.rapport.resultat);});
       await bt.commit();
     });return;
   }
@@ -3637,9 +3716,11 @@ document.addEventListener("submit",async e=>{
     Object.keys(DEFAULT_MEFAITS).forEach(k=>{mefaits[k]=Math.round(num("mf-"+k,mefaitPts()[k],1));mefaitsN[k]=Math.round(num("mfn-"+k,mefaitN()[k],1));});
     BIENFAITS.forEach(k=>{bienNv[k]=Math.round(num("bn-"+k,bienN()[k],1));bienRv[k]=Math.round(num("br-"+k,bienR()[k],1));bienLb[k]=v("bl-"+k).slice(0,40)||BIENFAIT_LABELS[k];});
     ["cuivre","fer","argent","or","mithral"].forEach(k=>{mult[k]=num("mu-"+k,rankMult()[k],1);});
+    const meritWv={},promo={etoile:{m:Math.max(1,Math.round(num("pm-etoile",starM(),1)))}};["cuivre","fer","argent","or","mithral"].forEach(k=>{meritWv[k]=num("mw-"+k,meritW()[k],1);});
+    Object.keys(PROMO_DEF).forEach(k=>{promo[k]={m:Math.max(1,Math.round(num("pm-"+k,promoCfg()[k].m,1))),niv:Math.max(1,Math.min(20,Math.round(num("pn-"+k,promoCfg()[k].niv,1))))};});
     Object.keys(RES_PTS).forEach(k=>{res[k]={n:Math.round(num("rs-n-"+k,resPts()[k].n)),r:Math.round(num("rs-r-"+k,resPts()[k].r))};});
     ui.scaleEdit=false;
-    await run("Renommée",async()=>{const bt=writeBatch(db);bt.set(doc(db,"config","renommee"),{noto,repu,titres,bienLabels:bienLb,majLe:serverTimestamp()},{merge:true});bt.set(doc(db,"prive","renommee"),{seuilsN,seuilsR,mefaits,mefaitsN,bienN:bienNv,bienR:bienRv,mult,res},{merge:true});await bt.commit();
+    await run("Renommée",async()=>{const bt=writeBatch(db);bt.set(doc(db,"config","renommee"),{noto,repu,titres,bienLabels:bienLb,majLe:serverTimestamp()},{merge:true});bt.set(doc(db,"prive","renommee"),{seuilsN,seuilsR,mefaits,mefaitsN,bienN:bienNv,bienR:bienRv,mult,res,meritW:meritWv,promo},{merge:true});await bt.commit();
       priv=Object.assign({},priv||{},{seuilsN,seuilsR});
       const bt2=writeBatch(db);let k=0;aventuriers.forEach(a=>bureaux.forEach(b=>{if(typeof (pointsMap[a.id]||{})[b.id]!=="number"&&typeof (notoMap[a.id]||{})[b.id]!=="number")return;const nc=codeOf(ptsN(a,b.id),pts(a,b.id));if(nc!==renown(a,b.id)){k++;bt2.update(doc(db,"aventuriers",a.id),new FieldPath("niveaux",b.id),nc);}}));if(k)await bt2.commit();});return;
   }
