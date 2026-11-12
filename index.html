@@ -369,6 +369,9 @@ form .csqpick label.pickrow{min-height:0;padding:4px 8px;display:flex;flex-direc
 form .csqpick label.pickrow input{flex:none;width:18px;height:18px;margin-top:2px}
 .csqkept{border-left:3px solid #a3271a;padding:4px 10px;margin:.6em 0;background:rgba(163,39,26,.05)}
 .csqkept h4{margin:0 0 4px}
+.recap{background:rgba(255,255,255,.45);border:1px solid var(--parch-3);border-radius:6px;padding:8px 12px;margin:0 0 12px}
+.recap h3{margin:0 0 6px}.recap dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;margin:0}.recap dt{font-weight:700}.recap dd{margin:0}.recap ul{margin:0;padding-left:18px}
+@media (max-width:640px){.recap dl{grid-template-columns:1fr}}
 .dmrep label{display:block;margin-top:10px}.dmrep textarea{width:100%;box-sizing:border-box}
 .repprev{background:#fff;border:1px solid var(--parch-3);border-radius:6px;padding:8px 10px;max-height:220px;overflow:auto}
 .atktgt{background:#fff;border:1px solid var(--parch-3);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
@@ -2205,7 +2208,11 @@ function render(){
           '<p class="tip">Un participant sans personnage du registre ne reçoit ni points ni pénalité.</p>'+
           '<div class="actions"><button class="btn" type="submit">Suivant : le bilan</button><button class="btn ghost" type="button" data-a="step-back">Retour</button></div>';
       } else {
-        const g0=questGain(cq,C.rapport.resultat);
+        const g0=questGain(cq,C.rapport.resultat),wn=C.writer&&(C.parts.find(x=>x.uid===C.writer)||{}).nom,dr=cq.rapportBrouillon&&cq.rapportBrouillon.resume;
+        h+='<div class="recap"><h3>Résumé</h3><dl><dt>Résultat</dt><dd>'+esc(RESULTS[C.rapport.resultat]||"")+(C.rapport.date?' · '+esc(C.rapport.date):'')+'</dd>'+
+          '<dt>Conséquences pour le monde</dt><dd>'+((C.csq||[]).length||C.csqx?'<ul>'+(C.csq||[]).map(t=>'<li>'+esc(t)+'</li>').join("")+(C.csqx?'<li><em>'+esc(C.csqx)+'</em></li>':'')+'</ul>':'<span class="desc">Aucune</span>')+'</dd>'+
+          '<dt>Rapport de mission</dt><dd>'+(dr?'Reçu de '+esc(cq.rapportBrouillon.auteur||"un joueur")+', publié dans les Chroniques':wn?'Demandé à '+esc(wn):'<span class="desc">Aucun auteur désigné</span>')+'</dd>'+
+          (C.notesDM&&C.notesDM!==ptNotesDM(cq)?'<dt>Notes DM</dt><dd>Ajoutées au rapport privé</dd>':'')+'</dl></div>';
         h+='<p>Renommée à '+esc(bo?bo.nom:"la région")+'. Quête '+esc((RANKS[cq.rang]||RANKS.inconnu).label)+' (×'+questMult(cq)+'), '+esc((RESULTS[C.rapport.resultat]||"").toLowerCase())+' : <strong>+'+g0.n+' notoriété</strong>, <strong>'+(g0.r>=0?'+':'')+g0.r+' réputation</strong> proposés. Ajuste au besoin ; les méfaits et bienfaits s\'ajoutent.</p>'+
           '<div class="tablebox light"><table class="mef bilan"><thead><tr><th scope="col">Aventurier</th><th scope="col">Fin de quête<br><span class="muted">notoriété · réputation</span></th><th scope="col">Méfaits</th><th scope="col">Bienfaits</th><th scope="col">Total</th><th scope="col">Résultat</th></tr></thead><tbody>'+
           C.parts.map((x,i)=>{const a=aventuriers.find(y=>y.id===x.aventurier),t=partTotals(cq,C.rapport.resultat,x);
@@ -2290,7 +2297,7 @@ function ptReport(q,noNotes){const d=(ui.pt&&ui.pt.id===q.id)?ui.pt:parties.find
   return t;}
 function ptNotesDM(q){const d=(ui.pt&&ui.pt.id===q.id)?ui.pt:parties.find(p=>p.id===q.id);return (d&&d.notesDM)||"";}
 function ptReportBlock(q,open,edit){if(edit){const C=ui.complete,t=ptReport(q,true),nv=C&&C.notesDM!=null?C.notesDM:ptNotesDM(q);
-    return '<details class="dmrep" open><summary>Rapport du DM (privé)</summary>'+(t?'<div class="wikibody">'+md(t)+'</div>':'<p class="desc">Aucune donnée du Mode Partie pour cette quête.</p>')+
+    return '<details class="dmrep"'+(nv&&nv!==ptNotesDM(q)?' open':'')+'><summary>Rapport du DM (privé)'+(nv?' <span class="desc">· notes ajoutées</span>':'')+'</summary>'+(t?'<div class="wikibody">'+md(t)+'</div>':'<p class="desc">Aucune donnée du Mode Partie pour cette quête.</p>')+
       '<label for="c-dmnotes">Notes DM additionnelles<textarea id="c-dmnotes" rows="4" maxlength="10000" placeholder="Ce qui ne figure pas au journal : décisions du groupe, PNJ rencontrés, promesses, indices trouvés…">'+esc(nv)+'</textarea></label></details>';}
   const t=ptReport(q);return t?'<details class="dmrep"'+(open?' open':'')+'><summary>Rapport du DM (privé)</summary><div class="wikibody">'+md(t)+'</div></details>':'';}
 function ptQuest(){return ui.office&&ui.office.indexOf("partie-")===0?questById(ui.office.slice(7)):null;}
