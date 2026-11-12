@@ -275,6 +275,9 @@ service cloud.firestore {
     match /butins/{id} {
       allow read, write: if isAdmin();
     }
+    match /relations/{id} {
+      allow read, write: if isAdmin();
+    }
     match /monstres/{id} {
       allow read, write: if isAdmin();
     }
@@ -340,7 +343,7 @@ service cloud.firestore {
     match /journal/{id} {
       allow read: if isAdmin();
       allow create, update: if isAdmin()
-        && request.resource.data.keys().hasOnly(['aventurier', 'nom', 'bureau', 'points', 'raison', 'quete', 'date'])
+        && request.resource.data.keys().hasOnly(['aventurier', 'nom', 'bureau', 'points', 'notoriete', 'raison', 'quete', 'date'])
         && request.resource.data.points is int
         && str(request.resource.data.aventurier, 1, 80);
       allow delete: if isAdmin();

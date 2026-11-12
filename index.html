@@ -813,6 +813,20 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 /* renommée */
 .rn{display:inline-block;font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.06em;border-radius:999px;padding:4px 10px;white-space:nowrap;border:1px solid transparent}
 .rn0{background:#e2d6b6;color:#4d4030}
+.rr1{background:#c99327;color:#1c1404}.rr2{background:#d8ab4c;color:#2a1f06}.rr3{background:#e3c172;color:#33270a}.rr4{background:#efe2bb;color:#4a3a14}.rr5{background:#e2d6b6;color:#4d4030}
+.rr6{background:#ead0c3;color:#5e2a1c}.rr7{background:#d9927d;color:#3f130a}.rr8{background:#9b2c22;color:#fff3ee}.rr9{background:#4a0f0b;color:#ffd9cf}
+.rn.rnn5,.rn.rnn6{box-shadow:0 0 0 1px rgba(0,0,0,.25) inset}.rn.rnn7{box-shadow:0 0 0 2px #c99327 inset}
+.renaxes{display:block;font-size:12px;color:var(--ink-soft);margin-top:2px}
+.axes{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+table.matrix{border-collapse:separate;border-spacing:3px;width:100%;font-size:12px}
+table.matrix th{font-family:var(--display);font-size:11px;letter-spacing:.06em;text-align:center;padding:4px}
+table.matrix td.mx{padding:6px 4px;border-radius:4px;text-align:center;vertical-align:middle;min-width:80px}
+.mxc{display:block;font-weight:700;opacity:.7;font-size:11px}
+.mxt{display:block;line-height:1.2}
+table.matrix.edit input{width:100%;box-sizing:border-box;font:inherit;font-size:12px;padding:3px;border-radius:3px;border:1px solid rgba(0,0,0,.2);background:rgba(255,255,255,.85);color:#222}
+.rellist{list-style:none;padding:0;margin:4px 0;display:flex;flex-direction:column;gap:4px}
+.wanted.w4{filter:saturate(1.2)}
+@media (max-width:760px){.axes{grid-template-columns:1fr}}
 .rnp1{background:#efe2bb;color:#4a3a14}.rnp2{background:#ead39a;color:#3f300d}.rnp3{background:#e3c172;color:#33270a}
 .rnp4{background:#d8ab4c;color:#2a1f06}.rnp5{background:#c99327;color:#1c1404}.rnp6{background:#f6ecd0;color:#7a4f00;border-color:#c99327;box-shadow:0 0 0 2px #c99327 inset}
 .rnm1{background:#ead0c3;color:#5e2a1c}.rnm2{background:#d9927d;color:#3f130a}.rnm3{background:#9b2c22;color:#fff3ee}
@@ -925,7 +939,7 @@ const DEFAULT_SCALE = [
 ];
 
 /* ---------- state ---------- */
-let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], parties = [], modules = [], butins = [], crieur = null, pnjs = [], monstres = [], rencontres = [], scenarios = {};
+let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, notoMap = {}, relations = [], priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], parties = [], modules = [], butins = [], crieur = null, pnjs = [], monstres = [], rencontres = [], scenarios = {};
 const loaded = {b:false, q:false, i:false, a:false, w:false, c:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
@@ -1017,15 +1031,15 @@ function listen(){
 }
 // Données réservées au DM (points, journal, seuils) : lues seulement par un compte admin.
 function listenPrivate(on){
-  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;dossiers={};factions=[];parties=[];modules=[];butins=[];crieur=null;pnjs=[];monstres=[];rencontres=[];scenarios={};
+  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};notoMap={};relations=[];journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;dossiers={};factions=[];parties=[];modules=[];butins=[];crieur=null;pnjs=[];monstres=[];rencontres=[];scenarios={};
   if(!on)return;
   const err=e=>console.error(e);
-  privUnsubs.push(onSnapshot(collection(db,"points"),snap=>{const m={};snap.docs.forEach(d=>{m[d.id]=(d.data().parRegion)||{};});pointsMap=m;render();},err));
+  privUnsubs.push(onSnapshot(collection(db,"points"),snap=>{const m={};const nm={};snap.docs.forEach(d=>{m[d.id]=(d.data().parRegion)||{};nm[d.id]=(d.data().notoriete)||{};});pointsMap=m;notoMap=nm;render();},err));
   privUnsubs.push(onSnapshot(query(collection(db,"journal"),orderBy("date","desc"),limit(60)),snap=>{journal=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","renommee"),snap=>{priv=snap.exists()?snap.data():null;render();},err));
   const arr=(c,set)=>privUnsubs.push(onSnapshot(collection(db,c),snap=>{set(snap.docs.map(d=>Object.assign({id:d.id},d.data())));render();},err));
   arr("dossiers",l=>{dossiers={};l.forEach(x=>{dossiers[x.id]=x;});});arr("scenarios",l=>{scenarios={};l.forEach(x=>{scenarios[x.id]=x;});});
-  arr("pnj",l=>{pnjs=l;});arr("factions",l=>{factions=l;});arr("parties",l=>{parties=l;});arr("modules",l=>{modules=l;});arr("butins",l=>{butins=l;});arr("monstres",l=>{monstres=l;});arr("rencontres",l=>{rencontres=l;});
+  arr("pnj",l=>{pnjs=l;});arr("factions",l=>{factions=l;});arr("parties",l=>{parties=l;});arr("modules",l=>{modules=l;});arr("butins",l=>{butins=l;});arr("relations",l=>{relations=l;});arr("monstres",l=>{monstres=l;});arr("rencontres",l=>{rencontres=l;});
   privUnsubs.push(onSnapshot(collection(db,"notesdm"),snap=>{notesDm=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(collection(db,"evolutions"),snap=>{evols=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","monde"),snap=>{monde=snap.exists()?snap.data():null;render();},err));
@@ -1235,15 +1249,15 @@ function form(){
     '<div class="actions wide"><button class="btn" type="submit">Enregistrer la quête</button><button class="btn ghost" type="button" data-a="cancel">Annuler</button></div></form>';
 }
 /* ---------- avis de recherche (renommée négative) ---------- */
-const WANTED={"-1":{prime:"50 po",etat:"Recherché vivant",crime:"Soupçonné de méfaits envers la cité"},"-2":{prime:"250 po",etat:"Recherché vivant",crime:"Pour violences et troubles répétés"},"-3":{prime:"1 000 po",etat:"Mort ou vif",crime:"Pour crimes graves contre la cité"}};
-function wantedPoster(a,bid){const n=Math.max(-3,renown(a,bid)),W=WANTED[String(n)],b=office(bid),k=-n;
-  const ident=[a.espece,a.classe].filter(Boolean).join(" · ");
-  const pic=n===-1?'<div class="wpic none" aria-hidden="true"><span>?</span></div>':(a.image?'<div class="wpic"><img class="'+(n===-2?'sketch':'clear')+'" src="'+esc(a.image)+'" alt="'+(n===-2?'Croquis de ':'Portrait de ')+esc(a.nom)+'"></div>':'<div class="wpic none" aria-hidden="true"><span>?</span></div>');
-  return '<a class="wanted w'+k+'" href="#perso-'+esc(a.id)+'"><span class="wtop">Recherché</span><span class="wetat">'+esc(W.etat)+'</span>'+pic+
-    '<span class="wnom">'+esc(a.nom)+'</span>'+(ident?'<span class="wid">'+esc(ident)+'</span>':'')+
-    (n===-1&&a.description?'<span class="wdesc">« '+esc(String(a.description).slice(0,110))+(String(a.description).length>110?'…':'')+' »</span>':'')+
+const WANTED={"6":{prime:"50 po",etat:"Recherché vivant",crime:"Soupçonné de méfaits envers la cité"},"7":{prime:"250 po",etat:"Recherché vivant",crime:"Pour violences et troubles répétés"},"8":{prime:"1 000 po",etat:"Mort ou vif",crime:"Pour crimes graves contre la cité"},"9":{prime:"5 000 po",etat:"Mort ou vif",crime:"Ennemi juré de la cité"}};
+function wantedPoster(a,bid){const c=renown(a,bid),r=Math.min(9,cR(c)),nn=cN(c),W=WANTED[String(r)],b=office(bid),k=Math.min(3,r-5);
+  const ident=[a.espece,a.classe].filter(Boolean).join(" · "),face=nn<=2?0:nn<=4?1:2;
+  const pic=face===0||!a.image?'<div class="wpic none" aria-hidden="true"><span>?</span></div>':'<div class="wpic"><img class="'+(face===1?'sketch':'clear')+'" src="'+esc(a.image)+'" alt="'+(face===1?'Croquis de ':'Portrait de ')+esc(a.nom)+'"></div>';
+  return '<a class="wanted w'+k+(r===9?' w4':'')+'" href="#perso-'+esc(a.id)+'"><span class="wtop">'+(r===9?'Ennemi juré':'Recherché')+'</span><span class="wetat">'+esc(W.etat)+'</span>'+pic+
+    '<span class="wnom">'+esc(face===0&&nn===1?"Individu inconnu":a.nom)+'</span>'+(ident?'<span class="wid">'+esc(ident)+'</span>':'')+
+    (face===0&&a.description?'<span class="wdesc">« '+esc(String(a.description).slice(0,110))+(String(a.description).length>110?'…':'')+' »</span>':'')+
     '<span class="wcrime">'+esc(W.crime)+(b?' de '+esc(b.nom):'')+'</span><span class="wprime">Prime : '+esc(W.prime)+'</span><span class="wfoot">Par ordre du Guet'+(b?' de '+esc(b.nom):'')+'</span></a>';}
-function wantedSection(bid){const l=ranked().filter(a=>renown(a,bid)<0).sort((x,y)=>renown(x,bid)-renown(y,bid)||String(x.nom).localeCompare(String(y.nom),"fr"));
+function wantedSection(bid){const l=ranked().filter(a=>cR(renown(a,bid))>=6).sort((x,y)=>cR(renown(y,bid))-cR(renown(x,bid))||cN(renown(y,bid))-cN(renown(x,bid))||String(x.nom).localeCompare(String(y.nom),"fr"));
   if(!l.length)return "";return '<section class="wantedwrap" aria-label="Avis de recherche"><h2>Avis de recherche</h2><div class="wantedgrid">'+l.map(a=>wantedPoster(a,bid)).join("")+'</div></section>';}
 function boardView(){
   const mine=quetes.filter(q=>q.bureau===ui.office);
@@ -1263,51 +1277,89 @@ function boardView(){
   return h;
 }
 
-/* ---------- renommée ---------- */
-function scaleList(){const l=scaleDoc&&Array.isArray(scaleDoc.niveaux)&&scaleDoc.niveaux.length?scaleDoc.niveaux:DEFAULT_SCALE;return l.slice().sort((a,b)=>a.n-b.n);}
-function lvl(n){return scaleList().find(s=>s.n===n)||{n,titre:String(n),effet:""};}
-function rnClass(n){return "rn rn"+(n<0?"m"+(-n):n>0?"p"+n:"0");}
-function chip(n){return '<span class="'+rnClass(n)+'">'+esc(lvl(n).titre)+'</span>';}
-function seuilOf(s){const v=priv&&priv.seuils&&priv.seuils[String(s.n)];return typeof v==="number"?v:((DEFAULT_SCALE.find(d=>d.n===s.n)||{seuil:0}).seuil);}
+/* ---------- renommée : matrice notoriété × réputation ---------- */
+const NOTO_DEF=[
+  {n:1,titre:"Inconnu",seuil:0,effet:"Personne ne sait qui vous êtes."},
+  {n:2,titre:"Remarqué",seuil:5,effet:"On a entendu parler de vous ; quelques regards curieux."},
+  {n:3,titre:"Connu",seuil:15,effet:"Votre nom circule dans les tavernes."},
+  {n:4,titre:"Reconnu",seuil:30,effet:"On vous reconnaît dans la rue."},
+  {n:5,titre:"Renommé",seuil:50,effet:"Votre nom est sur toutes les lèvres de la région."},
+  {n:6,titre:"Célèbre",seuil:80,effet:"Les bardes chantent vos exploits ; les puissants vous remarquent."},
+  {n:7,titre:"Légendaire",seuil:120,effet:"On racontera votre histoire pendant des générations."}];
+const REPU_DEF=[
+  {r:1,titre:"Adulé",seuil:50,effet:"On se bat pour vous servir ; portes et bourses s'ouvrent."},
+  {r:2,titre:"Honoré",seuil:30,effet:"Faveurs, rabais, audiences auprès des notables."},
+  {r:3,titre:"Apprécié",seuil:15,effet:"Petits services, sourires, informations données volontiers."},
+  {r:4,titre:"Amical",seuil:5,effet:"Accueil chaleureux, prix honnêtes."},
+  {r:5,titre:"Neutre",seuil:0,effet:"Indifférence, prix normaux, méfiance ordinaire envers les étrangers."},
+  {r:6,titre:"Suspect",seuil:-5,effet:"Méfiance, gardes qui vous suivent, prix un peu majorés."},
+  {r:7,titre:"Craint",seuil:-15,effet:"Les gens s'écartent, les portes se ferment, les prix doublent."},
+  {r:8,titre:"Recherché",seuil:-30,effet:"Prime sur votre tête ; les gardes vous arrêtent à vue."},
+  {r:9,titre:"Ennemi juré",seuil:-50,effet:"Mort ou vif : chasseurs de primes et milices vous traquent."}];
+const DEFAULT_TITRES={"11": "Bienfaiteur anonyme", "12": "Visage aimé", "13": "Chouchou du quartier", "14": "Ami du peuple", "15": "Héros local", "16": "Champion de la région", "17": "Légende vivante", "21": "Ange gardien inconnu", "22": "Âme bienveillante", "23": "Allié précieux", "24": "Notable honoré", "25": "Protecteur de la région", "26": "Héros célébré", "27": "Légende", "31": "Inconnu sympathique", "32": "Nouveau venu apprécié", "33": "Habitué estimé", "34": "Figure respectée", "35": "Aventurier réputé", "36": "Héros admiré", "37": "Figure illustre", "41": "Étranger aimable", "42": "Visage familier", "43": "Voisin de confiance", "44": "Compagnon estimé", "45": "Aventurier connu de tous", "46": "Personnalité célèbre", "47": "Grand nom de la côte", "51": "Inconnu", "52": "Simple voyageur", "53": "Visage connu", "54": "Figure du coin", "55": "Aventurier renommé", "56": "Célébrité", "57": "Figure légendaire", "61": "Étranger louche", "62": "Individu à surveiller", "63": "Personnage douteux", "64": "Fauteur de troubles notoire", "65": "Réputation sulfureuse", "66": "Célébrité controversée", "67": "Légende trouble", "71": "Ombre menaçante", "72": "Brute redoutée", "73": "Gibier de potence", "74": "Terreur du quartier", "75": "Terreur de la région", "76": "Nom qu'on murmure", "77": "Fléau légendaire", "81": "Hors-la-loi sans visage", "82": "Fugitif", "83": "Bandit recherché", "84": "Hors-la-loi notoire", "85": "Ennemi de la cité", "86": "Ennemi public", "87": "Hors-la-loi légendaire", "91": "Menace invisible", "92": "Proscrit", "93": "Paria condamné", "94": "Ennemi déclaré", "95": "Fléau de la région", "96": "Ennemi public n° 1", "97": "Fléau de la Sword Coast"};
+function notoList(){const o=(scaleDoc&&scaleDoc.noto)||[];return NOTO_DEF.map(d=>Object.assign({},d,o.find(x=>x.n===d.n)||{}));}
+function repuList(){const o=(scaleDoc&&scaleDoc.repu)||[];return REPU_DEF.map(d=>Object.assign({},d,o.find(x=>x.r===d.r)||{}));}
+function titresMap(){return Object.assign({},DEFAULT_TITRES,(scaleDoc&&scaleDoc.titres)||{});}
+function seuilN(n){const v=priv&&priv.seuilsN&&priv.seuilsN[String(n)];return typeof v==="number"?v:NOTO_DEF[n-1].seuil;}
+function seuilR(r){const v=priv&&priv.seuilsR&&priv.seuilsR[String(r)];return typeof v==="number"?v:REPU_DEF[r-1].seuil;}
+function notoOf(p){let n=1;for(let k=2;k<=7;k++)if(p>=seuilN(k))n=k;return n;}
+function repuOf(p){for(let r=1;r<=4;r++)if(p>=seuilR(r))return r;for(let r=9;r>=6;r--)if(p<=seuilR(r))return r;return 5;}
+function codeOf(np,rp){return repuOf(rp)*10+notoOf(np);}
+function cN(c){return c%10;}
+function cR(c){return Math.floor(c/10);}
+function legacyCode(v){if(typeof v!=="number")return 51;if(v>=11)return v;return {"-3":84,"-2":73,"-1":62,"0":51,"1":42,"2":43,"3":34,"4":25,"5":16,"6":17}[String(v)]||51;}
+function nTitre(n){return (notoList()[n-1]||{}).titre||"";}
+function rTitre(r){return (repuList()[r-1]||{}).titre||"";}
+function renLabel(c){c=legacyCode(c);const t=titresMap()[String(c)];if(t)return t;return nTitre(cN(c))+", "+rTitre(cR(c)).toLowerCase();}
+function renHint(c){c=legacyCode(c);return "Notoriété : "+nTitre(cN(c))+" · Réputation : "+rTitre(cR(c));}
+function chip(c){c=legacyCode(c);return '<span class="rn rr'+cR(c)+' rnn'+cN(c)+'" title="'+esc(renHint(c))+'">'+esc(renLabel(c))+'</span>';}
+function repChip(r){return '<span class="rn rr'+r+'">'+esc(rTitre(r))+'</span>';}
 function rankPts(){return Object.assign({},DEFAULT_RANK_PTS,(priv&&priv.pointsParRang)||{});}
 function mefaitPts(){return Object.assign({},DEFAULT_MEFAITS,(priv&&priv.mefaits)||{});}
 function questPts(q){const o=priv&&priv.quetes&&priv.quetes[q.id];return typeof o==="number"?o:(rankPts()[q.rang]||0);}
 function pts(a,bid){const m=pointsMap[a.id];return m&&typeof m[bid]==="number"?m[bid]:0;}
-function levelOf(p){let n=0;scaleList().forEach(s=>{const t=seuilOf(s);if(s.n>0&&p>=t&&s.n>n)n=s.n;if(s.n<0&&p<=t&&s.n<n)n=s.n;});return n;}
-// Le rang public est enregistré sur la fiche (niveaux) ; seul le DM voit les points.
-function renown(a,bid){const v=a.niveaux&&a.niveaux[bid];return typeof v==="number"?v:0;}
-function nextInfo(p){const lv=levelOf(p);const nx=scaleList().filter(s=>s.n>Math.max(lv,0)).sort((a,b)=>a.n-b.n)[0];return nx?{need:seuilOf(nx)-p,titre:nx.titre}:null;}
+function ptsN(a,bid){const m=notoMap[a.id];return m&&typeof m[bid]==="number"?m[bid]:0;}
+// Le rang public (code de la matrice) est enregistré sur la fiche (niveaux) ; seul le DM voit les points.
+function renown(a,bid){return legacyCode(a.niveaux&&a.niveaux[bid]);}
 function ptsLabel(p){return (p>0?"+":"")+p+" pt"+(Math.abs(p)>1?"s":"");}
-function addPoints(bt,a,bid,delta){
-  const before=pts(a,bid),after=before+delta,oldLv=renown(a,bid),newLv=levelOf(after);
-  bt.set(doc(db,"points",a.id),{parRegion:{[bid]:after}},{merge:true});
-  pointsMap[a.id]=Object.assign({},pointsMap[a.id]||{},{[bid]:after});
-  if(newLv!==oldLv){
-    bt.update(doc(db,"aventuriers",a.id),new FieldPath("niveaux",bid),newLv,"majLe",serverTimestamp());
-    bt.set(doc(collection(db,"rangs")),{aventurier:a.id,nom:a.nom,bureau:bid,ancien:oldLv,nouveau:newLv,date:serverTimestamp()});
+function mefNoto(pen){return Math.ceil((+pen||0)/2);}
+function addPoints(bt,a,bid,dR,dN){
+  const r0=pts(a,bid),n0=ptsN(a,bid),r1=r0+(dR||0),n1=Math.max(0,n0+(dN||0)),oldC=renown(a,bid),newC=codeOf(n1,r1);
+  bt.set(doc(db,"points",a.id),{parRegion:{[bid]:r1},notoriete:{[bid]:n1}},{merge:true});
+  pointsMap[a.id]=Object.assign({},pointsMap[a.id]||{},{[bid]:r1});notoMap[a.id]=Object.assign({},notoMap[a.id]||{},{[bid]:n1});
+  if(newC!==oldC||!(a.niveaux&&a.niveaux[bid]>=11)){
+    bt.update(doc(db,"aventuriers",a.id),new FieldPath("niveaux",bid),newC,"majLe",serverTimestamp());
+    if(newC!==oldC)bt.set(doc(collection(db,"rangs")),{aventurier:a.id,nom:a.nom,bureau:bid,ancien:oldC,nouveau:newC,date:serverTimestamp()});
   }
 }
+function matrixTable(dm){const T=titresMap(),N=notoList(),Rl=repuList();
+  return '<div class="tablebox"><table class="matrix"><thead><tr><th scope="col"><span class="sr">Réputation</span></th>'+N.map(n=>'<th scope="col">'+esc(n.titre)+'</th>').join("")+'</tr></thead><tbody>'+
+    Rl.map(r=>'<tr><th scope="row">'+repChip(r.r)+'</th>'+N.map(n=>{const c=r.r*10+n.n,t=T[String(c)];return '<td class="mx rr'+r.r+'">'+(dm?'<span class="mxc">'+c+'</span>':'')+(t?'<span class="mxt">'+esc(t)+'</span>':'')+'</td>';}).join("")+'</tr>').join("")+'</tbody></table></div>';}
+function renAxes(c){c=legacyCode(c);return '<span class="renaxes">'+esc(nTitre(cN(c)))+' · '+esc(rTitre(cR(c)))+'</span>';}
 function reputationSection(bid,nom){
-  const list=ranked().sort((x,y)=>(renown(y,bid)-renown(x,bid))||(ui.dm?pts(y,bid)-pts(x,bid):0)||String(x.nom).localeCompare(String(y.nom),"fr"));
+  const list=ranked().sort((x,y)=>(cN(renown(y,bid))-cN(renown(x,bid)))||(cR(renown(x,bid))-cR(renown(y,bid)))||(ui.dm?pts(y,bid)-pts(x,bid):0)||String(x.nom).localeCompare(String(y.nom),"fr"));
   let h='<section class="rep" aria-label="Réputation"><h2>Réputation à '+esc(nom)+'</h2>';
   if(!list.length)return h+'<p class="hint">Aucun aventurier n\'est encore inscrit au registre. <a href="#renommee">Voir le registre de renommée</a></p></section>';
-  h+='<ul class="replist">'+list.map(a=>{const n=renown(a,bid),p=pts(a,bid);return '<li><span class="who">'+esc(a.nom)+(a.joueur?' <em>('+esc(a.joueur)+')</em>':'')+(ui.dm?'<span class="pts">'+ptsLabel(p)+'</span>':'')+'</span>'+chip(n)+'</li>';}).join("")+'</ul>';
+  h+='<ul class="replist">'+list.map(a=>{const n=renown(a,bid),p=pts(a,bid);return '<li><span class="who">'+esc(a.nom)+(a.joueur?' <em>('+esc(a.joueur)+')</em>':'')+(ui.dm?'<span class="pts">'+n+' · R '+ptsLabel(p)+' · N '+ptsLabel(ptsN(a,bid))+'</span>':'')+'</span>'+chip(n)+'</li>';}).join("")+'</ul>';
   return h+'<p class="hint"><a href="#renommee">Voir le registre de renommée complet</a></p></section>';
 }
 function renownView(){
-  const sc=scaleList();
-  let h='<section class="reg"><h2>L\'échelle de renommée</h2><p class="hint">La renommée se compte par région : un héros à Daggerford peut être un parfait inconnu à Luskan.</p>';
+  const N=notoList(),Rl=repuList(),T=titresMap();
+  let h='<section class="reg"><h2>La renommée</h2><p class="hint">La renommée se compte par région, sur deux axes : la <strong>notoriété</strong> (à quel point on vous connaît) et la <strong>réputation</strong> (ce qu\'on pense de vous). Un méfait vous fait mieux connaître… et moins aimer. Chaque combinaison donne un titre.</p>';
   if(ui.dm&&ui.scaleEdit){
-    h+='<form id="scaleform" class="scaleform">'+sc.map(s=>'<div class="srow"><span class="'+rnClass(s.n)+'">'+(s.n>0?'+':'')+s.n+'</span><label for="sc-t'+s.n+'">Titre<input id="sc-t'+s.n+'" maxlength="40" value="'+esc(s.titre)+'"></label><label for="sc-s'+s.n+'">Points (total)<input id="sc-s'+s.n+'" type="number" value="'+seuilOf(s)+'"'+(s.n===0?' disabled':'')+'></label><label for="sc-e'+s.n+'">Comment les gens réagissent<input id="sc-e'+s.n+'" maxlength="300" value="'+esc(s.effet)+'"></label></div>').join("")+
-      '<fieldset class="mefset"><legend>Méfaits (points retirés, DM seulement)</legend>'+Object.keys(DEFAULT_MEFAITS).map(k=>'<label for="mf-'+k+'">'+MEFAIT_LABELS[k]+'<input id="mf-'+k+'" type="number" min="0" max="999" value="'+mefaitPts()[k]+'"></label>').join("")+'</fieldset>'+
-      '<div class="actions"><button class="btn gold" type="submit">Enregistrer l\'échelle</button><button class="btn board" type="button" data-a="scale-cancel">Annuler</button></div></form>';
+    h+='<form id="scaleform" class="scaleform"><h3 class="subh">Notoriété</h3>'+N.map(s=>'<div class="srow"><span class="rn rr5 rnn'+s.n+'">'+s.n+'</span><label for="sn-t'+s.n+'">Titre<input id="sn-t'+s.n+'" maxlength="40" value="'+esc(s.titre)+'"></label><label for="sn-s'+s.n+'">Points (dès)<input id="sn-s'+s.n+'" type="number" value="'+seuilN(s.n)+'"'+(s.n===1?' disabled':'')+'></label><label for="sn-e'+s.n+'">Effet<input id="sn-e'+s.n+'" maxlength="300" value="'+esc(s.effet)+'"></label></div>').join("")+
+      '<h3 class="subh">Réputation</h3>'+Rl.map(s=>'<div class="srow"><span class="rn rr'+s.r+'">'+s.r+'</span><label for="sr-t'+s.r+'">Titre<input id="sr-t'+s.r+'" maxlength="40" value="'+esc(s.titre)+'"></label><label for="sr-s'+s.r+'">Points ('+(s.r<5?'dès':s.r>5?'jusqu\'à':'—')+')<input id="sr-s'+s.r+'" type="number" value="'+seuilR(s.r)+'"'+(s.r===5?' disabled':'')+'></label><label for="sr-e'+s.r+'">Effet<input id="sr-e'+s.r+'" maxlength="300" value="'+esc(s.effet)+'"></label></div>').join("")+
+      '<h3 class="subh">Titres de région (facultatifs)</h3><div class="tablebox"><table class="matrix edit"><thead><tr><th scope="col"><span class="sr">Réputation</span></th>'+N.map(n=>'<th scope="col">'+esc(n.titre)+'</th>').join("")+'</tr></thead><tbody>'+
+      Rl.map(r=>'<tr><th scope="row">'+esc(r.titre)+'</th>'+N.map(n=>{const c=r.r*10+n.n;return '<td class="mx rr'+r.r+'"><label class="sr" for="tt-'+c+'">Titre '+c+'</label><span class="mxc">'+c+'</span><input id="tt-'+c+'" maxlength="40" value="'+esc(T[String(c)]||"")+'"></td>';}).join("")+'</tr>').join("")+'</tbody></table></div>'+
+      '<fieldset class="mefset"><legend>Méfaits (points de réputation retirés ; la notoriété monte de la moitié)</legend>'+Object.keys(DEFAULT_MEFAITS).map(k=>'<label for="mf-'+k+'">'+MEFAIT_LABELS[k]+'<input id="mf-'+k+'" type="number" min="0" max="999" value="'+mefaitPts()[k]+'"></label>').join("")+'</fieldset>'+
+      '<div class="actions"><button class="btn gold" type="submit">Enregistrer</button><button class="btn board" type="button" data-a="scale-cancel">Annuler</button></div></form>';
   } else {
-    h+='<div class="tablebox"><table class="scale"><thead><tr><th scope="col">Niveau</th><th scope="col">Titre</th>'+(ui.dm?'<th scope="col">Points</th>':'')+'<th scope="col">Comment les gens réagissent</th></tr></thead><tbody>'+
-      sc.slice().reverse().map(s=>'<tr><td class="num">'+(s.n>0?'+':'')+s.n+'</td><td>'+chip(s.n)+'</td>'+(ui.dm?'<td class="num">'+(s.n===0?'0':(s.n>0?seuilOf(s)+' et +':seuilOf(s)+' et −'))+'</td>':'')+'<td>'+esc(s.effet)+'</td></tr>').join("")+'</tbody></table></div>';
+    h+='<div class="axes"><div><h3 class="subh">Notoriété</h3><div class="tablebox"><table class="scale"><tbody>'+N.map(s=>'<tr><td><span class="rn rr5 rnn'+s.n+'">'+esc(s.titre)+'</span></td>'+(ui.dm?'<td class="num">'+seuilN(s.n)+'+</td>':'')+'<td>'+esc(s.effet)+'</td></tr>').join("")+'</tbody></table></div></div>'+
+      '<div><h3 class="subh">Réputation</h3><div class="tablebox"><table class="scale"><tbody>'+Rl.map(s=>'<tr><td>'+repChip(s.r)+'</td>'+(ui.dm?'<td class="num">'+(s.r===5?'0':s.r<5?seuilR(s.r)+' et +':seuilR(s.r)+' et −')+'</td>':'')+'<td>'+esc(s.effet)+'</td></tr>').join("")+'</tbody></table></div></div></div>';
+    h+='<h3 class="subh">Les titres</h3><p class="hint">Dans chaque région, la combinaison des deux axes vous vaut un titre.</p>'+matrixTable(ui.dm);
     const rp=rankPts();
-    if(ui.dm)h+='<p class="hint">Visible par le DM seulement. Méfaits : '+Object.keys(DEFAULT_MEFAITS).map(k=>'<strong>'+MEFAIT_LABELS[k]+'</strong> −'+mefaitPts()[k]).join(" · ")+'.</p>';
-    if(ui.dm)h+='<p class="hint">Visible par le DM seulement. Points gagnés par participant pour une quête terminée, dans la région du comptoir : '+["cuivre","fer","argent","or","mithral"].map(r=>'<strong>'+esc(RANKS[r].label)+'</strong> '+rp[r]).join(" · ")+'. Le DM peut ajuster selon le déroulement.</p>';
-    if(ui.dm)h+='<div class="actions"><button class="btn board" data-a="scale-edit">Modifier l\'échelle</button></div>';
+    if(ui.dm)h+='<p class="hint">Visible par le DM seulement. Une quête réussie donne par défaut le même nombre de points sur les deux axes : '+["cuivre","fer","argent","or","mithral"].map(r=>'<strong>'+esc(RANKS[r].label)+'</strong> '+rp[r]).join(" · ")+'. Méfaits (réputation) : '+Object.keys(DEFAULT_MEFAITS).map(k=>'<strong>'+MEFAIT_LABELS[k]+'</strong> −'+mefaitPts()[k]).join(" · ")+' ; la notoriété monte de la moitié.</p>';
+    if(ui.dm)h+='<div class="actions"><button class="btn board" data-a="scale-edit">Modifier les axes et les titres</button></div>';
   }
   h+='</section><section class="reg"><h2>Les aventuriers</h2>';
   if(ui.dm){
@@ -1319,21 +1371,20 @@ function renownView(){
   if(ui.dm){
     h+=ui.adjust?'<form class="inline dark" id="adjform"><label for="j-adv">Aventurier<select id="j-adv">'+aventuriers.map(a=>'<option value="'+esc(a.id)+'">'+esc(a.nom)+'</option>').join("")+'</select></label>'+
       '<label for="j-b">Région<select id="j-b">'+bureaux.map(b=>'<option value="'+esc(b.id)+'">'+esc(b.nom)+'</option>').join("")+'</select></label>'+
-      '<label for="j-pts">Points (+ ou −)<input id="j-pts" type="number" required step="1"></label><label for="j-why">Raison<input id="j-why" maxlength="200" placeholder="ex. A sauvé le bourgmestre"></label>'+
+      '<label for="j-pts">Réputation (+ ou −)<input id="j-pts" type="number" step="1" value="0"></label><label for="j-ptsn">Notoriété (+ ou −)<input id="j-ptsn" type="number" step="1" value="0"></label><label for="j-why">Raison<input id="j-why" maxlength="200" placeholder="ex. A sauvé le bourgmestre"></label>'+
       '<button class="btn gold" type="submit">Appliquer</button><button class="btn board" type="button" data-a="adj-cancel">Annuler</button></form>'
       :'<div class="actions"><button class="btn board" data-a="adj-open">Ajuster des points à la main</button></div>';
   }
   h+='<div class="tablebox"><table class="roster"><thead><tr><th scope="col">Aventurier</th>'+bureaux.map(b=>'<th scope="col">'+esc(b.nom)+'</th>').join("")+(ui.dm?'<th scope="col"><span class="sr">Actions</span></th>':'')+'</tr></thead><tbody>'+
     ranked().map(a=>'<tr><th scope="row"><a class="plink row" href="#perso-'+esc(a.id)+'">'+(a.image?'<img class="av" src="'+esc(a.image)+'" alt="">':'<span class="av ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+'<span>'+esc(a.nom)+(a.joueur?'<span class="pl">'+esc(a.joueur)+'</span>':'')+'</span></a></th>'+
-      bureaux.map(b=>{const n=renown(a,b.id),p=pts(a,b.id),nx=nextInfo(p);
-        if(!ui.dm)return '<td>'+(n?chip(n):'<span class="muted">Inconnu</span>')+'</td>';
-        return '<td>'+(n||p?chip(n):'<span class="muted">Inconnu</span>')+'<span class="ptsline">'+ptsLabel(p)+(nx&&p>=0?' · encore '+nx.need+' pour '+esc(nx.titre):'')+'</span></td>';}).join("")+
+      bureaux.map(b=>{const c=renown(a,b.id);if(!ui.dm)return '<td>'+(c!==51?chip(c):'<span class="muted">Inconnu</span>')+'</td>';
+        return '<td>'+(c!==51?chip(c):'<span class="muted">Inconnu</span>')+'<span class="ptsline">'+c+' · R '+ptsLabel(pts(a,b.id))+' · N '+ptsLabel(ptsN(a,b.id))+'</span></td>';}).join("")+
       (ui.dm?'<td>'+(ui.confirmAdv===a.id?'<button class="btn danger sm" data-a="adv-del-yes" data-id="'+esc(a.id)+'">Confirmer</button> <button class="btn board sm" data-a="adv-del-no">Annuler</button>':'<button class="btn board sm" data-a="adv-del" data-id="'+esc(a.id)+'">Retirer</button>')+'</td>':'')+'</tr>').join("")+
     '</tbody></table></div>';
-  if(rangs.length)h+='<h3 class="subh">Historique des rangs</h3><ul class="journal">'+rangs.slice(0,30).map(r=>{const b=office(r.bureau);const d=r.date&&r.date.toDate?r.date.toDate().toLocaleDateString("fr-CA",{day:"numeric",month:"short",year:"numeric"}):"";
-      return '<li><span class="jd">'+esc(d)+'</span><span><strong>'+esc(r.nom||"")+'</strong> '+(r.nouveau>r.ancien?'devient':'descend à')+' '+chip(r.nouveau)+(b?' à '+esc(b.nom):'')+'</span></li>';}).join("")+'</ul>';
+  if(rangs.length)h+='<h3 class="subh">Historique</h3><ul class="journal">'+rangs.slice(0,30).map(r=>{const b=office(r.bureau);const d=r.date&&r.date.toDate?r.date.toDate().toLocaleDateString("fr-CA",{day:"numeric",month:"short",year:"numeric"}):"";
+      return '<li><span class="jd">'+esc(d)+'</span><span><strong>'+esc(r.nom||"")+'</strong> est désormais '+chip(r.nouveau)+(b?' à '+esc(b.nom):'')+'</span></li>';}).join("")+'</ul>';
   if(ui.dm&&journal.length)h+='<h3 class="subh">Journal des points (DM seulement)</h3><ul class="journal">'+journal.slice(0,30).map(j=>{const b=office(j.bureau);const d=j.date&&j.date.toDate?j.date.toDate().toLocaleDateString("fr-CA",{day:"numeric",month:"short",year:"numeric"}):"";
-      return '<li><span class="jd">'+esc(d)+'</span><span><strong>'+esc(j.nom||"")+'</strong> '+(j.points>=0?'gagne':'perd')+' '+Math.abs(j.points)+' pt'+(Math.abs(j.points)>1?'s':'')+(b?' à '+esc(b.nom):'')+(j.raison?' · '+esc(j.raison):'')+'</span></li>';}).join("")+'</ul>';
+      return '<li><span class="jd">'+esc(d)+'</span><span><strong>'+esc(j.nom||"")+'</strong> : réputation '+ptsLabel(j.points||0)+(typeof j.notoriete==="number"?', notoriété '+ptsLabel(j.notoriete):'')+(b?' à '+esc(b.nom):'')+(j.raison?' · '+esc(j.raison):'')+'</span></li>';}).join("")+'</ul>';
   return h+'</section>';
 }
 
@@ -1364,8 +1415,8 @@ function sheetView(id){
     '<div class="sheet-id"><h2>'+esc(a.nom)+'</h2><p class="sheet-sub">'+esc([a.espece,a.classe].filter(Boolean).join(" · ")||"Aventurier")+'</p>'+(a.joueur?'<p class="sheet-pl">Joué par '+esc(a.joueur)+'</p>':'')+'</div></div>';
   if(a.description)h+='<h3>Description</h3><p class="desc">'+esc(a.description)+'</p>';
   if(a.background)h+='<h3>Background</h3><p class="desc">'+esc(a.background)+'</p>';
-  const known=bureaux.filter(b=>renown(a,b.id)!==0);
-  h+='<h3>Renommée</h3>'+(known.length?'<ul class="sheetrep">'+known.map(b=>'<li><span>'+esc(b.nom)+'</span>'+chip(renown(a,b.id))+'</li>').join("")+'</ul>':'<p class="desc">Inconnu dans toutes les régions… pour l\'instant.</p>');
+  const known=bureaux.filter(b=>renown(a,b.id)!==51);
+  h+='<h3>Renommée</h3>'+(known.length?'<ul class="sheetrep">'+known.map(b=>'<li><span>'+esc(b.nom)+'</span><span>'+chip(renown(a,b.id))+renAxes(renown(a,b.id))+'</span></li>').join("")+'</ul>':'<p class="desc">Inconnu dans toutes les régions… pour l\'instant.</p>');
   const qs=questsOf(a);
   h+='<h3>Quêtes accomplies</h3>'+(qs.length?'<ul class="sheetq">'+qs.map(q=>'<li>'+rankSeal(q.rang)+' <a href="#chroniques">'+esc(q.titre)+'</a>'+(office(q.bureau)?' <em>('+esc(office(q.bureau).nom)+')</em>':'')+'</li>').join("")+'</ul>':'<p class="desc">Aucune pour le moment.</p>');
   h+=sheetNews(a.id);
@@ -1528,7 +1579,7 @@ const ATTITUDES=[["","—"],["amical","Amical"],["neutre","Neutre"],["mefiant","
 const MOD_STATUS=[["avenir","À venir"],["premices","Signes avant-coureurs"],["encours","En cours"],["termine","Terminé"]];
 const MOD_LBL=Object.fromEntries(MOD_STATUS);
 const ABIL=[["for","FOR"],["dex","DEX"],["con","CON"],["int","INT"],["sag","SAG"],["cha","CHA"]];
-const MAN_SECS=[["perso","Personnages"],["pnj","PNJ"],["factions","Factions"],["monstres","Bestiaire"],["rencontres","Rencontres"],["generateur","Générateur"],["quetes","Quêtes & scénarios"],["modules","Modules officiels"],["loot","Loot Box"],["notes","Notes & pages"],["atelier","Portraits"]];
+const MAN_SECS=[["perso","Personnages"],["pnj","PNJ"],["factions","Factions"],["relations","Relations"],["monstres","Bestiaire"],["rencontres","Rencontres"],["generateur","Générateur"],["quetes","Quêtes & scénarios"],["modules","Modules officiels"],["loot","Loot Box"],["notes","Notes & pages"],["atelier","Portraits"]];
 const MAN={
   pnj:{coll:"pnj",nom:"PNJ",fields:[["nom","Nom","text",1],["image","Portrait","image"],["role","Rôle ou occupation","text"],["espece","Espèce","text"],["region","Région","region"],["lieu","Lieu","text"],["faction","Factions (séparées par des virgules)","text"],["outerworlder","Outerworlder (venu d'un autre monde)","check"],["attitude","Attitude envers la Guilde","select",0,ATTITUDES],["apparence","Apparence","textarea"],["voix","Voix et manières","textarea"],["secrets","Secrets","md"],["monstre","Stats (bestiaire)","monsterref"],["quetes","Quêtes liées","questmulti"],["butinTable","Table de butin (privée) : objets de quête et butin propre à ce PNJ","loottable"],["notes","Notes","md"]]},
   monstres:{coll:"monstres",nom:"monstre",fields:[["nom","Nom","text",1],["image","Image","image"],["taille","Taille","select",0,SIZES],["type","Type","text"],["alignement","Alignement","text"],["fp","Facteur de puissance (FP)","select",0,CR_LIST.map(c=>[c,c+" ("+CR_XP[c]+" XP)"])],["ca","Classe d'armure","number"],["pv","Points de vie","text"],["vitesse","Vitesse","text"],
@@ -1656,13 +1707,14 @@ function secPerso(){
     if(ui.manEdit)return backLink("Personnages")+manForm("dossiers",d,"Dossier DM : "+a.nom);
     const curQ=quetes.filter(q=>q.statut==="encours"&&inscriptions.some(i=>i.quete===q.id&&i.aventurier===a.id&&i.statut==="confirmee"));
     const waitQ=quetes.filter(q=>q.statut==="ouverte"&&inscriptions.some(i=>i.quete===q.id&&i.aventurier===a.id&&i.statut==="attente"));
-    const doneQ=questsOf(a),pm=pointsMap[a.id]||{},regs=bureaux.filter(b=>typeof pm[b.id]==="number"||renown(a,b.id));
+    const doneQ=questsOf(a),pm=pointsMap[a.id]||{},regs=bureaux.filter(b=>typeof pm[b.id]==="number"||renown(a,b.id)!==51);
     const ql=l=>l.length?'<ul class="todo">'+l.map(q=>'<li><span>'+rankSeal(q.rang)+' '+esc(q.titre)+' <em>('+esc((office(q.bureau)||{}).nom||"")+')</em></span><button class="mini" data-a="man-quest" data-id="'+esc(q.id)+'">Scénario</button></li>').join("")+'</ul>':'<p class="desc">Aucune.</p>';
     let h=backLink("Personnages")+'<article class="dossier"><div class="sheet-top">'+(a.image?'<img class="portrait" src="'+esc(a.image)+'" alt="">':'<span class="portrait ph" aria-hidden="true">'+esc(String(a.nom).charAt(0))+'</span>')+'<div class="sheet-id"><h2>'+esc(a.nom)+'</h2><p class="sheet-sub">'+esc([a.espece,a.classe].filter(Boolean).join(" · ")||"Aventurier")+(d.niveau?' · niveau '+esc(d.niveau):'')+'</p>'+(a.joueur?'<p class="sheet-pl">Joué par '+esc(a.joueur)+'</p>':'')+'<p><a href="#perso-'+esc(a.id)+'">Voir la fiche publique</a></p></div></div>';
     h+='<div class="dmgrid"><section class="dmcard"><h3>Le Système</h3><p><strong>Outerworlder :</strong> '+({oui:"Oui",non:"Non (natif)"}[d.outerworlder]||"À déterminer")+'</p>'+(d.donNom?'<p class="don-dm"><strong>Don : '+esc(d.donNom)+'</strong></p>'+(d.donDesc?'<div class="wikibody">'+md(d.donDesc)+'</div>':''):d.outerworlder==="non"?'':'<p class="warn">Aucun Don attribué.</p>')+(a.don&&!d.donNom?'<p class="desc">Ancien Don (fiche publique) : '+esc(a.don)+'</p>':'')+'</section>';
     h+='<section class="dmcard"><h3>En jeu</h3><p class="sbl"><strong>CA</strong> '+esc(d.ca==null?"—":d.ca)+' · <strong>PV max</strong> '+esc(d.pv==null?"—":d.pv)+' · <strong>Perception passive</strong> '+esc(d.percPassive==null?"—":d.percPassive)+'</p></section></div>';
     h+=mdBlock("Accroches et liens",d.accroches)+mdBlock("Notes du DM",d.notes);
-    h+='<h3>Renommée</h3>'+(regs.length?'<ul class="sheetrep">'+regs.map(b=>'<li><span>'+esc(b.nom)+'</span>'+chip(renown(a,b.id))+' <span class="muted">'+(pm[b.id]||0)+' pts</span></li>').join("")+'</ul>':'<p class="desc">Inconnu partout.</p>');
+    h+='<h3>Renommée</h3>'+(regs.length?'<ul class="sheetrep">'+regs.map(b=>'<li><span>'+esc(b.nom)+'</span><span>'+chip(renown(a,b.id))+renAxes(renown(a,b.id))+' <span class="muted">'+renown(a,b.id)+' · R '+ptsLabel(pm[b.id]||0)+' · N '+ptsLabel(ptsN(a,b.id))+'</span></span></li>').join("")+'</ul>':'<p class="desc">Inconnu partout.</p>');
+    h+=relBlock("perso",a.id);
     h+='<h3>Quêtes en cours</h3>'+ql(curQ)+'<h3>Inscriptions en attente</h3>'+ql(waitQ)+'<h3>Quêtes accomplies</h3>'+ql(doneQ);
     h+=sheetNews(a.id);
     if(a.description)h+='<h3>Description (publique)</h3><p class="desc">'+esc(a.description)+'</p>';
@@ -1689,7 +1741,7 @@ function secGeneric(type){const S=MAN[type],list=manList(type);
       if(fl(x.allies).length||fl(x.rivaux).length)h+='<div class="linked">'+(fl(x.allies).length?'<p><span class="lk">Alliés</span>'+fl(x.allies).map(f=>linkChip("factions",f,esc(f.nom))).join("")+'</p>':'')+(fl(x.rivaux).length?'<p><span class="lk">Rivaux</span>'+fl(x.rivaux).map(f=>linkChip("factions",f,esc(f.nom))).join("")+'</p>':'')+'</div>';
       h+='<h3>Membres connus</h3>'+(mem.length?'<div class="mangrid">'+mem.map(p=>'<a class="mcard" href="#man/pnj/'+encodeURIComponent(p.id)+'">'+(p.image?'<img src="'+esc(p.image)+'" alt="">':'<span class="ph" aria-hidden="true">'+esc(String(p.nom).charAt(0))+'</span>')+'<span class="mb"><strong>'+esc(p.nom)+'</strong><span>'+esc(p.role||"")+'</span></span></a>').join("")+'</div>':'<p class="desc">Aucun PNJ n\'a encore cette faction sur sa fiche (champ Factions).</p>');
       if(qs.length)h+='<h3>Quêtes liées</h3><p>'+qs.map(q=>linkChip("quetes",q,esc(q.titre))).join("")+'</p>';
-      h+=mdBlock("Notes",x.notes)+revealBox("factions",x.id);
+      h+=mdBlock("Notes",x.notes)+relBlock("faction",x.id)+revealBox("factions",x.id);
       return h+manTools(type,x.id)+'</article>';}
     if(type==="monstres"){h+=statblock(x)+ltView(x)+(x.tags?'<p class="desc">Mots-clés : '+esc(x.tags)+'</p>':'')+(x.region?'<p class="desc">Région : '+esc(regionName(x.region))+'</p>':'')+mdBlock("Notes",x.notes);
       const used=rencontres.filter(r=>(r.monstres||[]).some(m=>m.id===x.id)),pn=pnjs.filter(p=>p.monstre===x.id);
@@ -1707,7 +1759,7 @@ function secGeneric(type){const S=MAN[type],list=manList(type);
       h+='<ul class="todo">'+(x.monstres||[]).map(r=>{const m=monstres.find(y=>y.id===r.id);return '<li><span><strong>'+esc(r.nb)+' ×</strong> '+esc(m?m.nom:"(supprimé)")+(m?' · FP '+esc(m.fp)+' · CA '+esc(m.ca==null?"—":m.ca)+' · PV '+esc(m.pv||"—"):'')+'</span>'+(m?'<button class="mini" data-a="man-open" data-sec="monstres" data-id="'+esc(m.id)+'">Stats</button>':'')+'</li>';}).join("")+'</ul>';
       h+='<p class="sbl"><strong>XP totale :</strong> '+xp+' · <strong>Difficulté :</strong> <span class="'+df[1]+'">'+df[0]+'</span></p>'+partyBox();
       h+=(x.terrain?'<h3>Terrain et ambiance</h3><p class="desc">'+esc(x.terrain)+'</p>':'')+mdBlock("Tactique et déroulement",x.notes);}
-    if(type==="pnj")h+=ltView(x);
+    if(type==="pnj")h+=ltView(x)+relBlock("pnj",x.id);
     if(type==="pnj"||type==="monstres")h+=revealBox(type,x.id);
     return h+manTools(type,x.id)+'</article>';}
   if(type==="monstres"){const l=filterQ(byName(monstres),["nom","type","tags","fp"]);
@@ -1796,7 +1848,7 @@ function copyText(t){return (navigator.clipboard&&navigator.clipboard.writeText?
 function dmManual(){
   const s=ui.manSec;
   let h='<div class="chips mansecs" role="group" aria-label="Sections du Manuel">'+MAN_SECS.map(x=>'<button class="chip" data-a="man-sec" data-v="'+x[0]+'" aria-pressed="'+(s===x[0])+'">'+x[1]+'</button>').join("")+'</div>';
-  return h+(s==="perso"?secPerso():s==="generateur"?secGen():s==="quetes"?secQuetes():s==="notes"?dmNotes():s==="atelier"?secAtelier():s==="loot"?secLoot():secGeneric(s));}
+  return h+(s==="perso"?secPerso():s==="generateur"?secGen():s==="quetes"?secQuetes():s==="notes"?dmNotes():s==="atelier"?secAtelier():s==="loot"?secLoot():s==="relations"?secRelations():secGeneric(s));}
 
 /* ---------- Espace DM ---------- */
 function todoItems(){
@@ -1880,8 +1932,8 @@ function dmStats(){
   let h='<div class="tiles">'+tile(c.ouverte,"Quêtes ouvertes")+tile(c.encours,"En cours")+tile(c.terminee+c.archivee,"Accomplies")+tile(ranked().length,"Personnages")+tile(players,"Joueurs inscrits")+tile(compEntries().length,"Entrées du compendium")+'</div>';
   const X=seuilMonde();
   h+='<div class="tablebox light"><table class="dmtable"><thead><tr><th scope="col">Comptoir</th><th scope="col">Ouvertes</th><th scope="col">En cours</th><th scope="col">Accomplies</th><th scope="col">Évolution</th><th scope="col">Le plus renommé</th></tr></thead><tbody>'+
-    bureaux.map(b=>{const qs=quetes.filter(q=>q.bureau===b.id);let best=null,bp=-1e9;ranked().forEach(a=>{const p=pts(a,b.id);if(p>bp&&p>0){bp=p;best=a;}});
-      return '<tr><th scope="row">'+esc(b.nom)+'</th><td>'+qs.filter(q=>q.statut==="ouverte").length+'</td><td>'+qs.filter(q=>q.statut==="encours").length+'</td><td>'+doneIn(b.id).length+'</td><td>'+pendingIn(b.id).length+' / '+X+'</td><td>'+(best?'<a href="#perso-'+esc(best.id)+'">'+esc(best.nom)+'</a> '+chip(levelOf(bp))+' <span class="muted">'+bp+' pts</span>':'<span class="muted">—</span>')+'</td></tr>';}).join("")+'</tbody></table></div>';
+    bureaux.map(b=>{const qs=quetes.filter(q=>q.bureau===b.id);let best=null,bp=-1e9;ranked().forEach(a=>{const p=ptsN(a,b.id);if(p>bp&&p>0){bp=p;best=a;}});
+      return '<tr><th scope="row">'+esc(b.nom)+'</th><td>'+qs.filter(q=>q.statut==="ouverte").length+'</td><td>'+qs.filter(q=>q.statut==="encours").length+'</td><td>'+doneIn(b.id).length+'</td><td>'+pendingIn(b.id).length+' / '+X+'</td><td>'+(best?'<a href="#perso-'+esc(best.id)+'">'+esc(best.nom)+'</a> '+chip(renown(best,b.id))+' <span class="muted">N '+bp+' pts</span>':'<span class="muted">—</span>')+'</td></tr>';}).join("")+'</tbody></table></div>';
   return h;
 }
 function dmSpaceView(){
@@ -1898,7 +1950,7 @@ function galleryView(){
   if(!loaded.a)return '<p class="hint">Chargement…</p>';
   if(!aventuriers.length)return '<p class="empty">Aucun aventurier n\'est encore inscrit à la Guilde. Connecte-toi et crée ta fiche pour être le premier !</p>';
   return '<div class="gallery">'+ranked().map(a=>{
-    let best=null;bureaux.forEach(b=>{const n=renown(a,b.id);if(n>0&&(!best||n>best.n))best={n,b};});
+    let best=null;bureaux.forEach(b=>{const n=renown(a,b.id);if(n!==51&&(!best||cN(n)>cN(best.n)||(cN(n)===cN(best.n)&&cR(n)<cR(best.n))))best={n,b};});
     const qn=questsOf(a).length;
     return '<a class="gcard" href="#perso-'+esc(a.id)+'">'+(a.image?'<img class="gimg" src="'+esc(a.image)+'" alt="">':'<span class="gimg ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+
       '<span class="gbody"><strong class="gname">'+esc(a.nom)+'</strong><span class="sheet-sub">'+esc([a.espece,a.classe].filter(Boolean).join(" · ")||"Aventurier")+'</span>'+
@@ -2068,11 +2120,11 @@ function render(){
           '<p class="tip">Un participant sans personnage du registre ne reçoit ni points ni pénalité.</p>'+
           '<div class="actions"><button class="btn" type="submit">Suivant : le bilan</button><button class="btn ghost" type="button" data-a="step-back">Retour</button></div>';
       } else {
-        h+='<p>Renommée à '+esc(bo?bo.nom:"la région")+'. Rang '+esc((RANKS[cq.rang]||RANKS.inconnu).label)+' : +'+questPts(cq)+' proposé. Ajuste le gain si le groupe s\'est illustré.</p>'+
-          '<div class="tablebox light"><table class="mef"><thead><tr><th scope="col">Aventurier</th><th scope="col">Gain</th><th scope="col">Méfaits</th><th scope="col">Total</th><th scope="col">Rang</th></tr></thead><tbody>'+
-          C.parts.map((x,i)=>{const a=aventuriers.find(y=>y.id===x.aventurier);const pen=Object.keys(DEFAULT_MEFAITS).reduce((t,k)=>t+(x[k]||0)*mp[k],0);const net=(x.gain||0)-pen;
-            const before=a?renown(a,cq.bureau):0,after=a?levelOf(pts(a,cq.bureau)+net):0;
-            return '<tr><th scope="row">'+esc(x.nom)+(a?'':' <em>(hors registre)</em>')+'</th><td data-l="Gain"><label class="sr" for="b-gain'+i+'">Gain pour '+esc(x.nom)+'</label><input class="cnt" id="b-gain'+i+'" type="number" step="1" value="'+(x.gain||0)+'"'+(a?'':' disabled')+'></td><td class="num" data-l="Méfaits">'+(pen?'−'+pen:'0')+'</td><td class="num" data-l="Total"><strong>'+(net>0?'+':'')+net+'</strong></td><td data-l="Rang">'+(a?chip(before)+(after!==before?' → '+chip(after):''):'—')+'</td></tr>';}).join("")+
+        h+='<p>Renommée à '+esc(bo?bo.nom:"la région")+'. Rang '+esc((RANKS[cq.rang]||RANKS.inconnu).label)+' : +'+questPts(cq)+' proposé sur chaque axe. Les méfaits retirent de la réputation et ajoutent la moitié en notoriété.</p>'+
+          '<div class="tablebox light"><table class="mef"><thead><tr><th scope="col">Aventurier</th><th scope="col">Notoriété</th><th scope="col">Réputation</th><th scope="col">Méfaits</th><th scope="col">Résultat</th></tr></thead><tbody>'+
+          C.parts.map((x,i)=>{const a=aventuriers.find(y=>y.id===x.aventurier);const pen=Object.keys(DEFAULT_MEFAITS).reduce((t,k)=>t+(x[k]||0)*mp[k],0);const netR=(x.gain||0)-pen,netN=(x.gainN==null?(x.gain||0):x.gainN)+mefNoto(pen);
+            const before=a?renown(a,cq.bureau):51,after=a?codeOf(ptsN(a,cq.bureau)+netN,pts(a,cq.bureau)+netR):51;
+            return '<tr><th scope="row">'+esc(x.nom)+(a?'':' <em>(hors registre)</em>')+'</th><td data-l="Notoriété"><label class="sr" for="b-gainn'+i+'">Notoriété pour '+esc(x.nom)+'</label><input class="cnt" id="b-gainn'+i+'" type="number" step="1" value="'+(x.gainN==null?(x.gain||0):x.gainN)+'"'+(a?'':' disabled')+'>'+(pen?' <span class="muted">+'+mefNoto(pen)+'</span>':'')+'</td><td data-l="Réputation"><label class="sr" for="b-gain'+i+'">Réputation pour '+esc(x.nom)+'</label><input class="cnt" id="b-gain'+i+'" type="number" step="1" value="'+(x.gain||0)+'"'+(a?'':' disabled')+'></td><td class="num" data-l="Méfaits">'+(pen?'−'+pen:'0')+'</td><td data-l="Résultat">'+(a?chip(before)+(after!==before?' → '+chip(after):''):'—')+'</td></tr>';}).join("")+
           '</tbody></table></div>'+
           '<div class="actions"><button class="btn" type="submit">Terminer la quête</button><button class="btn ghost" type="button" data-a="step-recalc">Recalculer</button><button class="btn ghost" type="button" data-a="step-back">Retour</button></div>';
       }
@@ -2569,6 +2621,32 @@ function lootDefeated(){const C=ui.pt.combat,out=[];if(!C)return out;(ui.pt.list
   const pn=pnjs.find(x=>x.id===c.ref);if(pn){const mm=monstres.find(x=>x.id===(pn.monstre||c.mon))||{};out.push({c:c,m:mm,pnj:pn});return;}
   if((c.qitems||[]).length)out.push({c:c,m:{nom:c.nom,fp:"1",id:""},libre:1});});return out;}
 function lootTotal(l){return l.reduce((t,x)=>t+(+x.valeur||0),0);}
+/* ---------- relations entre personnes (DM, axe réputation seulement) ---------- */
+const REL_T={perso:"Personnage",pnj:"PNJ",faction:"Faction"};
+function relEnts(){return byName(aventuriers).filter(a=>!a.pnj).map(a=>({t:"perso",id:a.id,nom:a.nom})).concat(byName(pnjs).map(p=>({t:"pnj",id:p.id,nom:p.nom})),byName(factions).map(f=>({t:"faction",id:f.id,nom:f.nom})));}
+function relName(t,id){const l=t==="perso"?aventuriers:t==="pnj"?pnjs:factions,x=l.find(y=>y.id===id);return x?x.nom:"?";}
+function relHref(t,id){return t==="perso"?"#man/perso/"+encodeURIComponent(id):"#man/"+(t==="pnj"?"pnj":"factions")+"/"+encodeURIComponent(id);}
+function relKey(t,id){return t+":"+id;}
+function relOpts(sel){const g=relEnts();return Object.keys(REL_T).map(t=>{const l=g.filter(e=>e.t===t);return l.length?'<optgroup label="'+esc(REL_T[t])+'">'+l.map(e=>'<option value="'+esc(relKey(e.t,e.id))+'"'+(sel===relKey(e.t,e.id)?' selected':'')+'>'+esc(e.nom)+'</option>').join("")+'</optgroup>':'';}).join("");}
+function relRow(x){return '<tr><td><a href="'+relHref(x.de.t,x.de.id)+'">'+esc(relName(x.de.t,x.de.id))+'</a> <span class="desc">'+esc(REL_T[x.de.t]||"")+'</span></td><td>'+repChip(x.r||5)+'</td><td><a href="'+relHref(x.vers.t,x.vers.id)+'">'+esc(relName(x.vers.t,x.vers.id))+'</a> <span class="desc">'+esc(REL_T[x.vers.t]||"")+'</span></td><td class="desc">'+esc(x.notes||"")+'</td><td>'+(ui.relDel===x.id?'<button class="mini danger" data-a="rel-del-yes" data-id="'+esc(x.id)+'">Retirer</button><button class="mini" data-a="rel-del-no">Annuler</button>':'<button class="mini" data-a="rel-edit" data-id="'+esc(x.id)+'">Modifier</button><button class="mini" data-a="rel-del" data-id="'+esc(x.id)+'">Retirer</button>')+'</td></tr>';}
+function relTable(l){return l.length?'<div class="tablebox light"><table class="dmtable rel"><thead><tr><th scope="col">Qui</th><th scope="col">Pense de</th><th scope="col">Qui</th><th scope="col">Notes</th><th scope="col"><span class="sr">Actions</span></th></tr></thead><tbody>'+l.map(relRow).join("")+'</tbody></table></div>':'<p class="desc">Aucune relation notée.</p>';}
+function relForm(pre){const x=ui.relEdit&&ui.relEdit!=="new"?relations.find(y=>y.id===ui.relEdit):null,de=x?relKey(x.de.t,x.de.id):(pre||""),vers=x?relKey(x.vers.t,x.vers.id):"";
+  return '<form id="relform" class="form dmform"><h3>'+(x?'Modifier la relation':'Nouvelle relation')+'</h3><label for="rl-de">Qui<select id="rl-de" required><option value="">—</option>'+relOpts(de)+'</select></label>'+
+    '<label for="rl-r">Pense<select id="rl-r">'+repuList().map(s=>'<option value="'+s.r+'"'+((x?x.r:5)===s.r?' selected':'')+'>'+esc(s.titre)+'</option>').join("")+'</select></label>'+
+    '<label for="rl-vers">De qui<select id="rl-vers" required><option value="">—</option>'+relOpts(vers)+'</select></label>'+
+    '<label class="wide" for="rl-notes">Notes (pourquoi, depuis quand)<input id="rl-notes" maxlength="300" value="'+esc(x?x.notes||"":"")+'"></label>'+
+    '<div class="actions wide"><button class="btn gold" type="submit">Enregistrer</button><button class="btn ghost" type="button" data-a="rel-cancel">Annuler</button></div></form>';}
+function secRelations(){
+  const f=ui.relF||"",l=relations.filter(x=>!f||relKey(x.de.t,x.de.id)===f||relKey(x.vers.t,x.vers.id)===f).sort((a,b)=>String(relName(a.de.t,a.de.id)).localeCompare(relName(b.de.t,b.de.id),"fr")||(a.r-b.r));
+  let h='<p class="desc">Ce que chacun pense des autres, sur l\'axe de la réputation (d\'Adulé à Ennemi juré). Une relation se lit dans un sens : le Poing Enflammé peut se méfier de Bob sans que Bob le sache. Privé.</p>';
+  h+=ui.relEdit?relForm(f):'<div class="lootbar"><label for="rel-f">Filtrer<select id="rel-f"><option value="">Tout le monde</option>'+relOpts(f)+'</select></label><button class="btn gold" data-a="rel-new">Nouvelle relation</button></div>';
+  return h+relTable(l);
+}
+function relBlock(t,id){const k=relKey(t,id),out=relations.filter(x=>relKey(x.de.t,x.de.id)===k),inn=relations.filter(x=>relKey(x.vers.t,x.vers.id)===k);
+  return '<details class="ltview"'+(out.length||inn.length?' open':'')+'><summary>🤝 Relations <span class="desc">('+out.length+' · '+inn.length+')</span></summary>'+
+    (out.length?'<h4>Ce qu\'il pense des autres</h4><ul class="rellist">'+out.map(x=>'<li>'+repChip(x.r)+' envers <a href="'+relHref(x.vers.t,x.vers.id)+'">'+esc(relName(x.vers.t,x.vers.id))+'</a>'+(x.notes?' <span class="desc">· '+esc(x.notes)+'</span>':'')+'</li>').join("")+'</ul>':'')+
+    (inn.length?'<h4>Ce que les autres pensent de lui</h4><ul class="rellist">'+inn.map(x=>'<li><a href="'+relHref(x.de.t,x.de.id)+'">'+esc(relName(x.de.t,x.de.id))+'</a> : '+repChip(x.r)+(x.notes?' <span class="desc">· '+esc(x.notes)+'</span>':'')+'</li>').join("")+'</ul>':'')+
+    '<p><button class="mini" data-a="rel-newfor" data-id="'+esc(k)+'">Ajouter une relation</button></p></details>';}
 function secLoot(){
   const all=butins.slice().sort((a,b)=>(b.creeMs||0)-(a.creeMs||0)),f=ui.lootF||"";
   const l=f?all.filter(x=>x.quete===f):all,by={};l.forEach(x=>{const k=x.pour?(x.pourNom||x.pour):"__groupe";(by[k]=by[k]||[]).push(x);});
@@ -2791,7 +2869,7 @@ function readStep(){
   const C=ui.complete;if(!C)return;
   if(C.step===1){C.rapport={date:v0("c-date").slice(0,80),resultat:v0("c-res")||"reussite",resume:((document.getElementById("c-resume")||{}).value||"").slice(0,4000)};}
   if(C.step===2){C.parts.forEach((x,i)=>{x.aventurier=v0("m-adv"+i)||null;Object.keys(DEFAULT_MEFAITS).forEach(k=>{x[k]=Math.max(0,Math.round(+v0("m-"+k+i)||0));});});}
-  if(C.step===3){C.parts.forEach((x,i)=>{const el=document.getElementById("b-gain"+i);if(el&&!el.disabled)x.gain=Math.round(+el.value||0);});}
+  if(C.step===3){C.parts.forEach((x,i)=>{const el=document.getElementById("b-gain"+i),en=document.getElementById("b-gainn"+i);if(el&&!el.disabled)x.gain=Math.round(+el.value||0);if(en&&!en.disabled)x.gainN=Math.round(+en.value||0);});}
 }
 document.addEventListener("click",async e=>{
   const ml=e.target.closest&&e.target.closest('a[href^="#man/"]');
@@ -2845,7 +2923,7 @@ document.addEventListener("click",async e=>{
   else if(a==="complete"){const q=questById(id);if(!q)return;
     const match=(nom,aid)=>{if(aid&&aventuriers.some(x=>x.id===aid))return aid;const m=aventuriers.find(x=>String(x.nom).trim().toLowerCase()===String(nom).trim().toLowerCase());return m?m.id:"";};
     ui.complete={id,step:1,rapport:{date:q.date||"",resultat:"reussite",resume:(q.rapportBrouillon&&q.rapportBrouillon.resume)||""},
-      parts:signupsFor(id).filter(x=>x.statut==="confirmee").map(x=>({nom:x.nom,uid:x.uid,aventurier:match(x.nom,x.aventurier),gain:questPts(q),mineur:0,moyen:0,grave:0}))};}
+      parts:signupsFor(id).filter(x=>x.statut==="confirmee").map(x=>({nom:x.nom,uid:x.uid,aventurier:match(x.nom,x.aventurier),gain:questPts(q),gainN:questPts(q),mineur:0,moyen:0,grave:0}))};}
   else if(a==="complete-cancel"){if(e.target!==b)return;ui.complete=null;}
   else if(a==="step-back"){readStep();ui.complete.step--;}
   else if(a==="step-recalc"){readStep();}
@@ -2930,6 +3008,13 @@ document.addEventListener("click",async e=>{
     await run("Disponibilité",()=>updateDoc(doc(db,"planif",id),{[key]:nx?nx:deleteField()}));return;}
   else if(a==="plan-del"){await run("Date retirée",()=>deleteDoc(doc(db,"planif",id)));return;}
   else if(a==="report-write"){ui.reportWrite=id;}
+  else if(a==="rel-new"){ui.relEdit="new";}
+  else if(a==="rel-newfor"){ui.manSec="relations";ui.manId=null;ui.relF=id;ui.relEdit="new";location.hash="#man/relations";}
+  else if(a==="rel-edit"){ui.relEdit=id;}
+  else if(a==="rel-cancel"){ui.relEdit=null;}
+  else if(a==="rel-del"){ui.relDel=id;}
+  else if(a==="rel-del-no"){ui.relDel=null;}
+  else if(a==="rel-del-yes"){ui.relDel=null;await run("Relation retirée",()=>deleteDoc(doc(db,"relations",id)));return;}
   else if(a==="loot-del"){const x=butins.find(y=>y.id===id);if(!x)return;await run("Butin retiré",()=>deleteDoc(doc(db,"butins",id)));return;}
   else if(a==="lt-reset"){const coll=b.getAttribute("data-coll"),nom=b.getAttribute("data-v"),rec=coll==="scenarios"?scenarios[id]:(coll==="pnj"?pnjs:monstres).find(r=>r.id===id);if(!rec)return;
     await run("Objet remis en jeu",()=>setDoc(doc(db,coll,id),{butinPris:(rec.butinPris||[]).filter(n=>n!==nom)},{merge:true}));return;}
@@ -2952,6 +3037,7 @@ document.addEventListener("click",async e=>{
 });
 document.addEventListener("change",e=>{
   if(e.target.id==="loot-f"){ui.lootF=e.target.value;render();return;}
+  if(e.target.id==="rel-f"){ui.relF=e.target.value;render();return;}
   if(e.target.classList&&e.target.classList.contains("loot-to")){const id=e.target.getAttribute("data-id"),a=aventuriers.find(x=>x.id===e.target.value);run("Butin attribué",()=>setDoc(doc(db,"butins",id),{pour:a?a.id:"",pourNom:a?a.nom:""},{merge:true}));return;}
   if(partyChange(e))return;
   if(e.target.classList&&e.target.classList.contains("rnsel")){
@@ -3011,6 +3097,9 @@ async function approveComp(e,force){
   });
 }
 document.addEventListener("submit",async e=>{
+  if(e.target.id==="relform"){e.preventDefault();const g=k=>document.getElementById(k).value,de=g("rl-de").split(":"),vers=g("rl-vers").split(":");if(!de[1]||!vers[1])return;if(de.join(":")===vers.join(":"))return;
+    const old=ui.relEdit&&ui.relEdit!=="new"?ui.relEdit:null,id=de[0]+"_"+de[1]+"__"+vers[0]+"_"+vers[1],rv=Math.max(1,Math.min(9,+g("rl-r")||5)),nt=g("rl-notes").trim().slice(0,300);ui.relEdit=null;
+    await run("Relation",async()=>{if(old&&old!==id)await deleteDoc(doc(db,"relations",old));await setDoc(doc(db,"relations",id),{de:{t:de[0],id:de[1]},vers:{t:vers[0],id:vers[1]},r:rv,notes:nt,majLe:serverTimestamp()});});return;}
   if(e.target.id==="loot-add"){e.preventDefault();const g=k=>document.getElementById(k).value,nom=g("la-nom").trim().slice(0,120);if(!nom)return;const a=aventuriers.find(x=>x.id===g("la-p")),val=Math.max(0,+g("la-val")||0),qq=g("la-q");["la-nom","la-val"].forEach(k=>{document.getElementById(k).value="";});
     await run("Butin ajouté",()=>lootSave([{nom:nom,valeur:val,quete:qq,rencontre:"",source:"",pour:a?a.id:"",pourNom:a?a.nom:""}]));return;}
   if(partySubmit(e))return;
@@ -3071,11 +3160,11 @@ document.addEventListener("submit",async e=>{
       bt.set(doc(db,"quetes",q.id),{statut:"terminee",rapport,majLe:serverTimestamp()},{merge:true});
       const seen={};
       C.parts.forEach(x=>{const a=x.aventurier&&aventuriers.find(y=>y.id===x.aventurier);if(!a)return;
-        const pen=Object.keys(DEFAULT_MEFAITS).reduce((t,k)=>t+(x[k]||0)*mp[k],0),net=(x.gain||0)-pen;
+        const pen=Object.keys(DEFAULT_MEFAITS).reduce((t,k)=>t+(x[k]||0)*mp[k],0),net=(x.gain||0)-pen,netN=(x.gainN==null?(x.gain||0):x.gainN)+mefNoto(pen);
         const det=Object.keys(DEFAULT_MEFAITS).filter(k=>x[k]).map(k=>x[k]+" "+MEFAIT_LABELS[k].toLowerCase()+(x[k]>1?"s":"")).join(", ");
-        seen[a.id]=(seen[a.id]||0)+net;
-        bt.set(doc(collection(db,"journal")),{aventurier:a.id,nom:a.nom,bureau:q.bureau,points:net,raison:"Quête : "+q.titre+" (gain +"+(x.gain||0)+(pen?", méfaits −"+pen+" : "+det:"")+")",quete:q.id,date:serverTimestamp()});});
-      Object.keys(seen).forEach(id=>{if(seen[id])addPoints(bt,aventuriers.find(y=>y.id===id),q.bureau,seen[id]);});
+        seen[a.id]=seen[a.id]||{r:0,n:0};seen[a.id].r+=net;seen[a.id].n+=netN;
+        bt.set(doc(collection(db,"journal")),{aventurier:a.id,nom:a.nom,bureau:q.bureau,points:net,notoriete:netN,raison:"Quête : "+q.titre+" (gain +"+(x.gain||0)+(pen?", méfaits −"+pen+" : "+det:"")+")",quete:q.id,date:serverTimestamp()});});
+      Object.keys(seen).forEach(id=>{if(seen[id].r||seen[id].n)addPoints(bt,aventuriers.find(y=>y.id===id),q.bureau,seen[id].r,seen[id].n);});
       await bt.commit();
     });return;
   }
@@ -3155,9 +3244,9 @@ document.addEventListener("submit",async e=>{
     ui.signupMsg={id:q.id,text:"Rapport envoyé au DM. Merci !"};render();return;
   }
   if(e.target.id==="adjform"){
-    const a=aventuriers.find(y=>y.id===v("j-adv")),bid=v("j-b"),n=Math.round(+v("j-pts")||0),why=v("j-why").slice(0,200);if(!a||!n)return;
+    const a=aventuriers.find(y=>y.id===v("j-adv")),bid=v("j-b"),n=Math.round(+v("j-pts")||0),nn=Math.round(+v("j-ptsn")||0),why=v("j-why").slice(0,200);if(!a||(!n&&!nn))return;
     ui.adjust=false;
-    await run("Renommée",async()=>{const bt=writeBatch(db);addPoints(bt,a,bid,n);bt.set(doc(collection(db,"journal")),{aventurier:a.id,nom:a.nom,bureau:bid,points:n,raison:why||"Ajustement du DM",date:serverTimestamp()});await bt.commit();});return;
+    await run("Renommée",async()=>{const bt=writeBatch(db);addPoints(bt,a,bid,n,nn);bt.set(doc(collection(db,"journal")),{aventurier:a.id,nom:a.nom,bureau:bid,points:n,notoriete:nn,raison:why||"Ajustement du DM",date:serverTimestamp()});await bt.commit();});return;
   }
   if(e.target.id==="wikiform"){
     const titre=v("w-titre").slice(0,100),contenu=(document.getElementById("w-contenu")||{}).value||"",o=v("w-ordre");if(!titre)return;
@@ -3169,13 +3258,14 @@ document.addEventListener("submit",async e=>{
     if(ok&&isNew)location.hash="#"+id;return;
   }
   if(e.target.id==="scaleform"){
-    const niveaux=scaleList().map(s=>{const raw=v("sc-s"+s.n);return {n:s.n,seuil:s.n===0?0:(raw===""||isNaN(+raw)?seuilOf(s):Math.round(+raw)),titre:v("sc-t"+s.n).slice(0,40)||s.titre,effet:v("sc-e"+s.n).slice(0,300)};});
-    ui.scaleEdit=false;
-    const seuils={};niveaux.forEach(n=>{seuils[String(n.n)]=n.seuil;});
+    const noto=NOTO_DEF.map(d=>({n:d.n,titre:v("sn-t"+d.n).slice(0,40)||d.titre,effet:v("sn-e"+d.n).slice(0,300)})),repu=REPU_DEF.map(d=>({r:d.r,titre:v("sr-t"+d.r).slice(0,40)||d.titre,effet:v("sr-e"+d.r).slice(0,300)}));
+    const seuilsN={},seuilsR={};NOTO_DEF.forEach(d=>{const x=v("sn-s"+d.n);seuilsN[String(d.n)]=d.n===1?0:(x===""||isNaN(+x)?seuilN(d.n):Math.round(+x));});REPU_DEF.forEach(d=>{const x=v("sr-s"+d.r);seuilsR[String(d.r)]=d.r===5?0:(x===""||isNaN(+x)?seuilR(d.r):Math.round(+x));});
+    const titres={};REPU_DEF.forEach(r=>NOTO_DEF.forEach(n=>{const c=r.r*10+n.n;titres[String(c)]=v("tt-"+c).slice(0,40);}));
     const mefaits={};Object.keys(DEFAULT_MEFAITS).forEach(k=>{const x=v("mf-"+k);mefaits[k]=x===""||isNaN(+x)?mefaitPts()[k]:Math.abs(Math.round(+x));});
-    await run("Échelle",async()=>{const bt=writeBatch(db);bt.set(doc(db,"config","renommee"),{niveaux:niveaux.map(n=>({n:n.n,titre:n.titre,effet:n.effet})),majLe:serverTimestamp()},{merge:true});bt.set(doc(db,"prive","renommee"),{seuils,mefaits},{merge:true});await bt.commit();
-      // recalcul des rangs publics avec les nouveaux seuils
-      const bt2=writeBatch(db);let k=0;aventuriers.forEach(a=>bureaux.forEach(b=>{const nl=levelOf(pts(a,b.id));if(nl!==renown(a,b.id)){k++;bt2.update(doc(db,"aventuriers",a.id),new FieldPath("niveaux",b.id),nl);}}));if(k)await bt2.commit();});return;
+    ui.scaleEdit=false;
+    await run("Renommée",async()=>{const bt=writeBatch(db);bt.set(doc(db,"config","renommee"),{noto,repu,titres,majLe:serverTimestamp()},{merge:true});bt.set(doc(db,"prive","renommee"),{seuilsN,seuilsR,mefaits},{merge:true});await bt.commit();
+      priv=Object.assign({},priv||{},{seuilsN,seuilsR});
+      const bt2=writeBatch(db);let k=0;aventuriers.forEach(a=>bureaux.forEach(b=>{if(typeof (pointsMap[a.id]||{})[b.id]!=="number"&&typeof (notoMap[a.id]||{})[b.id]!=="number")return;const nc=codeOf(ptsN(a,b.id),pts(a,b.id));if(nc!==renown(a,b.id)){k++;bt2.update(doc(db,"aventuriers",a.id),new FieldPath("niveaux",b.id),nc);}}));if(k)await bt2.commit();});return;
   }
   if(e.target.id==="nameform"){
     const qid=e.target.getAttribute("data-id"),name=v("f-addname").slice(0,40);if(!name)return;
