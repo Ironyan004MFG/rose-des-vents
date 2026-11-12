@@ -369,6 +369,27 @@ form .csqpick label.pickrow{min-height:0;padding:4px 8px;display:flex;flex-direc
 form .csqpick label.pickrow input{flex:none;width:18px;height:18px;margin-top:2px}
 .csqkept{border-left:3px solid #a3271a;padding:4px 10px;margin:.6em 0;background:rgba(163,39,26,.05)}
 .csqkept h4{margin:0 0 4px}
+ul.csqitems{list-style:none;padding:0;margin:0 0 10px;display:grid;gap:6px}
+.csqitem{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-left:3px solid #a3271a;border-radius:6px}
+.csqitem .desc{grid-column:1;font-size:13px}.csqitem .csqact{grid-column:2;grid-row:1/3;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+.csqitem.done{border-left-color:#3d7a3a;opacity:.85}
+.evoprop{border:2px solid var(--gold);border-radius:8px;padding:10px 14px;margin:0 0 12px;background:#fbf3d8;color:var(--ink)}
+.evoprop h3{margin:6px 0}
+.modbal{display:inline-flex;gap:2px;vertical-align:middle;margin:0 4px}.modbal i{width:10px;height:10px;border-radius:2px;background:#d8cba6}.modbal i.zero{background:#bfb39a}
+.modbal i.on.neg{background:#a3271a}.modbal i.on.pos{background:#3d7a3a}.modbal i.on.zero{background:#3a2f1f}
+ol.modsteps{padding-left:22px}ol.modsteps li.past{opacity:.6}ol.modsteps li.cur>details>summary{font-weight:700;color:#6b4d0a}
+ul.modlist{list-style:none;padding:0;display:grid;gap:6px}.modprog{font-size:13px}
+.cartest{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;margin:12px 0;padding:10px 14px;border:1px solid var(--line);border-radius:8px}
+.ccat.sens-negatif{background:#a3271a;color:#fff}.ccat.sens-positif{background:#3d7a3a;color:#fff}
+.cartest.due.negatif{border:2px solid #a3271a}.cartest.due.positif{border:2px solid #3d7a3a}
+.evoprop.neg{border-color:#a3271a;background:#f8e8e4}
+ul.evomaj{margin:6px 0;padding-left:18px}
+ul.agelist{list-style:none;margin:0;padding:0;display:grid;gap:3px;min-width:180px}
+ul.agelist li{display:grid;grid-template-columns:minmax(0,1fr) 60px auto;gap:6px;align-items:center;font-size:13px}
+.agen{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prog.near i{background:#c98a1a}.prog.over i{background:#a3271a}
+.evotab{background:#fff;border:1px dashed var(--parch-3);border-radius:6px;padding:6px 10px}
+@media (max-width:640px){.csqitem{grid-template-columns:1fr}.csqitem .csqact{grid-column:1;grid-row:auto;justify-content:flex-start}}
 .objres{display:flex;flex-direction:column;gap:4px;justify-content:flex-end}
 .objres .stamp{align-self:flex-start}
 .winbox{margin:12px 0;padding:10px 14px;border:2px solid var(--gold);border-radius:8px;background:#fbf3d8}
@@ -1024,6 +1045,7 @@ const DEFAULT_SCALE = [
 ];
 
 /* ---------- state ---------- */
+let evoPriv=null;
 let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, notoMap = {}, relations = [], priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], parties = [], modules = [], butins = [], crieur = null, pnjs = [], monstres = [], rencontres = [], scenarios = {};
 const loaded = {b:false, q:false, i:false, a:false, w:false, c:false};
 let user = null, isAdmin = false, adminChecked = false;
@@ -1117,7 +1139,7 @@ function listen(){
 }
 // Données réservées au DM (points, journal, seuils) : lues seulement par un compte admin.
 function listenPrivate(on){
-  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};notoMap={};relations=[];journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;dossiers={};factions=[];parties=[];modules=[];butins=[];crieur=null;pnjs=[];monstres=[];rencontres=[];scenarios={};
+  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};notoMap={};relations=[];journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;evoPriv=null;dossiers={};factions=[];parties=[];modules=[];butins=[];crieur=null;pnjs=[];monstres=[];rencontres=[];scenarios={};
   if(!on)return;
   const err=e=>console.error(e);
   privUnsubs.push(onSnapshot(collection(db,"points"),snap=>{const m={};const nm={};snap.docs.forEach(d=>{m[d.id]=(d.data().parRegion)||{};nm[d.id]=(d.data().notoriete)||{};});pointsMap=m;notoMap=nm;render();},err));
@@ -1130,6 +1152,7 @@ function listenPrivate(on){
   privUnsubs.push(onSnapshot(collection(db,"evolutions"),snap=>{evols=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","monde"),snap=>{monde=snap.exists()?snap.data():null;render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","crieur"),snap=>{crieur=snap.exists()?snap.data():null;render();},err));
+  privUnsubs.push(onSnapshot(doc(db,"prive","evolution"),snap=>{evoPriv=snap.exists()?snap.data():null;render();},err));
   privUnsubs.push(onSnapshot(collection(db,"compendium"),snap=>{compAll=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
 }
 window.addEventListener("offline",()=>{net={state:"hors-ligne",msg:""};render();});
@@ -1315,7 +1338,7 @@ function card(q){
 }
 function form(){
   const blank={bureau:ui.office,titre:"",type:"Contrat",rang:"cuivre",statut:"ouverte",lieu:"",recompense:"",niveau:"",joueurs:"",joueursMin:null,joueursMax:null,supercharged:false,date:"",description:""};
-  const q=ui.editing==="new"?blank:questById(ui.editing);
+  const q=ui.editing==="new"?Object.assign(blank,ui.questDraft||{}):questById(ui.editing);
   if(!q)return "";
   const opts=(keys,cur,label)=>keys.map(k=>'<option value="'+esc(k)+'"'+(k===cur?" selected":"")+'>'+esc(label(k))+'</option>').join("");
   return '<form class="form" id="qform"><h2>'+(ui.editing==="new"?"Nouvelle quête":"Modifier la quête")+'</h2>'+
@@ -1635,6 +1658,20 @@ function seuilMonde(){const v=monde&&monde.seuil;return typeof v==="number"&&v>0
 function doneIn(bid){return quetes.filter(q=>q.bureau===bid&&q.rapport&&(q.statut==="terminee"||q.statut==="archivee"));}
 function pendingIn(bid){const r=(monde&&monde.regions&&monde.regions[bid])||{},vues=r.vues||[];return doneIn(bid).filter(q=>vues.indexOf(q.id)<0);}
 function dueRegions(){return bureaux.filter(b=>pendingIn(b.id).length>=seuilMonde());}
+// Âge d'une quête ouverte = missions accomplies depuis sa publication (ou sa dernière évolution) : 1 dans sa région, ½ ailleurs.
+function ageMax(){const v=monde&&monde.ageMax;return typeof v==="number"&&v>0?v:4;}
+function aggravSeuil(){const v=monde&&monde.aggravSeuil;return typeof v==="number"&&v>0?v:2;}
+function ageBase(q){return Math.max(tms(q.creeLe)||0,((monde&&monde.reset)||{})[q.id]||0);}
+function ageOf(q){const F=(monde&&monde.fini)||{},b=ageBase(q);let a=0;Object.keys(F).forEach(k=>{const e=F[k];if(k!==q.id&&e&&e.ms>b)a+=e.r===q.bureau?1:0.5;});return a;}
+function agedIn(bid){return quetes.filter(q=>q.statut==="ouverte"&&(!bid||q.bureau===bid)&&ageOf(q)>=ageMax());}
+function aggravIn(bid){const r=(monde&&monde.regions&&monde.regions[bid])||{},A=r.aggrav||{},c=r.criseMs||0;return Object.keys(A).filter(k=>A[k]>c).length;}
+function criseRegions(){return bureaux.filter(b=>aggravIn(b.id)>=aggravSeuil());}
+// Sens d'une évolution de région : positive s'il n'y a eu aucune aggravation depuis la dernière évolution, sinon mitigée.
+function regionSens(bid){return aggravIn(bid)===0?"positif":"mixte";}
+function carteSeuil(){const v=monde&&monde.carteSeuil;return typeof v==="number"&&v>0?v:2;}
+function carteCount(){const c=(monde&&monde.carteMs)||0,l=evols.filter(e=>e.region!=="carte"&&tms(e.date)>c);return {pos:l.filter(e=>e.sens==="positif").length,neg:l.filter(e=>e.sens==="negatif").length};}
+function carteDue(){const k=carteCount(),n=carteSeuil();return k.neg>=n?"negatif":(k.pos>=n&&k.neg===0?"positif":null);}
+const SENS_L={positif:"positive",mixte:"mitigée",negatif:"crise"};
 function newsFor(bid){return nouvelles.filter(n=>!bid||n.region===bid||(bid&&n.region==="cote")).sort((a,b)=>tms(b.date)-tms(a.date));}
 function tms(t){return t&&t.toMillis?t.toMillis():0;}
 function newsChars(n){const l=(n.aventuriers||[]).map(id=>aventuriers.find(a=>a.id===id)).filter(Boolean);
@@ -1693,7 +1730,7 @@ const MAN={
   factions:{coll:"factions",nom:"faction",fields:[["nom","Nom","text",1],["image","Emblème","image"],["type","Type (guilde, culte, gang, autorité, ordre…)","text"],["regions","Zones d'influence","regionmulti"],["siege","Siège","text"],["chef","Chef (nom d'un PNJ ou description)","text"],["attitude","Attitude envers la Guilde","select",0,ATTITUDES],
     ["presentation","Présentation (pour toi)","md"],["objectifs","Objectifs publics","md"],["secrets","Objectifs secrets et secrets","md"],["allies","Alliés","factionmulti"],["rivaux","Rivaux","factionmulti"],["notes","Notes","md"]]},
   modules:{coll:"modules",nom:"module",fields:[["nom","Nom du module","text",1],["ordre","Ordre chronologique (1, 2, 3…)","number"],["periode","Période (ex. été 1492 DR)","text"],["statut","Statut","select",0,MOD_STATUS],["regions","Régions touchées","regionmulti"],["heros","Les héros qui le vivent (l'autre groupe)","text"],
-    ["resume","Résumé de l'intrigue (pour toi)","md"],["signes","Signes publics : ce que le peuple voit et entend (rumeurs, Crieur)","md"],["consequences","Conséquences par région (pour les évolutions)","md"],["accroches","Quêtes secondaires pour la Guilde (aider les héros)","md"],["notes","Notes","md"]]},
+    ["resume","Résumé de l'intrigue (pour toi)","md"],["signes","Signes publics : ce que le peuple voit et entend (rumeurs, Crieur)","md"],["consequences","Conséquences par région (pour les évolutions)","md"],["accroches","Quêtes secondaires pour la Guilde (aider les héros)","md"],["etapes","Étapes (« ## Titre » par étape, puis « ## Fin positive », « ## Fin normale », « ## Fin négative »)","md"],["notes","Notes","md"]]},
   rencontres:{coll:"rencontres",nom:"rencontre",fields:[["nom","Nom","text",1],["region","Région","region"],["quete","Quête liée","questref"],["monstres","Monstres","monsterlist"],["terrain","Terrain et ambiance","textarea"],["notes","Tactique et déroulement","md"],["butin","Butin prévu (une ligne par objet, ex. « Épée courte (10 po) »)","textarea"]]},
   dossiers:{coll:"dossiers",nom:"dossier",fields:[["outerworlder","Outerworlder","select",0,[["","À déterminer"],["oui","Oui"],["non","Non (natif)"]]],["donNom","Don accordé par le Système","text"],["donDesc","Effet du Don","md"],["niveau","Niveau","number"],["ca","CA","number"],["pv","PV max","number"],["percPassive","Perception passive","number"],["accroches","Accroches et liens","md"],["notes","Notes du DM","md"]]},
   scenarios:{coll:"scenarios",nom:"scénario",fields:[["module","Module officiel lié (quête secondaire)","moduleref"],["scenario","Scénario","md"],["objectifs","Objectifs (secrets)","objs"],["consequences","Autres conséquences pour le monde","consq"],["rencontres","Rencontres liées","rencmulti"],["pnj","PNJ liés","pnjmulti"],["monstres","Monstres liés","monstermulti"],["butinQuete","Objets de quête","questloot"],["notes","Notes","md"]]}
@@ -1801,6 +1838,20 @@ function filterQ(l,keys){const q=ui.manQ.trim().toLowerCase();return !q?l:l.filt
 function searchBar(lbl,newLbl){return '<div class="compbar"><label for="man-q" class="sr">Rechercher</label><input id="man-q" type="search" placeholder="'+lbl+'" value="'+esc(ui.manQ)+'">'+(newLbl?'<button class="btn gold" data-a="man-new">'+newLbl+'</button>':'')+'</div>';}
 function modOrder(){return modules.slice().sort((a,b)=>((a.ordre==null?999:a.ordre)-(b.ordre==null?999:b.ordre))||String(a.nom).localeCompare(String(b.nom),"fr"));}
 function modChip(m){return '<span class="ccat mod-'+esc(m.statut||"avenir")+'">'+esc(MOD_LBL[m.statut]||"À venir")+'</span>';}
+/* ---------- progression des modules (indépendante des joueurs) ---------- */
+function modPas(){const v=monde&&monde.modPas;return typeof v==="number"&&v>0?v:3;}
+function modParse(m){const t=String(m.etapes||""),parts=t.split(/\n(?=##\s)/).map(x=>x.trim()).filter(x=>/^##\s/.test(x));
+  const st=[],fins={};parts.forEach(x=>{const h=x.split("\n")[0].replace(/^##\s*/,"").trim(),body=x.split("\n").slice(1).join("\n").trim(),f=h.toLowerCase().match(/^fin\s+(positive|normale|n[ée]gative)/);
+    if(f)fins[f[1].startsWith("n")&&f[1]!=="normale"?"negative":f[1]]={titre:h,txt:body};else st.push({titre:h,txt:body});});return {etapes:st,fins:fins};}
+function modActive(m){return m.statut==="premices"||m.statut==="encours";}
+function modMissions(m){const F=(monde&&monde.fini)||{},b=m.etapeMs||m.debutMs||0;return Object.keys(F).filter(k=>F[k]&&F[k].ms>b).length;}
+function modEtape(m){return typeof m.etape==="number"?m.etape:0;}
+function modDue(m){if(!modActive(m))return null;const n=modParse(m).etapes.length;if(!n)return null;return modMissions(m)>=modPas()?(modEtape(m)+1>=n?"fin":"etape"):null;}
+function modBalance(m){const R=m.regions||[],all=R.indexOf("cote")>=0,b=m.debutMs||0;return evols.filter(e=>e.region!=="carte"&&(all||R.indexOf(e.region)>=0)&&tms(e.date)>b).reduce((t,e)=>t+(e.sens==="positif"?1:e.sens==="negatif"?-1:0),0);}
+function modFinOf(bal){return bal>0?"positive":bal<0?"negative":"normale";}
+function modGauge(bal){const c=Math.max(-3,Math.min(3,bal));return '<span class="modbal" title="Balance : '+(bal>0?'+':'')+bal+'">'+[-3,-2,-1,0,1,2,3].map(i=>'<i class="'+(i===c?'on ':'')+(i<0?'neg':i>0?'pos':'zero')+'"></i>').join("")+'</span>';}
+function modProg(m){const P=modParse(m),n=P.etapes.length,e=modEtape(m),left=Math.max(0,modPas()-modMissions(m));
+  return n?'<span class="modprog">Étape '+Math.min(e+1,n)+' / '+n+(modActive(m)?(left?' · prochaine dans '+left+' mission'+(left>1?'s':''):' · étape suivante due'):'')+'</span>':'<span class="desc">Étapes à écrire</span>';}
 function modsIn(bid,active){return modOrder().filter(m=>((m.regions||[]).indexOf(bid)>=0||(m.regions||[]).indexOf("cote")>=0)&&(!active||m.statut==="premices"||m.statut==="encours"));}
 function modQuests(m){return quetes.filter(q=>(scenarios[q.id]||{}).module===m.id);}
 function factionByName(n){const k=String(n||"").trim().toLowerCase();return factions.find(f=>String(f.nom).toLowerCase()===k);}
@@ -1836,6 +1887,10 @@ function secGeneric(type){const S=MAN[type],list=manList(type);
     if(type==="modules"){const qs=modQuests(x);
       h+='<div class="ctags">'+modChip(x)+(x.periode?'<span class="creg">'+esc(x.periode)+'</span>':'')+(x.ordre!=null?'<span class="ccat">N° '+esc(x.ordre)+' dans la chronologie</span>':'')+'</div><h2>'+esc(x.nom)+'</h2>'+
         '<p class="ctags">'+(x.regions||[]).map(r=>'<span class="creg">'+esc(regionName(r))+'</span>').join("")+'</p>'+(x.heros?'<p class="desc"><strong>Les héros :</strong> '+esc(x.heros)+'</p>':'');
+      if(ui.dm){const P=modParse(x),e=modEtape(x),bal=modBalance(x);
+        h+='<section class="modtrack"><h3>Progression</h3><p>'+modProg(x)+' · Balance '+modGauge(bal)+' <span class="desc">'+(modActive(x)?'fin '+({positive:"positive",normale:"normale",negative:"négative"})[modFinOf(bal)]+' si elle s\'arrêtait maintenant':(x.fin?'Fin '+esc(x.fin):''))+'</span></p>'+
+          (P.etapes.length?'<ol class="modsteps">'+P.etapes.map((st,i)=>'<li class="'+(i<e?'past':i===e&&modActive(x)?'cur':'')+'"><details'+(i===e&&modActive(x)?' open':'')+'><summary>'+esc(st.titre)+'</summary><div class="wikibody">'+md(st.txt)+'</div></details></li>').join("")+'</ol>':'')+
+          (Object.keys(P.fins).length?'<details class="csqbox"><summary>Les fins possibles</summary>'+["positive","normale","negative"].filter(k=>P.fins[k]).map(k=>'<h4>'+esc(P.fins[k].titre)+'</h4><div class="wikibody">'+md(P.fins[k].txt)+'</div>').join("")+'</details>':'')+'</section>';}
       h+=mdBlock("Résumé de l'intrigue",x.resume)+mdBlock("Signes publics",x.signes)+mdBlock("Conséquences par région",x.consequences)+mdBlock("Quêtes secondaires pour la Guilde",x.accroches);
       h+='<h3>Quêtes liées à ce module</h3>'+(qs.length?'<ul class="todo">'+qs.map(q=>'<li><span>'+rankSeal(q.rang)+' <strong>'+esc(q.titre)+'</strong> · '+esc((office(q.bureau)||{}).nom||"")+' · '+esc(STATUS[q.statut]||"")+'</span><button class="mini" data-a="man-quest" data-id="'+esc(q.id)+'">Scénario</button></li>').join("")+'</ul>':'<p class="desc">Aucune pour l\'instant. Pour lier une quête : ouvre son scénario (Quêtes & scénarios) et choisis ce module dans « Module officiel lié ».</p>');
       h+=mdBlock("Notes",x.notes);
@@ -1961,7 +2016,12 @@ function dmManual(){
 /* ---------- Espace DM ---------- */
 function todoItems(){
   const it=[];
-  dueRegions().forEach(b=>it.push({k:"evol",t:'<strong>'+esc(b.nom)+'</strong> : le monde doit réagir ('+pendingIn(b.id).length+' quêtes accomplies)',act:'<button class="mini" data-a="evolve" data-id="'+esc(b.id)+'">Faire évoluer</button>'}));
+  modOrder().forEach(m=>{const d=modDue(m);if(!d)return;const P=modParse(m),bal=modBalance(m);
+    it.push({k:"evol",t:'<strong>'+esc(m.nom)+'</strong> : '+(d==="fin"?'<strong class="warn">fin du module</strong> ('+({positive:"positive",normale:"normale",negative:"négative"})[modFinOf(bal)]+', balance '+(bal>0?'+':'')+bal+')':'passe à l\'étape '+(modEtape(m)+2)+' / '+P.etapes.length+' : '+esc((P.etapes[modEtape(m)+1]||{}).titre||""))+evoWait("module",m.id),act:''});});
+  {const cd=carteDue();if(cd)it.push({k:"evol",t:'<strong>Toute la carte</strong> : '+(cd==="negatif"?'<strong class="warn">le monde s\'assombrit</strong> ('+carteCount().neg+' crises régionales)':'<strong>le monde s\'éclaire</strong> ('+carteCount().pos+' évolutions positives)')+evoWait("carte",cd),act:''});}
+  dueRegions().forEach(b=>it.push({k:"evol",t:'<strong>'+esc(b.nom)+'</strong> : évolution '+SENS_L[regionSens(b.id)]+' de la région ('+pendingIn(b.id).length+' quêtes accomplies'+(aggravIn(b.id)?', '+aggravIn(b.id)+' aggravation'+(aggravIn(b.id)>1?'s':''):', aucune aggravation')+')'+evoWait("region",b.id),act:'<button class="mini" data-a="evolve" data-id="'+esc(b.id)+'">Faire évoluer moi-même</button>'}));
+  criseRegions().forEach(b=>it.push({k:"evol",t:'<strong>'+esc(b.nom)+'</strong> : <strong class="warn">crise régionale</strong> ('+aggravIn(b.id)+' quêtes aggravées)'+evoWait("crise",b.id),act:''}));
+  agedIn().forEach(q=>{const b=office(q.bureau);it.push({k:"evol",t:'<strong>'+esc(q.titre)+'</strong> ('+esc(b?b.nom:"")+') : quête ignorée, âge '+fmtAge(ageOf(q))+' / '+ageMax()+', elle va s\'aggraver'+evoWait("maj",q.id),act:''});});
   quetes.filter(q=>q.statut==="ouverte").forEach(q=>{const s=signupsFor(q.id),att=s.filter(x=>x.statut==="attente").length;if(!att)return;const pb=planBest(q),b=office(q.bureau);
     it.push({k:"group",t:'<strong>'+esc(q.titre)+'</strong> ('+esc(b?b.nom:"")+') : '+att+' demande'+(att>1?'s':'')+' en attente'+(pb?' · meilleure date : '+esc(fmtPlan(pb)):''),act:'<a class="mini" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir</a>'});});
   quetes.filter(q=>q.statut==="encours"&&q.rapportBrouillon&&q.rapportBrouillon.resume).forEach(q=>it.push({k:"report",t:'<strong>'+esc(q.titre)+'</strong> : rapport reçu de '+esc(q.rapportBrouillon.auteur||"un joueur"),act:'<a class="mini" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Terminer</a>'}));
@@ -2002,10 +2062,13 @@ function evolveForm(bid){
 function dmEvol(){
   if(ui.evolve)return evolveForm(ui.evolve);
   const X=seuilMonde();
-  let h='<form class="inline dmseuil" id="seuilform"><label for="ev-seuil">Le monde réagit toutes les<input id="ev-seuil" type="number" min="1" max="50" value="'+X+'"></label><span>quêtes accomplies dans une région.</span><button class="btn ghost" type="submit">Enregistrer</button></form>';
-  h+='<div class="tablebox light"><table class="dmtable"><thead><tr><th scope="col">Comptoir</th><th scope="col">Depuis la dernière évolution</th><th scope="col">Modules en cours</th><th scope="col"></th></tr></thead><tbody>'+bureaux.map(b=>{const n=pendingIn(b.id).length,pc=Math.min(100,Math.round(n/X*100));
-    return '<tr'+(n>=X?' class="due"':'')+'><th scope="row">'+esc(b.nom)+'</th><td><span class="prog" role="img" aria-label="'+n+' sur '+X+'"><i style="width:'+pc+'%"></i></span> '+n+' / '+X+(n>=X?' <strong class="warn">Le monde doit réagir</strong>':'')+'</td><td>'+(modsIn(b.id,true).map(m=>'<a class="ccat mod-'+esc(m.statut)+'" href="#man/modules/'+encodeURIComponent(m.id)+'">'+esc(m.nom)+'</a>').join(" ")||'<span class="desc">—</span>')+'</td><td><button class="mini" data-a="evolve" data-id="'+esc(b.id)+'">Faire évoluer</button></td></tr>';}).join("")+'</tbody></table></div>';
-  h+='<section class="dmsec"><h2>Journal des évolutions</h2>'+(evols.length?evols.slice().sort((a,b)=>tms(b.date)-tms(a.date)).map(e=>'<article class="evlog"><div class="ntop"><span class="creg">'+esc(regionName(e.region))+'</span><span class="jd">'+esc(fmtDate(e.date))+'</span></div>'+
+  let h='<form class="inline dmseuil" id="seuilform"><label for="ev-seuil">Le monde réagit toutes les<input id="ev-seuil" type="number" min="1" max="50" value="'+X+'"></label><span>quêtes accomplies dans une région.</span><label for="ev-agemax">Une quête ignorée s\'aggrave à l\'âge<input id="ev-agemax" type="number" min="1" max="50" step="0.5" value="'+ageMax()+'"></label><label for="ev-aggr">Crise régionale après<input id="ev-aggr" type="number" min="1" max="20" value="'+aggravSeuil()+'"></label><span>quêtes aggravées.</span><label for="ev-modpas">Les modules avancent toutes les<input id="ev-modpas" type="number" min="1" max="20" value="'+modPas()+'"></label><span>missions.</span><label for="ev-carte">La carte évolue après<input id="ev-carte" type="number" min="1" max="20" value="'+carteSeuil()+'"></label><span>évolutions de région du même sens.</span><button class="btn ghost" type="submit">Enregistrer</button></form>';
+  h+='<div class="tablebox light"><table class="dmtable"><thead><tr><th scope="col">Comptoir</th><th scope="col">Depuis la dernière évolution</th><th scope="col">Quêtes ouvertes (âge)</th><th scope="col">Aggravations</th><th scope="col">Modules en cours</th><th scope="col"></th></tr></thead><tbody>'+bureaux.map(b=>{const n=pendingIn(b.id).length,pc=Math.min(100,Math.round(n/X*100));
+    return '<tr'+(n>=X?' class="due"':'')+'><th scope="row">'+esc(b.nom)+'</th><td><span class="prog" role="img" aria-label="'+n+' sur '+X+'"><i style="width:'+pc+'%"></i></span> '+n+' / '+X+(n>=X?' <strong class="warn">Le monde doit réagir</strong>':'')+'</td><td>'+agesCell(b.id)+'</td><td>'+(aggravIn(b.id)>=aggravSeuil()?'<strong class="warn">':'')+aggravIn(b.id)+' / '+aggravSeuil()+(aggravIn(b.id)>=aggravSeuil()?' · crise</strong>':'')+'</td><td>'+(modsIn(b.id,true).map(m=>'<a class="ccat mod-'+esc(m.statut)+'" href="#man/modules/'+encodeURIComponent(m.id)+'">'+esc(m.nom)+(modParse(m).etapes.length?' · '+Math.min(modEtape(m)+1,modParse(m).etapes.length)+'/'+modParse(m).etapes.length:'')+'</a>').join(" ")||'<span class="desc">—</span>')+'</td><td><button class="mini" data-a="evolve" data-id="'+esc(b.id)+'">Faire évoluer</button></td></tr>';}).join("")+'</tbody></table></div>';
+  {const k=carteCount(),n=carteSeuil(),cd=carteDue();h+='<div class="cartest'+(cd?' due '+cd:'')+'"><strong>Toute la carte</strong><span>Évolutions positives : '+k.pos+' / '+n+'</span><span>Crises régionales : '+k.neg+' / '+n+'</span>'+(cd?'<strong class="warn">'+(cd==="negatif"?'Le monde s\'assombrit':'Le monde s\'éclaire')+'</strong>':'<span class="desc">Une évolution de la carte remet ces compteurs à zéro.</span>')+'</div>';}
+  {const am=modOrder().filter(modActive);if(am.length)h+='<section class="dmsec"><h2>Les modules</h2><p class="desc">Les héros du module avancent seuls : une étape toutes les '+modPas()+' missions de la Guilde. Les évolutions de leurs régions font pencher la balance vers une fin positive ou négative.</p><ul class="modlist">'+am.map(m=>'<li><a href="#man/modules/'+encodeURIComponent(m.id)+'"><strong>'+esc(m.nom)+'</strong></a> '+modProg(m)+' '+modGauge(modBalance(m))+(modDue(m)?' <strong class="warn">'+(modDue(m)==="fin"?'fin due':'étape due')+'</strong>':'')+'</li>').join("")+'</ul></section>';}
+  h+=csqSection();
+  h+='<section class="dmsec"><h2>Journal des évolutions</h2>'+(evols.length?evols.slice().sort((a,b)=>tms(b.date)-tms(a.date)).map(e=>'<article class="evlog"><div class="ntop"><span class="creg">'+esc(e.region==="carte"?"Toute la carte":regionName(e.region))+'</span>'+(e.sens?'<span class="ccat sens-'+esc(e.sens)+'">'+esc(e.region==="carte"?(e.sens==="negatif"?"Le monde s'assombrit":"Le monde s'éclaire"):"Évolution "+(SENS_L[e.sens]||""))+'</span>':'')+'<span class="jd">'+esc(fmtDate(e.date))+'</span></div>'+
     (e.notes?'<div class="wikibody">'+md(e.notes)+'</div>':'<p class="desc">Sans notes.</p>')+
     ((e.changements||[]).length?'<ul class="todo">'+e.changements.map(c=>'<li><span>'+esc(c.titre)+' : '+esc((RANKS[c.ancienRang]||{}).label||c.ancienRang)+' → '+esc((RANKS[c.nouveauRang]||{}).label||c.nouveauRang)+(c.maj?' · « '+esc(c.maj)+' »':'')+'</span></li>').join("")+'</ul>':'')+
     (e.nouvelleTitre?'<p class="desc">Nouvelle publiée : « '+esc(e.nouvelleTitre)+' »</p>':'')+'</article>').join(""):'<p class="desc">Aucune évolution pour l\'instant.</p>')+'</section>';
@@ -2274,7 +2337,7 @@ function render(){
 function route(){
   const id=(location.hash||"").slice(1);
   const next=id&&id!=="carte"?id:null;
-  if(next!==ui.office){ui.office=next;if(!(next==="personnages"&&ui.sheetEdit==="new"))ui.sheetEdit=null;if(!(next==="compendium"&&ui.compEdit==="new"))ui.compEdit=null;ui.compHist=null;ui.compVer=null;ui.confirmComp=null;ui.evolve=null;ui.noteEdit=null;ui.newsEdit=null;if(!ui.pendingMan){ui.manEdit=null;}ui.pendingMan=false;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter=ui.pendingFilter||"ouverte";ui.rank="all";const focusQ=ui.pendingQuest;ui.pendingFilter=null;ui.pendingQuest=null;render();
+  if(next!==ui.office){ui.office=next;if(!(next==="personnages"&&ui.sheetEdit==="new"))ui.sheetEdit=null;if(!(next==="compendium"&&ui.compEdit==="new"))ui.compEdit=null;ui.compHist=null;ui.compVer=null;ui.confirmComp=null;ui.evolve=null;ui.noteEdit=null;ui.newsEdit=null;if(!ui.pendingMan){ui.manEdit=null;}ui.pendingMan=false;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=ui.pendingEdit||null;ui.pendingEdit=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter=ui.pendingFilter||"ouverte";ui.rank="all";const focusQ=ui.pendingQuest;ui.pendingFilter=null;ui.pendingQuest=null;render();
     try{const el=focusQ&&document.getElementById("q-"+focusQ);if(el){el.scrollIntoView({block:"center"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1600);}else window.scrollTo(0,0);}catch(e){}}
 }
 window.addEventListener("hashchange",route);
@@ -2590,6 +2653,46 @@ function csqList(q){const l=csqParse((scenarios[q.id]||{}).consequences);return 
 // Conséquences retenues au bilan (privé : dans le scénario)
 function csqKept(q){const m=(scenarios[q.id]||{}).monde;if(!m||!((m.liste||[]).length||m.autre))return "";
   return '<div class="csqkept"><h4>Conséquences retenues ('+esc((RESULTS[m.resultat]||"").toLowerCase())+')</h4><ul>'+(m.liste||[]).map(t=>'<li>'+esc(t)+'</li>').join("")+(m.autre?'<li><em>'+esc(m.autre)+'</em></li>':'')+'</ul></div>';}
+// Conséquences retenues à suivre : une ligne par conséquence, avec son état (à suivre, rumeur/quête créée, réglée).
+function csqItems(q){const m=(scenarios[q.id]||{}).monde;if(!m)return [];const su=m.suites||{};
+  return (m.liste||[]).concat(m.autre?[m.autre]:[]).map((t,k)=>({q:q,k:k,txt:t,suite:su[k]||null}));}
+function csqAll(){return quetes.filter(q=>q.statut==="terminee"||q.statut==="archivee").flatMap(csqItems);}
+function fmtAge(a){return String(a).replace(".",",");}
+function evoWait(kind,id){const p=evoProps().find(x=>(kind==="maj"?x.type==="maj"&&x.quete===id:kind==="module"?x.type==="module"&&x.module===id:kind==="carte"?x.type==="carte":x.type==="region"&&x.region===id&&(kind==="crise")===(x.sens==="negatif")));
+  return p?' · <em>proposition prête dans Évolution du monde</em>':' · <span class="desc">en attente de Claude (« fais évoluer le monde »)</span>';}
+function evoProps(){const P=(evoPriv&&evoPriv.propositions)||{};return Object.keys(P).map(k=>Object.assign({pid:k},P[k]));}
+function csqProposed(x){return evoProps().some(p=>(p.sources||[]).some(r=>r.q===x.q.id&&+r.k===x.k));}
+function csqRow(x){const s=x.suite,lq=s&&s.quete&&questById(s.quete);
+  return '<li class="csqitem'+(s?' done':'')+'"><span class="csqtxt">'+esc(x.txt)+'</span><span class="desc">'+esc(x.q.titre)+'</span><span class="csqact">'+
+    (s?(lq?'<a class="ccat" href="#'+esc(lq.bureau)+'">'+(s.type==="rumeur"?'Rumeur':'Quête')+' : '+esc(lq.titre)+'</a>':'✓ Réglée hors-jeu')+(lq?'':' <button class="mini" data-a="csq-undo" data-id="'+esc(x.q.id)+'" data-v="'+x.k+'">Rouvrir</button>'):
+      '<span class="desc">'+(csqProposed(x)?'Proposition prête ↑':'À intégrer')+'</span><button class="mini" data-a="csq-done" data-id="'+esc(x.q.id)+'" data-v="'+x.k+'">✓ Réglée hors-jeu</button>')+'</span></li>';}
+function evoMajLine(m){const q=questById(m.quete);if(!q)return "";const ch=[];if(m.rang&&m.rang!==q.rang)ch.push('rang '+esc((RANKS[q.rang]||{}).label||q.rang)+' → '+esc((RANKS[m.rang]||{}).label||m.rang));if(m.recompense)ch.push('récompense : '+esc(m.recompense));if(m.scenario)ch.push('scénario adapté');if(m.objectifs)ch.push('objectifs revus');
+  return '<li><strong>'+esc(q.titre)+'</strong>'+(ch.length?' <span class="desc">('+ch.join(" · ")+')</span>':'')+(m.maj?'<div class="wikibody evotab">'+md(m.maj)+'</div>':'')+(m.scenario?'<details class="csqbox"><summary>Nouveau scénario</summary><div class="wikibody">'+md(m.scenario)+'</div></details>':'')+'</li>';}
+function evoPropCard(p){if(p.type==="maj"||p.type==="region"||p.type==="carte"||p.type==="module")return evoChgCard(p);const b=office(p.region);
+  return '<article class="evoprop"><div class="ntop"><span class="creg">'+esc(b?b.nom:p.region||"")+'</span><span class="ccat">'+(p.type==="rumeur"?'Rumeur':'Quête'+(p.rang&&RANKS[p.rang]?' · '+esc(RANKS[p.rang].label):''))+'</span></div>'+
+    '<h3>'+esc(p.titre||"")+'</h3>'+(p.texteJoueurs?'<p class="desc"><strong>Au tableau (ce que voient les joueurs) :</strong></p><div class="wikibody evotab">'+md(p.texteJoueurs)+'</div><p class="desc"><strong>Pour toi :</strong></p>':'')+'<div class="wikibody">'+md(p.description||"")+'</div>'+
+    (p.pourquoi?'<p class="desc"><strong>Pourquoi :</strong> '+esc(p.pourquoi)+'</p>':'')+
+    ((p.sources||[]).length?'<p class="desc"><strong>Conséquences intégrées :</strong> '+(p.sources||[]).map(r=>{const q=questById(r.q),x=q&&csqItems(q)[+r.k];return x?esc(x.txt):"";}).filter(Boolean).join(" · ")+'</p>':'')+
+    (p.scenario?'<details class="csqbox"><summary>Scénario proposé</summary><div class="wikibody">'+md(p.scenario)+'</div></details>':'')+
+    '<div class="actions">'+(ui.evoDel===p.pid?'<button class="btn danger sm" data-a="evo-rej-yes" data-id="'+esc(p.pid)+'">Confirmer le rejet</button><button class="btn ghost sm" data-a="evo-rej-no">Annuler</button>':'<button class="btn gold sm" data-a="evo-pub" data-id="'+esc(p.pid)+'">Publier au tableau</button><button class="btn ghost sm" data-a="evo-rej" data-id="'+esc(p.pid)+'">Rejeter</button>')+'</div></article>';}
+function evoChgCard(p){const q=p.type==="maj"?questById(p.quete):null,mo=p.type==="module"?modules.find(x=>x.id===p.module):null,b=p.type==="carte"?{nom:"Toute la carte"}:mo?{nom:mo.nom}:office(p.type==="maj"?(q&&q.bureau):p.region);
+  const lab=p.type==="module"?(p.fin?'Fin du module : '+({positive:"positive",normale:"normale",negative:"négative"})[p.fin]+(p.fin==="negative"?' (le monde s\'assombrit)':p.fin==="positive"?' (le monde s\'éclaire)':''):'Le module avance : étape '+((p.etape||0)+1)):p.type==="maj"?(p.aggravation?'Quête ignorée : aggravation':'Mise à jour de quête'):p.type==="carte"?(p.sens==="negatif"?'Le monde s\'assombrit':'Le monde s\'éclaire'):(p.sens==="negatif"?'Crise régionale':'Évolution '+(SENS_L[p.sens]||'')+' de la région');
+  return '<article class="evoprop'+((p.aggravation||p.sens==="negatif")?' neg':'')+'"><div class="ntop"><span class="creg">'+esc(b?b.nom:"")+'</span><span class="ccat">'+lab+'</span></div>'+
+    '<h3>'+esc(p.titre||(q?q.titre:""))+'</h3>'+(p.description?'<div class="wikibody">'+md(p.description)+'</div>':'')+
+    (p.pourquoi?'<p class="desc"><strong>Pourquoi :</strong> '+esc(p.pourquoi)+'</p>':'')+
+    (p.type==="maj"?'<ul class="evomaj">'+evoMajLine(Object.assign({},p))+'</ul>':'')+
+    ((p.type==="region"||p.type==="carte"||p.type==="module")&&(p.majs||[]).length?'<p class="desc"><strong>Quêtes touchées :</strong></p><ul class="evomaj">'+p.majs.map(evoMajLine).join("")+'</ul>':'')+
+    (p.nouvelleTitre?'<p class="desc"><strong>Le Crieur publiera :</strong> '+esc(p.nouvelleTitre)+'</p><div class="wikibody evotab">'+md(p.nouvelleTexte||"")+'</div>':'')+
+    (p.notes?'<details class="csqbox"><summary>Notes d\'évolution (privées)</summary><div class="wikibody">'+md(p.notes)+'</div></details>':'')+
+    '<div class="actions">'+(ui.evoDel===p.pid?'<button class="btn danger sm" data-a="evo-rej-yes" data-id="'+esc(p.pid)+'">Confirmer le rejet</button><button class="btn ghost sm" data-a="evo-rej-no">Annuler</button>':'<button class="btn gold sm" data-a="evo-pub" data-id="'+esc(p.pid)+'">Appliquer</button><button class="btn ghost sm" data-a="evo-rej" data-id="'+esc(p.pid)+'">Rejeter</button>')+'</div></article>';}
+function agesCell(bid){const l=quetes.filter(q=>q.bureau===bid&&q.statut==="ouverte").map(q=>({q:q,a:ageOf(q)})).sort((x,y)=>y.a-x.a);if(!l.length)return '<span class="desc">—</span>';
+  return '<ul class="agelist">'+l.map(x=>{const pc=Math.min(100,Math.round(x.a/ageMax()*100));return '<li title="'+esc(x.q.titre)+'"><span class="agen">'+esc(x.q.titre)+'</span><span class="prog'+(x.a>=ageMax()?' over':x.a>=ageMax()-1?' near':'')+'"><i style="width:'+pc+'%"></i></span><span class="desc">'+fmtAge(x.a)+'</span></li>';}).join("")+'</ul>';}
+function csqSection(){const all=csqAll(),todo=all.filter(x=>!x.suite),done=all.filter(x=>x.suite);
+  const byReg=l=>bureaux.map(b=>{const r=l.filter(x=>x.q.bureau===b.id);return r.length?'<h3 class="subh">'+esc(b.nom)+'</h3><ul class="csqitems">'+r.map(csqRow).join("")+'</ul>':'';}).join("");
+  const pr=evoProps();
+  return (pr.length?'<section class="dmsec"><h2>Propositions de Claude <span class="desc">('+pr.length+')</span></h2><p class="desc">Rumeurs, quêtes, aggravations et évolutions de région, écrites à partir des conséquences, des journaux, des rapports et des modules en cours. Applique-les ou rejette-les.</p>'+pr.map(evoPropCard).join("")+'</section>':'')+
+    (!all.length?'':'<section class="dmsec"><h2>Conséquences à suivre <span class="desc">('+todo.length+')</span></h2><p class="desc">Les conséquences retenues en fin de quête. Je les intègre au monde (rumeurs, quêtes) quand tu me demandes « fais évoluer le monde ». Coche seulement celles qui se sont réglées hors-jeu.</p>'+
+    (todo.length?byReg(todo):'<p class="desc">Tout est suivi. Le monde est à jour.</p>')+(done.length?'<details class="csqbox"><summary>Déjà suivies ('+done.length+')</summary>'+byReg(done)+'</details>':'')+'</section>');}
 function csqText(q){const m=(scenarios[q.id]||{}).monde;if(!m)return "";return ((m.liste||[]).concat(m.autre?[m.autre]:[])).map(t=>"- "+q.titre+" : "+t).join("\n");}
 function ptObjectifs(q){const ob=objsOf(q),P=ui.pt,od=P.objectifs||[],sd=P.objSub||{};
   return '<p class="desc">Secrets : les joueurs ne les voient pas. Ils déterminent le résultat en fin de quête (tous = Réussite, certains = Réussite partielle, aucun = Échec).</p>'+ob.map(o=>{const on=od.indexOf(o.i)>=0,ss=sd[o.i]||[];
@@ -3190,6 +3293,42 @@ document.addEventListener("click",async e=>{
   else if(a==="gen-again"){ui.gen.res=genEncounter();}
   else if(a==="gen-save"){const r=ui.gen.res;if(!r||!r.list)return;ui.manSec="rencontres";ui.manId=null;ui.manEdit="new";ui.manML=r.list.map(x=>({id:x.id,nb:x.nb}));ui.manDraft={nom:"Rencontre générée",region:ui.gen.region};}
   else if(a==="dmtab"){ui.dmTab=b.getAttribute("data-v");ui.evolve=null;ui.noteEdit=null;ui.newsEdit=null;}
+  else if(a==="evo-rej"){ui.evoDel=id;}
+  else if(a==="evo-rej-no"){ui.evoDel=null;}
+  else if(a==="evo-rej-yes"){ui.evoDel=null;await run("Proposition rejetée",()=>updateDoc(doc(db,"prive","evolution"),new FieldPath("propositions",id),deleteField()));return;}
+  else if(a==="evo-pub"&&(()=>{const p=evoProps().find(x=>x.pid===id);return p&&(p.type==="maj"||p.type==="region"||p.type==="carte"||p.type==="module");})()){const p=evoProps().find(x=>x.pid===id),now=Date.now();
+    const applyMaj=(bt,m)=>{const q=questById(m.quete);if(!q)return;const up={majLe:serverTimestamp()};["rang","recompense","maj","titre","description","lieu","niveau"].forEach(k=>{if(m[k]!=null&&m[k]!=="")up[k]=m[k];});bt.set(doc(db,"quetes",q.id),up,{merge:true});
+      const sc={};["scenario","objectifs","consequences"].forEach(k=>{if(m[k])sc[k]=m[k];});if(Object.keys(sc).length)bt.set(doc(db,"scenarios",q.id),sc,{merge:true});};
+    await run("Évolution appliquée",async()=>{const bt=writeBatch(db);
+      if(p.type==="maj"){applyMaj(bt,p);const q=questById(p.quete);if(p.aggravation&&q)bt.set(doc(db,"prive","monde"),{reset:{[q.id]:now},regions:{[q.bureau]:{aggrav:{[q.id+"_"+now]:now}}}},{merge:true});}
+      else if(p.type==="module"){const mo=modules.find(x=>x.id===p.module);if(mo){(p.majs||[]).forEach(m=>applyMaj(bt,m));let nid=null;
+          if(p.nouvelleTitre){nid=doc(collection(db,"nouvelles")).id;bt.set(doc(db,"nouvelles",nid),{titre:p.nouvelleTitre,contenu:p.nouvelleTexte||"",region:(mo.regions||[]).length===1?mo.regions[0]:"",aventuriers:[],quete:"",date:serverTimestamp()});}
+          if(p.fin){bt.set(doc(db,"modules",mo.id),{statut:"termine",fin:p.fin,finMs:now,etape:modParse(mo).etapes.length},{merge:true});
+            const nx=modOrder().find(x=>x.statut==="avenir"&&x.id!==mo.id);if(nx)bt.set(doc(db,"modules",nx.id),{statut:"premices",debutMs:now,etapeMs:now,etape:0},{merge:true});
+            if(p.fin!=="normale"){bt.set(doc(collection(db,"evolutions")),{region:"carte",sens:p.fin==="positive"?"positif":"negatif",date:serverTimestamp(),quetes:[],notes:"Fin de « "+mo.nom+" ». "+(p.notes||""),changements:(p.majs||[]).map(m=>{const q=questById(m.quete)||{};return {quete:m.quete,titre:q.titre||"",ancienRang:q.rang||"",nouveauRang:m.rang||q.rang||"",maj:m.maj||""};}),nouvelle:nid,nouvelleTitre:p.nouvelleTitre||"",par:"claude"});
+              const up={carteMs:now};if(p.fin==="negative"){const R={};quetes.filter(q=>q.statut==="ouverte").forEach(q=>R[q.id]=now);up.reset=R;}bt.set(doc(db,"prive","monde"),up,{merge:true});}}
+          else{const e=typeof p.etape==="number"?p.etape:modEtape(mo)+1;bt.set(doc(db,"modules",mo.id),{etape:e,etapeMs:now,statut:e>=1?"encours":"premices"},{merge:true});}}}
+      else if(p.type==="carte"){(p.majs||[]).forEach(m=>applyMaj(bt,m));let nid=null;
+        if(p.nouvelleTitre){nid=doc(collection(db,"nouvelles")).id;bt.set(doc(db,"nouvelles",nid),{titre:p.nouvelleTitre,contenu:p.nouvelleTexte||"",region:"",aventuriers:[],quete:"",date:serverTimestamp()});}
+        bt.set(doc(collection(db,"evolutions")),{region:"carte",sens:p.sens||"positif",date:serverTimestamp(),quetes:[],notes:p.notes||"",changements:(p.majs||[]).map(m=>{const q=questById(m.quete)||{};return {quete:m.quete,titre:q.titre||"",ancienRang:q.rang||"",nouveauRang:m.rang||q.rang||"",maj:m.maj||""};}),nouvelle:nid,nouvelleTitre:p.nouvelleTitre||"",par:"claude"});
+        const up={carteMs:now};if(p.sens==="negatif"){const R={};quetes.filter(q=>q.statut==="ouverte").forEach(q=>R[q.id]=now);up.reset=R;}bt.set(doc(db,"prive","monde"),up,{merge:true});}
+      else{const bid=p.region,sens=p.sens==="negatif"?"negatif":regionSens(bid);(p.majs||[]).forEach(m=>applyMaj(bt,m));let nid=null;
+        if(p.nouvelleTitre){nid=doc(collection(db,"nouvelles")).id;bt.set(doc(db,"nouvelles",nid),{titre:p.nouvelleTitre,contenu:p.nouvelleTexte||"",region:bid,aventuriers:[],quete:"",date:serverTimestamp()});}
+        bt.set(doc(collection(db,"evolutions")),{region:bid,sens:sens,date:serverTimestamp(),quetes:pendingIn(bid).map(q=>q.id),notes:(p.notes||""),changements:(p.majs||[]).map(m=>{const q=questById(m.quete)||{};return {quete:m.quete,titre:q.titre||"",ancienRang:q.rang||"",nouveauRang:m.rang||q.rang||"",maj:m.maj||""};}),nouvelle:nid,nouvelleTitre:p.nouvelleTitre||"",par:"claude"});
+        const up={regions:{[bid]:{vues:doneIn(bid).map(q=>q.id),criseMs:now}}};if(sens==="negatif"){const R={};quetes.filter(q=>q.bureau===bid&&q.statut==="ouverte").forEach(q=>R[q.id]=now);up.reset=R;}
+        bt.set(doc(db,"prive","monde"),up,{merge:true});}
+      (p.sources||[]).forEach(r=>bt.set(doc(db,"scenarios",r.q),{monde:{suites:{[String(r.k)]:{regle:true,par:"evolution"}}}},{merge:true}));
+      bt.update(doc(db,"prive","evolution"),new FieldPath("propositions",id),deleteField());await bt.commit();});return;}
+  else if(a==="evo-pub"){const p=evoProps().find(x=>x.pid===id);if(!p)return;const qid="q"+Date.now().toString(36);
+    const q=normQuest({bureau:p.region,titre:p.titre||"Rumeur",type:p.type==="rumeur"?"Rumeur":(p.typeQuete||"Contrat"),rang:p.type==="rumeur"?"inconnu":(p.rang||"cuivre"),statut:"ouverte",lieu:p.lieu||"",recompense:p.recompense||"",niveau:p.niveau||"",
+      joueursMin:p.joueursMin==null?null:+p.joueursMin,joueursMax:p.joueursMax==null?null:+p.joueursMax,supercharged:false,date:"",description:p.texteJoueurs||p.description||""});
+    q.joueurs=q.joueursMin!=null&&q.joueursMax!=null?(q.joueursMin===q.joueursMax?String(q.joueursMin):q.joueursMin+" à "+q.joueursMax):"?";
+    await run("Publié au tableau",async()=>{const bt=writeBatch(db);bt.set(doc(db,"quetes",qid),Object.assign(q,{creeLe:serverTimestamp(),majLe:serverTimestamp()}));
+      if(p.scenario||p.objectifs||p.consequences)bt.set(doc(db,"scenarios",qid),{scenario:p.scenario||"",objectifs:p.objectifs||"",consequences:p.consequences||""},{merge:true});
+      (p.sources||[]).forEach(r=>bt.set(doc(db,"scenarios",r.q),{monde:{suites:{[String(r.k)]:{quete:qid,type:p.type==="rumeur"?"rumeur":"quete"}}}},{merge:true}));
+      bt.update(doc(db,"prive","evolution"),new FieldPath("propositions",id),deleteField());await bt.commit();});return;}
+  else if(a==="csq-done"){await run("Conséquence réglée",()=>setDoc(doc(db,"scenarios",id),{monde:{suites:{[b.getAttribute("data-v")]:{regle:true}}}},{merge:true}));return;}
+  else if(a==="csq-undo"){await run("Conséquence rouverte",()=>updateDoc(doc(db,"scenarios",id),new FieldPath("monde","suites",String(b.getAttribute("data-v"))),deleteField()));return;}
   else if(a==="csq-notes"){const t=pendingIn(id).map(csqText).filter(Boolean).join("\n"),el=document.getElementById("ev-notes");if(el&&t){el.value=(el.value.trim()?el.value.trim()+"\n":"")+t;el.focus();}return;}
   else if(a==="evolve"){ui.dmTab="evol";ui.evolve=id;if(location.hash!=="#dm"){location.hash="#dm";}}
   else if(a==="evolve-cancel"){ui.evolve=null;}
@@ -3372,6 +3511,7 @@ document.addEventListener("submit",async e=>{
       if(C.notesDM!=null&&C.notesDM!==ptNotesDM(q))bt.set(doc(db,"parties",q.id),{notesDM:C.notesDM},{merge:true});
       if(C.writer)bt.set(doc(db,"quetes",q.id),{redacteur:C.writer},{merge:true});
       const obm=objsOf(q).filter(o=>(C.obj||[]).indexOf(o.i)<0&&o.csq).map(o=>o.csq).concat(C.rapport.resultat==="reussite"?csqWin(q).map(c=>c.txt):[]);
+      bt.set(doc(db,"prive","monde"),{fini:{[q.id]:{r:q.bureau,ms:Date.now()}}},{merge:true});
       bt.set(doc(db,"scenarios",q.id),{monde:{resultat:C.rapport.resultat,objectifs:objsOf(q).map(o=>({txt:o.txt,ok:(C.obj||[]).indexOf(o.i)>=0})),liste:obm.concat(C.csq||[]),autre:C.csqx||"",le:serverTimestamp()}},{merge:true});
       const seen={};
       C.parts.forEach(x=>{const a=x.aventurier&&aventuriers.find(y=>y.id===x.aventurier);if(!a)return;
@@ -3393,7 +3533,7 @@ document.addEventListener("submit",async e=>{
     ui.manEdit=null;ui.manImg=undefined;ui.manDraft=null;if(type!=="dossiers"&&type!=="scenarios")ui.manId=id;
     await run("Manuel du DM",()=>setDoc(doc(db,S.coll,id),d,{merge:true}));return;
   }
-  if(e.target.id==="seuilform"){const n=Math.max(1,Math.min(50,Math.round(+v("ev-seuil")||3)));await run("Seuil",()=>setDoc(doc(db,"prive","monde"),{seuil:n},{merge:true}));return;}
+  if(e.target.id==="seuilform"){const n=Math.max(1,Math.min(50,Math.round(+v("ev-seuil")||3))),am=Math.max(1,Math.min(50,+v("ev-agemax")||4)),ag=Math.max(1,Math.min(20,Math.round(+v("ev-aggr")||2))),cs=Math.max(1,Math.min(20,Math.round(+v("ev-carte")||2))),mp=Math.max(1,Math.min(20,Math.round(+v("ev-modpas")||3)));await run("Réglages",()=>setDoc(doc(db,"prive","monde"),{seuil:n,ageMax:am,aggravSeuil:ag,carteSeuil:cs,modPas:mp},{merge:true}));return;}
   if(e.target.id==="noteform"){
     const titre=v("n-titre").slice(0,120);if(!titre)return;const isNew=ui.noteEdit==="new",id=isNew?doc(collection(db,"notesdm")).id:ui.noteEdit;
     const pin=document.getElementById("n-pin");
@@ -3423,8 +3563,8 @@ document.addEventListener("submit",async e=>{
       const bt=writeBatch(db);let nid=null;
       if(nt){nid=doc(collection(db,"nouvelles")).id;bt.set(doc(db,"nouvelles",nid),{titre:nt,contenu:nx,region:bid,aventuriers:chars,quete:"",date:serverTimestamp()});}
       changes.forEach(c=>{const up={rang:c.nouveauRang,recompense:c.recompense,majLe:serverTimestamp()};if(c.maj)up.maj=c.maj;bt.set(doc(db,"quetes",c.quete),up,{merge:true});});
-      bt.set(doc(collection(db,"evolutions")),{region:bid,date:serverTimestamp(),quetes:pend,notes,changements:changes.map(c=>({quete:c.quete,titre:c.titre,ancienRang:c.ancienRang,nouveauRang:c.nouveauRang,maj:c.maj})),nouvelle:nid,nouvelleTitre:nt});
-      bt.set(doc(db,"prive","monde"),{regions:{[bid]:{vues:allDone}}},{merge:true});
+      bt.set(doc(collection(db,"evolutions")),{region:bid,sens:regionSens(bid),date:serverTimestamp(),quetes:pend,notes,changements:changes.map(c=>({quete:c.quete,titre:c.titre,ancienRang:c.ancienRang,nouveauRang:c.nouveauRang,maj:c.maj})),nouvelle:nid,nouvelleTitre:nt});
+      bt.set(doc(db,"prive","monde"),{regions:{[bid]:{vues:allDone,criseMs:Date.now()}}},{merge:true});
       await bt.commit();
     });return;
   }
@@ -3506,7 +3646,9 @@ document.addEventListener("submit",async e=>{
     const cur=isNew?null:questById(id);
     ui.editing=null;
     await run("Points",()=>setDoc(doc(db,"prive","renommee"),{quetes:{[id]:ptsOverride===""?null:Math.round(+ptsOverride)}},{merge:true}));
+    const dref=isNew&&ui.questDraft&&ui.questDraft.csqRef;ui.questDraft=null;
     await run("Enregistrement",()=>cur?setDoc(doc(db,"quetes",id),Object.assign(q,{majLe:serverTimestamp()}),{merge:true}):setDoc(doc(db,"quetes",id),Object.assign(q,{creeLe:serverTimestamp(),majLe:serverTimestamp()})));
+    if(dref)await run("Conséquence suivie",()=>setDoc(doc(db,"scenarios",dref.q),{monde:{suites:{[dref.k]:{quete:id,type:q.type==="Rumeur"?"rumeur":"quete"}}}},{merge:true}));
   }
 });
 
