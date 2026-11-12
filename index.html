@@ -73,6 +73,20 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .note-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .seal{display:inline-flex;align-items:center;gap:7px;font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
 .seal i{width:16px;height:16px;border-radius:50%;display:inline-block;box-shadow:inset 0 0 0 2px rgba(0,0,0,.25)}
+/* Rangs de Guilde : matériau de la plaque */
+.gm-bois{--m1:#6e4628;--m2:#a8733f;--mi:#f3e2c6}.gm-cuivre{--m1:#8a4a22;--m2:#d08a52;--mi:#fff1e2}.gm-fer{--m1:#4e585e;--m2:#97a3aa;--mi:#f1f4f6}.gm-argent{--m1:#9aa5ab;--m2:#eef2f4;--mi:#2a3236}.gm-or{--m1:#a07a22;--m2:#f0d488;--mi:#3a2a08}.gm-mithral{--m1:#3f9893;--m2:#c9f2ef;--mi:#0f2e2c}
+.gchip{display:inline-flex;align-items:center;gap:6px;font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:2px 8px 2px 3px;border-radius:4px;background:linear-gradient(135deg,var(--m1),var(--m2) 60%,var(--m1));color:var(--mi);border:1px solid rgba(0,0,0,.35);box-shadow:inset 0 1px 0 rgba(255,255,255,.35);vertical-align:middle;white-space:nowrap}
+.gchip svg{width:14px;height:14px}
+.gplaque{position:relative;display:flex;align-items:center;gap:14px;max-width:360px;margin:6px 0 4px;padding:12px 18px 12px 12px;border-radius:8px;background:linear-gradient(135deg,var(--m1),var(--m2) 55%,var(--m1));color:var(--mi);border:1px solid rgba(0,0,0,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -2px 0 rgba(0,0,0,.25),inset 0 0 0 4px rgba(0,0,0,.08),0 3px 8px rgba(0,0,0,.35)}
+.gplaque.gm-bois{background:repeating-linear-gradient(100deg,rgba(0,0,0,.08) 0 3px,transparent 3px 11px),linear-gradient(135deg,var(--m1),var(--m2) 55%,var(--m1))}
+.gplaque .gp-rose{width:46px;height:46px;flex:none;filter:drop-shadow(0 1px 0 rgba(255,255,255,.35)) drop-shadow(0 -1px 0 rgba(0,0,0,.3))}
+.gplaque .gp-txt{display:flex;flex-direction:column;min-width:0;flex:1}
+.gplaque .gp-g{font-family:var(--display);font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.8}
+.gplaque .gp-name{font-family:var(--display);font-size:20px;font-weight:700;line-height:1.15;overflow-wrap:anywhere;text-shadow:0 1px 0 rgba(255,255,255,.3),0 -1px 0 rgba(0,0,0,.35)}
+.gplaque .gp-r{font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+.gplaque .gp-stamp{width:40px;height:40px;flex:none;transform:rotate(-14deg);opacity:.85}
+.gmerit{font-size:13px;color:var(--muted,#8a7d6a);margin:2px 0 0}
+.pickrow.off{opacity:.55}.pickrow .why{display:block;font-size:12px;color:var(--danger,#a33)}
 .kind{font-family:var(--display);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
 .note h2{font-family:var(--display);font-size:21px;line-height:1.2;margin:0;text-wrap:balance}
 .desc{margin:0;white-space:pre-line}
@@ -1019,8 +1033,13 @@ if (new URLSearchParams(location.search).has("emu")) {
 
 /* ---------- constants ---------- */
 const RANKS = {cuivre:{label:"Cuivre",c:"var(--r-cuivre)"},fer:{label:"Fer",c:"var(--r-fer)"},argent:{label:"Argent",c:"var(--r-argent)"},or:{label:"Or",c:"var(--r-or)"},mithral:{label:"Mithril",c:"var(--r-mithral)"},inconnu:{label:"Rang inconnu",c:"#3a3128"}};
+// Rangs de Guilde (un seul rang pour tous les comptoirs). Bois = rang d'essai.
+const GRANKS = ["bois","cuivre","fer","argent","or","mithral"];
+const GRANK_LBL = {bois:"Bois",cuivre:"Cuivre",fer:"Fer",argent:"Argent",or:"Or",mithral:"Mithril"};
+const PROMO_DEF = {fer:{m:6,niv:3},argent:{m:12,niv:5},or:{m:24,niv:9},mithral:{m:40,niv:13}};
+const MERIT_W = {cuivre:1,fer:2,argent:3,or:5,mithral:8};
 const STATUS = {ouverte:"Ouverte",encours:"En cours",terminee:"Terminée",archivee:"Archivée"};
-const TYPES = ["Contrat","Recherche","Exploration","Prime","Escorte","Rumeur"];
+const TYPES = ["Contrat","Recherche","Exploration","Prime","Escorte","Rumeur","Examen"];
 const QUEST_KEYS = ["bureau","titre","type","rang","statut","lieu","recompense","niveau","joueurs","joueursMin","joueursMax","supercharged","date","description","maj"];
 const BASE_CATS = ["PNJ","Créatures","Lieux","Indices & rumeurs","Objets","Factions"];
 const DEFAULT_MEFAITS = {mineur:2,moyen:5,grave:10};
@@ -1055,7 +1074,7 @@ const DEFAULT_SCALE = [
 
 /* ---------- state ---------- */
 let evoPriv=null;
-let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, notoMap = {}, relations = [], priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], parties = [], modules = [], butins = [], crieur = null, pnjs = [], monstres = [], rencontres = [], scenarios = {};
+let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, notoMap = {}, meritMap = {}, relations = [], priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], parties = [], modules = [], butins = [], crieur = null, pnjs = [], monstres = [], rencontres = [], scenarios = {};
 const loaded = {b:false, q:false, i:false, a:false, w:false, c:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
@@ -1148,10 +1167,10 @@ function listen(){
 }
 // Données réservées au DM (points, journal, seuils) : lues seulement par un compte admin.
 function listenPrivate(on){
-  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};notoMap={};relations=[];journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;evoPriv=null;dossiers={};factions=[];parties=[];modules=[];butins=[];crieur=null;pnjs=[];monstres=[];rencontres=[];scenarios={};
+  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};notoMap={};meritMap={};relations=[];journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;evoPriv=null;dossiers={};factions=[];parties=[];modules=[];butins=[];crieur=null;pnjs=[];monstres=[];rencontres=[];scenarios={};
   if(!on)return;
   const err=e=>console.error(e);
-  privUnsubs.push(onSnapshot(collection(db,"points"),snap=>{const m={};const nm={};snap.docs.forEach(d=>{m[d.id]=(d.data().parRegion)||{};nm[d.id]=(d.data().notoriete)||{};});pointsMap=m;notoMap=nm;render();},err));
+  privUnsubs.push(onSnapshot(collection(db,"points"),snap=>{const m={};const nm={};const mm={};snap.docs.forEach(d=>{m[d.id]=(d.data().parRegion)||{};nm[d.id]=(d.data().notoriete)||{};if(typeof d.data().merite==="number")mm[d.id]=d.data().merite;});pointsMap=m;notoMap=nm;meritMap=mm;render();},err));
   privUnsubs.push(onSnapshot(query(collection(db,"journal"),orderBy("date","desc"),limit(60)),snap=>{journal=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","renommee"),snap=>{priv=snap.exists()?snap.data():null;render();},err));
   const arr=(c,set)=>privUnsubs.push(onSnapshot(collection(db,c),snap=>{set(snap.docs.map(d=>Object.assign({id:d.id},d.data())));render();},err));
@@ -1463,6 +1482,26 @@ function addPoints(bt,a,bid,dR,dN){
     if(newC!==oldC)bt.set(doc(collection(db,"rangs")),{aventurier:a.id,nom:a.nom,bureau:bid,ancien:oldC,nouveau:newC,date:serverTimestamp()});
   }
 }
+/* ---------- rangs de Guilde ---------- */
+function promoCfg(){const p=(priv&&priv.promo)||{},o={};Object.keys(PROMO_DEF).forEach(k=>{o[k]=Object.assign({},PROMO_DEF[k],p[k]||{});});return o;}
+function meritW(){return Object.assign({},MERIT_W,(priv&&priv.meritW)||{});}
+function grank(a){return a&&GRANKS.indexOf(a.rangGuilde)>=0?a.rangGuilde:"bois";}
+function gIdx(r){return GRANKS.indexOf(r);}
+function gNext(r){return GRANKS[GRANKS.indexOf(r)+1]||null;}
+function merit(a){return meritMap[a.id]||0;}
+// Le mérite ne se cumule pas : il plafonne au seuil du rang suivant et repart à 0 à chaque promotion.
+function meritCap(a){const nx=gNext(grank(a)),c=nx&&promoCfg()[nx];return c?c.m:0;}
+function meritGain(q,res){const w=meritW()[q.rang]||1;return res==="reussite"?w:res==="partielle"?w/2:0;}
+function charLevel(a){return Math.max(1,Math.min(20,+(dossiers[a.id]||{}).niveau||1));}
+function examReady(a){const nx=gNext(grank(a)),c=nx&&promoCfg()[nx];return c&&merit(a)>=c.m&&charLevel(a)>=c.niv?nx:null;}
+function gRose(){return '<svg viewBox="-110 -110 220 220" aria-hidden="true">'+rose(104,'rgba(0,0,0,.35)')+'</svg>';}
+function gChip(a){const r=typeof a==="string"?a:grank(a);return '<span class="gchip gm-'+r+'" title="Rang de Guilde">'+gRose()+esc(GRANK_LBL[r]||r)+'</span>';}
+function gStamp(){return '<svg class="gp-stamp" viewBox="-50 -50 100 100" aria-hidden="true"><circle r="44" fill="none" stroke="currentColor" stroke-width="4"/><circle r="36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3"/><polygon points="0,-26 6,-6 26,0 6,6 0,26 -6,6 -26,0 -6,-6" fill="currentColor"/><circle r="5" fill="none" stroke="currentColor" stroke-width="2"/></svg>';}
+function gPlaque(a){const r=grank(a);return '<div class="gplaque gm-'+r+'" role="img" aria-label="Plaque de Guilde : '+esc(a.nom)+', rang '+esc(GRANK_LBL[r])+'"><span class="gp-rose">'+gRose()+'</span><span class="gp-txt"><span class="gp-g">Grande Guilde de la Rose des Vents</span><span class="gp-name">'+esc(a.nom)+'</span><span class="gp-r">Rang '+esc(GRANK_LBL[r])+(r==="bois"?' · à l\'essai':'')+'</span></span>'+gStamp()+'</div>';}
+// Inscription : rang de la quête ≤ rang du personnage + 1, sinon il faut un chaperon inscrit qui a au moins le rang de la quête.
+function joinCheck(a,q){const qi=gIdx(q.rang);if(qi<0)return {ok:true};const ci=gIdx(grank(a));if(qi<=ci+1)return {ok:true};
+  const chap=signupsFor(q.id).filter(s=>s.statut!=="refusee"&&s.aventurier!==a.id).map(s=>aventuriers.find(x=>x.id===s.aventurier)).filter(Boolean).find(x=>gIdx(grank(x))>=qi);
+  return chap?{ok:true,chap:chap}:{ok:false,why:"Quête "+GRANK_LBL[q.rang]+" : il faut un chaperon de rang "+GRANK_LBL[q.rang]+" ou plus déjà inscrit."};}
 function matrixTable(dm){const T=titresMap(),N=notoList(),Rl=repuList();
   return '<div class="mxwrap"><div class="tablebox"><table class="matrix"><thead><tr><th scope="col"><span class="sr">Réputation</span></th>'+N.map(n=>'<th scope="col">'+esc(n.titre)+'</th>').join("")+'</tr></thead><tbody>'+
     Rl.map(r=>'<tr><th scope="row">'+repChip(r.r)+'</th>'+N.map(n=>{const c=r.r*10+n.n,t=T[String(c)];return '<td class="mx rr'+r.r+'">'+(dm?'<span class="mxc">'+c+'</span>':'')+(t?'<span class="mxt">'+esc(t)+'</span>':'')+'</td>';}).join("")+'</tr>').join("")+'</tbody></table></div>'+
