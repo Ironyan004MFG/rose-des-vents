@@ -369,6 +369,15 @@ form .csqpick label.pickrow{min-height:0;padding:4px 8px;display:flex;flex-direc
 form .csqpick label.pickrow input{flex:none;width:18px;height:18px;margin-top:2px}
 .csqkept{border-left:3px solid #a3271a;padding:4px 10px;margin:.6em 0;background:rgba(163,39,26,.05)}
 .csqkept h4{margin:0 0 4px}
+.objres{display:flex;flex-direction:column;gap:4px;justify-content:flex-end}
+.objres .stamp{align-self:flex-start}
+.objcsq{display:block;font-size:13px;margin-top:2px;color:#2f6a2c}.objcsq.miss{color:#a3271a}
+.ptobj{border:1px solid var(--gold);background:rgba(216,182,92,.12);border-radius:8px;padding:8px 12px;margin:0 0 14px}
+.ptobj h3{margin:0 0 6px}
+.ptobjrow{display:flex;gap:10px;align-items:flex-start;padding:6px 4px;cursor:pointer;border-radius:5px}
+.ptobjrow input{width:20px;height:20px;flex:none;margin-top:2px}
+.ptobjrow .desc{display:block;font-size:13px}
+.ptobjrow.done strong{text-decoration:line-through;opacity:.7}
 .recap{background:rgba(255,255,255,.45);border:1px solid var(--parch-3);border-radius:6px;padding:8px 12px;margin:0 0 12px}
 .recap h3{margin:0 0 6px}.recap dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;margin:0}.recap dt{font-weight:700}.recap dd{margin:0}.recap ul{margin:0;padding-left:18px}
 @media (max-width:640px){.recap dl{grid-template-columns:1fr}}
@@ -1672,7 +1681,7 @@ const MAN={
     ["resume","Résumé de l'intrigue (pour toi)","md"],["signes","Signes publics : ce que le peuple voit et entend (rumeurs, Crieur)","md"],["consequences","Conséquences par région (pour les évolutions)","md"],["accroches","Quêtes secondaires pour la Guilde (aider les héros)","md"],["notes","Notes","md"]]},
   rencontres:{coll:"rencontres",nom:"rencontre",fields:[["nom","Nom","text",1],["region","Région","region"],["quete","Quête liée","questref"],["monstres","Monstres","monsterlist"],["terrain","Terrain et ambiance","textarea"],["notes","Tactique et déroulement","md"],["butin","Butin prévu (une ligne par objet, ex. « Épée courte (10 po) »)","textarea"]]},
   dossiers:{coll:"dossiers",nom:"dossier",fields:[["outerworlder","Outerworlder","select",0,[["","À déterminer"],["oui","Oui"],["non","Non (natif)"]]],["donNom","Don accordé par le Système","text"],["donDesc","Effet du Don","md"],["niveau","Niveau","number"],["ca","CA","number"],["pv","PV max","number"],["percPassive","Perception passive","number"],["accroches","Accroches et liens","md"],["notes","Notes du DM","md"]]},
-  scenarios:{coll:"scenarios",nom:"scénario",fields:[["module","Module officiel lié (quête secondaire)","moduleref"],["scenario","Scénario","md"],["consequences","Conséquences possibles pour le monde","consq"],["rencontres","Rencontres liées","rencmulti"],["pnj","PNJ liés","pnjmulti"],["monstres","Monstres liés","monstermulti"],["butinQuete","Objets de quête","questloot"],["notes","Notes","md"]]}
+  scenarios:{coll:"scenarios",nom:"scénario",fields:[["module","Module officiel lié (quête secondaire)","moduleref"],["scenario","Scénario","md"],["objectifs","Objectifs (secrets)","objs"],["consequences","Autres conséquences pour le monde","consq"],["rencontres","Rencontres liées","rencmulti"],["pnj","PNJ liés","pnjmulti"],["monstres","Monstres liés","monstermulti"],["butinQuete","Objets de quête","questloot"],["notes","Notes","md"]]}
 };
 function manList(t){return t==="modules"?modules:t==="factions"?factions:t==="pnj"?pnjs:t==="monstres"?monstres:t==="rencontres"?rencontres:[];}
 function byName(l){return l.slice().sort((a,b)=>String(a.nom||"").localeCompare(String(b.nom||""),"fr"));}
@@ -1699,7 +1708,7 @@ function mlEditor(){const rows=ui.manML||[];
 function manForm(type,d,title){const S=MAN[type];d=d||{};
   let h='<form class="form dmform" id="manform" data-type="'+type+'"><h2>'+esc(title)+'</h2>';
   S.fields.forEach(f=>{const [k,lab,ty,req,opts]=f,v=d[k],id="mf-"+k;
-    const wide=["textarea","md","consq","image","monsterlist","questmulti","rencmulti","pnjmulti","monstermulti"].indexOf(ty)>=0||k==="nom"||k==="titre";
+    const wide=["textarea","md","consq","objs","image","monsterlist","questmulti","rencmulti","pnjmulti","monstermulti"].indexOf(ty)>=0||k==="nom"||k==="titre";
     if(ty==="image"){const img=ui.manImg!==undefined?ui.manImg:(v||"");h+='<div class="wide imgrow">'+(img?'<img class="portrait sm" src="'+esc(img)+'" alt="">':'<span class="portrait sm ph" aria-hidden="true">?</span>')+'<label for="mf-img">'+lab+' (facultatif)<input id="mf-img" type="file" accept="image/*"></label>'+(img?'<button class="btn ghost" type="button" data-a="mimg-clear">Retirer</button>':'')+'</div>';return;}
     h+=ty==="monsterlist"||ty.indexOf("multi")>0?'<fieldset class="wide pick"><legend>'+lab+'</legend>':'<label class="'+(ty==="check"?'pickrow ':'')+(wide?'wide':'')+(ABIL.some(x=>x[0]===k)?' abil':'')+'" for="'+id+'">'+lab+(ty==="md"?' <span class="tip">## Titre, **gras**, - liste, [[Nom]] = lien vers une fiche</span>':'');
     if(ty==="text")h+='<input id="'+id+'" maxlength="'+(k==="nom"?100:300)+'"'+(req?' required':'')+' value="'+esc(v||"")+'">';
@@ -1709,6 +1718,7 @@ function manForm(type,d,title){const S=MAN[type];d=d||{};
     else if(ty==="questloot")h+='<span class="tip">Une ligne par objet : Porteur &gt; Objet | valeur | chances | rareté | max. Porteur : un ou plusieurs monstres ou PNJ, séparés par des virgules. Devant l\'objet : « ! » garanti une fois, « + » garanti sur chaque porteur, « * » au hasard une fois, rien = au hasard sans maximum. « max 10 » arrête après 10 objets récoltés. Ces objets ne s\'ajoutent aux tables que pendant cette quête.</span><textarea id="'+id+'" rows="4" maxlength="3000" class="mono" placeholder="Skratch &gt; !Clé de bronze naine&#10;Gobelin guerrier, Gobelin sbire &gt; +Écusson de la tribu | | | | max 10&#10;Grenouille géante &gt; Herbe des marais | | 40">'+esc(v||"")+'</textarea>';
     else if(ty==="loottable")h+='<span class="tip">Une ligne par butin possible : Objet | valeur | chances | rareté. Raretés : Médiocre, Classique, Inhabituel, Rare, Épique, Légendaire (sans chance indiquée, la rareté la fixe : Légendaire = très rare). « Rien | | 20 » = chance de ne rien trouver. « Pièces | | 15 » = des pièces selon le FP. Une ligne qui commence par ! est un objet de quête : garanti, mais une seule fois. Une ligne qui commence par * est un objet unique : il tombe au hasard, une seule fois (ensuite sa chance devient « Rien »).</span><textarea id="'+id+'" rows="8" maxlength="4000" class="mono" placeholder="Pièces | | 15&#10;Cimeterre ébréché | 1 po | | Médiocre&#10;Collier de dents de loup | 2 pa | | Classique&#10;Dague du chef de clan | 25 po | | Rare&#10;!Lettre du commanditaire&#10;Rien | | 20">'+esc(v||"")+'</textarea>';
     else if(ty==="md")h+='<textarea id="'+id+'" rows="'+(k==="scenario"?14:6)+'" maxlength="40000">'+esc(v||"")+'</textarea>';
+    else if(ty==="objs")h+='<span class="tip">Une ligne par objectif : Objectif | conséquence si l\'objectif n\'est pas rempli. Tous remplis = Réussite, certains = Réussite partielle, aucun = Échec. Les joueurs ne les voient jamais.</span><textarea id="'+id+'" rows="4" maxlength="5000" placeholder="Tous les ennemis éliminés | Les rats reviennent trois jours plus tard.&#10;Tunnel trouvé | Maître Tobrin rappellera la Guilde dans un mois.">'+esc(v||"")+'</textarea>';
     else if(ty==="consq")h+='<span class="tip">Une ligne par conséquence. Commence par « Réussite : », « Partielle : », « Échec : » (ou plusieurs : « Partielle, Échec : »). Sans préfixe, elle vaut pour tous les résultats. À la fin de la quête, tu coches celles qui arrivent.</span><textarea id="'+id+'" rows="6" maxlength="10000" placeholder="Échec : Des goules rôdent dans la Haute-Ville.&#10;Partielle, Échec : Garrow s\'enfuit et jure de se venger.&#10;Réussite : Frère Aldo devient un allié.">'+esc(v||"")+'</textarea>';
     else if(ty==="select")h+='<select id="'+id+'">'+opts.map(o=>'<option value="'+esc(o[0])+'"'+(String(v==null?(k==="fp"?"1":k==="taille"?"M":""):v)===o[0]?' selected':'')+'>'+esc(o[1])+'</option>').join("")+'</select>';
     else if(ty==="region")h+='<select id="'+id+'">'+regionOpts(v)+'</select>';
@@ -2188,8 +2198,9 @@ function render(){
       if(C.step===1){
         const writers=C.parts.filter(x=>x.uid&&x.uid!=="dm"),dr=cq.rapportBrouillon&&cq.rapportBrouillon.resume,wsel=C.writer!==undefined?C.writer:(cq.redacteur||"");
         h+='<div class="row2"><label for="c-date">Date de la session<input id="c-date" maxlength="80" value="'+esc(C.rapport.date)+'"></label>'+
-          '<label for="c-res">Résultat<select id="c-res">'+Object.keys(RESULTS).map(k=>'<option value="'+k+'"'+(k===C.rapport.resultat?' selected':'')+'>'+RESULTS[k]+'</option>').join("")+'</select></label></div>'+
-          ptReportBlock(cq,true,true)+csqPick(cq,C)+
+          (objsOf(cq).length?'<div class="objres"><span class="ptlbl">Résultat</span><strong class="stamp res-'+esc(C.rapport.resultat)+'">'+esc(RESULTS[C.rapport.resultat]||"")+'</strong><span class="desc">'+(C.obj||[]).length+' / '+objsOf(cq).length+' objectifs</span></div>':
+            '<label for="c-res">Résultat<select id="c-res">'+Object.keys(RESULTS).map(k=>'<option value="'+k+'"'+(k===C.rapport.resultat?' selected':'')+'>'+RESULTS[k]+'</option>').join("")+'</select></label>')+'</div>'+
+          ptReportBlock(cq,true,true)+objPick(cq,C)+csqPick(cq,C)+
           '<fieldset class="pick"><legend>Rapport de mission (Chroniques)</legend>'+
           (dr?'<p class="desc">Rapport reçu de <strong>'+esc(cq.rapportBrouillon.auteur||"un joueur")+'</strong>. Il sera publié dans les Chroniques.</p><div class="wikibody repprev">'+esc(dr).replace(/\n/g,"<br>")+'</div>':
             (writers.length?'<label for="c-writer">Auteur du rapport<select id="c-writer"><option value="">Personne pour l\'instant</option>'+writers.map(x=>'<option value="'+esc(x.uid)+'"'+(wsel===x.uid?' selected':'')+'>'+esc(x.nom)+'</option>').join("")+'</select></label><p class="desc">L\'auteur verra un bouton « Écrire le rapport de mission » sur la quête. Son rapport t\'attendra dans À traiter, pour publication.</p>':'<p class="desc">Aucun joueur inscrit avec un compte : pas d\'auteur à désigner.</p>'))+'</fieldset>'+
@@ -2210,7 +2221,8 @@ function render(){
       } else {
         const g0=questGain(cq,C.rapport.resultat),wn=C.writer&&(C.parts.find(x=>x.uid===C.writer)||{}).nom,dr=cq.rapportBrouillon&&cq.rapportBrouillon.resume;
         h+='<div class="recap"><h3>Résumé</h3><dl><dt>Résultat</dt><dd>'+esc(RESULTS[C.rapport.resultat]||"")+(C.rapport.date?' · '+esc(C.rapport.date):'')+'</dd>'+
-          '<dt>Conséquences pour le monde</dt><dd>'+((C.csq||[]).length||C.csqx?'<ul>'+(C.csq||[]).map(t=>'<li>'+esc(t)+'</li>').join("")+(C.csqx?'<li><em>'+esc(C.csqx)+'</em></li>':'')+'</ul>':'<span class="desc">Aucune</span>')+'</dd>'+
+          (objsOf(cq).length?'<dt>Objectifs</dt><dd><ul>'+objsOf(cq).map(o=>'<li>'+((C.obj||[]).indexOf(o.i)>=0?'✅ ':'❌ ')+esc(o.txt)+'</li>').join("")+'</ul></dd>':'')+
+          '<dt>Conséquences pour le monde</dt><dd>'+((C.csq||[]).length||C.csqx||objsOf(cq).some(o=>(C.obj||[]).indexOf(o.i)<0&&o.csq)?'<ul>'+objsOf(cq).filter(o=>(C.obj||[]).indexOf(o.i)<0&&o.csq).map(o=>'<li>'+esc(o.csq)+'</li>').join("")+(C.csq||[]).map(t=>'<li>'+esc(t)+'</li>').join("")+(C.csqx?'<li><em>'+esc(C.csqx)+'</em></li>':'')+'</ul>':'<span class="desc">Aucune</span>')+'</dd>'+
           '<dt>Rapport de mission</dt><dd>'+(dr?'Reçu de '+esc(cq.rapportBrouillon.auteur||"un joueur")+', publié dans les Chroniques':wn?'Demandé à '+esc(wn):'<span class="desc">Aucun auteur désigné</span>')+'</dd>'+
           (C.notesDM&&C.notesDM!==ptNotesDM(cq)?'<dt>Notes DM</dt><dd>Ajoutées au rapport privé</dd>':'')+'</dl></div>';
         h+='<p>Renommée à '+esc(bo?bo.nom:"la région")+'. Quête '+esc((RANKS[cq.rang]||RANKS.inconnu).label)+' (×'+questMult(cq)+'), '+esc((RESULTS[C.rapport.resultat]||"").toLowerCase())+' : <strong>+'+g0.n+' notoriété</strong>, <strong>'+(g0.r>=0?'+':'')+g0.r+' réputation</strong> proposés. Ajuste au besoin ; les méfaits et bienfaits s\'ajoutent.</p>'+
@@ -2227,7 +2239,7 @@ function render(){
   const app=document.getElementById("app");
   const formKey=ui.editing+"|"+ui.signup+"|"+ui.addName+"|"+ui.advForm+"|"+ui.scaleEdit+"|"+ui.wikiEdit+"|"+(ui.complete?ui.complete.id+ui.complete.step:"")+"|"+ui.confirmGroup+"|"+ui.plan+"|"+ui.dmTab+"|"+ui.manSec+"|"+ui.manId+"|"+ui.manEdit+"|"+ui.evolve+"|"+ui.noteEdit+"|"+ui.newsEdit+"|"+ui.reportWrite+"|"+ui.adjust+"|"+ui.sheetEdit+"|"+ui.compEdit;
   const keep={}; if(render.lastForm===formKey)["f-titre","f-bureau","f-type","f-rang","f-statut","f-lieu","f-recompense","f-niveau","f-jmin","f-jmax","f-date","f-desc","f-maj","ev-notes","ev-ntitre","ev-ntexte","ev-seuil","n-titre","n-cat","n-reg","n-contenu","n-search","nw-titre","nw-reg","nw-texte","f-name","f-addname","f-advnom","f-advjoueur","w-titre","w-ordre","w-contenu","f-pts","c-date","c-res","c-resume","g-date","r-texte","pl-date","pl-heure","c2-titre","c2-cat","c2-reg","c2-quete","c2-contenu","c-search","p-nom","p-espece","p-classe","p-desc","p-bg","p-don"].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.type==="checkbox"?el.checked:el.value;});
-  if(render.lastForm===formKey)document.querySelectorAll('#manform [id^="mf-"]:not([type=file]),#manform input[data-mm],#genform [id^="gen-"],#completeform [id^="csq-"],#c-dmnotes,#c-writer').forEach(el=>{keep[el.id]=el.type==="checkbox"?el.checked:el.value;});
+  if(render.lastForm===formKey)document.querySelectorAll('#manform [id^="mf-"]:not([type=file]),#manform input[data-mm],#genform [id^="gen-"],#completeform [id^="csq-"],#completeform [id^="cobj-"],#c-dmnotes,#c-writer').forEach(el=>{keep[el.id]=el.type==="checkbox"?el.checked:el.value;});
   const sup=document.getElementById("f-super");if(sup&&render.lastForm===formKey)keep["f-super"]=sup.checked;
   render.lastForm=formKey;
   const ptKeep={};let ptFoc=null,ptSel=null;
@@ -2301,7 +2313,7 @@ function ptReportBlock(q,open,edit){if(edit){const C=ui.complete,t=ptReport(q,tr
       '<label for="c-dmnotes">Notes DM additionnelles<textarea id="c-dmnotes" rows="4" maxlength="10000" placeholder="Ce qui ne figure pas au journal : décisions du groupe, PNJ rencontrés, promesses, indices trouvés…">'+esc(nv)+'</textarea></label></details>';}
   const t=ptReport(q);return t?'<details class="dmrep"'+(open?' open':'')+'><summary>Rapport du DM (privé)</summary><div class="wikibody">'+md(t)+'</div></details>':'';}
 function ptQuest(){return ui.office&&ui.office.indexOf("partie-")===0?questById(ui.office.slice(7)):null;}
-function ptBlank(qid){return {id:qid,round:0,cur:null,liste:[],journal:[],rev:0,combat:null,combats:[],stats:{combats:0,rounds:0,vaincus:{},ko:[]},notesDM:""};}
+function ptBlank(qid){return {id:qid,round:0,cur:null,liste:[],objectifs:[],journal:[],rev:0,combat:null,combats:[],stats:{combats:0,rounds:0,vaincus:{},ko:[]},notesDM:""};}
 function ptStats(){const P=ui.pt;P.stats=Object.assign({combats:0,rounds:0,vaincus:{},ko:[]},P.stats||{});return P.stats;}
 function ptClone(o){return JSON.parse(JSON.stringify(o));}
 function ptSync(qid){
@@ -2537,6 +2549,10 @@ const CSQ_K={"réussite":"reussite",reussite:"reussite",partielle:"partielle","r
 const CSQ_L={reussite:"Réussite",partielle:"Partielle",echec:"Échec"};
 function csqParse(t){return String(t||"").split(/\n+/).map(l=>l.replace(/^\s*[-*•]\s*/,"").trim()).filter(Boolean).map((l,i)=>{const m=l.match(/^([^:]{2,40}):\s*(.+)$/);let q=null,txt=l;
   if(m){const ks=m[1].split(/,|\/| et /).map(x=>CSQ_K[x.trim().toLowerCase()]);if(ks.length&&ks.every(Boolean)){txt=m[2];q=ks.indexOf("*")>=0?null:ks;}}return {i:i,txt:txt,q:q};});}
+function objParse(t){return String(t||"").split(/\n+/).map(l=>l.replace(/^\s*[-*•]\s*/,"").trim()).filter(Boolean).map((l,i)=>{const k=l.indexOf("|");return {i:i,txt:(k>=0?l.slice(0,k):l).trim(),csq:(k>=0?l.slice(k+1):"").trim()};});}
+function objsOf(q){return objParse((scenarios[q.id]||{}).objectifs);}
+function objResult(n,tot){return !tot?null:n>=tot?"reussite":n>0?"partielle":"echec";}
+function ptObjDone(q){const d=(ui.pt&&ui.pt.id===q.id)?ui.pt:parties.find(p=>p.id===q.id);return (d&&d.objectifs)||[];}
 function csqTags(c){return c.q?c.q.map(k=>'<span class="csqt t-'+k+'">'+CSQ_L[k]+'</span>').join(""):'<span class="csqt">Tous</span>';}
 function csqList(q){const l=csqParse((scenarios[q.id]||{}).consequences);return l.length?'<ul class="csql">'+l.map(c=>'<li>'+csqTags(c)+' '+esc(c.txt)+'</li>').join("")+'</ul>':'';}
 // Conséquences retenues au bilan (privé : dans le scénario)
@@ -2545,7 +2561,9 @@ function csqKept(q){const m=(scenarios[q.id]||{}).monde;if(!m||!((m.liste||[]).l
 function csqText(q){const m=(scenarios[q.id]||{}).monde;if(!m)return "";return ((m.liste||[]).concat(m.autre?[m.autre]:[])).map(t=>"- "+q.titre+" : "+t).join("\n");}
 function ptScenario(q){
   const s=scenarios[q.id]||{},txt=String(s.scenario||""),P=ui.pt,faits=P.faits||[],encs=ptEncounters(q),used={};
-  const parts=txt.split(/\n(?=##\s)/);let h='';
+  const ob=objsOf(q),od=P.objectifs||[];
+  let oh=ob.length?'<section class="ptobj"><h3>Objectifs <span class="desc">(secrets · '+od.filter(i=>i<ob.length).length+' / '+ob.length+')</span></h3>'+ob.map(o=>'<label class="ptobjrow'+(od.indexOf(o.i)>=0?' done':'')+'" for="pobj-'+o.i+'"><input type="checkbox" class="pt-obj" id="pobj-'+o.i+'" data-i="'+o.i+'"'+(od.indexOf(o.i)>=0?' checked':'')+'><span><strong>'+esc(o.txt)+'</strong>'+(o.csq?'<span class="desc">Sinon : '+esc(o.csq)+'</span>':'')+'</span></label>').join("")+'</section>':'';
+  const parts=txt.split(/\n(?=##\s)/);let h=oh;
   const encBtn=r=>'<button class="btn gold sm" data-a="pt-launch" data-id="'+esc(r.id)+'">⚔ Lancer le combat : '+esc(r.nom)+'</button>';
   parts.forEach((sec,i)=>{const isH=/^##\s/.test(sec);const here=encs.filter(r=>sec.indexOf(r.nom)>=0);here.forEach(r=>{used[r.id]=1;});
     if(!isH){if(sec.trim())h+='<div class="wikibody">'+md(manLinks(sec))+'</div>'+(here.length?'<p class="ptlaunch">'+here.map(encBtn).join("")+'</p>':'');return;}
@@ -2938,6 +2956,7 @@ function partySubmit(e){
 function partyChange(e){
   const t=e.target;
   if(ui.pt&&t.classList&&t.classList.contains("pt-tr")){const c=ptC(t.getAttribute("data-id"));if(!c)return true;const f=t.getAttribute("data-f");c.tr=c.tr||{};c.tr[f]=t.checked?1:"";ptSave();setTimeout(render,0);return true;}
+  if(ui.pt&&t.classList&&t.classList.contains("pt-obj")){const i=+t.getAttribute("data-i"),F=ui.pt.objectifs=ui.pt.objectifs||[],k=F.indexOf(i);if(t.checked&&k<0)F.push(i);if(!t.checked&&k>=0)F.splice(k,1);ptLog((t.checked?"🎯 Objectif rempli : ":"Objectif décoché : ")+((objsOf(questById(ui.pt.id)||{id:""})[i]||{}).txt||""));ptSave();setTimeout(render,0);return true;}
   if(ui.pt&&t.classList&&t.classList.contains("pt-sec")){const i=+t.getAttribute("data-i"),F=ui.pt.faits=ui.pt.faits||[],k=F.indexOf(i);if(t.checked&&k<0)F.push(i);if(!t.checked&&k>=0)F.splice(k,1);ptSave();setTimeout(render,0);return true;}
   if(ui.pt&&t.id==="pt-cnotes"&&ui.pt.combat){ui.pt.combat.notes=String(t.value).slice(0,5000);ptSave();return true;}
   if(ui.pt&&t.id==="pt-notes"){ui.pt.notesDM=String(t.value).slice(0,10000);ptSave();setTimeout(render,0);return true;}
@@ -2999,15 +3018,20 @@ async function migrate(){
 }
 
 function v0(id){const el=document.getElementById(id);return el?el.value.trim():"";}
+function objPick(q,C){const ob=objsOf(q);if(!ob.length)return "";const sel=C.obj||[];
+  return '<fieldset class="pick csqpick objpick"><legend>Objectifs</legend><p class="desc">Ils déterminent le résultat : tous remplis = Réussite, certains = Réussite partielle, aucun = Échec. Un objectif raté ajoute sa conséquence.</p>'+
+    ob.map(o=>{const on=sel.indexOf(o.i)>=0;return '<label class="pickrow" for="cobj-'+o.i+'"><input type="checkbox" class="c-obj" id="cobj-'+o.i+'" data-i="'+o.i+'"'+(on?' checked':'')+'><span><strong>'+esc(o.txt)+'</strong>'+(o.csq?'<span class="objcsq'+(on?'':' miss')+'">'+(on?'Évité : ':'Conséquence : ')+esc(o.csq)+'</span>':'')+'</span></label>';}).join("")+'</fieldset>';}
 function csqPick(q,C){const all=csqParse((scenarios[q.id]||{}).consequences),res=C.rapport.resultat,sel=C.csq||[];
   const row=c=>'<label class="pickrow" for="csq-'+c.i+'"><input type="checkbox" id="csq-'+c.i+'" data-csq="'+c.i+'"'+(sel.indexOf(c.txt)>=0?' checked':'')+'><span>'+csqTags(c)+' '+esc(c.txt)+'</span></label>';
   const ord=c=>c.q?Math.min.apply(null,c.q.map(k=>["reussite","partielle","echec"].indexOf(k))):3,list=all.slice().sort((a,b)=>ord(a)-ord(b)||a.i-b.i);
-  return '<fieldset class="pick csqpick"><legend>Conséquences pour le monde</legend><p class="desc">Coche ce qui arrive. C\'est gardé dans ton rapport DM (jamais montré aux joueurs) et ça t\'attendra dans Évolution du monde.</p>'+
+  return '<fieldset class="pick csqpick"><legend>'+(objsOf(q).length?'Autres conséquences':'Conséquences pour le monde')+'</legend><p class="desc">Coche ce qui arrive. C\'est gardé dans ton rapport DM (jamais montré aux joueurs) et ça t\'attendra dans Évolution du monde.</p>'+
     (list.length?list.map(row).join(""):'<p class="desc">Aucune conséquence prévue dans le scénario.</p>')+
     '<label for="csq-autre">Autre conséquence (facultatif)<textarea id="csq-autre" rows="2" maxlength="1000" placeholder="Ex. Le lieutenant Garrow a vu le visage de Bob.">'+esc(C.csqx||"")+'</textarea></label></fieldset>';}
 function readStep(){
   const C=ui.complete;if(!C)return;
-  if(C.step===1){const r0=C.rapport&&C.rapport.resultat;C.rapport={date:v0("c-date").slice(0,80),resultat:v0("c-res")||"reussite",resume:C.rapport.resume||""};
+  if(C.step===1){const r0=C.rapport&&C.rapport.resultat,ob=objsOf(questById(C.id)||{id:""});
+    if(ob.length)C.obj=Array.from(document.querySelectorAll('#completeform input.c-obj')).filter(c=>c.checked).map(c=>+c.getAttribute("data-i"));
+    C.rapport={date:v0("c-date").slice(0,80),resultat:ob.length?objResult((C.obj||[]).length,ob.length):(v0("c-res")||"reussite"),resume:C.rapport.resume||""};
     const nd=document.getElementById("c-dmnotes");if(nd)C.notesDM=String(nd.value).slice(0,10000);const wr=document.getElementById("c-writer");if(wr)C.writer=wr.value;
     const all=csqParse((scenarios[C.id]||{}).consequences);C.csq=Array.from(document.querySelectorAll('#completeform input[data-csq]')).filter(c=>c.checked).map(c=>(all[+c.getAttribute("data-csq")]||{}).txt).filter(Boolean);
     const ax=document.getElementById("csq-autre");if(ax)C.csqx=String(ax.value).trim().slice(0,1000);if(r0&&r0!==C.rapport.resultat)C.parts.forEach(x=>{x.gain=null;x.gainN=null;});}
@@ -3066,7 +3090,8 @@ document.addEventListener("click",async e=>{
   else if(a==="scale-edit"){ui.scaleEdit=true;}
   else if(a==="complete"){const q=questById(id);if(!q)return;
     const match=(nom,aid)=>{if(aid&&aventuriers.some(x=>x.id===aid))return aid;const m=aventuriers.find(x=>String(x.nom).trim().toLowerCase()===String(nom).trim().toLowerCase());return m?m.id:"";};
-    ui.complete={id,step:1,rapport:{date:q.date||"",resultat:"reussite",resume:(q.rapportBrouillon&&q.rapportBrouillon.resume)||""},
+    const ob0=objsOf(q),od0=ptObjDone(q).filter(i=>i<ob0.length);
+    ui.complete={id,step:1,obj:od0.slice(),rapport:{date:q.date||"",resultat:objResult(od0.length,ob0.length)||"reussite",resume:(q.rapportBrouillon&&q.rapportBrouillon.resume)||""},
       parts:signupsFor(id).filter(x=>x.statut==="confirmee").map(x=>({nom:x.nom,uid:x.uid,aventurier:match(x.nom,x.aventurier),gain:null,gainN:null,mineur:0,moyen:0,grave:0,bon:0,remarquable:0,miracle:0}))};}
   else if(a==="complete-cancel"){if(e.target!==b)return;ui.complete=null;}
   else if(a==="step-back"){readStep();ui.complete.step--;}
@@ -3185,6 +3210,7 @@ document.addEventListener("change",e=>{
   if(e.target.id==="loot-f"){ui.lootF=e.target.value;render();return;}
   if(e.target.id==="rel-f"){ui.relF=e.target.value;render();return;}
   if(e.target.classList&&e.target.classList.contains("loot-to")){const id=e.target.getAttribute("data-id"),a=aventuriers.find(x=>x.id===e.target.value);run("Butin attribué",()=>setDoc(doc(db,"butins",id),{pour:a?a.id:"",pourNom:a?a.nom:""},{merge:true}));return;}
+  if(e.target.classList&&e.target.classList.contains("c-obj")&&ui.complete){readStep();render();return;}
   if(partyChange(e))return;
   if(e.target.classList&&e.target.classList.contains("rnsel")){
     const aid=e.target.getAttribute("data-adv"),bid=e.target.getAttribute("data-b"),n=parseInt(e.target.value,10);
@@ -3306,7 +3332,8 @@ document.addEventListener("submit",async e=>{
       bt.set(doc(db,"quetes",q.id),{statut:"terminee",rapport,majLe:serverTimestamp()},{merge:true});
       if(C.notesDM!=null&&C.notesDM!==ptNotesDM(q))bt.set(doc(db,"parties",q.id),{notesDM:C.notesDM},{merge:true});
       if(C.writer)bt.set(doc(db,"quetes",q.id),{redacteur:C.writer},{merge:true});
-      bt.set(doc(db,"scenarios",q.id),{monde:{resultat:C.rapport.resultat,liste:C.csq||[],autre:C.csqx||"",le:serverTimestamp()}},{merge:true});
+      const obm=objsOf(q).filter(o=>(C.obj||[]).indexOf(o.i)<0&&o.csq).map(o=>o.csq);
+      bt.set(doc(db,"scenarios",q.id),{monde:{resultat:C.rapport.resultat,objectifs:objsOf(q).map(o=>({txt:o.txt,ok:(C.obj||[]).indexOf(o.i)>=0})),liste:obm.concat(C.csq||[]),autre:C.csqx||"",le:serverTimestamp()}},{merge:true});
       const seen={};
       C.parts.forEach(x=>{const a=x.aventurier&&aventuriers.find(y=>y.id===x.aventurier);if(!a)return;
         const t=partTotals(q,C.rapport.resultat,x),net=t.r,netN=t.n,bl=bienLabels();
