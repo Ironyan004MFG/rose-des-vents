@@ -682,10 +682,11 @@ a.mini{text-decoration:none;display:inline-block}
 /* groupe, rapport, méfaits */
 .aide{border:1px solid #c9b88f;border-radius:6px;background:#f7f1e1;padding:8px 12px}
 .aide summary{cursor:pointer;font-family:var(--display);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);min-height:28px;display:flex;align-items:center}
-.aide dl{margin:8px 0 0;display:grid;grid-template-columns:auto 1fr;gap:8px 12px;align-items:start}
+.aide dl{margin:8px 0 0;display:grid;grid-template-columns:minmax(0,15em) 1fr;gap:8px 12px;align-items:start}
 .aide dd{margin:0;font-size:15px}
 @media (max-width:520px){.aide dl{grid-template-columns:1fr}}
 .mefpill{display:inline-block;font-family:var(--display);font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.aide .mefpill{white-space:normal;border-radius:10px}
 .m-mineur{background:#ead0c3;color:#5e2a1c}.m-moyen{background:#d9927d;color:#3f130a}.m-grave{background:#9b2c22;color:#fff3ee}
 .steps{list-style:none;display:flex;gap:6px;margin:0;padding:0;counter-reset:st}
 .steps li{counter-increment:st;font-family:var(--display);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);border:1px solid #c9b88f;border-radius:999px;padding:5px 12px}
@@ -816,6 +817,10 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .rr1{background:#c99327;color:#1c1404}.rr2{background:#d8ab4c;color:#2a1f06}.rr3{background:#e3c172;color:#33270a}.rr4{background:#efe2bb;color:#4a3a14}.rr5{background:#e2d6b6;color:#4d4030}
 .rr6{background:#ead0c3;color:#5e2a1c}.rr7{background:#d9927d;color:#3f130a}.rr8{background:#9b2c22;color:#fff3ee}.rr9{background:#4a0f0b;color:#ffd9cf}
 .rn.rnn5,.rn.rnn6{box-shadow:0 0 0 1px rgba(0,0,0,.25) inset}.rn.rnn7{box-shadow:0 0 0 2px #c99327 inset}
+.mefpill.b-bon,.mefpill.b-remarquable,.mefpill.b-miracle{background:#dcebd6;color:#1f4a1a;border-color:#a9c9a6}
+td.bien,th.bien{background:rgba(61,122,58,.06)}
+table.bilan td.gains,table.bilan td.nw{white-space:nowrap}
+table.bilan td.gains input{width:56px;margin-right:4px}
 .renaxes{display:block;font-size:12px;color:var(--ink-soft);margin-top:2px}
 .axes{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 table.matrix{border-collapse:separate;border-spacing:3px;width:100%;font-size:12px}
@@ -914,14 +919,21 @@ const RANKS = {cuivre:{label:"Cuivre",c:"var(--r-cuivre)"},fer:{label:"Fer",c:"v
 const STATUS = {ouverte:"Ouverte",encours:"En cours",terminee:"Terminée",archivee:"Archivée"};
 const TYPES = ["Contrat","Recherche","Exploration","Prime","Escorte","Rumeur"];
 const QUEST_KEYS = ["bureau","titre","type","rang","statut","lieu","recompense","niveau","joueurs","joueursMin","joueursMax","supercharged","date","description","maj"];
-const DEFAULT_RANK_PTS = {cuivre:1,fer:5,argent:10,or:25,mithral:50,inconnu:0};
 const BASE_CATS = ["PNJ","Créatures","Lieux","Indices & rumeurs","Objets","Factions"];
-const DEFAULT_MEFAITS = {mineur:1,moyen:3,grave:10};
-const MEFAIT_LABELS = {mineur:"Mineur",moyen:"Moyen",grave:"Grave"};
+const DEFAULT_MEFAITS = {mineur:2,moyen:5,grave:10};
+const DEFAULT_MEFAITS_N = {mineur:1,moyen:2,grave:5};
+const MEFAIT_LABELS = {mineur:"Mineur",moyen:"Moyen",grave:"Majeur"};
+const BIENFAITS = ["bon","remarquable","miracle"];
+const BIENFAIT_LABELS = {bon:"Bon geste",remarquable:"Acte remarquable",miracle:"Miracle ou coup de génie"};
+const DEFAULT_BIEN_N = {bon:1,remarquable:2,miracle:5};
+const DEFAULT_BIEN_R = {bon:1,remarquable:5,miracle:10};
+const BIEN_AIDE = {bon:"Aider un passant, rendre un objet perdu, partager son butin avec un village.",remarquable:"Sauver une vie au péril de la sienne, démasquer un traître, épargner un ennemi qui se rend.",miracle:"Sauver un village entier, un plan génial qui change le cours des choses, un acte qu'on racontera longtemps."};
+const RANK_MULT = {cuivre:1,fer:2,argent:3,or:5,mithral:8,inconnu:1};
+const RES_PTS = {reussite:{n:2,r:1},partielle:{n:1,r:0},echec:{n:0,r:-1}};
 const MEFAIT_AIDE = {
-  mineur:{ex:"Bagarre de taverne, petit vol, insulter un garde, refuser de payer sa note.",pourquoi:"Sur une quête de Cuivre (+1), un seul méfait mineur annule le gain : les débutants apprennent vite que ça ne paie pas."},
-  moyen:{ex:"Vandalisme, cambriolage, menacer un notable, frapper un garde, libérer un prisonnier.",pourquoi:"Ça fait mal sans détruire : une quête de Fer (+5) reste positive malgré un méfait moyen."},
-  grave:{ex:"Meurtre d'un innocent, incendie, trahir un client de la Guilde, profaner un temple.",pourquoi:"Un seul méfait grave fait passer un inconnu à « Suspect » (−10). Ça pèse, comme un vrai crime."}
+  mineur:{ex:"Bagarre de taverne, petit vol, insulter un garde, refuser de payer sa note.",pourquoi:"On en parle un peu (+1 notoriété), on vous aime un peu moins (−2 réputation)."},
+  moyen:{ex:"Vandalisme, cambriolage, menacer un notable, frapper un garde, libérer un prisonnier.",pourquoi:"Un seul suffit à rendre un inconnu « Suspect » (−5)."},
+  grave:{ex:"Meurtre d'un innocent, incendie, trahir un client de la Guilde, profaner un temple.",pourquoi:"Tout le monde en parle (+5 notoriété) et la confiance s'effondre (−10) : deux suffisent à être « Craint »."}
 };
 const RESULTS = {reussite:"Réussite",partielle:"Réussite partielle",echec:"Échec"};
 const SEED = JSON.parse(document.getElementById("bb-seed").textContent);
@@ -1208,7 +1220,7 @@ function card(q){
   if(ch.level==="risque")h+='<p class="riskline">Risque de Supercharged : '+(ch.conf+ch.pend)+' demandes pour '+ch.max+' places recommandées.</p>';
   h+='<dl class="facts"><dt>Lieu</dt><dd>'+esc(q.lieu||"—")+'</dd><dt>Récompense</dt><dd>'+esc(q.recompense||"—")+'</dd><dt>Niveau</dt><dd>'+esc(q.niveau||"—")+'</dd><dt>Joueurs</dt><dd>'+esc(q.joueurs||"—")+'</dd>';
   if(q.date)h+='<dt>Date</dt><dd>'+esc(q.date)+'</dd>';
-  if(ui.dm)h+='<dt>Renommée</dt><dd>'+questPts(q)+' pt'+(questPts(q)>1?'s':'')+' par participant <em>(DM)</em></dd>';
+  if(ui.dm){const g=questGain(q,"reussite");h+='<dt>Renommée</dt><dd>×'+questMult(q)+' (réussite : +'+g.n+' notoriété, +'+g.r+' réputation) <em>(DM)</em></dd>';}
   if(q.rapport&&q.statut!=="ouverte"){const r=q.rapport;h+='<dt>Rapport</dt><dd><strong>'+esc(RESULTS[r.resultat]||"")+'</strong>'+(r.date?' · '+esc(r.date):'')+(r.resume?'<br>'+esc(r.resume):'')+'</dd>';}
   if(ui.dm&&q.statut==="encours"&&(q.redacteur||q.rapportBrouillon)){const rs=signupsFor(q.id).find(x=>x.uid===q.redacteur);h+='<dt>Rapport</dt><dd>'+(q.rapportBrouillon&&q.rapportBrouillon.resume?'Proposé par '+esc(q.rapportBrouillon.auteur||"un joueur")+' ✓':'Demandé à '+esc(rs?rs.nom:"un joueur")+', en attente')+'</dd>';}
   h+='<dt>Inscrits</dt><dd>'+signupList(q)+'</dd></dl>'+planLine(q)+'<div class="actions">';
@@ -1242,7 +1254,7 @@ function form(){
     '<label for="f-jmin">Joueurs recommandés : min<input id="f-jmin" type="number" min="0" max="99" value="'+(q.joueursMin==null?"":q.joueursMin)+'"></label>'+
     '<label for="f-jmax">Joueurs recommandés : max<input id="f-jmax" type="number" min="0" max="99" value="'+(q.joueursMax==null?"":q.joueursMax)+'"></label>'+
     '<label for="f-date">Date prévue<input id="f-date" maxlength="80" placeholder="ex. sam. 22 nov., 19 h" value="'+esc(q.date)+'"></label>'+
-    '<label for="f-pts">Points de renommée (vide = selon le rang)<input id="f-pts" type="number" step="1" value="'+(priv&&priv.quetes&&typeof priv.quetes[q.id]==="number"?priv.quetes[q.id]:"")+'"></label>'+
+    '<label for="f-pts">Multiplicateur de renommée (vide = selon le rang)<input id="f-pts" type="number" step="1" value="'+(priv&&priv.quetes&&typeof priv.quetes[q.id]==="number"?priv.quetes[q.id]:"")+'"></label>'+
     '<label class="check" for="f-super"><input id="f-super" type="checkbox"'+(q.supercharged?" checked":"")+'> Forcer « Supercharged »</label>'+
     '<label class="wide" for="f-desc">Description<textarea id="f-desc" maxlength="4000">'+esc(q.description)+'</textarea></label>'+
     '<label class="wide" for="f-maj">Mise à jour (évolution du monde, facultatif)<input id="f-maj" maxlength="1000" value="'+esc(q.maj||"")+'"></label>'+
@@ -1280,17 +1292,17 @@ function boardView(){
 /* ---------- renommée : matrice notoriété × réputation ---------- */
 const NOTO_DEF=[
   {n:1,titre:"Inconnu",seuil:0,effet:"Personne ne sait qui vous êtes."},
-  {n:2,titre:"Remarqué",seuil:5,effet:"On a entendu parler de vous ; quelques regards curieux."},
-  {n:3,titre:"Connu",seuil:15,effet:"Votre nom circule dans les tavernes."},
-  {n:4,titre:"Reconnu",seuil:30,effet:"On vous reconnaît dans la rue."},
-  {n:5,titre:"Renommé",seuil:50,effet:"Votre nom est sur toutes les lèvres de la région."},
-  {n:6,titre:"Célèbre",seuil:80,effet:"Les bardes chantent vos exploits ; les puissants vous remarquent."},
-  {n:7,titre:"Légendaire",seuil:120,effet:"On racontera votre histoire pendant des générations."}];
+  {n:2,titre:"Remarqué",seuil:10,effet:"On a entendu parler de vous ; quelques regards curieux."},
+  {n:3,titre:"Connu",seuil:30,effet:"Votre nom circule dans les tavernes."},
+  {n:4,titre:"Reconnu",seuil:60,effet:"On vous reconnaît dans la rue."},
+  {n:5,titre:"Renommé",seuil:100,effet:"Votre nom est sur toutes les lèvres de la région."},
+  {n:6,titre:"Célèbre",seuil:160,effet:"Les bardes chantent vos exploits ; les puissants vous remarquent."},
+  {n:7,titre:"Légendaire",seuil:240,effet:"On racontera votre histoire pendant des générations."}];
 const REPU_DEF=[
-  {r:1,titre:"Adulé",seuil:50,effet:"On se bat pour vous servir ; portes et bourses s'ouvrent."},
-  {r:2,titre:"Honoré",seuil:30,effet:"Faveurs, rabais, audiences auprès des notables."},
-  {r:3,titre:"Apprécié",seuil:15,effet:"Petits services, sourires, informations données volontiers."},
-  {r:4,titre:"Amical",seuil:5,effet:"Accueil chaleureux, prix honnêtes."},
+  {r:1,titre:"Adulé",seuil:100,effet:"On se bat pour vous servir ; portes et bourses s'ouvrent."},
+  {r:2,titre:"Honoré",seuil:60,effet:"Faveurs, rabais, audiences auprès des notables."},
+  {r:3,titre:"Apprécié",seuil:30,effet:"Petits services, sourires, informations données volontiers."},
+  {r:4,titre:"Amical",seuil:10,effet:"Accueil chaleureux, prix honnêtes."},
   {r:5,titre:"Neutre",seuil:0,effet:"Indifférence, prix normaux, méfiance ordinaire envers les étrangers."},
   {r:6,titre:"Suspect",seuil:-5,effet:"Méfiance, gardes qui vous suivent, prix un peu majorés."},
   {r:7,titre:"Craint",seuil:-15,effet:"Les gens s'écartent, les portes se ferment, les prix doublent."},
@@ -1314,15 +1326,26 @@ function renLabel(c){c=legacyCode(c);const t=titresMap()[String(c)];if(t)return 
 function renHint(c){c=legacyCode(c);return "Notoriété : "+nTitre(cN(c))+" · Réputation : "+rTitre(cR(c));}
 function chip(c){c=legacyCode(c);return '<span class="rn rr'+cR(c)+' rnn'+cN(c)+'" title="'+esc(renHint(c))+'">'+esc(renLabel(c))+'</span>';}
 function repChip(r){return '<span class="rn rr'+r+'">'+esc(rTitre(r))+'</span>';}
-function rankPts(){return Object.assign({},DEFAULT_RANK_PTS,(priv&&priv.pointsParRang)||{});}
+function rankMult(){return Object.assign({},RANK_MULT,(priv&&priv.mult)||{});}
+function resPts(){const o=(priv&&priv.res)||{};const r={};Object.keys(RES_PTS).forEach(k=>{r[k]=Object.assign({},RES_PTS[k],o[k]||{});});return r;}
 function mefaitPts(){return Object.assign({},DEFAULT_MEFAITS,(priv&&priv.mefaits)||{});}
-function questPts(q){const o=priv&&priv.quetes&&priv.quetes[q.id];return typeof o==="number"?o:(rankPts()[q.rang]||0);}
+function mefaitN(){return Object.assign({},DEFAULT_MEFAITS_N,(priv&&priv.mefaitsN)||{});}
+function bienN(){return Object.assign({},DEFAULT_BIEN_N,(priv&&priv.bienN)||{});}
+function bienR(){return Object.assign({},DEFAULT_BIEN_R,(priv&&priv.bienR)||{});}
+function bienLabels(){return Object.assign({},BIENFAIT_LABELS,(scaleDoc&&scaleDoc.bienLabels)||{});}
+function questMult(q){const o=priv&&priv.quetes&&priv.quetes[q.id];return typeof o==="number"?o:(rankMult()[q.rang]||1);}
+function questPts(q){return questMult(q);}
+function questGain(q,res){const b=resPts()[res||"reussite"]||{n:0,r:0},m=questMult(q);return {n:b.n*m,r:b.r*m};}
+// Total d'un participant : fin de quête (ajustable) + méfaits + bienfaits
+function partTotals(q,res,x){const g=questGain(q,res),gN=x.gainN==null?g.n:x.gainN,gR=x.gain==null?g.r:x.gain,mR=mefaitPts(),mN=mefaitN(),bN=bienN(),bR=bienR();
+  const pen=Object.keys(DEFAULT_MEFAITS).reduce((t,k)=>t+(x[k]||0)*mR[k],0),mefN=Object.keys(DEFAULT_MEFAITS).reduce((t,k)=>t+(x[k]||0)*mN[k],0);
+  const bnN=BIENFAITS.reduce((t,k)=>t+(x[k]||0)*bN[k],0),bnR=BIENFAITS.reduce((t,k)=>t+(x[k]||0)*bR[k],0);
+  return {gN:gN,gR:gR,pen:pen,mefN:mefN,bnN:bnN,bnR:bnR,n:gN+mefN+bnN,r:gR-pen+bnR};}
 function pts(a,bid){const m=pointsMap[a.id];return m&&typeof m[bid]==="number"?m[bid]:0;}
 function ptsN(a,bid){const m=notoMap[a.id];return m&&typeof m[bid]==="number"?m[bid]:0;}
 // Le rang public (code de la matrice) est enregistré sur la fiche (niveaux) ; seul le DM voit les points.
 function renown(a,bid){return legacyCode(a.niveaux&&a.niveaux[bid]);}
 function ptsLabel(p){return (p>0?"+":"")+p+" pt"+(Math.abs(p)>1?"s":"");}
-function mefNoto(pen){return Math.ceil((+pen||0)/2);}
 function addPoints(bt,a,bid,dR,dN){
   const r0=pts(a,bid),n0=ptsN(a,bid),r1=r0+(dR||0),n1=Math.max(0,n0+(dN||0)),oldC=renown(a,bid),newC=codeOf(n1,r1);
   bt.set(doc(db,"points",a.id),{parRegion:{[bid]:r1},notoriete:{[bid]:n1}},{merge:true});
@@ -1351,14 +1374,16 @@ function renownView(){
       '<h3 class="subh">Réputation</h3>'+Rl.map(s=>'<div class="srow"><span class="rn rr'+s.r+'">'+s.r+'</span><label for="sr-t'+s.r+'">Titre<input id="sr-t'+s.r+'" maxlength="40" value="'+esc(s.titre)+'"></label><label for="sr-s'+s.r+'">Points ('+(s.r<5?'dès':s.r>5?'jusqu\'à':'—')+')<input id="sr-s'+s.r+'" type="number" value="'+seuilR(s.r)+'"'+(s.r===5?' disabled':'')+'></label><label for="sr-e'+s.r+'">Effet<input id="sr-e'+s.r+'" maxlength="300" value="'+esc(s.effet)+'"></label></div>').join("")+
       '<h3 class="subh">Titres de région (facultatifs)</h3><div class="tablebox"><table class="matrix edit"><thead><tr><th scope="col"><span class="sr">Réputation</span></th>'+N.map(n=>'<th scope="col">'+esc(n.titre)+'</th>').join("")+'</tr></thead><tbody>'+
       Rl.map(r=>'<tr><th scope="row">'+esc(r.titre)+'</th>'+N.map(n=>{const c=r.r*10+n.n;return '<td class="mx rr'+r.r+'"><label class="sr" for="tt-'+c+'">Titre '+c+'</label><span class="mxc">'+c+'</span><input id="tt-'+c+'" maxlength="40" value="'+esc(T[String(c)]||"")+'"></td>';}).join("")+'</tr>').join("")+'</tbody></table></div>'+
-      '<fieldset class="mefset"><legend>Méfaits (points de réputation retirés ; la notoriété monte de la moitié)</legend>'+Object.keys(DEFAULT_MEFAITS).map(k=>'<label for="mf-'+k+'">'+MEFAIT_LABELS[k]+'<input id="mf-'+k+'" type="number" min="0" max="999" value="'+mefaitPts()[k]+'"></label>').join("")+'</fieldset>'+
+      '<fieldset class="mefset"><legend>Multiplicateur selon le rang de la quête</legend>'+["cuivre","fer","argent","or","mithral"].map(k=>'<label for="mu-'+k+'">'+esc(RANKS[k].label)+'<input id="mu-'+k+'" type="number" min="0" max="99" step="0.5" value="'+rankMult()[k]+'"></label>').join("")+'</fieldset>'+
+      '<fieldset class="mefset"><legend>Fin de quête (avant multiplicateur) : notoriété / réputation</legend>'+Object.keys(RES_PTS).map(k=>'<label for="rs-n-'+k+'">'+esc(RESULTS[k])+' N<input id="rs-n-'+k+'" type="number" value="'+resPts()[k].n+'"></label><label for="rs-r-'+k+'">R<input id="rs-r-'+k+'" type="number" value="'+resPts()[k].r+'"></label>').join("")+'</fieldset>'+
+      '<fieldset class="mefset"><legend>Méfaits : notoriété gagnée / réputation perdue</legend>'+Object.keys(DEFAULT_MEFAITS).map(k=>'<label for="mfn-'+k+'">'+MEFAIT_LABELS[k]+' N +<input id="mfn-'+k+'" type="number" min="0" max="999" value="'+mefaitN()[k]+'"></label><label for="mf-'+k+'">R −<input id="mf-'+k+'" type="number" min="0" max="999" value="'+mefaitPts()[k]+'"></label>').join("")+'</fieldset>'+
+      '<fieldset class="mefset"><legend>Bienfaits : nom, notoriété gagnée, réputation gagnée</legend>'+BIENFAITS.map(k=>'<label for="bl-'+k+'">Nom<input id="bl-'+k+'" maxlength="40" value="'+esc(bienLabels()[k])+'"></label><label for="bn-'+k+'">N +<input id="bn-'+k+'" type="number" min="0" max="999" value="'+bienN()[k]+'"></label><label for="br-'+k+'">R +<input id="br-'+k+'" type="number" min="0" max="999" value="'+bienR()[k]+'"></label>').join("")+'</fieldset>'+
       '<div class="actions"><button class="btn gold" type="submit">Enregistrer</button><button class="btn board" type="button" data-a="scale-cancel">Annuler</button></div></form>';
   } else {
     h+='<div class="axes"><div><h3 class="subh">Notoriété</h3><div class="tablebox"><table class="scale"><tbody>'+N.map(s=>'<tr><td><span class="rn rr5 rnn'+s.n+'">'+esc(s.titre)+'</span></td>'+(ui.dm?'<td class="num">'+seuilN(s.n)+'+</td>':'')+'<td>'+esc(s.effet)+'</td></tr>').join("")+'</tbody></table></div></div>'+
       '<div><h3 class="subh">Réputation</h3><div class="tablebox"><table class="scale"><tbody>'+Rl.map(s=>'<tr><td>'+repChip(s.r)+'</td>'+(ui.dm?'<td class="num">'+(s.r===5?'0':s.r<5?seuilR(s.r)+' et +':seuilR(s.r)+' et −')+'</td>':'')+'<td>'+esc(s.effet)+'</td></tr>').join("")+'</tbody></table></div></div></div>';
     h+='<h3 class="subh">Les titres</h3><p class="hint">Dans chaque région, la combinaison des deux axes vous vaut un titre.</p>'+matrixTable(ui.dm);
-    const rp=rankPts();
-    if(ui.dm)h+='<p class="hint">Visible par le DM seulement. Une quête réussie donne par défaut le même nombre de points sur les deux axes : '+["cuivre","fer","argent","or","mithral"].map(r=>'<strong>'+esc(RANKS[r].label)+'</strong> '+rp[r]).join(" · ")+'. Méfaits (réputation) : '+Object.keys(DEFAULT_MEFAITS).map(k=>'<strong>'+MEFAIT_LABELS[k]+'</strong> −'+mefaitPts()[k]).join(" · ")+' ; la notoriété monte de la moitié.</p>';
+    if(ui.dm){const rs=resPts(),mu=rankMult(),bl=bienLabels();h+='<p class="hint">Visible par le DM seulement. <strong>Fin de quête</strong> : réussite N +'+rs.reussite.n+' / R +'+rs.reussite.r+', partielle N +'+rs.partielle.n+' / R '+rs.partielle.r+', échec N +'+rs.echec.n+' / R '+rs.echec.r+', multipliés selon le rang ('+["cuivre","fer","argent","or","mithral"].map(r=>esc(RANKS[r].label)+' ×'+mu[r]).join(", ")+'). <strong>Méfaits</strong> : '+Object.keys(DEFAULT_MEFAITS).map(k=>MEFAIT_LABELS[k]+' N +'+mefaitN()[k]+' / R −'+mefaitPts()[k]).join(", ")+'. <strong>Bienfaits</strong> : '+BIENFAITS.map(k=>esc(bl[k])+' N +'+bienN()[k]+' / R +'+bienR()[k]).join(", ")+'.</p>';}
     if(ui.dm)h+='<div class="actions"><button class="btn board" data-a="scale-edit">Modifier les axes et les titres</button></div>';
   }
   h+='</section><section class="reg"><h2>Les aventuriers</h2>';
@@ -2097,7 +2122,7 @@ function render(){
   if(ui.complete&&ui.dm){const C=ui.complete,cq=questById(C.id);
     if(cq){const bo=office(cq.bureau),mp=mefaitPts();
       const advOpts=sel=>'<option value="">— Aucun personnage du registre —</option>'+aventuriers.map(a=>'<option value="'+esc(a.id)+'"'+(a.id===sel?' selected':'')+'>'+esc(a.nom)+(a.joueur?' ('+esc(a.joueur)+')':'')+'</option>').join("");
-      const steps=['Rapport','Méfaits','Bilan'];
+      const steps=['Rapport','Méfaits et bienfaits','Bilan'];
       h+='<div class="modal-bg" data-a="complete-cancel"><form class="modal wide" id="completeform" data-step="'+C.step+'" role="dialog" aria-modal="true" aria-labelledby="cp-t"><h2 id="cp-t">Terminer « '+esc(cq.titre)+' »</h2>'+
         '<ol class="steps">'+steps.map((t,i)=>'<li'+(i+1===C.step?' aria-current="step"':'')+(i+1<C.step?' class="done"':'')+'>'+t+'</li>').join("")+'</ol>';
       if(C.step===1){
@@ -2108,23 +2133,28 @@ function render(){
           ptReportBlock(cq,false)+
           '<label for="c-resume">Rapport de mission (publié dans les Chroniques)<textarea id="c-resume" maxlength="4000" rows="6">'+esc(C.rapport.resume)+'</textarea></label>'+
           (writers.length?'<div class="askrow"><label for="c-writer">Ou faire écrire le rapport par<select id="c-writer">'+writers.map(x=>'<option value="'+esc(x.uid)+'"'+(cq.redacteur===x.uid?' selected':'')+'>'+esc(x.nom)+'</option>').join("")+'</select></label><button class="btn ghost" type="button" data-a="ask-writer">Lui demander le rapport</button></div>':'')+
-          '<div class="actions"><button class="btn" type="submit">Suivant : les méfaits</button><button class="btn ghost" type="button" data-a="complete-cancel">Annuler</button></div>';
+          '<div class="actions"><button class="btn" type="submit">Suivant : méfaits et bienfaits</button><button class="btn ghost" type="button" data-a="complete-cancel">Annuler</button></div>';
       } else if(C.step===2){
-        h+='<p>Combien de méfaits chaque aventurier s\'est-il <strong>fait prendre</strong> à commettre ? Les points retirés s\'appliquent dans la région du comptoir et se soustraient au gain de la mission.</p>'+
-          '<details class="aide"'+(window.matchMedia&&window.matchMedia("(max-width:560px)").matches?'':' open')+'><summary>Aide-mémoire : l\'échelle des méfaits</summary><dl>'+Object.keys(DEFAULT_MEFAITS).map(k=>'<dt><span class="mefpill m-'+k+'">'+MEFAIT_LABELS[k]+' −'+mp[k]+'</span></dt><dd><strong>Exemples :</strong> '+esc(MEFAIT_AIDE[k].ex)+'<br><em>'+esc(MEFAIT_AIDE[k].pourquoi)+'</em></dd>').join("")+'</dl>'+
-          '<p class="tip">Rappel des rangs négatifs : Suspect à −10, Craint à −20, Recherché à −50.</p></details>'+
-          '<div class="tablebox light"><table class="mef"><thead><tr><th scope="col">Aventurier</th><th scope="col">Personnage du registre</th>'+Object.keys(DEFAULT_MEFAITS).map(k=>'<th scope="col">'+MEFAIT_LABELS[k]+'</th>').join("")+'</tr></thead><tbody>'+
+        const bl=bienLabels(),bN=bienN(),bR=bienR(),mN=mefaitN();
+        h+='<p>Pour chaque aventurier : les <strong>méfaits</strong> pour lesquels il s\'est fait prendre, et ses <strong>bienfaits</strong>. Tout compte dans la région du comptoir.</p>'+
+          '<details class="aide"'+(window.matchMedia&&window.matchMedia("(max-width:560px)").matches?'':' open')+'><summary>Aide-mémoire : méfaits et bienfaits</summary><dl>'+Object.keys(DEFAULT_MEFAITS).map(k=>'<dt><span class="mefpill m-'+k+'">Méfait '+MEFAIT_LABELS[k].toLowerCase()+' : +'+mN[k]+' notoriété, −'+mp[k]+' réputation</span></dt><dd><strong>Exemples :</strong> '+esc(MEFAIT_AIDE[k].ex)+'<br><em>'+esc(MEFAIT_AIDE[k].pourquoi)+'</em></dd>').join("")+
+          BIENFAITS.map(k=>'<dt><span class="mefpill b-'+k+'">'+esc(bl[k])+' : +'+bN[k]+' notoriété, +'+bR[k]+' réputation</span></dt><dd><strong>Exemples :</strong> '+esc(BIEN_AIDE[k])+'</dd>').join("")+'</dl>'+
+          '<p class="tip">Rappel : Suspect à −'+Math.abs(seuilR(6))+', Craint à −'+Math.abs(seuilR(7))+', Recherché à −'+Math.abs(seuilR(8))+'.</p></details>'+
+          '<div class="tablebox light"><table class="mef"><thead><tr><th scope="col">Aventurier</th><th scope="col">Personnage du registre</th>'+Object.keys(DEFAULT_MEFAITS).map(k=>'<th scope="col">Méfait '+MEFAIT_LABELS[k].toLowerCase()+'</th>').join("")+BIENFAITS.map(k=>'<th scope="col" class="bien">'+esc(bl[k])+'</th>').join("")+'</tr></thead><tbody>'+
           C.parts.map((x,i)=>'<tr><th scope="row">'+esc(x.nom)+'</th><td data-l="Personnage"><label class="sr" for="m-adv'+i+'">Personnage de '+esc(x.nom)+'</label><select id="m-adv'+i+'">'+advOpts(x.aventurier)+'</select></td>'+
-            Object.keys(DEFAULT_MEFAITS).map(k=>'<td data-l="'+MEFAIT_LABELS[k]+' −'+mp[k]+'"><label class="sr" for="m-'+k+i+'">'+MEFAIT_LABELS[k]+' pour '+esc(x.nom)+'</label><input class="cnt" id="m-'+k+i+'" type="number" min="0" max="99" value="'+(x[k]||0)+'"></td>').join("")+'</tr>').join("")+
+            Object.keys(DEFAULT_MEFAITS).map(k=>'<td data-l="'+MEFAIT_LABELS[k]+' −'+mp[k]+'"><label class="sr" for="m-'+k+i+'">'+MEFAIT_LABELS[k]+' pour '+esc(x.nom)+'</label><input class="cnt" id="m-'+k+i+'" type="number" min="0" max="99" value="'+(x[k]||0)+'"></td>').join("")+
+            BIENFAITS.map(k=>'<td class="bien" data-l="'+esc(bl[k])+'"><label class="sr" for="m-'+k+i+'">'+esc(bl[k])+' pour '+esc(x.nom)+'</label><input class="cnt" id="m-'+k+i+'" type="number" min="0" max="99" value="'+(x[k]||0)+'"></td>').join("")+'</tr>').join("")+
           '</tbody></table></div>'+(C.parts.length?'':'<p class="tip">Aucun participant confirmé.</p>')+
           '<p class="tip">Un participant sans personnage du registre ne reçoit ni points ni pénalité.</p>'+
           '<div class="actions"><button class="btn" type="submit">Suivant : le bilan</button><button class="btn ghost" type="button" data-a="step-back">Retour</button></div>';
       } else {
-        h+='<p>Renommée à '+esc(bo?bo.nom:"la région")+'. Rang '+esc((RANKS[cq.rang]||RANKS.inconnu).label)+' : +'+questPts(cq)+' proposé sur chaque axe. Les méfaits retirent de la réputation et ajoutent la moitié en notoriété.</p>'+
-          '<div class="tablebox light"><table class="mef"><thead><tr><th scope="col">Aventurier</th><th scope="col">Notoriété</th><th scope="col">Réputation</th><th scope="col">Méfaits</th><th scope="col">Résultat</th></tr></thead><tbody>'+
-          C.parts.map((x,i)=>{const a=aventuriers.find(y=>y.id===x.aventurier);const pen=Object.keys(DEFAULT_MEFAITS).reduce((t,k)=>t+(x[k]||0)*mp[k],0);const netR=(x.gain||0)-pen,netN=(x.gainN==null?(x.gain||0):x.gainN)+mefNoto(pen);
-            const before=a?renown(a,cq.bureau):51,after=a?codeOf(ptsN(a,cq.bureau)+netN,pts(a,cq.bureau)+netR):51;
-            return '<tr><th scope="row">'+esc(x.nom)+(a?'':' <em>(hors registre)</em>')+'</th><td data-l="Notoriété"><label class="sr" for="b-gainn'+i+'">Notoriété pour '+esc(x.nom)+'</label><input class="cnt" id="b-gainn'+i+'" type="number" step="1" value="'+(x.gainN==null?(x.gain||0):x.gainN)+'"'+(a?'':' disabled')+'>'+(pen?' <span class="muted">+'+mefNoto(pen)+'</span>':'')+'</td><td data-l="Réputation"><label class="sr" for="b-gain'+i+'">Réputation pour '+esc(x.nom)+'</label><input class="cnt" id="b-gain'+i+'" type="number" step="1" value="'+(x.gain||0)+'"'+(a?'':' disabled')+'></td><td class="num" data-l="Méfaits">'+(pen?'−'+pen:'0')+'</td><td data-l="Résultat">'+(a?chip(before)+(after!==before?' → '+chip(after):''):'—')+'</td></tr>';}).join("")+
+        const g0=questGain(cq,C.rapport.resultat);
+        h+='<p>Renommée à '+esc(bo?bo.nom:"la région")+'. Quête '+esc((RANKS[cq.rang]||RANKS.inconnu).label)+' (×'+questMult(cq)+'), '+esc((RESULTS[C.rapport.resultat]||"").toLowerCase())+' : <strong>+'+g0.n+' notoriété</strong>, <strong>'+(g0.r>=0?'+':'')+g0.r+' réputation</strong> proposés. Ajuste au besoin ; les méfaits et bienfaits s\'ajoutent.</p>'+
+          '<div class="tablebox light"><table class="mef bilan"><thead><tr><th scope="col">Aventurier</th><th scope="col">Fin de quête<br><span class="muted">notoriété · réputation</span></th><th scope="col">Méfaits</th><th scope="col">Bienfaits</th><th scope="col">Total</th><th scope="col">Résultat</th></tr></thead><tbody>'+
+          C.parts.map((x,i)=>{const a=aventuriers.find(y=>y.id===x.aventurier),t=partTotals(cq,C.rapport.resultat,x);
+            const before=a?renown(a,cq.bureau):51,after=a?codeOf(ptsN(a,cq.bureau)+t.n,pts(a,cq.bureau)+t.r):51,sg=v=>(v>0?'+':'')+v;
+            return '<tr><th scope="row">'+esc(x.nom)+(a?'':' <em>(hors registre)</em>')+'</th><td data-l="Fin de quête" class="gains"><label class="sr" for="b-gainn'+i+'">Notoriété pour '+esc(x.nom)+'</label><input class="cnt" id="b-gainn'+i+'" type="number" step="1" value="'+t.gN+'"'+(a?'':' disabled')+' title="Notoriété"><label class="sr" for="b-gain'+i+'">Réputation pour '+esc(x.nom)+'</label><input class="cnt" id="b-gain'+i+'" type="number" step="1" value="'+t.gR+'"'+(a?'':' disabled')+' title="Réputation"></td>'+
+              '<td class="num nw" data-l="Méfaits">'+(t.pen?'N +'+t.mefN+'<br>R −'+t.pen:'—')+'</td><td class="num nw" data-l="Bienfaits">'+(t.bnN||t.bnR?'N +'+t.bnN+'<br>R +'+t.bnR:'—')+'</td><td class="num nw" data-l="Total"><strong>N '+sg(t.n)+'<br>R '+sg(t.r)+'</strong></td><td data-l="Résultat">'+(a?chip(before)+(after!==before?' → '+chip(after):''):'—')+'</td></tr>';}).join("")+
           '</tbody></table></div>'+
           '<div class="actions"><button class="btn" type="submit">Terminer la quête</button><button class="btn ghost" type="button" data-a="step-recalc">Recalculer</button><button class="btn ghost" type="button" data-a="step-back">Retour</button></div>';
       }
@@ -2867,8 +2897,8 @@ async function migrate(){
 function v0(id){const el=document.getElementById(id);return el?el.value.trim():"";}
 function readStep(){
   const C=ui.complete;if(!C)return;
-  if(C.step===1){C.rapport={date:v0("c-date").slice(0,80),resultat:v0("c-res")||"reussite",resume:((document.getElementById("c-resume")||{}).value||"").slice(0,4000)};}
-  if(C.step===2){C.parts.forEach((x,i)=>{x.aventurier=v0("m-adv"+i)||null;Object.keys(DEFAULT_MEFAITS).forEach(k=>{x[k]=Math.max(0,Math.round(+v0("m-"+k+i)||0));});});}
+  if(C.step===1){const r0=C.rapport&&C.rapport.resultat;C.rapport={date:v0("c-date").slice(0,80),resultat:v0("c-res")||"reussite",resume:((document.getElementById("c-resume")||{}).value||"").slice(0,4000)};if(r0&&r0!==C.rapport.resultat)C.parts.forEach(x=>{x.gain=null;x.gainN=null;});}
+  if(C.step===2){C.parts.forEach((x,i)=>{x.aventurier=v0("m-adv"+i)||null;Object.keys(DEFAULT_MEFAITS).concat(BIENFAITS).forEach(k=>{x[k]=Math.max(0,Math.round(+v0("m-"+k+i)||0));});});}
   if(C.step===3){C.parts.forEach((x,i)=>{const el=document.getElementById("b-gain"+i),en=document.getElementById("b-gainn"+i);if(el&&!el.disabled)x.gain=Math.round(+el.value||0);if(en&&!en.disabled)x.gainN=Math.round(+en.value||0);});}
 }
 document.addEventListener("click",async e=>{
@@ -2923,7 +2953,7 @@ document.addEventListener("click",async e=>{
   else if(a==="complete"){const q=questById(id);if(!q)return;
     const match=(nom,aid)=>{if(aid&&aventuriers.some(x=>x.id===aid))return aid;const m=aventuriers.find(x=>String(x.nom).trim().toLowerCase()===String(nom).trim().toLowerCase());return m?m.id:"";};
     ui.complete={id,step:1,rapport:{date:q.date||"",resultat:"reussite",resume:(q.rapportBrouillon&&q.rapportBrouillon.resume)||""},
-      parts:signupsFor(id).filter(x=>x.statut==="confirmee").map(x=>({nom:x.nom,uid:x.uid,aventurier:match(x.nom,x.aventurier),gain:questPts(q),gainN:questPts(q),mineur:0,moyen:0,grave:0}))};}
+      parts:signupsFor(id).filter(x=>x.statut==="confirmee").map(x=>({nom:x.nom,uid:x.uid,aventurier:match(x.nom,x.aventurier),gain:null,gainN:null,mineur:0,moyen:0,grave:0,bon:0,remarquable:0,miracle:0}))};}
   else if(a==="complete-cancel"){if(e.target!==b)return;ui.complete=null;}
   else if(a==="step-back"){readStep();ui.complete.step--;}
   else if(a==="step-recalc"){readStep();}
@@ -3160,10 +3190,10 @@ document.addEventListener("submit",async e=>{
       bt.set(doc(db,"quetes",q.id),{statut:"terminee",rapport,majLe:serverTimestamp()},{merge:true});
       const seen={};
       C.parts.forEach(x=>{const a=x.aventurier&&aventuriers.find(y=>y.id===x.aventurier);if(!a)return;
-        const pen=Object.keys(DEFAULT_MEFAITS).reduce((t,k)=>t+(x[k]||0)*mp[k],0),net=(x.gain||0)-pen,netN=(x.gainN==null?(x.gain||0):x.gainN)+mefNoto(pen);
-        const det=Object.keys(DEFAULT_MEFAITS).filter(k=>x[k]).map(k=>x[k]+" "+MEFAIT_LABELS[k].toLowerCase()+(x[k]>1?"s":"")).join(", ");
+        const t=partTotals(q,C.rapport.resultat,x),net=t.r,netN=t.n,bl=bienLabels();
+        const det=Object.keys(DEFAULT_MEFAITS).filter(k=>x[k]).map(k=>x[k]+" méfait"+(x[k]>1?"s":"")+" "+MEFAIT_LABELS[k].toLowerCase()).concat(BIENFAITS.filter(k=>x[k]).map(k=>x[k]+" × "+bl[k].toLowerCase())).join(", ");
         seen[a.id]=seen[a.id]||{r:0,n:0};seen[a.id].r+=net;seen[a.id].n+=netN;
-        bt.set(doc(collection(db,"journal")),{aventurier:a.id,nom:a.nom,bureau:q.bureau,points:net,notoriete:netN,raison:"Quête : "+q.titre+" (gain +"+(x.gain||0)+(pen?", méfaits −"+pen+" : "+det:"")+")",quete:q.id,date:serverTimestamp()});});
+        bt.set(doc(collection(db,"journal")),{aventurier:a.id,nom:a.nom,bureau:q.bureau,points:net,notoriete:netN,raison:"Quête : "+q.titre+" ("+(RESULTS[C.rapport.resultat]||"")+" : N +"+t.gN+", R "+(t.gR>=0?"+":"")+t.gR+(det?" ; "+det:"")+")",quete:q.id,date:serverTimestamp()});});
       Object.keys(seen).forEach(id=>{if(seen[id].r||seen[id].n)addPoints(bt,aventuriers.find(y=>y.id===id),q.bureau,seen[id].r,seen[id].n);});
       await bt.commit();
     });return;
@@ -3261,9 +3291,14 @@ document.addEventListener("submit",async e=>{
     const noto=NOTO_DEF.map(d=>({n:d.n,titre:v("sn-t"+d.n).slice(0,40)||d.titre,effet:v("sn-e"+d.n).slice(0,300)})),repu=REPU_DEF.map(d=>({r:d.r,titre:v("sr-t"+d.r).slice(0,40)||d.titre,effet:v("sr-e"+d.r).slice(0,300)}));
     const seuilsN={},seuilsR={};NOTO_DEF.forEach(d=>{const x=v("sn-s"+d.n);seuilsN[String(d.n)]=d.n===1?0:(x===""||isNaN(+x)?seuilN(d.n):Math.round(+x));});REPU_DEF.forEach(d=>{const x=v("sr-s"+d.r);seuilsR[String(d.r)]=d.r===5?0:(x===""||isNaN(+x)?seuilR(d.r):Math.round(+x));});
     const titres={};REPU_DEF.forEach(r=>NOTO_DEF.forEach(n=>{const c=r.r*10+n.n;titres[String(c)]=v("tt-"+c).slice(0,40);}));
-    const mefaits={};Object.keys(DEFAULT_MEFAITS).forEach(k=>{const x=v("mf-"+k);mefaits[k]=x===""||isNaN(+x)?mefaitPts()[k]:Math.abs(Math.round(+x));});
+    const num=(id,d,abs)=>{const x=v(id);return x===""||isNaN(+x)?d:(abs?Math.abs(+x):+x);};
+    const mefaits={},mefaitsN={},bienNv={},bienRv={},bienLb={},mult={},res={};
+    Object.keys(DEFAULT_MEFAITS).forEach(k=>{mefaits[k]=Math.round(num("mf-"+k,mefaitPts()[k],1));mefaitsN[k]=Math.round(num("mfn-"+k,mefaitN()[k],1));});
+    BIENFAITS.forEach(k=>{bienNv[k]=Math.round(num("bn-"+k,bienN()[k],1));bienRv[k]=Math.round(num("br-"+k,bienR()[k],1));bienLb[k]=v("bl-"+k).slice(0,40)||BIENFAIT_LABELS[k];});
+    ["cuivre","fer","argent","or","mithral"].forEach(k=>{mult[k]=num("mu-"+k,rankMult()[k],1);});
+    Object.keys(RES_PTS).forEach(k=>{res[k]={n:Math.round(num("rs-n-"+k,resPts()[k].n)),r:Math.round(num("rs-r-"+k,resPts()[k].r))};});
     ui.scaleEdit=false;
-    await run("Renommée",async()=>{const bt=writeBatch(db);bt.set(doc(db,"config","renommee"),{noto,repu,titres,majLe:serverTimestamp()},{merge:true});bt.set(doc(db,"prive","renommee"),{seuilsN,seuilsR,mefaits},{merge:true});await bt.commit();
+    await run("Renommée",async()=>{const bt=writeBatch(db);bt.set(doc(db,"config","renommee"),{noto,repu,titres,bienLabels:bienLb,majLe:serverTimestamp()},{merge:true});bt.set(doc(db,"prive","renommee"),{seuilsN,seuilsR,mefaits,mefaitsN,bienN:bienNv,bienR:bienRv,mult,res},{merge:true});await bt.commit();
       priv=Object.assign({},priv||{},{seuilsN,seuilsR});
       const bt2=writeBatch(db);let k=0;aventuriers.forEach(a=>bureaux.forEach(b=>{if(typeof (pointsMap[a.id]||{})[b.id]!=="number"&&typeof (notoMap[a.id]||{})[b.id]!=="number")return;const nc=codeOf(ptsN(a,b.id),pts(a,b.id));if(nc!==renown(a,b.id)){k++;bt2.update(doc(db,"aventuriers",a.id),new FieldPath("niveaux",b.id),nc);}}));if(k)await bt2.commit();});return;
   }
