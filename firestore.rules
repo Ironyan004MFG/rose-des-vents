@@ -302,7 +302,7 @@ service cloud.firestore {
     // ---------- Phase 2 : renommée (lecture publique, écriture admin) ----------
     function validAdv(d) {
       return d.keys().hasOnly(['nom', 'joueur', 'niveaux', 'proprietaire', 'espece', 'classe', 'description',
-                               'background', 'image', 'don', 'pnj', 'rangGuilde', 'etoiles', 'creeLe', 'majLe'])
+                               'background', 'image', 'don', 'pnj', 'rangGuilde', 'etoiles', 'xp', 'xpLog', 'creeLe', 'majLe'])
         && str(d.nom, 1, 60)
         && optStr(d, 'joueur', 60) && optStr(d, 'espece', 60) && optStr(d, 'classe', 60)
         && optStr(d, 'description', 2000) && optStr(d, 'background', 4000) && optStr(d, 'don', 500)
@@ -310,6 +310,8 @@ service cloud.firestore {
         && (!('pnj' in d) || d.pnj is bool)
         && (!('rangGuilde' in d) || d.rangGuilde in ['bois', 'cuivre', 'fer', 'argent', 'or', 'mithral', 'rose'])
         && (!('etoiles' in d) || (d.etoiles is int && d.etoiles >= 0 && d.etoiles <= 3))
+        && (!('xp' in d) || (d.xp is int && d.xp >= 0 && d.xp <= 999999))
+        && (!('xpLog' in d) || (d.xpLog is list && d.xpLog.size() <= 200))
         && (!('niveaux' in d) || d.niveaux is map);
     }
     match /aventuriers/{id} {
@@ -320,7 +322,8 @@ service cloud.firestore {
         && request.resource.data.proprietaire == request.auth.uid
         && !('niveaux' in request.resource.data) && !('don' in request.resource.data)
         && !('pnj' in request.resource.data)
-        && !('rangGuilde' in request.resource.data) && !('etoiles' in request.resource.data);
+        && !('rangGuilde' in request.resource.data) && !('etoiles' in request.resource.data)
+        && !('xp' in request.resource.data) && !('xpLog' in request.resource.data);
       allow update: if realAccount() && validAdv(request.resource.data)
         && resource.data.proprietaire == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys()
