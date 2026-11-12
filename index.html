@@ -374,9 +374,17 @@ form .csqpick label.pickrow input{flex:none;width:18px;height:18px;margin-top:2p
 .objcsq{display:block;font-size:13px;margin-top:2px;color:#2f6a2c}.objcsq.miss{color:#a3271a}
 .ptobj{border:1px solid var(--gold);background:rgba(216,182,92,.12);border-radius:8px;padding:8px 12px;margin:0 0 14px}
 .ptobj h3{margin:0 0 6px}
+.ptobj.done{background:rgba(61,122,58,.12);border-color:#a9c9a6}
+ul.objsub{list-style:none;margin:2px 0 4px 34px;padding:0;display:grid;gap:2px}
+ul.objsub label{display:flex;gap:8px;align-items:center;cursor:pointer;padding:3px 4px;font-size:15px}
+ul.objsub input{width:18px;height:18px;flex:none}
+ul.objsub input:checked+span{text-decoration:line-through;opacity:.65}
+.otc{display:inline-block;margin-left:4px;padding:0 7px;border-radius:999px;background:#d8cba6;color:#3a2f1f;font-family:inherit;font-size:12px;letter-spacing:0}
+.otc.ok{background:#3d7a3a;color:#fff}
+.pttabs button.allok{background:rgba(61,122,58,.16);color:#1f4a1a}
 .ptobjrow{display:flex;gap:10px;align-items:flex-start;padding:6px 4px;cursor:pointer;border-radius:5px}
 .ptobjrow input{width:20px;height:20px;flex:none;margin-top:2px}
-.ptobjrow .desc{display:block;font-size:13px}
+.ptobjrow .desc{font-size:13px;margin-left:4px}
 .ptobjrow.done strong{text-decoration:line-through;opacity:.7}
 .recap{background:rgba(255,255,255,.45);border:1px solid var(--parch-3);border-radius:6px;padding:8px 12px;margin:0 0 12px}
 .recap h3{margin:0 0 6px}.recap dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;margin:0}.recap dt{font-weight:700}.recap dd{margin:0}.recap ul{margin:0;padding-left:18px}
@@ -2313,7 +2321,7 @@ function ptReportBlock(q,open,edit){if(edit){const C=ui.complete,t=ptReport(q,tr
       '<label for="c-dmnotes">Notes DM additionnelles<textarea id="c-dmnotes" rows="4" maxlength="10000" placeholder="Ce qui ne figure pas au journal : décisions du groupe, PNJ rencontrés, promesses, indices trouvés…">'+esc(nv)+'</textarea></label></details>';}
   const t=ptReport(q);return t?'<details class="dmrep"'+(open?' open':'')+'><summary>Rapport du DM (privé)</summary><div class="wikibody">'+md(t)+'</div></details>':'';}
 function ptQuest(){return ui.office&&ui.office.indexOf("partie-")===0?questById(ui.office.slice(7)):null;}
-function ptBlank(qid){return {id:qid,round:0,cur:null,liste:[],objectifs:[],journal:[],rev:0,combat:null,combats:[],stats:{combats:0,rounds:0,vaincus:{},ko:[]},notesDM:""};}
+function ptBlank(qid){return {id:qid,round:0,cur:null,liste:[],objectifs:[],objSub:{},journal:[],rev:0,combat:null,combats:[],stats:{combats:0,rounds:0,vaincus:{},ko:[]},notesDM:""};}
 function ptStats(){const P=ui.pt;P.stats=Object.assign({combats:0,rounds:0,vaincus:{},ko:[]},P.stats||{});return P.stats;}
 function ptClone(o){return JSON.parse(JSON.stringify(o));}
 function ptSync(qid){
@@ -2388,9 +2396,11 @@ function ptCondChip(c,x){const k=PT_COND[x.k];if(!k)return "";
   return '<span class="ptcond" title="'+esc(k[3])+'"><button class="ptcx" data-a="pt-cinfo" data-v="'+x.k+'">'+esc(k[1])+(x.k==="exhaustion"?" "+(x.n||1):"")+(x.d>0?' · '+x.d+'r':'')+'</button><button class="ptcx del" data-a="pt-cdel" data-id="'+c.cid+'" data-v="'+x.k+'" aria-label="Retirer '+esc(k[1])+'">✕</button></span>';}
 function ptSide(q){
   const tab=ui.ptTab||"scenario",s=scenarios[q.id]||{};
-  const tabs=[["scenario","Scénario"],["compendium","Compendium"],["butin","Butin"],["tests","Tests & DD"],["regles","Règles"],["des","Dés"],["journal","Journal"],["bilan","Bilan"]];
-  let h='<div class="pttabs" role="tablist">'+tabs.map(t=>'<button role="tab" aria-selected="'+(tab===t[0])+'" class="'+(tab===t[0]?'on':'')+'" data-a="pt-tab" data-v="'+t[0]+'">'+t[1]+'</button>').join("")+'</div><div class="ptpanel">';
-  if(tab==="scenario"){
+  const ob=objsOf(q),od=(ui.pt.objectifs||[]).filter(i=>i<ob.length).length;
+  const tabs=(ob.length?[["objectifs",'Objectifs <span class="otc'+(od>=ob.length?' ok':'')+'">'+od+'/'+ob.length+'</span>']]:[]).concat([["scenario","Scénario"],["compendium","Compendium"],["butin","Butin"],["tests","Tests & DD"],["regles","Règles"],["des","Dés"],["journal","Journal"],["bilan","Bilan"]]);
+  let h='<div class="pttabs" role="tablist">'+tabs.map(t=>'<button role="tab" aria-selected="'+(tab===t[0])+'" class="'+(tab===t[0]?'on':'')+(t[0]==="objectifs"&&od>=ob.length?' allok':'')+'" data-a="pt-tab" data-v="'+t[0]+'">'+t[1]+'</button>').join("")+'</div><div class="ptpanel">';
+  if(tab==="objectifs")h+=ptObjectifs(q);
+  else if(tab==="scenario"){
     h+=s.scenario?ptScenario(q):'<p class="desc">Aucun scénario pour cette quête. <a href="#man/quetes/'+encodeURIComponent(q.id)+'">L\'écrire dans le manuel</a></p>';
     const ps=(s.pnj||[]).map(id=>pnjs.find(p=>p.id===id)).filter(Boolean).concat(pnjs.filter(p=>(p.quetes||[]).indexOf(q.id)>=0&&(s.pnj||[]).indexOf(p.id)<0));
     if(ps.length)h+='<h3>PNJ de la quête</h3>'+ps.map(p=>'<details class="ptpnj"><summary>'+(p.image?'<img src="'+esc(p.image)+'" alt="">':'')+'<strong>'+esc(p.nom)+'</strong>'+(p.role?' · '+esc(p.role):'')+'</summary>'+(p.voix?'<p><strong>Voix :</strong> '+esc(p.voix)+'</p>':'')+(p.apparence?'<p><strong>Apparence :</strong> '+esc(p.apparence)+'</p>':'')+(p.secrets?'<div class="wikibody"><strong>Secrets :</strong> '+md(manLinks(p.secrets))+'</div>':'')+(p.monstre?'<button class="ptadd" data-a="pt-sb" data-id="'+esc(p.monstre)+'">Bloc de stats</button>':'')+'</details>').join("");
@@ -2549,7 +2559,12 @@ const CSQ_K={"réussite":"reussite",reussite:"reussite",partielle:"partielle","r
 const CSQ_L={reussite:"Réussite",partielle:"Partielle",echec:"Échec"};
 function csqParse(t){return String(t||"").split(/\n+/).map(l=>l.replace(/^\s*[-*•]\s*/,"").trim()).filter(Boolean).map((l,i)=>{const m=l.match(/^([^:]{2,40}):\s*(.+)$/);let q=null,txt=l;
   if(m){const ks=m[1].split(/,|\/| et /).map(x=>CSQ_K[x.trim().toLowerCase()]);if(ks.length&&ks.every(Boolean)){txt=m[2];q=ks.indexOf("*")>=0?null:ks;}}return {i:i,txt:txt,q:q};});}
-function objParse(t){return String(t||"").split(/\n+/).map(l=>l.replace(/^\s*[-*•]\s*/,"").trim()).filter(Boolean).map((l,i)=>{const k=l.indexOf("|");return {i:i,txt:(k>=0?l.slice(0,k):l).trim(),csq:(k>=0?l.slice(k+1):"").trim()};});}
+// Objectifs : une ligne par objectif « Objectif | conséquence si raté » ; les lignes « - … » en dessous sont des éléments à cocher (« ×2 » = deux cases).
+function objParse(t){const out=[];String(t||"").split(/\n+/).forEach(raw=>{const l=raw.trim();if(!l)return;
+    const sub=/^[-*•]\s+/.test(l);if(sub&&out.length){const x=l.replace(/^[-*•]\s+/,""),m=x.match(/^(.*?)\s*[×x]\s*(\d{1,2})$/),o=out[out.length-1];
+      if(m&&+m[2]>1)for(let n=1;n<=+m[2];n++)o.sub.push(m[1].trim()+" "+n);else o.sub.push(m?m[1].trim():x);return;}
+    const k=l.indexOf("|"),y=l.replace(/^[-*•]\s+/,"");const kk=y.indexOf("|");out.push({i:out.length,txt:(kk>=0?y.slice(0,kk):y).trim(),csq:(kk>=0?y.slice(kk+1):"").trim(),sub:[]});});
+  return out;}
 function objsOf(q){return objParse((scenarios[q.id]||{}).objectifs);}
 function objResult(n,tot){return !tot?null:n>=tot?"reussite":n>0?"partielle":"echec";}
 function ptObjDone(q){const d=(ui.pt&&ui.pt.id===q.id)?ui.pt:parties.find(p=>p.id===q.id);return (d&&d.objectifs)||[];}
@@ -2559,11 +2574,13 @@ function csqList(q){const l=csqParse((scenarios[q.id]||{}).consequences);return 
 function csqKept(q){const m=(scenarios[q.id]||{}).monde;if(!m||!((m.liste||[]).length||m.autre))return "";
   return '<div class="csqkept"><h4>Conséquences retenues ('+esc((RESULTS[m.resultat]||"").toLowerCase())+')</h4><ul>'+(m.liste||[]).map(t=>'<li>'+esc(t)+'</li>').join("")+(m.autre?'<li><em>'+esc(m.autre)+'</em></li>':'')+'</ul></div>';}
 function csqText(q){const m=(scenarios[q.id]||{}).monde;if(!m)return "";return ((m.liste||[]).concat(m.autre?[m.autre]:[])).map(t=>"- "+q.titre+" : "+t).join("\n");}
+function ptObjectifs(q){const ob=objsOf(q),P=ui.pt,od=P.objectifs||[],sd=P.objSub||{};
+  return '<p class="desc">Secrets : les joueurs ne les voient pas. Ils déterminent le résultat en fin de quête (tous = Réussite, certains = Réussite partielle, aucun = Échec).</p>'+ob.map(o=>{const on=od.indexOf(o.i)>=0,ss=sd[o.i]||[];
+    return '<section class="ptobj'+(on?' done':'')+'"><label class="ptobjrow" for="pobj-'+o.i+'"><input type="checkbox" class="pt-obj" id="pobj-'+o.i+'" data-i="'+o.i+'"'+(on?' checked':'')+'><span><strong>'+esc(o.txt)+'</strong>'+(o.sub.length?' <span class="desc">('+ss.filter(k=>k<o.sub.length).length+' / '+o.sub.length+')</span>':'')+'</span></label>'+
+      (o.sub.length?'<ul class="objsub">'+o.sub.map((x,k)=>'<li><label for="psub-'+o.i+'-'+k+'"><input type="checkbox" class="pt-osub" id="psub-'+o.i+'-'+k+'" data-i="'+o.i+'" data-k="'+k+'"'+(ss.indexOf(k)>=0?' checked':'')+'><span>'+esc(x)+'</span></label></li>').join("")+'</ul>':'')+'</section>';}).join("");}
 function ptScenario(q){
   const s=scenarios[q.id]||{},txt=String(s.scenario||""),P=ui.pt,faits=P.faits||[],encs=ptEncounters(q),used={};
-  const ob=objsOf(q),od=P.objectifs||[];
-  let oh=ob.length?'<section class="ptobj"><h3>Objectifs <span class="desc">(secrets · '+od.filter(i=>i<ob.length).length+' / '+ob.length+')</span></h3>'+ob.map(o=>'<label class="ptobjrow'+(od.indexOf(o.i)>=0?' done':'')+'" for="pobj-'+o.i+'"><input type="checkbox" class="pt-obj" id="pobj-'+o.i+'" data-i="'+o.i+'"'+(od.indexOf(o.i)>=0?' checked':'')+'><span><strong>'+esc(o.txt)+'</strong>'+'</span></label>').join("")+'</section>':'';
-  const parts=txt.split(/\n(?=##\s)/);let h=oh;
+  const parts=txt.split(/\n(?=##\s)/);let h='';
   const encBtn=r=>'<button class="btn gold sm" data-a="pt-launch" data-id="'+esc(r.id)+'">⚔ Lancer le combat : '+esc(r.nom)+'</button>';
   parts.forEach((sec,i)=>{const isH=/^##\s/.test(sec);const here=encs.filter(r=>sec.indexOf(r.nom)>=0);here.forEach(r=>{used[r.id]=1;});
     if(!isH){if(sec.trim())h+='<div class="wikibody">'+md(manLinks(sec))+'</div>'+(here.length?'<p class="ptlaunch">'+here.map(encBtn).join("")+'</p>':'');return;}
@@ -2955,6 +2972,11 @@ function partySubmit(e){
 function partyChange(e){
   const t=e.target;
   if(ui.pt&&t.classList&&t.classList.contains("pt-tr")){const c=ptC(t.getAttribute("data-id"));if(!c)return true;const f=t.getAttribute("data-f");c.tr=c.tr||{};c.tr[f]=t.checked?1:"";ptSave();setTimeout(render,0);return true;}
+  if(ui.pt&&t.classList&&t.classList.contains("pt-osub")){const i=+t.getAttribute("data-i"),k=+t.getAttribute("data-k"),q=questById(ui.pt.id),o=q&&objsOf(q)[i];if(!o)return true;
+    const S=ui.pt.objSub=ui.pt.objSub||{},L=S[i]=S[i]||[],x=L.indexOf(k);if(t.checked&&x<0)L.push(k);if(!t.checked&&x>=0)L.splice(x,1);
+    const F=ui.pt.objectifs=ui.pt.objectifs||[],f=F.indexOf(i),all=o.sub.every((_,n)=>L.indexOf(n)>=0);
+    if(all&&f<0){F.push(i);ptLog("🎯 Objectif rempli : "+o.txt);}else if(!all&&f>=0)F.splice(f,1);
+    ptSave();setTimeout(render,0);return true;}
   if(ui.pt&&t.classList&&t.classList.contains("pt-obj")){const i=+t.getAttribute("data-i"),F=ui.pt.objectifs=ui.pt.objectifs||[],k=F.indexOf(i);if(t.checked&&k<0)F.push(i);if(!t.checked&&k>=0)F.splice(k,1);ptLog((t.checked?"🎯 Objectif rempli : ":"Objectif décoché : ")+((objsOf(questById(ui.pt.id)||{id:""})[i]||{}).txt||""));ptSave();setTimeout(render,0);return true;}
   if(ui.pt&&t.classList&&t.classList.contains("pt-sec")){const i=+t.getAttribute("data-i"),F=ui.pt.faits=ui.pt.faits||[],k=F.indexOf(i);if(t.checked&&k<0)F.push(i);if(!t.checked&&k>=0)F.splice(k,1);ptSave();setTimeout(render,0);return true;}
   if(ui.pt&&t.id==="pt-cnotes"&&ui.pt.combat){ui.pt.combat.notes=String(t.value).slice(0,5000);ptSave();return true;}
