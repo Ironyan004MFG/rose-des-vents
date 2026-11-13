@@ -90,6 +90,15 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .xpline{margin:4px 0 2px;font-size:15px}.xprow{display:flex;align-items:center;gap:10px;max-width:420px}.xpbar{flex:1;height:8px;border-radius:4px;background:rgba(0,0,0,.12);overflow:hidden}.xpnext{flex:none;font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}.xpbar i{display:block;height:100%;background:linear-gradient(90deg,#b8862f,#e3c06c)}
 .xpbox{margin:14px 0 6px;padding:10px 14px;border:1px solid var(--parch-3,#d9c9a0);border-radius:6px}.xpbox legend{font-family:var(--display);font-size:13px;letter-spacing:.12em;text-transform:uppercase;padding:0 6px}.xpbox label{display:inline-flex;flex-direction:column;max-width:240px}.xpbox ul{margin:6px 0 0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:6px}.xpbox li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}.xpbox li .xpp{flex-direction:row;align-items:center;gap:6px;font-size:14px}.xpbox li .xpp input{width:90px}
 .xphist{list-style:none;margin:6px 0;padding:0;max-width:560px;font-size:15px}.xphist li{display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.1)}.xphist .d{flex:none;width:92px;color:var(--ink-soft);font-size:13.5px;font-variant-numeric:tabular-nums}.xphist .t{flex:1;min-width:0}.xphist .x{flex:none;font-weight:700;font-variant-numeric:tabular-nums}.xphist .bp{display:block;font-size:13px;color:var(--ink-soft)}.xpline .nx{color:var(--ink-soft);font-size:14px}
+.shopgen{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-bottom:8px}.shopgen label{display:flex;flex-direction:column;font-size:13px}
+details.shop{border:1px solid var(--parch-3,#d9c9a0);border-radius:8px;padding:8px 12px;margin:10px 0;background:rgba(255,255,255,.25)}details.shop>summary{cursor:pointer;font-size:16px}
+.shopwho{margin:6px 0;font-size:14.5px}.shopcash{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:14px;padding:6px 10px;background:#efe4c6;border-radius:6px}
+.shophaggle{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0;font-size:13.5px}.shophaggle .chip{font-size:12px;padding:3px 9px;color:var(--ink,#2a2118);border-color:var(--ink-soft,#6b5a44)}.shophaggle .chip.on{background:var(--ink,#2a2118);color:#f6ecd0}
+.shopinv{list-style:none;margin:6px 0;padding:0}.shopinv li{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,.08);font-size:14.5px}.shopinv .sn{flex:1;min-width:0}.shopinv .sp{white-space:nowrap;font-variant-numeric:tabular-nums}.shopinv .sq{width:56px;text-align:right;font-size:13px;color:var(--ink-soft)}.shopinv li.out .sn,.shopinv li.out .sp{opacity:.45;text-decoration:line-through}
+.rar{font-size:11px;font-family:var(--display);letter-spacing:.06em;padding:1px 6px;border-radius:3px;white-space:nowrap}.rar.r-classique{background:#e8e2d4}.rar.r-inhabituel{background:#cfe8c9;color:#1f4d18}.rar.r-rare{background:#cbdcf2;color:#16365e}.rar.r-epique{background:#e2cdf0;color:#4b1d66}.rar.r-legendaire{background:#f6d7b0;color:#6b3a06}
+.shopsell{margin-top:8px;padding-top:6px;border-top:1px dashed var(--parch-3,#d9c9a0);display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}.shopsell h4{width:100%;margin:0;font-size:14px}.shopsell label{display:flex;flex-direction:column;font-size:13px}.shopsell input{max-width:180px}.shopoffer{width:100%;margin:4px 0;font-size:14.5px}
+.shopinv li.find{background:linear-gradient(90deg,rgba(216,180,94,.22),transparent);border-radius:4px;padding-left:6px}.shopfind{font-size:13.5px;margin:4px 0;color:var(--ink-soft)}.findtag{font-family:var(--display);font-size:11px;letter-spacing:.08em;color:#8a5a12;white-space:nowrap}.findwhy{display:block;font-size:13px;font-style:italic;color:var(--ink-soft)}
+.shoplog ul{font-size:13.5px;margin:4px 0;padding-left:18px}.shopacts{font-size:13.5px;margin:8px 0 2px}.shophouse{margin-top:14px;font-size:14px}.shophouse textarea{width:100%;font-family:monospace;font-size:13px}
 .ptxpgain{margin:4px 0 0;font-size:14px;color:var(--ink-soft)}
 .gmerit{font-size:13px;color:var(--muted,#8a7d6a);margin:2px 0 0}
 .pickrow.off{cursor:not-allowed}.pickrow.off .av,.pickrow.off strong,.pickrow.off .gchip{opacity:.55}.pickrow .why,.pickrow .desc{display:block;font-family:var(--body);font-size:14px;text-transform:none;letter-spacing:normal;font-weight:400}.pickrow .why{color:#9b2c22}
@@ -1083,7 +1092,7 @@ const DEFAULT_SCALE = [
 
 /* ---------- state ---------- */
 let evoPriv=null;
-let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, notoMap = {}, meritMap = {}, remisesMap = {}, niveauVuMap = {}, relations = [], priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], parties = [], modules = [], butins = [], crieur = null, pnjs = [], monstres = [], rencontres = [], scenarios = {};
+let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, notoMap = {}, meritMap = {}, remisesMap = {}, niveauVuMap = {}, shopCfg = null, relations = [], priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], parties = [], modules = [], butins = [], crieur = null, pnjs = [], monstres = [], rencontres = [], scenarios = {};
 const loaded = {b:false, q:false, i:false, a:false, w:false, c:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
@@ -1188,6 +1197,7 @@ function listenPrivate(on){
   privUnsubs.push(onSnapshot(collection(db,"notesdm"),snap=>{notesDm=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(collection(db,"evolutions"),snap=>{evols=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","monde"),snap=>{monde=snap.exists()?snap.data():null;render();},err));
+  privUnsubs.push(onSnapshot(doc(db,"prive","boutiques"),snap=>{shopCfg=snap.exists()?snap.data():null;},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","crieur"),snap=>{crieur=snap.exists()?snap.data():null;render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","evolution"),snap=>{evoPriv=snap.exists()?snap.data():null;render();},err));
   privUnsubs.push(onSnapshot(collection(db,"compendium"),snap=>{compAll=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
@@ -2580,10 +2590,200 @@ function ptTests(q){
 }
 function ptCondChip(c,x){const k=PT_COND[x.k];if(!k)return "";
   return '<span class="ptcond" title="'+esc(k[3])+'"><button class="ptcx" data-a="pt-cinfo" data-v="'+x.k+'">'+esc(k[1])+(x.k==="exhaustion"?" "+(x.n||1):"")+(x.d>0?' · '+x.d+'r':'')+'</button><button class="ptcx del" data-a="pt-cdel" data-id="'+c.cid+'" data-v="'+x.k+'" aria-label="Retirer '+esc(k[1])+'">✕</button></span>';}
+/* ---------- Boutiques de session (Mode Partie) ---------- */
+// Lieux : fonds du marchand (po), plafond de rachat pour UN objet, nombre d'articles, majoration, niveau d'accès au catalogue.
+const SHOP_LIEUX={ambulant:{l:"Marchand ambulant",f:[30,150],cap:50,n:[6,10],mk:0.10,lv:0},rural:{l:"Village / campagne",f:[100,600],cap:150,n:[8,13],mk:0,lv:0},
+  ville:{l:"Ville",f:[1000,6000],cap:1500,n:[13,20],mk:0,lv:1},cite:{l:"Grande cité",f:[5000,25000],cap:8000,n:[18,26],mk:-0.05,lv:2}};
+const SHOP_TYPES={general:{l:"Magasin général",lx:["ambulant","rural","ville","cite"]},forge:{l:"Forge et armurerie",lx:["ambulant","rural","ville","cite"]},
+  apo:{l:"Apothicaire et herboriste",lx:["ambulant","rural","ville","cite"]},arcane:{l:"Arcaniste",lx:["ville","cite"]},sellier:{l:"Sellier et écurie",lx:["rural","ville","cite"]},
+  provisions:{l:"Provisions et taverne",lx:["ambulant","rural","ville","cite"]},temple:{l:"Temple",lx:["rural","ville","cite"]},fourgue:{l:"Fourgue (marché noir)",lx:["ambulant","ville","cite"]}};
+// Catalogue SRD 5.5e (prix du Manuel des joueurs 2024). [nom, prix po, types, niveau de lieu minimal (0 partout, 1 ville, 2 cité), c = consommable (stock abondant), s = service]
+const SHOP_ITEMS=[
+  ["Sac à dos",2,"general",0],["Sac de couchage",1,"general",0],["Couverture",0.5,"general provisions",0],["Corde de chanvre (15 m)",1,"general",0],["Corde de soie (15 m)",10,"general",1],
+  ["Torche",0.01,"general provisions",0,"c"],["Lanterne à capuchon",5,"general",0],["Lanterne sourde",10,"general fourgue",1],["Huile (flasque)",0.1,"general apo",0,"c"],["Chandelle",0.01,"general temple",0,"c"],
+  ["Boîte d'allume-feu",0.5,"general",0],["Gourde",0.2,"general provisions",0],["Rations (1 jour)",0.5,"general provisions",0,"c"],["Tente (2 places)",2,"general",0],["Pied-de-biche",2,"general fourgue",0],
+  ["Grappin",2,"general",0],["Pelle",2,"general",0],["Chaîne (3 m)",5,"general forge",0],["Menottes",2,"general forge fourgue",0],["Cadenas",10,"general forge",1],["Miroir en acier",5,"general",0],
+  ["Craie",0.01,"general",0,"c"],["Piton",0.05,"general forge",0,"c"],["Bourse",0.5,"general",0],["Sac",0.01,"general",0],["Coffre",5,"general",0],["Marmite en fer",2,"general provisions",0],
+  ["Savon",0.02,"general",0,"c"],["Parchemin (feuille)",0.1,"general temple arcane",0,"c"],["Papier (feuille)",0.2,"general arcane",1,"c"],["Encre (flacon)",10,"general arcane",1],["Plume d'écriture",0.02,"general arcane",0,"c"],
+  ["Sablier",25,"general arcane",1],["Loupe",100,"general arcane",2],["Longue-vue",1000,"general",2],["Kit d'escalade",25,"general",1],["Kit de soins",5,"general apo temple",0],
+  ["Billes (sac de 1 000)",1,"general",0],["Chausse-trapes (sac de 20)",1,"general fourgue forge",0],["Filet",1,"general forge",0],["Cloche",1,"general",0],["Vêtements de voyageur",2,"general",0],
+  ["Vêtements raffinés",15,"general",1],["Costume",5,"general",1],["Carquois",1,"general forge",0],["Flèches (20)",1,"general forge",0,"c"],["Carreaux (20)",1,"forge",0,"c"],["Billes de fronde (20)",0.04,"general forge",0,"c"],
+  ["Échelle (3 m)",0.1,"general",0],["Perche (3 m)",0.05,"general",0],["Bélier portatif",4,"general forge",1],["Fiole vide",1,"apo arcane general",0,"c"],["Outils de voleur",25,"fourgue",0],["Kit de déguisement",25,"fourgue general",1],
+  ["Kit de contrefaçon",15,"fourgue",1],["Outils de navigateur",25,"general",1],["Matériel de calligraphe",10,"general arcane",1],["Outils de cartographe",15,"general",1],["Jeu de cartes",0.5,"general provisions fourgue",0],
+  ["Jeu de dés",0.1,"general provisions fourgue",0],["Flûte",2,"general",0],["Luth",35,"general",1],["Tambour",6,"general",0],["Outils de forgeron",20,"forge",0],["Outils de menuisier",8,"general",0],
+  // Provisions
+  ["Chope de bière",0.04,"provisions",0,"c"],["Pichet de vin ordinaire",0.2,"provisions",0,"c"],["Bouteille de vin fin",10,"provisions",1],["Repas modeste",0.3,"provisions",0,"c"],["Repas copieux",0.5,"provisions",0,"c"],
+  ["Miche de pain",0.02,"provisions",0,"c"],["Meule de fromage",0.5,"provisions",0],["Viande séchée (1 livre)",0.3,"provisions",0,"c"],["Nuit à l'auberge (modeste)",0.5,"provisions",0,"s"],["Nuit à l'auberge (confortable)",0.8,"provisions",1,"s"],
+  // Sellier
+  ["Poney",30,"sellier",0],["Mule",8,"sellier",0],["Cheval de selle",75,"sellier",0],["Cheval de trait",50,"sellier",0],["Cheval de guerre",400,"sellier",1],["Selle d'équitation",10,"sellier",0],
+  ["Selle militaire",20,"sellier",1],["Mors et bride",2,"sellier",0],["Fontes (sacoches de selle)",4,"sellier",0],["Charrette",15,"sellier",0],["Chariot",35,"sellier",0],["Avoine (1 jour)",0.05,"sellier",0,"c"],["Pension à l'écurie (1 jour)",0.5,"sellier",0,"s"],
+  // Apothicaire
+  ["Kit d'herboriste",5,"apo",0],["Antitoxine",50,"apo temple",0],["Potion de soins",50,"apo temple",0],["Acide (fiole)",25,"apo",0],["Feu grégeois (flasque)",50,"apo",1],["Parfum",5,"apo general",1],
+  ["Matériel d'alchimiste",50,"apo",1],["Matériel d'empoisonneur",50,"fourgue",1],["Poison basique (fiole)",100,"fourgue",1],
+  // Temple
+  ["Symbole sacré (amulette)",5,"temple",0],["Symbole sacré (emblème)",5,"temple",0],["Symbole sacré (reliquaire)",5,"temple",0],["Eau bénite (flasque)",25,"temple",0],
+  ["Service : sort de niveau 1 (ex. Soins)",50,"temple",0,"s"],["Service : sort de niveau 2 (ex. Restauration partielle)",200,"temple",1,"s"],["Service : Retour à la vie (diamant fourni)",600,"temple",2,"s"],
+  // Arcaniste
+  ["Focaliseur : cristal",10,"arcane",1],["Focaliseur : orbe",20,"arcane",1],["Focaliseur : baguette",10,"arcane",1],["Focaliseur : bâton",5,"arcane",1],["Sacoche à composantes",25,"arcane",1],["Grimoire vierge",50,"arcane",1],
+  // Forge : armes
+  ["Dague",2,"forge fourgue",0],["Gourdin",0.1,"forge",0],["Bâton",0.2,"forge",0],["Hachette",5,"forge general",0],["Javeline",0.5,"forge",0],["Lance",1,"forge",0],["Masse d'armes",5,"forge",0],["Faucille",1,"forge general",0],
+  ["Arc court",25,"forge",0],["Arbalète légère",25,"forge",0],["Fronde",0.1,"forge general",0],["Épée courte",10,"forge",0],["Épée longue",15,"forge",0],["Rapière",25,"forge",1],["Cimeterre",25,"forge",1],
+  ["Hache d'armes",10,"forge",0],["Marteau de guerre",15,"forge",0],["Morgenstern",15,"forge",0],["Fléau",10,"forge",0],["Pic de guerre",5,"forge",0],["Hallebarde",20,"forge",1],["Coutille",20,"forge",1],
+  ["Pique",5,"forge",0],["Trident",5,"forge",0],["Fouet",2,"forge",0],["Épée à deux mains",50,"forge",1],["Hache à deux mains",30,"forge",0],["Maillet d'armes",10,"forge",0],["Lance d'arçon",10,"forge",1],
+  ["Arc long",50,"forge",0],["Arbalète lourde",50,"forge",1],["Arbalète de poing",75,"forge fourgue",1],
+  // Forge : armures
+  ["Armure matelassée",5,"forge",0],["Armure de cuir",10,"forge",0],["Armure de cuir clouté",45,"forge",1],["Armure de peaux",10,"forge",0],["Chemise de mailles",50,"forge",0],["Armure d'écailles",50,"forge",1],
+  ["Cuirasse",400,"forge",1],["Demi-plate",750,"forge",1],["Broigne",30,"forge",0],["Cotte de mailles",75,"forge",1],["Clibanion",200,"forge",1],["Harnois",1500,"forge",2],["Bouclier",10,"forge",0],
+  ["Pierre à aiguiser",0.01,"forge general",0,"c"]
+];
+// Objets magiques du SRD 5.5e. Prix du Guide du maître 2024 : commun 100, peu commun 400, rare 4 000, très rare 40 000 (moitié pour un consommable).
+const SHOP_MAGIC=[
+  ["Potion d'escalade",50,"classique","apo arcane general"],["Parchemin de sort : tour de magie",30,"classique","arcane temple"],["Parchemin de sort : niveau 1",50,"classique","arcane temple"],
+  ["Potion de soins supérieurs",200,"inhabituel","apo temple arcane"],["Potion de résistance",200,"inhabituel","apo arcane"],["Potion de respiration aquatique",200,"inhabituel","apo arcane"],
+  ["Potion d'amitié avec les animaux",200,"inhabituel","apo"],["Potion de force de géant des collines",200,"inhabituel","apo arcane"],["Potion de souffle de feu",200,"inhabituel","apo arcane fourgue"],
+  ["Huile glissante",200,"inhabituel","apo arcane fourgue"],["Poussière de disparition",200,"inhabituel","arcane fourgue"],["Parchemin de sort : niveau 2",200,"inhabituel","arcane temple"],["Parchemin de sort : niveau 3",200,"inhabituel","arcane temple"],
+  ["Sac sans fond",400,"inhabituel","arcane fourgue"],["Cape de protection",400,"inhabituel","arcane"],["Bottes elfiques",400,"inhabituel","arcane fourgue"],["Lunettes de nuit",400,"inhabituel","arcane"],
+  ["Globe flottant",400,"inhabituel","arcane"],["Corde d'escalade",400,"inhabituel","arcane"],["Bâton inamovible",400,"inhabituel","arcane"],["Baguette de projectiles magiques",400,"inhabituel","arcane"],
+  ["Baguette de toile d'araignée",400,"inhabituel","arcane"],["Anneau de saut",400,"inhabituel","arcane"],["Anneau de nage",400,"inhabituel","arcane"],["Brassards d'archer",400,"inhabituel","arcane forge"],
+  ["Gants de voleur",400,"inhabituel","fourgue"],["Pierres de communication",400,"inhabituel","arcane"],["Cruche alchimique",400,"inhabituel","arcane apo"],["Carafe intarissable",400,"inhabituel","arcane"],
+  ["Perle de pouvoir",400,"inhabituel","arcane"],["Arme +1 (au choix)",400,"inhabituel","arcane forge"],["Bouclier +1",400,"inhabituel","forge arcane"],
+  ["Potion de soins majeurs",2000,"rare","apo temple arcane"],["Potion d'héroïsme",2000,"rare","temple arcane"],["Élixir de santé",2000,"rare","apo temple"],["Parchemin de sort : niveau 4",2000,"rare","arcane temple"],
+  ["Parchemin de sort : niveau 5",2000,"rare","arcane temple"],["Armure +1 (au choix)",4000,"rare","forge arcane"],["Anneau de protection",4000,"rare","arcane"],["Cape de déplacement",4000,"rare","arcane"],
+  ["Langue de feu",4000,"rare","arcane forge"],["Baguette de boule de feu",4000,"rare","arcane"],["Bottes de rapidité",4000,"rare","arcane"],["Collier de boules de feu",4000,"rare","arcane fourgue"],
+  ["Arme +2 (au choix)",4000,"rare","arcane forge"],["Amulette de santé",4000,"rare","arcane"]
+];
+// Combien d'objets magiques, selon le lieu et le type : [nb communs, nb peu communs, chance d'un rare]
+const SHOP_MAGIC_N={ambulant:{general:[1,0,0],apo:[1,0,0],fourgue:[0,1,0]},rural:{apo:[1,0,0],temple:[1,0,0]},
+  ville:{arcane:[2,3,0],temple:[2,1,0],apo:[1,1,0],fourgue:[0,1,0],forge:[0,1,0]},cite:{arcane:[2,5,0.8],temple:[2,2,0.3],apo:[1,2,0.3],fourgue:[0,2,0.3],forge:[0,1,0.3]}};
+// Couleur régionale : articles favoris et ajustements de prix par comptoir.
+const SHOP_REGION={luskan:{fav:["Filet","Outils de navigateur","Grappin","Longue-vue","Trident","Corde de chanvre (15 m)"],note:"port pirate : matériel marin partout, le fourgue n'est jamais loin"},
+  mirabar:{fav:["Lanterne sourde","Pelle","Pied-de-biche","Outils de forgeron","Piton"],forge:-0.10,note:"cité minière : armes et armures 10 % moins chères"},
+  silverymoon:{fav:["Parchemin (feuille)","Encre (flacon)","Grimoire vierge","Loupe"],magic:1,note:"cité du savoir : un objet magique de plus chez l'arcaniste"},
+  waterdeep:{fav:["Vêtements raffinés","Bouteille de vin fin"],note:"la Cité des Splendeurs : on y trouve de tout"},
+  "baldurs-gate":{fav:["Outils de voleur","Kit de déguisement","Dague"],fourgue:1,note:"ville portuaire : le marché noir y est mieux fourni"},
+  neverwinter:{fav:["Vêtements de voyageur","Kit de soins"],note:"la Cité des Mains habiles : objets bien finis"},
+  daggerford:{fav:["Cheval de selle","Fontes (sacoches de selle)","Rations (1 jour)"],note:"bourg de passage : chevaux et provisions"},
+  triboar:{fav:["Charrette","Chariot","Avoine (1 jour)","Tente (2 places)"],note:"carrefour des caravanes : tout pour la route"}};
+const SHOP_FIRST=["Bartholo","Pervenche","Odile","Grimbald","Tessa","Corvin","Ysolde","Mirko","Hulda","Faramond","Lisandre","Brom","Margot","Anselme","Rosalinde","Thibaud","Elric","Zéphyrine","Gunnar","Aldo","Clémence","Viggo","Sidonie","Ferdinand","Nyx","Oriane","Basile","Fenella"];
+const SHOP_LAST=["Boisvert","Chênefort","Pierrelune","Martelgris","Courtepaille","Ventebise","Malombre","Fauconnier","Crochebec","Ambrebois","Grisefeuille","Tournesol","Brasier","Lainefine","Quatrebourses"];
+const SHOP_SPECIES=["Humain","Humain","Humain","Nain","Nain","Halfelin","Halfelin","Gnome","Elfe","Orc","Tieffelin","Drakéide","Goliath"];
+const SHOP_TRAITS=["Méfiance : compte chaque pièce deux fois, mord les pièces d'or.","Bavardage : raconte la provenance de chaque objet (souvent inventée).","Jambe de bois, vieux souvenir d'aventure : un rabais à qui raconte une bonne histoire.",
+  "Timidité : parle tout bas et évite les regards, mais connaît son stock par cœur.","Superstition : refuse de vendre une lame sans la bénir d'un crachat.","Amour du marchandage : se vexe si on paie le premier prix.",
+  "Bonne humeur : offre une chope à tout client qui dépense plus de 10 po.","Toujours pressé : « Vous prenez ou pas ? J'ai d'autres clients. » (il n'y en a aucun)","Prix salés, marchandise impeccable, honnêteté absolue.",
+  "Distraction : se trompe parfois dans les prix (en faveur des clients… ou pas).","Passé militaire : jauge chaque client comme une recrue, respecte les plaques de la Guilde.","Fascination pour les Outerworlders : un rabais contre une histoire de « l'autre monde ».",
+  "Ne sourit jamais, parle de chaque objet comme s'il avait tué quelqu'un.","Fierté familiale : « Mon grand-père vendait déjà ça ! »","Âme de joueur : propose de jouer le prix aux dés.","Dettes : regard nerveux vers la porte, accepte presque n'importe quelle offre en or."];
+const SHOP_DEITIES=["Lathandre","Tymora","Ilmater","Chauntéa","Tyr","Séluné","Torm","Oghma"];
+const SHOP_ADJ=[["Doré","Dorée"],["Ébréché","Ébréchée"],["Rouillé","Rouillée"],["Ardent","Ardente"],["Joyeux","Joyeuse"],["Borgne","Borgne"],["Ventru","Ventrue"],["Endormi","Endormie"],["Vert","Verte"],["Fidèle","Fidèle"],["Bancal","Bancale"],["Patient","Patiente"]];
+const SHOP_NOUNS={general:[["Le Comptoir","m"],["Le Bazar","m"],["La Besace","f"],["La Lanterne","f"],["Le Bric-à-brac","m"]],forge:[["L'Enclume","f"],["La Lame","f"],["Le Marteau","m"],["La Forge","f"],["Le Soufflet","m"]],
+  apo:[["Le Mortier","m"],["La Fiole","f"],["La Racine","f"],["L'Alambic","m"],["La Mandragore","f"]],arcane:[["Le Grimoire","m"],["Le Sceau","m"],["L'Étoile","f"],["La Chandelle","f"],["L'Astrolabe","m"]],
+  sellier:[["Le Fer à cheval","m"],["L'Étrier","m"],["La Selle","f"],["La Bride","f"]],provisions:[["La Chope","f"],["La Marmite","f"],["Le Tonneau","m"],["La Broche","f"],["Le Chaudron","m"]],
+  fourgue:[["La Cave","f"],["Le Rat","m"],["L'Arrière-boutique","f"],["La Taupe","f"]]};
+const SHOP_TAIL={general:"bazar",forge:"forgeron",apo:"herbes et onguents",arcane:"curiosités arcaniques",sellier:"sellier",provisions:"provisions",fourgue:"pas de questions"};
+// Trouvaille : chance qu'un marchand possède un objet magique hors de l'ordinaire, et la rareté qu'il peut avoir.
+// Chance de base × multiplicateur du lieu : ambulant ×1, village ×2, ville ×5, cité ×10.
+const SHOP_FIND_BASE=0.05;
+const SHOP_FIND={ambulant:{m:1,r:[["inhabituel",0.8],["rare",0.2]]},rural:{m:2,r:[["inhabituel",0.8],["rare",0.2]]},ville:{m:5,r:[["inhabituel",0.6],["rare",0.4]]},cite:{m:10,r:[["inhabituel",0.4],["rare",0.6]]}};
+function shopFindP(lieu){const F=SHOP_FIND[lieu];return F?Math.min(1,SHOP_FIND_BASE*F.m):0;}
+const SHOP_FIND_WHY=["Acheté à un aventurier ruiné qui avait besoin d'argent vite.","Trouvé dans les affaires d'un client mort sans héritier.","Gagné aux dés contre un mercenaire ivre.",
+  "Repêché dans une épave sur la côte.","Héritage d'un oncle aventurier ; le marchand ignore ce qu'il fait vraiment.","Échangé contre un cheval… et le marchand pense avoir fait une mauvaise affaire.",
+  "Pièce d'exhibition accrochée au mur : « Pas à vendre. » (Sauf pour le bon prix.)","Saisi en paiement d'une dette.","Déterré par un fermier en labourant son champ.","Vendu par un elfe pressé qui ne voulait pas dire d'où il venait.",
+  "Le marchand jure qu'il est maudit et veut s'en débarrasser (il ne l'est pas… probablement).","Rapporté d'une ruine par son propre fils, qui n'est jamais revenu de la suivante."];
+function shopPick(a){return a[Math.floor(Math.random()*a.length)];}
+function shopRnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function shopName(type,lieu,who){
+  if(type==="temple")return shopPick(["Chapelle","Sanctuaire","Hospice","Autel"])+" de "+shopPick(SHOP_DEITIES);
+  if(lieu==="ambulant")return shopPick(["La Roulotte de ","Le Chariot de ","La Carriole de ","L'Étal de "])+who.split(" ")[0];
+  if(lieu==="rural"&&Math.random()<0.5)return "Chez "+who.split(" ")[0]+", "+SHOP_TAIL[type];
+  const n=shopPick(SHOP_NOUNS[type]||SHOP_NOUNS.general),a=shopPick(SHOP_ADJ);
+  if((lieu==="cite"||lieu==="ville")&&Math.random()<0.25)return "Maison "+who.split(" ").slice(1).join(" ")+", "+SHOP_TAIL[type];
+  return n[0]+" "+(n[1]==="f"?a[1]:a[0]);
+}
+// Prix en po → « 4 po 5 pa »
+function fmtPo(p){const c=Math.round((+p||0)*100);if(c>=10000)return Math.round(c/100).toLocaleString("fr-CA")+" po";const po=Math.floor(c/100),pa=Math.floor((c%100)/10),pc=c%10;
+  return [po?po.toLocaleString("fr-CA")+" po":"",pa?pa+" pa":"",pc?pc+" pc":""].filter(Boolean).join(" ")||"0 pc";}
+function shopRound(p){return p>=20?Math.round(p):p>=1?Math.round(p*10)/10:Math.max(0.01,Math.round(p*100)/100);}
+// Objets maison (Espace DM) : « Nom | prix po | types | rareté | lieu min (0, 1, 2) »
+function shopHouse(){const t=(shopCfg&&shopCfg.maison)||"";return t.split("\n").map(l=>l.split("|").map(x=>x.trim())).filter(x=>x[0]&&!isNaN(parseFloat(x[1]))).map(x=>({nom:x[0],prix:parseFloat(x[1]),types:(x[2]||"general").toLowerCase(),rar:rarOf(x[3]),lv:Math.max(0,Math.min(2,parseInt(x[4])||((rarOf(x[3])==="rare"||rarOf(x[3])==="epique")?2:rarOf(x[3])==="inhabituel"?1:0)))}));}
+function shopGen(type,lieu,bid){let findRoll=0;
+  const L=SHOP_LIEUX[lieu],R=SHOP_REGION[bid]||{},who=shopPick(SHOP_FIRST)+" "+shopPick(SHOP_LAST);
+  const vary=p=>{let m=1+L.mk+(Math.random()*0.2-0.1);if(type==="forge"&&R.forge)m+=R.forge;if(type==="fourgue")m-=0.1;return shopRound(p*m);};
+  const qty=(it)=>it[4]==="s"?null:it[4]==="c"?shopRnd(3,12):it[1]>=200?1:shopRnd(1,3);
+  let pool=SHOP_ITEMS.filter(it=>it[2].split(" ").indexOf(type)>=0&&it[3]<=L.lv);
+  if(lieu==="ambulant")pool=pool.filter(it=>it[1]<=60);
+  const house=shopHouse().filter(h=>h.types.split(/[ ,]+/).indexOf(type)>=0&&h.lv<=L.lv);
+  const fav=(R.fav||[]).map(n=>pool.find(it=>it[0]===n)).filter(Boolean);
+  let n=shopRnd(L.n[0],L.n[1]);if(type==="sellier"||type==="temple")n=Math.min(n,pool.length);
+  const chosen=[];fav.forEach(it=>{if(chosen.length<Math.ceil(n/3)&&chosen.indexOf(it)<0)chosen.push(it);});
+  const rest=pool.filter(it=>chosen.indexOf(it)<0).sort(()=>Math.random()-0.5);while(chosen.length<n&&rest.length)chosen.push(rest.pop());
+  const inv=chosen.map(it=>({nom:it[0],prix:vary(it[1]),base:it[1],stock:qty(it),svc:it[4]==="s"}));
+  house.filter(()=>Math.random()<0.5).forEach(h=>inv.push({nom:h.nom,prix:vary(h.prix),base:h.prix,stock:h.prix>=200?1:shopRnd(1,3),rar:h.rar||"",maison:true}));
+  // Objets magiques
+  const mn=((SHOP_MAGIC_N[lieu]||{})[type]||[0,0,0]).slice();if(type==="arcane"&&R.magic)mn[1]+=R.magic;if(type==="fourgue"&&R.fourgue)mn[1]+=R.fourgue;
+  const mp=(rar)=>SHOP_MAGIC.filter(m=>m[2]===rar&&m[3].split(" ").indexOf(type)>=0&&!inv.some(x=>x.nom===m[0])).sort(()=>Math.random()-0.5);
+  const addM=(rar,k,chance)=>{const l=mp(rar);for(let i=0;i<k&&l.length;i++){if(chance!=null&&Math.random()>chance)continue;const m=l.pop();inv.push({nom:m[0],prix:vary(m[1]),base:m[1],stock:/^(Potion|Parchemin|Huile|Poussière|Élixir)/.test(m[0])?shopRnd(1,3):1,rar:m[2]});}};
+  addM("classique",mn[0],lieu==="ambulant"?0.35:null);addM("inhabituel",mn[1],lieu==="ambulant"?0.25:null);if(mn[2])addM("rare",1,mn[2]);
+  // Trouvaille : un objet magique inattendu, avec son histoire.
+  {const F=SHOP_FIND[lieu];findRoll=ptD(100);if(F&&findRoll<=Math.round(shopFindP(lieu)*100)){let x=Math.random(),rar=F.r[F.r.length-1][0];for(const r of F.r){if(x<r[1]){rar=r[0];break;}x-=r[1];}
+    const l=SHOP_MAGIC.filter(m=>m[2]===rar&&!inv.some(y=>y.nom===m[0]));if(l.length){const m=shopPick(l),why=shopPick(SHOP_FIND_WHY),expo=/exhibition/.test(why);
+      inv.push({nom:m[0],prix:shopRound(vary(m[1])*(expo?1.25:1)),base:m[1],stock:1,rar:m[2],trouvaille:why});}}}
+  inv.sort((a,b)=>(a.trouvaille?1:0)-(b.trouvaille?1:0)||(a.rar?1:0)-(b.rar?1:0)||a.prix-b.prix);
+  findRoll=findRoll||0;
+  const fonds=shopRound(shopRnd(L.f[0],L.f[1])*(type==="arcane"?1.5:type==="provisions"?0.5:1));
+  return {id:ptUid(),nom:shopName(type,lieu,who),type,lieu,region:bid||"",marchand:who,espece:shopPick(SHOP_SPECIES),trait:shopPick(SHOP_TRAITS),fonds,fonds0:fonds,cap:L.cap,mod:0,inv,log:[],ouvert:true,findRoll,findMax:Math.round(shopFindP(lieu)*100)};
+}
+function shopRate(S){return S.type==="fourgue"?0.4:0.5;}
+function shopPrice(S,it){return shopRound(it.prix*(1+(S.mod||0)));}
+function shopTab(q){const P=ui.pt,B=P.boutiques||[],bid=q.bureau,R=SHOP_REGION[bid];
+  const lieu=ui.shopLieu||"ville",types=Object.keys(SHOP_TYPES).filter(k=>SHOP_TYPES[k].lx.indexOf(lieu)>=0),type=types.indexOf(ui.shopType)>=0?ui.shopType:types[0];
+  let h='<div class="shopgen"><label for="sh-lieu">Lieu<select id="sh-lieu" data-shop="lieu">'+Object.keys(SHOP_LIEUX).map(k=>'<option value="'+k+'"'+(k===lieu?' selected':'')+'>'+esc(SHOP_LIEUX[k].l)+'</option>').join("")+'</select></label>'+
+    '<label for="sh-type">Boutique<select id="sh-type" data-shop="type">'+types.map(k=>'<option value="'+k+'"'+(k===type?' selected':'')+'>'+esc(SHOP_TYPES[k].l)+'</option>').join("")+'</select></label>'+
+    '<button class="btn gold sm" data-a="pt-shop-gen" data-v="'+type+'">🎲 Générer</button></div>';
+  h+='<p class="desc">Chance d\'une trouvaille magique ('+esc(SHOP_LIEUX[lieu].l.toLowerCase())+') : <strong>'+Math.round(shopFindP(lieu)*100)+' %</strong> (base '+Math.round(SHOP_FIND_BASE*100)+' % × '+SHOP_FIND[lieu].m+').</p>';
+  if(R)h+='<p class="desc">'+esc((office(bid)||{}).nom||"")+' : '+esc(R.note)+'.</p>';
+  if(!B.length)h+='<p class="desc">Aucune boutique pour cette quête. Elles n\'existent que le temps de la quête.</p>';
+  h+=B.slice().reverse().map(S=>shopCard(S)).join("");
+  h+='<details class="shophouse"><summary>Objets maison (tous les générateurs)</summary><p class="desc">Un objet par ligne : <code>Nom | prix en po | types de boutique | rareté | lieu min (0 partout, 1 ville, 2 cité)</code>. Ex. <code>Lanterne de mineur de Mirabar | 15 | general forge | classique | 0</code></p><textarea id="sh-house" rows="5" maxlength="20000">'+esc((shopCfg&&shopCfg.maison)||"")+'</textarea><button class="btn ghost sm" data-a="pt-shop-house">Enregistrer</button></details>';
+  return h;}
+function shopCard(S){const L=SHOP_LIEUX[S.lieu]||{},T=SHOP_TYPES[S.type]||{},o=ui.shopSell&&ui.shopSell.id===S.id?ui.shopSell:null;
+  let h='<details class="shop"'+(S.ouvert?' open':'')+' data-shopid="'+esc(S.id)+'"><summary><strong>'+esc(S.nom)+'</strong> <span class="desc">'+esc(T.l||"")+' · '+esc(L.l||"")+'</span></summary>';
+  if(S.findRoll)h+='<p class="shopfind">🎲 Trouvaille : d100 = <strong>'+S.findRoll+'</strong> (≤ '+S.findMax+' requis) · '+(S.inv.some(x=>x.trouvaille)?'<strong>un objet hors du commun !</strong>':'rien d\'extraordinaire cette fois')+'</p>';
+  h+='<p class="shopwho"><strong>'+esc(S.marchand)+'</strong> ('+esc(S.espece)+') : '+esc(S.trait)+'</p>';
+  h+='<div class="shopcash"><span>Caisse : <strong>'+fmtPo(S.fonds)+'</strong></span><span>Rachète jusqu\'à <strong>'+fmtPo(Math.min(S.cap,S.fonds))+'</strong> par objet, à '+Math.round(shopRate(S)*100)+' % de sa valeur</span></div>';
+  h+='<div class="shophaggle"><span>Marchandage (Persuasion DD 15) :</span>'+[["-0.1","Réussi −10 %"],["0","Prix normal"],["0.1","Vexé +10 %"]].map(x=>'<button class="chip'+(String(S.mod||0)===x[0]?' on':'')+'" data-a="pt-shop-mod" data-id="'+esc(S.id)+'" data-v="'+x[0]+'" aria-pressed="'+(String(S.mod||0)===x[0])+'">'+x[1]+'</button>').join("")+'</div>';
+  h+='<ul class="shopinv">'+S.inv.map((it,i)=>'<li class="'+(it.stock===0?'out':'')+(it.trouvaille?' find':'')+'"><span class="sn">'+(it.trouvaille?'<span class="findtag">✦ Trouvaille</span> ':'')+esc(it.nom)+(it.rar&&RAR[it.rar]?' <span class="rar r-'+it.rar+'">'+esc(RAR[it.rar][1])+'</span>':'')+(it.trouvaille?'<span class="findwhy">'+esc(it.trouvaille)+'</span>':'')+'</span><span class="sp">'+fmtPo(shopPrice(S,it))+'</span><span class="sq">'+(it.svc?'service':it.stock===0?'épuisé':'×'+it.stock)+'</span><button class="mini" data-a="pt-shop-buy" data-id="'+esc(S.id)+'" data-v="'+i+'"'+(it.stock===0?' disabled':'')+' title="Un joueur achète">Vendu</button></li>').join("")+'</ul>';
+  h+='<div class="shopsell"><h4>Le groupe vend un objet</h4><label for="sv-n-'+esc(S.id)+'">Objet<input id="sv-n-'+esc(S.id)+'" maxlength="80" value="'+esc(o?o.nom:"")+'"></label><label for="sv-v-'+esc(S.id)+'">Valeur (po)<input id="sv-v-'+esc(S.id)+'" type="number" min="0" step="0.01" value="'+(o?o.val:"")+'"></label><button class="btn ghost sm" data-a="pt-shop-offer" data-id="'+esc(S.id)+'">Demander une offre</button>';
+  if(o){h+='<p class="shopoffer">'+o.txt+'</p>'+(o.offre>0?'<button class="btn gold sm" data-a="pt-shop-sold" data-id="'+esc(S.id)+'">Accepter ('+fmtPo(o.offre)+')</button>':'')+'<button class="btn ghost sm" data-a="pt-shop-nooffer" data-id="'+esc(S.id)+'">Refuser</button>';}
+  h+='</div>';
+  if((S.log||[]).length)h+='<details class="shoplog"><summary>Transactions ('+S.log.length+')</summary><ul>'+S.log.slice().reverse().map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul></details>';
+  h+='<p class="shopacts"><button class="linkbtn" data-a="pt-shop-regen" data-id="'+esc(S.id)+'">Régénérer l\'inventaire</button> · <button class="linkbtn" data-a="pt-shop-pnj" data-id="'+esc(S.id)+'">Garder le marchand comme PNJ</button> · <button class="linkbtn" data-a="pt-shop-del" data-id="'+esc(S.id)+'">Supprimer</button></p>';
+  return h+'</details>';}
+async function shopAction(a,id,b,v,q){const P=ui.pt;P.boutiques=P.boutiques||[];const S=P.boutiques.find(x=>x.id===id);
+  if(a==="pt-shop-gen"){const lieu=ui.shopLieu||"ville";const types=Object.keys(SHOP_TYPES).filter(k=>SHOP_TYPES[k].lx.indexOf(lieu)>=0);const ty=types.indexOf(v)>=0?v:types[0];
+    P.boutiques.forEach(x=>{x.ouvert=false;});const s=shopGen(ty,lieu,q.bureau);P.boutiques.push(s);ptLog("Boutique : "+s.nom+" ("+SHOP_TYPES[ty].l+", "+SHOP_LIEUX[lieu].l.toLowerCase()+").");return true;}
+  if(a==="pt-shop-house"){const t=String((document.getElementById("sh-house")||{}).value||"").slice(0,20000);await run("Objets maison",()=>setDoc(doc(db,"prive","boutiques"),{maison:t},{merge:true}));shopCfg=Object.assign({},shopCfg||{},{maison:t});return false;}
+  if(!S)return false;
+  if(a==="pt-shop-mod"){S.mod=+v||0;return true;}
+  if(a==="pt-shop-buy"){const it=S.inv[+v];if(!it||it.stock===0)return false;const p=shopPrice(S,it);if(it.stock!=null)it.stock--;S.fonds=shopRound(S.fonds+p);S.log.push("Vendu : "+it.nom+" pour "+fmtPo(p));ptLog(S.nom+" : vendu "+it.nom+" ("+fmtPo(p)+").");return true;}
+  if(a==="pt-shop-offer"){const nom=String((document.getElementById("sv-n-"+id)||{}).value||"").trim().slice(0,80)||"Objet",val=Math.max(0,+(document.getElementById("sv-v-"+id)||{}).value||0);
+    const juste=shopRound(val*shopRate(S)*(1-(S.mod||0)));let offre=juste,txt;
+    if(!val){ui.shopSell={id,nom,val,offre:0,txt:"Indique la valeur de l'objet."};return false;}
+    if(juste>S.cap&&juste>S.fonds)offre=Math.min(S.cap,S.fonds);else if(juste>S.cap)offre=S.cap;else if(juste>S.fonds)offre=S.fonds;
+    offre=shopRound(offre);
+    txt=offre<=0?"« Désolé, je n'ai plus un sou en caisse. »":offre<juste?"Prix juste : "+fmtPo(juste)+". « Je n'ai pas cette somme. Je peux vous en donner <strong>"+fmtPo(offre)+"</strong>, pas un cuivre de plus. »":"« Je vous en donne <strong>"+fmtPo(offre)+"</strong>. »";
+    ui.shopSell={id,nom,val,offre,txt};return false;}
+  if(a==="pt-shop-nooffer"){ui.shopSell=null;return false;}
+  if(a==="pt-shop-sold"){const o=ui.shopSell;if(!o||o.id!==id||!(o.offre>0))return false;S.fonds=shopRound(S.fonds-o.offre);S.inv.push({nom:o.nom,prix:shopRound(o.val),base:o.val,stock:1,rachat:true});
+    S.log.push("Acheté au groupe : "+o.nom+" pour "+fmtPo(o.offre));ptLog(S.nom+" : achète "+o.nom+" au groupe ("+fmtPo(o.offre)+").");ui.shopSell=null;return true;}
+  if(a==="pt-shop-regen"){const n=shopGen(S.type,S.lieu,S.region);S.inv=n.inv.concat(S.inv.filter(x=>x.rachat));return true;}
+  if(a==="pt-shop-del"){P.boutiques=P.boutiques.filter(x=>x.id!==id);return true;}
+  if(a==="pt-shop-pnj"){const T=SHOP_TYPES[S.type]||{};await run("PNJ",()=>setDoc(doc(collection(db,"pnj")),{nom:S.marchand,role:"Marchand : "+S.nom+" ("+(T.l||"")+")",espece:S.espece,voix:S.trait,lieu:S.nom,region:S.region||"",attitude:"neutre",quetes:[q.id],notes:"Créé depuis une boutique de session ("+(SHOP_LIEUX[S.lieu]||{}).l+")."}));
+    S.log.push("Marchand gardé comme PNJ dans le Manuel.");return true;}
+  return false;}
+
 function ptSide(q){
   const tab=ui.ptTab||"scenario",s=scenarios[q.id]||{};
   const ob=objsOf(q),od=(ui.pt.objectifs||[]).filter(i=>i<ob.length).length;
-  const tabs=(ob.length?[["objectifs",'Objectifs <span class="otc'+(od>=ob.length?' ok':'')+'">'+od+'/'+ob.length+'</span>']]:[]).concat([["scenario","Scénario"],["compendium","Compendium"],["butin","Butin"],["tests","Tests & DD"],["regles","Règles"],["des","Dés"],["journal","Journal"],["bilan","Bilan"]]);
+  const tabs=(ob.length?[["objectifs",'Objectifs <span class="otc'+(od>=ob.length?' ok':'')+'">'+od+'/'+ob.length+'</span>']]:[]).concat([["scenario","Scénario"],["compendium","Compendium"],["butin","Butin"],["boutiques","Boutiques"],["tests","Tests & DD"],["regles","Règles"],["des","Dés"],["journal","Journal"],["bilan","Bilan"]]);
   let h='<div class="pttabs" role="tablist">'+tabs.map(t=>'<button role="tab" aria-selected="'+(tab===t[0])+'" class="'+(tab===t[0]?'on':'')+(t[0]==="objectifs"&&od>=ob.length?' allok':'')+'" data-a="pt-tab" data-v="'+t[0]+'">'+t[1]+'</button>').join("")+'</div><div class="ptpanel">';
   if(tab==="objectifs")h+=ptObjectifs(q);
   else if(tab==="scenario"){
@@ -2606,6 +2806,7 @@ function ptSide(q){
     h+='<div class="ptadv"><button class="'+(ui.ptAdv==="adv"?'on':'')+'" data-a="pt-adv" data-v="adv">Avantage</button><button class="'+(!ui.ptAdv?'on':'')+'" data-a="pt-adv" data-v="">Normal</button><button class="'+(ui.ptAdv==="dis"?'on':'')+'" data-a="pt-adv" data-v="dis">Désavantage</button></div>';
     h+='<form class="ptexpr" id="pt-expr"><input id="pt-expr-in" placeholder="Ex. : 2d6+3 ou d20+5" aria-label="Formule de dés"><button class="btn gold">Lancer</button></form>';
     h+=(ui.ptDice||[]).length?'<ul class="ptrolls">'+ui.ptDice.map((r,i)=>'<li class="'+(i===0?'last':'')+'"><strong>'+r.t+'</strong><span>'+esc(r.e)+' : '+esc(r.d)+'</span></li>').join("")+'</ul>':'<p class="desc">Les avantages et désavantages s\'appliquent aux d20.</p>';
+  }else if(tab==="boutiques"){h+=shopTab(q);
   }else if(tab==="butin"){h+=ptLootTab(q);
   }else if(tab==="compendium"){
     h+='<label class="ptnotes" for="pt-cq">Rechercher partout<input id="pt-cq" type="search" autocomplete="off" value="'+esc(ui.ptCq||"")+'" placeholder="Ex. gobelin, Pax, agrippé, Poing…"></label>'+ptSearch(ui.ptCq);
@@ -3072,6 +3273,7 @@ async function partyAction(a,id,b,e){
   const amt=(k)=>{const el=document.getElementById(k+"-"+id);const n=Math.round(+(el&&el.value)||0);if(el)el.value="";return n;};
   let ch=true;
   if(a==="pt-tab"){ui.ptTab=v;ch=false;}
+  else if(a.indexOf("pt-shop")===0){ch=await shopAction(a,id,b,v,q);}
   else if(a==="pt-sel"){ui.ptSel=ui.ptSel===id?null:id;ui.ptCond=null;ui.ptEditC=null;render();const el=document.getElementById("pt-"+(ui.ptSel===P.cur?P.cur:ui.ptSel));if(el&&ui.ptSel)el.scrollIntoView({block:"nearest",behavior:"smooth"});return;}
   else if(a==="pt-selx"){ui.ptSel=null;ch=false;}
   else if(a==="pt-findadd"||a==="pt-findnew"){const g=k=>document.getElementById(k),nb=Math.max(1,Math.min(20,+(g("pt-find-nb")||{}).value||1)),camp=(g("pt-find-camp")||{}).value||"",bf=ptIds();let added=[];
@@ -3499,7 +3701,10 @@ document.addEventListener("click",async e=>{
   render();
   if(a==="new"||a==="edit"){const f=document.getElementById("f-titre");if(f){f.focus();f.scrollIntoView({block:"center"});}}
 });
+document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.matches&&d.matches("details.shop")){const S=((ui.pt&&ui.pt.boutiques)||[]).find(x=>x.id===d.getAttribute("data-shopid"));if(S)S.ouvert=d.open;}},true);
 document.addEventListener("change",e=>{
+  if(e.target.getAttribute&&e.target.getAttribute("data-shop")==="lieu"){ui.shopLieu=e.target.value;render();return;}
+  if(e.target.getAttribute&&e.target.getAttribute("data-shop")==="type"){ui.shopType=e.target.value;render();return;}
   if(e.target.id==="loot-f"){ui.lootF=e.target.value;render();return;}
   if(e.target.id==="rel-f"){ui.relF=e.target.value;render();return;}
   if(e.target.classList&&e.target.classList.contains("loot-to")){const id=e.target.getAttribute("data-id"),a=aventuriers.find(x=>x.id===e.target.value);run("Butin attribué",()=>setDoc(doc(db,"butins",id),{pour:a?a.id:"",pourNom:a?a.nom:""},{merge:true}));return;}
