@@ -102,7 +102,7 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .ecdm .ecdate{font-size:13.5px;padding:0 4px}.ecdays{background:#efe4c6;border-radius:6px;padding:8px 12px;margin:8px 0;font-size:14px}.ecdays .ecdl{margin:4px 0 0;padding-left:20px}.ecdays .ecdl li.cur{font-weight:700}.ecdays .ecdl li.trj{font-style:italic;color:#6b5a44}.ecdays.sc{margin-top:0}
 .calform{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:6px 0}.calform label{display:flex;flex-direction:column;font-size:13px}.calform input{max-width:110px}
 .ectv-met .dt{display:block;font-family:var(--display);font-size:.9em;letter-spacing:.05em;color:#e9dfc6;margin-bottom:2px}
-.ecdm .ecday{font-family:var(--display);font-size:13px;letter-spacing:.08em;padding:0 4px}.ecdm .ecmet{background:#efe4c6;border-radius:6px;padding:8px 12px;margin:8px 0;font-size:14px}.ecdm .ecmet ul{margin:4px 0 0;padding-left:18px}.ecdm .ecmet p{margin:4px 0 0}
+.ecdm .chip.here{border-color:#d8b45e;border-width:2px}.ecdm .ecday{font-family:var(--display);font-size:13px;letter-spacing:.08em;padding:0 4px}.ecdm .ecmet{background:#efe4c6;border-radius:6px;padding:8px 12px;margin:8px 0;font-size:14px}.ecdm .ecmet ul{margin:4px 0 0;padding-left:18px}.ecdm .ecmet p{margin:4px 0 0}
 .ectv-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#d8b45e;font-family:var(--display);font-size:22px;text-align:center;padding:20px;pointer-events:none}.ectv-msg:empty{display:none}
 .ecdm .ecbar,.ecdm .ecrow,.ecdm .ecsel{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:8px 0}.ecdm label{display:flex;flex-direction:column;font-size:13px}.ecdm label.ecck{flex-direction:row;align-items:center;gap:5px}.ecdm .ecsp{flex:1}
 .ecdm .eccanvas{background:#0e161a;border-radius:8px;overflow:hidden;line-height:0}.ecdm canvas#ec-dm{width:100%;display:block;touch-action:none;cursor:crosshair;max-height:72vh;object-fit:contain}
@@ -2914,7 +2914,7 @@ const EC_GRP={ext:"Extérieur",int:"Intérieur",abri:"Abri"};
 function ecMapLbl(t){const m=EC_MAPS[t==="chemin"?"route":t];return m?EC_GRP[m.g]+" – "+m.l:t;}
 function ecIndoor(t){const m=EC_MAPS[t==="chemin"?"route":t];return !!m&&m.g!=="ext";}
 const ecGenCache={};
-function ecGenGeo(c){const key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h;if(!ecGenCache[key]){const G=EC_GEN[c.type];ecGenCache[key]=G.geo(c,ecRng(ecSeed(c.seed)));}return ecGenCache[key];}
+function ecGenGeo(c){const key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h+"|"+(c.bureau||"");if(!ecGenCache[key]){const G=EC_GEN[c.type];ecGenCache[key]=G.geo(c,ecRng(ecSeed(c.seed)));}return ecGenCache[key];}
 function ecGenLights(c){if(!EC_GEN[c.type])return [];return ecGenGeo(c).lights||[];}
 // Outils de grille
 function gGrid(W,H,v){const a=new Array(W*H).fill(v);a.W=W;a.H=H;return a;}
@@ -3250,6 +3250,78 @@ Object.assign(EC_MAPS,{navire:{l:"Navire en mer",g:"ext"},abordage:{l:"Abordage 
 Object.assign(EC_GEN,{navire:{geo:geoNavire,stat:statNavire,dyn:dynNavire},abordage:{geo:geoNavire,stat:statNavire,dyn:dynNavire},serre:{geo:geoSerre,stat:statSerre,dyn:dynSerre},
   campement:{geo:geoCamp,stat:statCamp,dyn:dynCamp},cimetiere:{geo:geoCimetiere,stat:statCimetiere,dyn:dynCimetiere},ruines:{geo:geoRuines,stat:statRuines,dyn:dynRuines}});
 
+/* ---------- Bureaux de la Guilde : une carte fixe par comptoir, dans le style de sa région ---------- */
+const EC_BUR={waterdeep:{n:"Siège de la Guilde (Waterdeep)",sz:[32,19],floor:"damier",out:"pave",wall:["#3a3530","#5a524a"]},
+  "baldurs-gate":{n:"Comptoir de Baldur's Gate",sz:[24,15],floor:"bois",out:"quai",wall:["#3a2f26","#57483a"]},
+  luskan:{n:"Comptoir de Luskan (ancienne capitainerie)",sz:[22,14],floor:"bois",out:"quai",wall:["#2f2a26","#4a423a"]},
+  mirabar:{n:"Comptoir de Mirabar",sz:[22,14],floor:"pierre",out:"pave",wall:["#3b3631","#5e574e"]},
+  silverymoon:{n:"Comptoir de Silverymoon",sz:[24,15],floor:"pierre",out:"jardin",wall:["#5a5a62","#8a8a94"]},
+  neverwinter:{n:"Comptoir de Neverwinter (hôtel particulier)",sz:[26,16],floor:"damier",out:"pave",wall:["#3a3530","#5a524a"]},
+  daggerford:{n:"Comptoir de Daggerford (arrière-salle d'auberge)",sz:[26,15],floor:"bois",out:"herbe",wall:["#3a2f26","#57483a"]},
+  triboar:{n:"Comptoir de Triboar (carrefour des caravanes)",sz:[18,12],floor:"bois",out:"cour",wall:["#3a2f26","#57483a"]}};
+function geoBureau(c,R){const bid=EC_BUR[c.bureau]?c.bureau:"waterdeep",B=EC_BUR[bid],W=c.w,H=c.h,G=gGrid(W,H,"."),g={G,bid,furn:[],fires:[],lights:[],floor:B.floor,spots:{},people:[],steam:null,extra:[]};
+  const bw=Math.min(W-4,B.sz[0]),bh=Math.min(H-4,B.sz[1]),bx0=Math.floor((W-bw)/2)+(bid==="triboar"?-7:0),by0=Math.max(1,Math.floor((H-bh)/2)-(B.out==="quai"?2:0)),bx1=bx0+bw,by1=by0+bh;g.box={x0:bx0,y0:by0,x1:bx1,y1:by1};
+  for(let y=by0;y<by1;y++)for(let x=bx0;x<bx1;x++)G[y*W+x]=(x===bx0||y===by0||x===bx1-1||y===by1-1)?"W":"F";
+  const F=o=>g.furn.push(o),ex=bx0+Math.floor(bw*0.35);gSet(G,ex,by1-1,"D");gSet(G,ex+1,by1-1,"D");g.door={x:ex,y:by1-1};
+  // Arrière-salles à droite (bureau du préposé, archives, réserve…)
+  const side=Math.max(6,Math.floor(bw*0.3)),cx=bx1-1-side;for(let y=by0+1;y<by1-1;y++)gSet(G,cx,y,"W");const rooms=[];gBsp(G,R,{x0:cx+1,y0:by0+1,x1:bx1-1,y1:by1-1},4,2,rooms);gSet(G,cx,by0+2+Math.floor(R()*(bh-4)),"D");
+  const m={x0:bx0+1,y0:by0+1,x1:cx,y1:by1-1},mw=m.x1-m.x0,mh=m.y1-m.y0;
+  // Hall : comptoir, tableau des quêtes, bannières à la rose, bancs, cheminée, table des cartes
+  F({k:"bar",x:m.x0+mw*0.55,y:m.y0+mh*0.55,w:Math.min(6,mw*0.35),h:1});g.spots.prepose={x:m.x0+mw*0.55+Math.min(6,mw*0.35)/2,y:m.y0+mh*0.55-0.7};
+  F({k:"board",x:m.x0+1.2,y:m.y0+0.05,w:Math.min(7,mw*0.4),h:0.5});
+  [m.x0+mw*0.55+0.5,m.x1-1.5].forEach(x=>F({k:"banner",x,y:m.y0+0.1}));
+  F({k:"hearth",x:m.x0-0.6,y:m.y0+mh*0.3,w:1.2,h:2.2});g.fires.push({x:m.x0+0.05,y:m.y0+mh*0.3+1.1,r:0.5});g.lights.push({x:m.x0+0.8,y:m.y0+mh*0.3+1.1,r:5});
+  for(let i=0;i<3;i++)F({k:"pew",x:m.x0+1.5,y:m.y0+mh*0.62+i*1.3,w:Math.min(5,mw*0.3)});
+  F({k:"maptable",x:m.x0+mw*0.25,y:m.y0+mh*0.18,w:3,h:2});
+  for(let i=0;i<2;i++){const X=m.x0+mw*(0.28+i*0.22),Y=m.y0+mh*0.85;if(R()<0.8){F({k:"table",x:X,y:Y});F({k:"stool",x:X-0.8,y:Y});F({k:"stool",x:X+0.8,y:Y});g.fires.push({x:X,y:Y,r:0.12,candle:1});}}
+  for(let i=0;i<2+Math.floor(R()*3);i++){const o=g.furn.filter(f=>f.k==="stool"||f.k==="pew")[i];if(o)g.people.push({x:o.x+(o.k==="pew"?1+R()*2:0),y:o.y+(o.k==="pew"?0.2:0),c:EC_COLORS[Math.floor(R()*EC_COLORS.length)],p:R()*6});}
+  rooms.forEach((r,i)=>{const w=r.x1-r.x0,h=r.y1-r.y0;if(i===0){F({k:"ltable",x:r.x0+0.6,y:r.y0+0.8,w:Math.min(3,w-1.2),h:1.2});F({k:"chair",x:r.x0+1.4,y:r.y0+2.4});F({k:"books",x:r.x0+0.2,y:r.y1-0.8,w:Math.max(1,w-0.4),h:0.6});F({k:"chest",x:r.x1-1.1,y:r.y0+0.3});g.fires.push({x:r.x0+1,y:r.y0+1.2,r:0.12,candle:1});}
+    else if(i===1){F({k:"books",x:r.x0+0.2,y:r.y0+0.2,w:Math.max(1,w-0.4),h:0.6});F({k:"books",x:r.x0+0.2,y:r.y0+1.6,w:Math.max(1,w-0.4),h:0.6});}
+    else for(let k=0;k<5;k++)F({k:R()<0.5?"crate":"barrel",x:r.x0+0.6+R()*Math.max(0.1,w-1.6),y:r.y0+0.6+R()*Math.max(0.1,h-1.6)});});
+  g.rooms=rooms;
+  // Couleur régionale
+  if(bid==="waterdeep"){const r=rooms[0];if(r){g.furn=g.furn.filter(o=>!(o.x>=r.x0&&o.x<r.x1&&o.y>=r.y0&&o.y<r.y1));F({k:"rug",x:r.x0+0.3,y:r.y0+0.3,w:r.x1-r.x0-0.6,h:r.y1-r.y0-0.6,c:"#2e3a6a"});F({k:"ltable",x:r.x0+1,y:r.y0+1.2,w:Math.min(4,r.x1-r.x0-2),h:1.6});F({k:"bigchair",x:r.x0+1+Math.min(4,r.x1-r.x0-2)/2,y:r.y0+3.4});
+      F({k:"espresso",x:r.x1-1.4,y:r.y0+0.4});g.steam={x:r.x1-0.95,y:r.y0+0.75};g.spots.pax={x:r.x0+1+Math.min(4,r.x1-r.x0-2)/2,y:r.y0+3.4};F({k:"books",x:r.x0+0.2,y:r.y1-0.8,w:Math.max(1,r.x1-r.x0-0.4),h:0.6});g.fires.push({x:r.x0+1.2,y:r.y0+1.5,r:0.14,candle:1});}
+    g.spots.oswin={x:m.x0+mw*0.55+Math.min(6,mw*0.35)+0.8,y:m.y0+mh*0.55+0.5};F({k:"ltable",x:g.spots.oswin.x-0.6,y:g.spots.oswin.y-1.6,w:1.6,h:1});F({k:"column",x:m.x0+mw*0.45,y:m.y0+1.5});F({k:"column",x:m.x0+mw*0.45,y:m.y1-1.5});}
+  if(bid==="luskan"||bid==="baldurs-gate"){F({k:"wheel",x:m.x0+mw*0.5,y:m.y0+0.1});F({k:"net",x:m.x0+0.2,y:m.y1-2.2,w:2,h:2});for(let i=0;i<4;i++)F({k:R()<0.5?"crate":"barrel",x:m.x0+mw*0.75+R()*2,y:m.y1-1.2-R()*2});}
+  if(bid==="luskan")F({k:"plaque",x:m.x0+mw*0.55+1,y:m.y0+mh*0.55+0.25});
+  if(bid==="mirabar"){F({k:"anvil",x:m.x0+mw*0.15,y:m.y1-2});F({k:"brazier",x:m.x0+mw*0.15+1.6,y:m.y1-2});g.fires.push({x:m.x0+mw*0.15+1.6,y:m.y1-2,r:0.3});F({k:"cart",x:m.x0+mw*0.7,y:m.y1-2});for(let i=0;i<3;i++)F({k:"ore",x:m.x0+mw*0.7+R()*1,y:m.y1-2+R()*0.6});}
+  if(bid==="silverymoon"){for(let i=0;i<5;i++)g.extra.push({k:"plant",x:m.x0+0.8+R()*(mw-1.6),y:m.y0+0.8+R()*(mh-1.6)});F({k:"lute",x:m.x0+mw*0.55+2,y:m.y0+mh*0.55+0.3});}
+  if(bid==="neverwinter"){F({k:"rug",x:m.x0+mw*0.2,y:m.y0+mh*0.4,w:mw*0.5,h:mh*0.4,c:"#5a2a2a"});F({k:"clock",x:m.x1-1.2,y:m.y0+0.2});}
+  if(bid==="daggerford"){F({k:"bar",x:m.x0+0.6,y:m.y0+0.6,w:4,h:0.9});for(let i=0;i<3;i++)F({k:"barrel",x:m.x0+0.8+i*0.9,y:m.y0+2});F({k:"sign",x:m.x0+mw*0.5,y:m.y0+0.1});}
+  if(bid==="triboar"){g.yard={x0:bx1+1,y0:by0-1,x1:Math.min(W-1,bx1+16),y1:by1+1};for(let i=0;i<3;i++)g.extra.push({k:"wagon",x:g.yard.x0+2+i*4.5,y:g.yard.y0+3,a:Math.PI/2});for(let i=0;i<4;i++)g.extra.push({k:"horse",x:g.yard.x0+2+i*2.2,y:g.yard.y1-2,a:-Math.PI/2,p:R()*6});}
+  return g;}
+function gFurnB(x,o,s){const k=o.k;
+  if(k==="board"){gRect(x,o.x,o.y,o.w,o.h,s,"#a8865a","#5a3e22");const cols=["#f1ead8","#e8d8a8","#f4e6c0","#e0c9a0"];for(let i=0;i<o.w*2;i++){x.fillStyle=cols[i%4];x.fillRect((o.x+0.15+i*0.48)*s,(o.y+0.06)*s,0.34*s,0.38*s);x.fillStyle="#9b2c22";x.beginPath();x.arc((o.x+0.32+i*0.48)*s,(o.y+0.1)*s,0.04*s,0,6.283);x.fill();}}
+  else if(k==="banner"){x.fillStyle="#1d3a4a";x.fillRect((o.x-0.35)*s,o.y*s,0.7*s,0.35*s);x.fillStyle="#d8b45e";x.beginPath();x.arc(o.x*s,(o.y+0.17)*s,0.12*s,0,6.283);x.fill();}
+  else if(k==="maptable"){gRect(x,o.x,o.y,o.w,o.h,s,"#6b4a2b","#3e2a16");x.fillStyle="#e8d8a8";x.fillRect((o.x+0.2)*s,(o.y+0.2)*s,(o.w-0.4)*s,(o.h-0.4)*s);x.strokeStyle="rgba(90,60,30,.6)";x.lineWidth=1;x.beginPath();x.moveTo((o.x+0.5)*s,(o.y+0.6)*s);x.bezierCurveTo((o.x+1.2)*s,(o.y+0.3)*s,(o.x+1.8)*s,(o.y+1.5)*s,(o.x+2.6)*s,(o.y+1.2)*s);x.stroke();}
+  else if(k==="bigchair"){gCirc(x,o.x,o.y,0.6,s,"#6a2a3a","#3a1520");}
+  else if(k==="espresso"){gRect(x,o.x,o.y,0.9,0.7,s,"#b08a3a","#5a4010");x.fillStyle="#d8c070";x.beginPath();x.arc((o.x+0.45)*s,(o.y+0.35)*s,0.22*s,0,6.283);x.fill();x.fillStyle="#2b2b2b";x.fillRect((o.x+0.2)*s,(o.y+0.55)*s,0.5*s,0.1*s);}
+  else if(k==="wheel"){x.strokeStyle="#5a3e22";x.lineWidth=Math.max(1,s*0.08);x.beginPath();x.arc(o.x*s,(o.y+0.4)*s,0.35*s,0,6.283);x.stroke();for(let i=0;i<8;i++){const a=i*0.785;x.beginPath();x.moveTo(o.x*s,(o.y+0.4)*s);x.lineTo((o.x+Math.cos(a)*0.48)*s,(o.y+0.4+Math.sin(a)*0.48)*s);x.stroke();}}
+  else if(k==="net"){x.strokeStyle="rgba(200,180,140,.7)";x.lineWidth=1;for(let i=0;i<=o.w;i+=0.25){x.beginPath();x.moveTo((o.x+i)*s,o.y*s);x.lineTo((o.x+i)*s,(o.y+o.h)*s);x.stroke();x.beginPath();x.moveTo(o.x*s,(o.y+i)*s);x.lineTo((o.x+o.w)*s,(o.y+i)*s);x.stroke();}}
+  else if(k==="plaque"){x.fillStyle="#8a8f94";x.fillRect(o.x*s,o.y*s,0.4*s,0.25*s);x.fillStyle="#cfd4d8";x.fillRect((o.x+1.1)*s,(o.y+0.05)*s,0.08*s,0.3*s);}
+  else if(k==="anvil"){gRect(x,o.x-0.4,o.y-0.25,0.8,0.5,s,"#4a4a4a","#1b1b1b");}
+  else if(k==="ore"){x.fillStyle="#7a6a5a";x.beginPath();x.arc(o.x*s,o.y*s,0.15*s,0,6.283);x.fill();x.fillStyle="#c9a24a";x.fillRect((o.x-0.03)*s,(o.y-0.03)*s,0.06*s,0.06*s);}
+  else if(k==="lute"){x.fillStyle="#a8743a";x.beginPath();x.ellipse(o.x*s,o.y*s,0.22*s,0.16*s,0.5,0,6.283);x.fill();x.strokeStyle="#5a3e22";x.lineWidth=Math.max(1,s*0.05);x.beginPath();x.moveTo(o.x*s,o.y*s);x.lineTo((o.x+0.4)*s,(o.y-0.25)*s);x.stroke();x.fillStyle="#e7a3c4";x.beginPath();x.arc((o.x+0.42)*s,(o.y-0.27)*s,0.06*s,0,6.283);x.fill();}
+  else if(k==="clock"){gRect(x,o.x,o.y,0.8,0.5,s,"#5a3e22","#2e1d0e");x.fillStyle="#e8dcc0";x.beginPath();x.arc((o.x+0.4)*s,(o.y+0.25)*s,0.18*s,0,6.283);x.fill();}
+  else if(k==="sign"){x.fillStyle="#6b4a2b";x.fillRect((o.x-0.6)*s,o.y*s,1.2*s,0.3*s);x.fillStyle="#d8b45e";x.fillRect((o.x-0.45)*s,(o.y+0.08)*s,0.9*s,0.14*s);}
+  else gFurn(x,o,s);}
+function statBureau(x,g,s,c){const B=EC_BUR[g.bid],SA=ecSaison(),R=ecRng(ecSeed(c.seed+"o"));
+  if(B.out==="herbe"||B.out==="jardin"||B.out==="cour")ecGround(x,c,s,R);else{x.fillStyle="#7d786c";x.fillRect(0,0,c.w*s,c.h*s);x.strokeStyle="rgba(40,35,30,.18)";x.lineWidth=1;for(let y=0;y<c.h;y+=0.5){x.beginPath();x.moveTo(0,y*s);x.lineTo(c.w*s,y*s);x.stroke();}}
+  if(B.out==="quai"){const y0=g.box.y1+2.5;x.fillStyle="#2f5a74";x.fillRect(0,y0*s,c.w*s,(c.h-y0)*s);x.fillStyle="#6f6a60";x.fillRect(0,(y0-0.5)*s,c.w*s,0.5*s);}
+  if(B.out==="cour"&&g.yard){x.fillStyle="#9a8466";x.fillRect(g.yard.x0*s,g.yard.y0*s,(g.yard.x1-g.yard.x0)*s,(g.yard.y1-g.yard.y0)*s);x.fillStyle="#6b4a2b";for(let X=g.yard.x0;X<g.yard.x1;X+=2)x.fillRect(X*s,(g.yard.y1-0.2)*s,0.2*s,0.2*s);}
+  if(B.out==="jardin"){x.fillStyle="#a39a88";x.fillRect((g.door.x-0.5)*s,(g.door.y+1)*s,3*s,(c.h-g.door.y)*s);}
+  x.fillStyle="rgba(0,0,0,.35)";x.fillRect((g.box.x0+0.4)*s,(g.box.y0+0.5)*s,(g.box.x1-g.box.x0)*s,(g.box.y1-g.box.y0)*s);
+  gFloor(x,g.G,s,g.floor);g.furn.forEach(o=>gFurnB(x,o,s));gWalls(x,g.G,s,B.wall[0],B.wall[1]);
+  x.fillStyle="#1d3a4a";x.fillRect((g.door.x-0.2)*s,(g.door.y+1.05)*s,2.4*s,0.45*s);x.fillStyle="#d8b45e";x.beginPath();x.arc((g.door.x+1)*s,(g.door.y+1.27)*s,0.15*s,0,6.283);x.fill();}
+function dynBureau(x,g,s,t,dt,A,c){const TT=Date.now()/1000;dynFires(x,g,s,t);
+  g.people.forEach(p=>{const b=Math.sin(TT*1.5+p.p)*0.03;x.fillStyle="rgba(0,0,0,.25)";x.beginPath();x.arc((p.x+0.05)*s,(p.y+0.06)*s,0.2*s,0,6.283);x.fill();x.fillStyle=p.c;x.beginPath();x.ellipse(p.x*s,(p.y+b)*s,0.13*s,0.19*s,0,0,6.283);x.fill();x.fillStyle="#e8c9a0";x.beginPath();x.arc(p.x*s,(p.y+b)*s,0.09*s,0,6.283);x.fill();});
+  g.extra.forEach(o=>{if(o.k==="plant"){const sw=Math.sin(TT+o.x)*0.03;gCirc(x,o.x,o.y,0.3,s,"#a8582e");x.fillStyle="#3f7a34";x.beginPath();x.arc((o.x+sw)*s,o.y*s,0.32*s,0,6.283);x.fill();x.fillStyle="#e7a3c4";x.beginPath();x.arc((o.x+0.12)*s,(o.y-0.1)*s,0.08*s,0,6.283);x.fill();}
+    else if(o.k==="wagon"){ecWalker(x,{kind:"charrette",c:"#7a3b2a",h:"#3a2c22"},o.x,o.y,o.a,s,0);}
+    else if(o.k==="horse"){x.save();x.translate(o.x*s,o.y*s);x.rotate(o.a+Math.sin(TT*0.3+o.p)*0.06);x.scale(1.9,1.9);x.fillStyle=["#5b4128","#2b2018","#8a6a44"][Math.floor(o.p)%3];x.beginPath();x.ellipse(0,0,0.36*s,0.13*s,0,0,6.283);x.fill();x.beginPath();x.ellipse((0.42+Math.sin(TT*0.8+o.p)*0.03)*s,0,0.13*s,0.07*s,0,0,6.283);x.fill();x.restore();}});
+  if(g.steam)for(let k=0;k<3;k++){const u=((TT*0.4+k/3)%1);x.fillStyle="rgba(240,240,240,"+(0.5*(1-u))+")";x.beginPath();x.arc((g.steam.x+Math.sin(TT*2+k)*0.1)*s,(g.steam.y-u*0.9)*s,(0.08+u*0.2)*s,0,6.283);x.fill();}}
+EC_MAPS.bureau={l:"Bureau de la Guilde",g:"int"};EC_GEN.bureau={geo:geoBureau,stat:statBureau,dyn:dynBureau};
+
 function ecStaticGen(c,s){const g=ecGenGeo(c),cv=document.createElement("canvas");cv.width=Math.ceil(c.w*s);cv.height=Math.ceil(c.h*s);EC_GEN[c.type].stat(cv.getContext("2d"),g,s,c);return cv;}
 const EC_LUM={jour:{l:"Jour",dark:0,vis:999},crepuscule:{l:"Crépuscule",dark:0.32,vis:12},nuit:{l:"Nuit",dark:0.7,vis:2},tenebres:{l:"Ténèbres",dark:0.9,vis:1}};
 // Météo (règles du Guide du maître 2024) : vision max (cases), obscurité ajoutée, effets de combat.
@@ -3541,14 +3613,15 @@ function ecCam(E,c){const tv=(ecDoc&&ecDoc.tv)||{cols:40,rows:22},pj=(c.tokens||
 function ecState(){const E=ecP(),c=ecCard(),q=ui.pt;if(!c)return null;
   let ordre=null;if(E.ordre&&E.ordre.mode==="combat"&&q.combat&&q.combat.phase==="combat"){ordre={titre:"Ordre de combat · round "+(q.round||1),liste:ptOrder().filter(x=>!(x.kind!=="pj"&&x.pv<=0)&&!x.cache).map(x=>({n:x.nom,k:x.kind==="pj"?"pj":"en",cur:x.cid===q.cur}))};}
   else if(E.ordre&&E.ordre.mode==="parole"){const L=String(E.ordre.parole||"").split("\n").map(x=>x.trim()).filter(Boolean),i=(E.ordre.idx||0)%Math.max(1,L.length);ordre={titre:"Ordre de parole",liste:L.map((n,j)=>({n,k:"pj",cur:j===i}))};}
-  return {qid:q.id,carte:{id:c.id,nom:c.nom,type:c.type,seed:c.seed,w:c.w,h:c.h,url:c.url||"",gone:c.gone||[],vie:c.vie||""},cam:ecCam(E,c),tokens:c.tokens||[],fog:{on:E.fog!==false,vu:c.vu||""},lum:E.lum||"jour",meteo:(c.abri||ecIndoor(c.type))?"clair":(E.meteo||"clair"),date:calLabel(calNow()),jour:E.jour||1,grid:!!E.grid,info:E.info||"",ordre,calib:(ecDoc&&ecDoc.calib)||{},ms:Date.now()};}
+  return {qid:q.id,carte:{id:c.id,nom:c.nom,type:c.type,seed:c.seed,w:c.w,h:c.h,url:c.url||"",gone:c.gone||[],vie:c.vie||"",bureau:c.bureau||""},cam:ecCam(E,c),tokens:c.tokens||[],fog:{on:E.fog!==false,vu:c.vu||""},lum:E.lum||"jour",meteo:(c.abri||ecIndoor(c.type))?"clair":(E.meteo||"clair"),date:calLabel(calNow()),jour:E.jour||1,grid:!!E.grid,info:E.info||"",ordre,calib:(ecDoc&&ecDoc.calib)||{},ms:Date.now()};}
 function ecPush(now){const st=ecState();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);ecPushT=setTimeout(()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},now?0:250);}
 function ecReveal(c){const E=ecP();const st=ecState();if(!st)return;const V=ecVision(st);let vu=(c.vu||"").padEnd(c.w*c.h,"0").split("");let ch=false;for(let i=0;i<V.vis.length;i++)if(V.vis[i]&&vu[i]!=="1"){vu[i]="1";ch=true;}if(ch)c.vu=vu.join("");}
 function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc.calib)||{};
   let h='<div class="ecdm"><p class="ecopen"><a class="btn gold sm" href="#ecran" target="_blank" rel="noopener">Ouvrir l\'écran joueurs ↗</a> <span class="desc">Ouvre-le sur l\'écran de table, puis F11 pour le plein écran.'+(tvv?' Écran détecté : '+tvv.cols+' × '+tvv.rows+' cases.':'')+'</span></p>';
   h+='<details class="eccal"><summary>Calibrage de l\'écran (1 case = 1 pouce)</summary><label for="ec-diag">Diagonale de l\'écran (pouces)<input id="ec-diag" type="number" min="10" max="120" step="0.5" value="'+(cal.diag||"")+'"></label><span class="ecfine">Ajustement fin : <button class="mini" data-a="pt-ec-k" data-v="-0.01">−</button> '+Math.round(((+cal.k)||1)*100)+' % <button class="mini" data-a="pt-ec-k" data-v="0.01">+</button></span><button class="mini" data-a="pt-ec-calshow">'+(cal.show?'Masquer la règle':'Afficher la règle de 5 pouces')+'</button><button class="mini gold" data-a="pt-ec-cal">Enregistrer</button></details>';
   {const SM=scMaps(q),sa=ecSaison();h+='<div class="eccards"><strong>Scènes du scénario :</strong> '+(SM.map((m,i)=>{const on=m.id===E.active,ind=ecIndoor(m.type),mk=ind?"clair":ecSeasonize(m.meteo,sa);return '<button class="chip'+(on?' on':'')+'" data-a="pt-ec-scene" data-v="'+i+'" aria-pressed="'+on+'" title="'+esc(ecMapLbl(m.type))+'">'+esc(m.nom)+' <span class="ecsm">'+(EC_LUM[m.lum]||{}).l+(ind?'':' · '+EC_METEO[mk].i)+'</span></button>';}).join(" ")||'<span class="desc">aucune carte prévue dans le scénario (Manuel → Cartes des scènes)</span>')+'</div>';}
-  h+='<div class="ecrand"><strong>Rencontre aléatoire :</strong><label for="ec-rt">Lieu<select id="ec-rt">'+Object.keys(EC_GRP).map(gk=>'<optgroup label="'+EC_GRP[gk]+'">'+Object.keys(EC_MAPS).filter(k=>EC_MAPS[k].g===gk&&k!=="image").map(k=>'<option value="'+k+'"'+(ui.ecRt===k?' selected':'')+'>'+esc(EC_MAPS[k].l)+'</option>').join("")+'</optgroup>').join("")+'</select></label><label for="ec-rl">Heure<select id="ec-rl">'+Object.keys(EC_LUM).map(k=>'<option value="'+k+'"'+(k===(ui.ecRl||E.lum||"jour")?' selected':'')+'>'+EC_LUM[k].l+'</option>').join("")+'</select></label><button class="btn gold sm" data-a="pt-ec-rand">🎲 Générer la rencontre</button></div>';
+  h+='<div class="eccards"><strong>Bureaux de la Guilde :</strong> '+Object.keys(EC_BUR).map(b=>'<button class="chip'+(E.active==="bur-"+b?' on':'')+(b===q.bureau?' here':'')+'" data-a="pt-ec-bureau" data-v="'+b+'" aria-pressed="'+(E.active==="bur-"+b)+'">'+esc(((office(b)||{}).nom)||b)+'</button>').join(" ")+'</div>';
+  h+='<div class="ecrand"><strong>Rencontre aléatoire :</strong><label for="ec-rt">Lieu<select id="ec-rt">'+Object.keys(EC_GRP).map(gk=>'<optgroup label="'+EC_GRP[gk]+'">'+Object.keys(EC_MAPS).filter(k=>EC_MAPS[k].g===gk&&k!=="image"&&k!=="bureau").map(k=>'<option value="'+k+'"'+(ui.ecRt===k?' selected':'')+'>'+esc(EC_MAPS[k].l)+'</option>').join("")+'</optgroup>').join("")+'</select></label><label for="ec-rl">Heure<select id="ec-rl">'+Object.keys(EC_LUM).map(k=>'<option value="'+k+'"'+(k===(ui.ecRl||E.lum||"jour")?' selected':'')+'>'+EC_LUM[k].l+'</option>').join("")+'</select></label><button class="btn gold sm" data-a="pt-ec-rand">🎲 Générer la rencontre</button></div>';
   h+='<div class="eccards"><strong>Cartes ouvertes :</strong> '+((E.cartes||[]).map(k=>'<button class="chip'+(k.id===E.active?' on':'')+'" data-a="pt-ec-pick" data-id="'+esc(k.id)+'" aria-pressed="'+(k.id===E.active)+'">'+esc(k.nom)+'</button>').join(" ")||'<span class="desc">aucune</span>')+'</div>';
   h+='<details class="ecnew"'+((E.cartes||[]).length?'':' open')+'><summary>Carte libre (type au choix ou image)</summary><div class="ecrow"><label for="ec-n">Nom<input id="ec-n" maxlength="60" placeholder="Le gué de la Rivière Noire"></label><label for="ec-t">Type<select id="ec-t">'+Object.keys(EC_GRP).map(gk=>'<optgroup label="'+EC_GRP[gk]+'">'+Object.keys(EC_MAPS).filter(k=>EC_MAPS[k].g===gk).map(k=>'<option value="'+k+'">'+esc(EC_MAPS[k].l)+'</option>').join("")+'</optgroup>').join("")+'</select></label><label for="ec-w">Largeur (cases)<input id="ec-w" type="number" min="8" max="120" value="'+((tvv&&tvv.cols)||40)+'"></label><label for="ec-h">Hauteur<input id="ec-h" type="number" min="6" max="120" value="'+((tvv&&tvv.rows)||22)+'"></label><label for="ec-u">URL de l\'image (type Image)<input id="ec-u" maxlength="500" placeholder="https://…"></label><label class="ecck"><input type="checkbox" id="ec-ab"> Intérieur ou souterrain (pas de météo)</label><button class="btn gold sm" data-a="pt-ec-new">Créer</button></div></details>';
   h+='<details class="eccal"><summary>Date de la campagne</summary>'+calForm()+'<p class="desc">La date avance à la fin de chaque quête : jours de la mission × '+calMult()+' (temps hors mission). Les saisons suivent le calendrier de Harptos.</p></details>';
@@ -3599,6 +3672,12 @@ async function ecAction(a,id,b,v,q){const E=ecP(),c=ecCard();
   if(a==="pt-ec-scene"){const m=scMaps(q)[+v];if(!m)return false;E.cartes=E.cartes||[];let k=E.cartes.find(x=>x.id===m.id);const tv=(ecDoc&&ecDoc.tv)||{cols:40,rows:22};
     const big=!ecIndoor(m.type)||["donjon","grotte","mine","egouts"].indexOf(m.type)>=0;if(!k){k={id:m.id,nom:m.nom,type:m.type,seed:m.seed,w:m.w||Math.min(120,(tv.cols||40)*(big?2:1)),h:m.h||Math.min(120,(tv.rows||22)*(big?2:1)),url:m.url,tokens:[],vu:"",cam:{x:0,y:0},scene:true};k.cam={x:Math.max(0,Math.round((k.w-(tv.cols||40))/2)),y:Math.max(0,Math.round((k.h-(tv.rows||22))/2))};E.cartes.push(k);}
     Object.assign(k,{nom:m.nom,type:m.url?"image":m.type,url:m.url||"",seed:m.seed,vie:ptUid(),gone:[]});E.active=k.id;E.lum=m.lum;E.meteo=ecIndoor(m.type)?"clair":ecSeasonize(m.meteo,ecSaison());ui.ecMetRoll=null;ui.ecSel=null;ecReveal(k);ecPush(true);return true;}
+  if(a==="pt-ec-bureau"){const b=EC_BUR[v]?v:"waterdeep",tv=(ecDoc&&ecDoc.tv)||{cols:40,rows:22},id="bur-"+b;E.cartes=E.cartes||[];let k=E.cartes.find(x=>x.id===id);
+    if(!k){k={id,nom:EC_BUR[b].n,type:"bureau",bureau:b,seed:"bureau|"+b,w:Math.max(tv.cols||40,EC_BUR[b].sz[0]+(b==="triboar"?20:6)),h:Math.max(tv.rows||22,EC_BUR[b].sz[1]+6),tokens:[],vu:"",cam:{x:0,y:0}};
+      const G=ecGenGeo(k),pj=pnjs.filter(p=>p.region===b&&/Guilde/.test(p.role||"")&&!/Messager/.test(p.role||""));const at=(p,sp,dx)=>{if(sp)k.tokens.push({id:ptUid(),k:"pnj",n:p.nom,x:Math.floor(sp.x+(dx||0))+0.5,y:Math.floor(sp.y)+0.5,vis:true});};
+      pj.forEach((p,i)=>{if(/^Pax/.test(p.nom))at(p,G.spots.pax);else if(/Oswin/.test(p.nom))at(p,G.spots.oswin);else at(p,G.spots.prepose,i&&!G.spots.oswin?i:0);});
+      k.cam={x:Math.max(0,Math.round((k.w-(tv.cols||40))/2)),y:Math.max(0,Math.round((k.h-(tv.rows||22))/2))};E.cartes.push(k);}
+    k.vie=ptUid();E.active=id;E.lum="jour";E.meteo="clair";ui.ecSel=null;ecPush(true);return true;}
   if(a==="pt-ec-rand"){const tp=(document.getElementById("ec-rt")||{}).value||"route",lu=(document.getElementById("ec-rl")||{}).value||"jour",tv=(ecDoc&&ecDoc.tv)||{cols:40,rows:22};ui.ecRt=tp;ui.ecRl=lu;
     const big=!ecIndoor(tp)||tp==="donjon"||tp==="grotte"||tp==="mine"||tp==="egouts";const W0=Math.min(120,(tv.cols||40)*(big?2:1)),H0=Math.min(120,(tv.rows||22)*(big?2:1)),k={id:ptUid(),vie:ptUid(),nom:"Rencontre : "+EC_MAPS[tp].l,type:tp,seed:ptUid(),w:W0,h:H0,url:"",tokens:[],vu:"",cam:{x:Math.max(0,Math.round((W0-(tv.cols||40))/2)),y:Math.max(0,Math.round((H0-(tv.rows||22))/2))}};E.cartes=(E.cartes||[]).concat([k]);E.active=k.id;E.lum=lu;
     if(ecIndoor(tp)){E.meteo="clair";ui.ecMetRoll=null;}else{const r=ecMeteoRoll(ecSaison());E.meteo=r.k;ui.ecMetRoll=r.r;}ptLog("Rencontre aléatoire : "+ecMapLbl(tp)+", "+EC_LUM[lu].l.toLowerCase()+(ecIndoor(tp)?"":", "+EC_METEO[E.meteo].l.toLowerCase())+".");ui.ecSel=null;ecPush(true);return true;}
