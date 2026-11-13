@@ -95,6 +95,13 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .ectv-ord{position:absolute;top:2vh;right:1.5vw;pointer-events:none}.ectv-ord h3{margin:0 0 4px;color:#d8b45e;font-family:var(--display);font-size:clamp(13px,1vw,20px);letter-spacing:.12em;text-transform:uppercase;text-shadow:0 1px 3px #000}
 .ectv-ord ol{margin:0;padding:8px 14px 8px 30px;background:rgba(14,22,26,.78);border-radius:8px;color:#e9dfc6;font-size:clamp(14px,1.2vw,24px)}.ectv-ord li{padding:2px 0}.ectv-ord li.cur{color:#ffd877;font-weight:700}.ectv-ord li.cur::marker{content:"▸ "}
 .ectv-met{position:absolute;top:2vh;left:1.5vw;max-width:34vw;padding:8px 14px;background:rgba(14,22,26,.78);border-radius:8px;color:#e9dfc6;pointer-events:none;font-size:clamp(12px,1vw,20px)}.ectv-met:empty{display:none}.ectv-met strong{display:block;color:#d8b45e;font-family:var(--display);letter-spacing:.06em}
+.calparch{position:absolute;top:10px;left:10px;z-index:3;display:flex;flex-direction:column;align-items:center;padding:6px 14px 7px;background:linear-gradient(180deg,#efe0b6,#e3cf9a);color:#3a2a17;border-radius:3px 3px 10px 10px/3px 3px 6px 6px;box-shadow:0 2px 6px rgba(0,0,0,.4),inset 0 0 0 1px rgba(90,60,20,.35);font-family:var(--display);pointer-events:none;line-height:1.2}
+.calparch::before,.calparch::after{content:"";position:absolute;left:-4px;right:-4px;height:6px;background:#c9b07a;border-radius:3px;box-shadow:0 1px 2px rgba(0,0,0,.3)}.calparch::before{top:-3px}.calparch::after{bottom:-3px}
+.calparch .cd{font-size:13px;font-weight:700;letter-spacing:.04em;white-space:nowrap}.calparch .cs{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.75}
+.map{position:relative}.map.saison-hiver svg{filter:saturate(.7) brightness(1.06)}.map.saison-automne svg{filter:sepia(.18) saturate(1.1)}.map.saison-ete svg{filter:saturate(1.08)}
+.ecdm .ecdate{font-size:13.5px;padding:0 4px}.ecdays{background:#efe4c6;border-radius:6px;padding:8px 12px;margin:8px 0;font-size:14px}.ecdays .ecdl{margin:4px 0 0;padding-left:20px}.ecdays .ecdl li.cur{font-weight:700}.ecdays.sc{margin-top:0}
+.calform{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:6px 0}.calform label{display:flex;flex-direction:column;font-size:13px}.calform input{max-width:110px}
+.ectv-met .dt{display:block;font-family:var(--display);font-size:.9em;letter-spacing:.05em;color:#e9dfc6;margin-bottom:2px}
 .ecdm .ecday{font-family:var(--display);font-size:13px;letter-spacing:.08em;padding:0 4px}.ecdm .ecmet{background:#efe4c6;border-radius:6px;padding:8px 12px;margin:8px 0;font-size:14px}.ecdm .ecmet ul{margin:4px 0 0;padding-left:18px}.ecdm .ecmet p{margin:4px 0 0}
 .ectv-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#d8b45e;font-family:var(--display);font-size:22px;text-align:center;padding:20px;pointer-events:none}.ectv-msg:empty{display:none}
 .ecdm .ecbar,.ecdm .ecrow,.ecdm .ecsel{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:8px 0}.ecdm label{display:flex;flex-direction:column;font-size:13px}.ecdm label.ecck{flex-direction:row;align-items:center;gap:5px}.ecdm .ecsp{flex:1}
@@ -1190,6 +1197,7 @@ function listen(){
   onSnapshot(collection(db,"aventuriers"),snap=>{
     aventuriers=snap.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>String(a.nom).localeCompare(String(b.nom),"fr"));loaded.a=true;render();
   },onErr);
+  onSnapshot(doc(db,"config","calendrier"),snap=>{calDoc=snap.exists()?snap.data():null;render();},onErr);
   onSnapshot(doc(db,"config","renommee"),snap=>{scaleDoc=snap.exists()?snap.data():null;render();},onErr);
   onSnapshot(query(collection(db,"rangs"),orderBy("date","desc"),limit(60)),snap=>{
     rangs=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();
@@ -1309,7 +1317,7 @@ function marker(b){
 }
 function mapView(){
   const total=quetes.filter(q=>q.statut==="ouverte").length;
-  let h='<div class="mapwrap"><div class="map"><svg viewBox="0 0 1000 1100" role="group" aria-label="Carte de la Sword Coast et comptoirs de la Guilde">'+mapBase()+bureaux.map(marker).join("")+'</svg></div>';
+  let h='<div class="mapwrap"><div class="map saison-'+ecSaison()+'">'+calParch()+'<svg viewBox="0 0 1000 1100" role="group" aria-label="Carte de la Sword Coast et comptoirs de la Guilde">'+mapBase()+bureaux.map(marker).join("")+'</svg></div>';
   h+='<nav class="offices" aria-label="Comptoirs"><h2>Comptoirs de la Guilde</h2>';
   bureaux.forEach(b=>{const n=openCount(b.id);
     h+='<a class="office" href="#'+esc(b.id)+'"><span class="nm">'+esc(b.nom)+(b.siege?'<span class="tag">Siège de la Guilde</span>':'')+'</span><span class="count'+(n?'':' zero')+'">'+n+' quête'+(n>1?'s':'')+'</span></a>';});
@@ -1859,7 +1867,7 @@ const MAN={
     ["resume","Résumé de l'intrigue (pour toi)","md"],["signes","Signes publics : ce que le peuple voit et entend (rumeurs, Crieur)","md"],["consequences","Conséquences par région (pour les évolutions)","md"],["accroches","Quêtes secondaires pour la Guilde (aider les héros)","md"],["etapes","Étapes (« ## Titre » par étape, puis « ## Fin positive », « ## Fin normale », « ## Fin négative »)","md"],["notes","Notes","md"]]},
   rencontres:{coll:"rencontres",nom:"rencontre",fields:[["nom","Nom","text",1],["region","Région","region"],["quete","Quête liée","questref"],["monstres","Monstres","monsterlist"],["terrain","Terrain et ambiance","textarea"],["notes","Tactique et déroulement","md"],["butin","Butin prévu (une ligne par objet, ex. « Épée courte (10 po) »)","textarea"]]},
   dossiers:{coll:"dossiers",nom:"dossier",fields:[["outerworlder","Outerworlder","select",0,[["","À déterminer"],["oui","Oui"],["non","Non (natif)"]]],["donNom","Don accordé par le Système","text"],["donDesc","Effet du Don","md"],["niveau","Niveau","number"],["ca","CA","number"],["pv","PV max","number"],["percPassive","Perception passive","number"],["accroches","Accroches et liens","md"],["notes","Notes du DM","md"]]},
-  scenarios:{coll:"scenarios",nom:"scénario",fields:[["module","Module officiel lié (quête secondaire)","moduleref"],["scenario","Scénario","md"],["objectifs","Objectifs (secrets)","objs"],["consequences","Autres conséquences pour le monde","consq"],["rencontres","Rencontres liées","rencmulti"],["pnj","PNJ liés","pnjmulti"],["monstres","Monstres liés","monstermulti"],["butinQuete","Objets de quête","questloot"],["notes","Notes","md"]]}
+  scenarios:{coll:"scenarios",nom:"scénario",fields:[["module","Module officiel lié (quête secondaire)","moduleref"],["scenario","Scénario","md"],["jours","Déroulement en jours","jours"],["objectifs","Objectifs (secrets)","objs"],["consequences","Autres conséquences pour le monde","consq"],["rencontres","Rencontres liées","rencmulti"],["pnj","PNJ liés","pnjmulti"],["monstres","Monstres liés","monstermulti"],["butinQuete","Objets de quête","questloot"],["notes","Notes","md"]]}
 };
 function manList(t){return t==="modules"?modules:t==="factions"?factions:t==="pnj"?pnjs:t==="monstres"?monstres:t==="rencontres"?rencontres:[];}
 function byName(l){return l.slice().sort((a,b)=>String(a.nom||"").localeCompare(String(b.nom||""),"fr"));}
@@ -1886,7 +1894,7 @@ function mlEditor(){const rows=ui.manML||[];
 function manForm(type,d,title){const S=MAN[type];d=d||{};
   let h='<form class="form dmform" id="manform" data-type="'+type+'"><h2>'+esc(title)+'</h2>';
   S.fields.forEach(f=>{const [k,lab,ty,req,opts]=f,v=d[k],id="mf-"+k;
-    const wide=["textarea","md","consq","objs","image","monsterlist","questmulti","rencmulti","pnjmulti","monstermulti"].indexOf(ty)>=0||k==="nom"||k==="titre";
+    const wide=["textarea","md","consq","objs","jours","image","monsterlist","questmulti","rencmulti","pnjmulti","monstermulti"].indexOf(ty)>=0||k==="nom"||k==="titre";
     if(ty==="image"){const img=ui.manImg!==undefined?ui.manImg:(v||"");h+='<div class="wide imgrow">'+(img?'<img class="portrait sm" src="'+esc(img)+'" alt="">':'<span class="portrait sm ph" aria-hidden="true">?</span>')+'<label for="mf-img">'+lab+' (facultatif)<input id="mf-img" type="file" accept="image/*"></label>'+(img?'<button class="btn ghost" type="button" data-a="mimg-clear">Retirer</button>':'')+'</div>';return;}
     h+=ty==="monsterlist"||ty.indexOf("multi")>0?'<fieldset class="wide pick"><legend>'+lab+'</legend>':'<label class="'+(ty==="check"?'pickrow ':'')+(wide?'wide':'')+(ABIL.some(x=>x[0]===k)?' abil':'')+'" for="'+id+'">'+lab+(ty==="md"?' <span class="tip">## Titre, **gras**, - liste, [[Nom]] = lien vers une fiche</span>':'');
     if(ty==="text")h+='<input id="'+id+'" maxlength="'+(k==="nom"?100:300)+'"'+(req?' required':'')+' value="'+esc(v||"")+'">';
@@ -1896,6 +1904,7 @@ function manForm(type,d,title){const S=MAN[type];d=d||{};
     else if(ty==="questloot")h+='<span class="tip">Une ligne par objet : Porteur &gt; Objet | valeur | chances | rareté | max. Porteur : un ou plusieurs monstres ou PNJ, séparés par des virgules. Devant l\'objet : « ! » garanti une fois, « + » garanti sur chaque porteur, « * » au hasard une fois, rien = au hasard sans maximum. « max 10 » arrête après 10 objets récoltés. Ces objets ne s\'ajoutent aux tables que pendant cette quête.</span><textarea id="'+id+'" rows="4" maxlength="3000" class="mono" placeholder="Skratch &gt; !Clé de bronze naine&#10;Gobelin guerrier, Gobelin sbire &gt; +Écusson de la tribu | | | | max 10&#10;Grenouille géante &gt; Herbe des marais | | 40">'+esc(v||"")+'</textarea>';
     else if(ty==="loottable")h+='<span class="tip">Une ligne par butin possible : Objet | valeur | chances | rareté. Raretés : Médiocre, Classique, Inhabituel, Rare, Épique, Légendaire (sans chance indiquée, la rareté la fixe : Légendaire = très rare). « Rien | | 20 » = chance de ne rien trouver. « Pièces | | 15 » = des pièces selon le FP. Une ligne qui commence par ! est un objet de quête : garanti, mais une seule fois. Une ligne qui commence par * est un objet unique : il tombe au hasard, une seule fois (ensuite sa chance devient « Rien »).</span><textarea id="'+id+'" rows="8" maxlength="4000" class="mono" placeholder="Pièces | | 15&#10;Cimeterre ébréché | 1 po | | Médiocre&#10;Collier de dents de loup | 2 pa | | Classique&#10;Dague du chef de clan | 25 po | | Rare&#10;!Lettre du commanditaire&#10;Rien | | 20">'+esc(v||"")+'</textarea>';
     else if(ty==="md")h+='<textarea id="'+id+'" rows="'+(k==="scenario"?14:6)+'" maxlength="40000">'+esc(v||"")+'</textarea>';
+    else if(ty==="jours")h+='<span class="tip">Une ligne par jour de jeu : Titre | scènes | météo. Météo : « auto » (tirée selon la saison), « abri » (sous terre ou à l\'intérieur), ou une météo précise (clair, nuageux, brume, brouillard, pluie, orage, vent, neige, froid, chaleur) si l\'histoire l\'exige. À la fin de la quête, le calendrier avance de ce nombre de jours × le temps hors mission.</span><textarea id="'+id+'" rows="3" maxlength="3000" placeholder="La route côtière | Scènes 1–2 | auto&#10;L\'embuscade | Scène 3 | brume">'+esc(v||"")+'</textarea>';
     else if(ty==="objs")h+='<span class="tip">Une ligne par objectif : Objectif | conséquence si l\'objectif n\'est pas rempli. Tous remplis = Réussite, certains = Réussite partielle, aucun = Échec. Les joueurs ne les voient jamais.</span><textarea id="'+id+'" rows="4" maxlength="5000" placeholder="Tous les ennemis éliminés | Les rats reviennent trois jours plus tard.&#10;Tunnel trouvé | Maître Tobrin rappellera la Guilde dans un mois.">'+esc(v||"")+'</textarea>';
     else if(ty==="consq")h+='<span class="tip">Une ligne par conséquence. Commence par « Réussite : », « Partielle : », « Échec : » (ou plusieurs : « Partielle, Échec : »). Sans préfixe, elle vaut pour tous les résultats. À la fin de la quête, tu coches celles qui arrivent.</span><textarea id="'+id+'" rows="6" maxlength="10000" placeholder="Échec : Des goules rôdent dans la Haute-Ville.&#10;Partielle, Échec : Garrow s\'enfuit et jure de se venger.&#10;Réussite : Frère Aldo devient un allié.">'+esc(v||"")+'</textarea>';
     else if(ty==="select")h+='<select id="'+id+'">'+opts.map(o=>'<option value="'+esc(o[0])+'"'+(String(v==null?(k==="fp"?"1":k==="taille"?"M":""):v)===o[0]?' selected':'')+'>'+esc(o[1])+'</option>').join("")+'</select>';
@@ -2450,7 +2459,7 @@ function render(){
             const before=a?renown(a,cq.bureau):51,after=a?codeOf(ptsN(a,cq.bureau)+t.n,pts(a,cq.bureau)+t.r):51,sg=v=>(v>0?'+':'')+v;
             return '<tr><th scope="row">'+esc(x.nom)+(a?'':' <em>(hors registre)</em>')+'</th><td data-l="Fin de quête" class="gains"><label class="sr" for="b-gainn'+i+'">Notoriété pour '+esc(x.nom)+'</label><input class="cnt" id="b-gainn'+i+'" type="number" step="1" value="'+t.gN+'"'+(a?'':' disabled')+' title="Notoriété"><label class="sr" for="b-gain'+i+'">Réputation pour '+esc(x.nom)+'</label><input class="cnt" id="b-gain'+i+'" type="number" step="1" value="'+t.gR+'"'+(a?'':' disabled')+' title="Réputation"></td>'+
               '<td class="num nw" data-l="Méfaits">'+(t.pen?'N +'+t.mefN+'<br>R −'+t.pen:'—')+'</td><td class="num nw" data-l="Bienfaits">'+(t.bnN||t.bnR?'N +'+t.bnN+'<br>R +'+t.bnR:'—')+'</td><td class="num nw" data-l="Total"><strong>N '+sg(t.n)+'<br>R '+sg(t.r)+'</strong></td><td data-l="Résultat">'+(a?chip(before)+(after!==before?' → '+chip(after):''):'—')+'</td></tr>';}).join("")+
-          '</tbody></table></div>'+xpBilan(cq,C)+
+          '</tbody></table></div>'+xpBilan(cq,C)+calBilan(cq,C)+
           '<div class="actions"><button class="btn" type="submit">Terminer la quête</button><button class="btn ghost" type="button" data-a="step-recalc">Recalculer</button><button class="btn ghost" type="button" data-a="step-back">Retour</button></div>';
       }
       h+='</form></div>';}}
@@ -2915,7 +2924,7 @@ const EC_SAISON={printemps:{l:"Printemps",t:[["clair",7],["nuageux",4],["brume",
 // Cohérence : météos possibles selon la saison, et évolution de proche en proche au fil de la journée.
 const EC_OK={printemps:["clair","nuageux","brume","pluie","orage","vent"],ete:["clair","nuageux","brume","pluie","orage","vent","chaleur"],automne:["clair","nuageux","brume","brouillard","pluie","orage","vent"],hiver:["clair","nuageux","brume","brouillard","neige","vent","froid"]};
 const EC_NEXT={clair:["nuageux","vent","brume","chaleur"],nuageux:["clair","pluie","brume","vent","neige"],brume:["clair","nuageux","brouillard"],brouillard:["brume"],pluie:["nuageux","orage","brume"],orage:["pluie","vent"],vent:["clair","nuageux","orage"],neige:["nuageux","froid","vent"],froid:["clair","neige"],chaleur:["clair","orage"]};
-function ecSaison(){return (monde&&EC_SAISON[monde.saison])?monde.saison:"printemps";}
+function ecSaison(){const c=calNow();return calSaison(c.an,c.j);}
 function ecMeteoStep(cur,saison){const ok=EC_OK[saison]||EC_OK.printemps;if(ok.indexOf(cur)<0)return ecMeteoRoll(saison).k;if(Math.random()<0.5)return cur;const n=(EC_NEXT[cur]||[]).filter(k=>ok.indexOf(k)>=0);return n.length?shopPick(n):cur;}
 function ecMeteoRoll(saison){const T=(EC_SAISON[saison]||EC_SAISON.printemps).t,r=ptD(20);let acc=0;for(const x of T){acc+=x[1];if(r<=acc)return {k:x[0],r};}return {k:"clair",r};}
 const EC_COLORS=["#d8b45e","#5fa8d3","#c75c5c","#7bc47f","#b48ad8","#e08a3c","#e7e2d3","#4fc1b6"];
@@ -3066,7 +3075,7 @@ function ecTvUpdate(){if(ui.office!=="ecran")return;const app=document.getElemen
   if(!isAdmin){m.textContent="Écran de table : connecte-toi avec le compte du Maître de la Guilde, puis recharge.";return;}
   if(!st||!st.carte){m.textContent="En attente d'une carte… Dans le Mode Partie, onglet Écran, choisis « Afficher sur l'écran ».";const r=ecBind("ec-tv","tv");if(r)r.st=null;return;}
   m.textContent="";const r=ecBind("ec-tv","tv");if(r)ecSet(r,st);
-  {const M=EC_METEO[st.meteo]||EC_METEO.clair;document.getElementById("ec-met").innerHTML=st.meteo&&st.meteo!=="clair"?'<strong>'+M.i+' '+esc(M.l)+'</strong>'+(M.fx.length?'<span>'+esc(M.fx[0])+'</span>':''):'';}
+  {const M=EC_METEO[st.meteo]||EC_METEO.clair;document.getElementById("ec-met").innerHTML=(st.date?'<span class="dt">📜 '+esc(st.date)+'</span>':'')+(st.meteo&&st.meteo!=="clair"?'<strong>'+M.i+' '+esc(M.l)+'</strong>'+(M.fx.length?'<span>'+esc(M.fx[0])+'</span>':''):'');}
   document.getElementById("ec-info").innerHTML=st.info?'<p>'+esc(st.info).replace(/\n/g,"<br>")+'</p>':'';
   const o=st.ordre;document.getElementById("ec-ord").innerHTML=o&&o.liste&&o.liste.length?'<h3>'+esc(o.titre||"Ordre")+'</h3><ol>'+o.liste.map(x=>'<li class="'+(x.cur?'cur ':'')+(x.k==="pj"?'pj':'')+'">'+esc(x.n)+'</li>').join("")+'</ol>':'';
   ecTvReport();}
@@ -3080,21 +3089,22 @@ function ecCard(){const E=ecP();return (E.cartes||[]).find(c=>c.id===E.active)||
 function ecState(){const E=ecP(),c=ecCard(),q=ui.pt;if(!c)return null;
   let ordre=null;if(E.ordre&&E.ordre.mode==="combat"&&q.combat&&q.combat.phase==="combat"){ordre={titre:"Ordre de combat · round "+(q.round||1),liste:ptOrder().filter(x=>!(x.kind!=="pj"&&x.pv<=0)&&!x.cache).map(x=>({n:x.nom,k:x.kind==="pj"?"pj":"en",cur:x.cid===q.cur}))};}
   else if(E.ordre&&E.ordre.mode==="parole"){const L=String(E.ordre.parole||"").split("\n").map(x=>x.trim()).filter(Boolean),i=(E.ordre.idx||0)%Math.max(1,L.length);ordre={titre:"Ordre de parole",liste:L.map((n,j)=>({n,k:"pj",cur:j===i}))};}
-  return {qid:q.id,carte:{id:c.id,nom:c.nom,type:c.type,seed:c.seed,w:c.w,h:c.h,url:c.url||""},cam:c.cam||{x:0,y:0},tokens:c.tokens||[],fog:{on:E.fog!==false,vu:c.vu||""},lum:E.lum||"jour",meteo:E.meteo||"clair",grid:!!E.grid,info:E.info||"",ordre,calib:(ecDoc&&ecDoc.calib)||{},ms:Date.now()};}
+  return {qid:q.id,carte:{id:c.id,nom:c.nom,type:c.type,seed:c.seed,w:c.w,h:c.h,url:c.url||""},cam:c.cam||{x:0,y:0},tokens:c.tokens||[],fog:{on:E.fog!==false,vu:c.vu||""},lum:E.lum||"jour",meteo:c.abri?"clair":(E.meteo||"clair"),date:calLabel(calNow()),jour:E.jour||1,grid:!!E.grid,info:E.info||"",ordre,calib:(ecDoc&&ecDoc.calib)||{},ms:Date.now()};}
 function ecPush(now){const st=ecState();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);ecPushT=setTimeout(()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},now?0:250);}
 function ecReveal(c){const E=ecP();const st=ecState();if(!st)return;const V=ecVision(st);let vu=(c.vu||"").padEnd(c.w*c.h,"0").split("");let ch=false;for(let i=0;i<V.vis.length;i++)if(V.vis[i]&&vu[i]!=="1"){vu[i]="1";ch=true;}if(ch)c.vu=vu.join("");}
-function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc.calib)||{};
+function ecTab(q){ecPlan(q);const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc.calib)||{};
   let h='<div class="ecdm"><p class="ecopen"><a class="btn gold sm" href="#ecran" target="_blank" rel="noopener">Ouvrir l\'écran joueurs ↗</a> <span class="desc">Ouvre-le sur l\'écran de table, puis F11 pour le plein écran.'+(tvv?' Écran détecté : '+tvv.cols+' × '+tvv.rows+' cases.':'')+'</span></p>';
   h+='<details class="eccal"><summary>Calibrage de l\'écran (1 case = 1 pouce)</summary><label for="ec-diag">Diagonale de l\'écran (pouces)<input id="ec-diag" type="number" min="10" max="120" step="0.5" value="'+(cal.diag||"")+'"></label><span class="ecfine">Ajustement fin : <button class="mini" data-a="pt-ec-k" data-v="-0.01">−</button> '+Math.round(((+cal.k)||1)*100)+' % <button class="mini" data-a="pt-ec-k" data-v="0.01">+</button></span><button class="mini" data-a="pt-ec-calshow">'+(cal.show?'Masquer la règle':'Afficher la règle de 5 pouces')+'</button><button class="mini gold" data-a="pt-ec-cal">Enregistrer</button></details>';
   h+='<div class="eccards"><strong>Cartes de la quête :</strong> '+((E.cartes||[]).map(k=>'<button class="chip'+(k.id===E.active?' on':'')+'" data-a="pt-ec-pick" data-id="'+esc(k.id)+'" aria-pressed="'+(k.id===E.active)+'">'+esc(k.nom)+'</button>').join(" ")||'<span class="desc">aucune</span>')+'</div>';
-  h+='<details class="ecnew"'+((E.cartes||[]).length?'':' open')+'><summary>Nouvelle carte</summary><div class="ecrow"><label for="ec-n">Nom<input id="ec-n" maxlength="60" placeholder="Le gué de la Rivière Noire"></label><label for="ec-t">Type<select id="ec-t">'+Object.keys(EC_TYPES).map(k=>'<option value="'+k+'">'+esc(EC_TYPES[k])+'</option>').join("")+'</select></label><label for="ec-w">Largeur (cases)<input id="ec-w" type="number" min="8" max="120" value="'+((tvv&&tvv.cols)||40)+'"></label><label for="ec-h">Hauteur<input id="ec-h" type="number" min="6" max="120" value="'+((tvv&&tvv.rows)||22)+'"></label><label for="ec-u">URL de l\'image (type Image)<input id="ec-u" maxlength="500" placeholder="https://…"></label><button class="btn gold sm" data-a="pt-ec-new">Créer</button></div></details>';
+  h+='<details class="ecnew"'+((E.cartes||[]).length?'':' open')+'><summary>Nouvelle carte</summary><div class="ecrow"><label for="ec-n">Nom<input id="ec-n" maxlength="60" placeholder="Le gué de la Rivière Noire"></label><label for="ec-t">Type<select id="ec-t">'+Object.keys(EC_TYPES).map(k=>'<option value="'+k+'">'+esc(EC_TYPES[k])+'</option>').join("")+'</select></label><label for="ec-w">Largeur (cases)<input id="ec-w" type="number" min="8" max="120" value="'+((tvv&&tvv.cols)||40)+'"></label><label for="ec-h">Hauteur<input id="ec-h" type="number" min="6" max="120" value="'+((tvv&&tvv.rows)||22)+'"></label><label for="ec-u">URL de l\'image (type Image)<input id="ec-u" maxlength="500" placeholder="https://…"></label><label class="ecck"><input type="checkbox" id="ec-ab"> Intérieur ou souterrain (pas de météo)</label><button class="btn gold sm" data-a="pt-ec-new">Créer</button></div></details>';
+  h+=ecDayBox(q)+'<details class="eccal"><summary>Date de la campagne</summary>'+calForm()+'<p class="desc">La date avance à la fin de chaque quête : jours de la mission × '+calMult()+' (temps hors mission). Les saisons suivent le calendrier de Harptos.</p></details>';
   if(!c)return h+'</div>';
   const sel=(c.tokens||[]).find(k=>k.id===ui.ecSel);
   h+='<div class="ecbar"><span class="ectool">'+[["move","✋ Déplacer"],["reveal","☀ Révéler"],["hide","☁ Cacher"]].map(x=>'<button class="chip'+((ui.ecTool||"move")===x[0]?' on':'')+'" data-a="pt-ec-tool" data-v="'+x[0]+'">'+x[1]+'</button>').join("")+'</span>'+
     '<label for="ec-lum">Lumière<select id="ec-lum" data-ec="lum">'+Object.keys(EC_LUM).map(k=>'<option value="'+k+'"'+(k===(E.lum||"jour")?' selected':'')+'>'+EC_LUM[k].l+'</option>').join("")+'</select></label>'+
-    '<label for="ec-sai">Saison (toute la campagne)<select id="ec-sai" data-ec="saison">'+Object.keys(EC_SAISON).map(k=>'<option value="'+k+'"'+(k===ecSaison()?' selected':'')+'>'+EC_SAISON[k].l+'</option>').join("")+'</select></label>'+
+    '<span class="ecdate">📅 '+esc(calLabel(calNow()))+' · '+esc(EC_SAISON[ecSaison()].l)+'</span>'+
     '<label for="ec-met">Météo (toute la quête)<select id="ec-met" data-ec="meteo">'+EC_OK[ecSaison()].map(k=>'<option value="'+k+'"'+(k===(E.meteo||"clair")?' selected':'')+'>'+EC_METEO[k].i+' '+EC_METEO[k].l+'</option>').join("")+'</select></label>'+
-    '<span class="ecday">Jour '+(E.jour||1)+'</span><button class="mini" data-a="pt-ec-hours">⏩ Quelques heures plus tard</button><button class="mini" data-a="pt-ec-meteo">🎲 Nouveau jour</button>'+
+    '<button class="mini" data-a="pt-ec-hours">⏩ Quelques heures plus tard</button><button class="mini" data-a="pt-ec-meteo">☀ Jour suivant</button>'+
     '<label class="ecck"><input type="checkbox" data-ec="fog"'+(E.fog!==false?' checked':'')+'> Brouillard</label><label class="ecck"><input type="checkbox" data-ec="grid"'+(E.grid?' checked':'')+'> Grille</label></div>';
   {const M=EC_METEO[E.meteo||"clair"];if(M.fx.length||ui.ecMetRoll)h+='<div class="ecmet"><strong>'+M.i+' '+esc(M.l)+'</strong>'+(ui.ecMetRoll?' <span class="desc">(d20 = '+ui.ecMetRoll+')</span>':'')+(M.fx.length?'<ul>'+M.fx.map(f=>'<li>'+esc(f)+'</li>').join("")+'</ul>':'<span class="desc"> : aucun effet en combat.</span>')+(M.vis<999?'<p class="desc">Vision limitée à '+M.vis+' cases ('+(M.vis*5)+' pieds) sur l\'écran.</p>':'')+'</div>';}
   h+='<div class="eccanvas'+(ui.ecBig?' big':'')+'">'+(ui.ecBig?'<div class="ecbigbar">'+[["move","✋ Déplacer"],["reveal","☀ Révéler"],["hide","☁ Cacher"]].map(x=>'<button class="chip'+((ui.ecTool||"move")===x[0]?' on':'')+'" data-a="pt-ec-tool" data-v="'+x[0]+'">'+x[1]+'</button>').join("")+'<button class="btn gold sm" data-a="pt-ec-big">Réduire ✕</button></div>':'')+'<canvas id="ec-dm" aria-label="Carte DM : glisse les jetons"></canvas></div>'+(ui.ecBig?'':'<p class="ecbigp"><button class="mini" data-a="pt-ec-big">⛶ Agrandir la carte</button></p>');
@@ -3123,10 +3133,10 @@ function ecUpd(){const r=ecRenderers["ec-dm"];const st=ecState();if(r&&st){st.tv
 async function ecAction(a,id,b,v,q){const E=ecP(),c=ecCard();
   if(a==="pt-ec-new"){const nom=(document.getElementById("ec-n").value||"").trim().slice(0,60)||("Carte "+((E.cartes||[]).length+1)),type=document.getElementById("ec-t").value,w=Math.max(8,Math.min(120,+document.getElementById("ec-w").value||40)),h=Math.max(6,Math.min(120,+document.getElementById("ec-h").value||22)),url=(document.getElementById("ec-u").value||"").trim().slice(0,500);
     if(type==="image"&&!/^https:\/\//.test(url)){ui.ptAlert="Pour une carte Image, indique une URL https://.";return true;}
-    const k={id:ptUid(),nom,type,seed:ptUid(),w,h,url,tokens:[],vu:"",cam:{x:0,y:0}};E.cartes=(E.cartes||[]).concat([k]);E.active=k.id;ecPush(true);return true;}
+    const k={id:ptUid(),nom,type,seed:ptUid(),w,h,url,abri:!!(document.getElementById("ec-ab")||{}).checked,tokens:[],vu:"",cam:{x:0,y:0}};E.cartes=(E.cartes||[]).concat([k]);E.active=k.id;ecPush(true);return true;}
   if(a==="pt-ec-pick"){E.active=id;ui.ecSel=null;ecPush(true);return true;}
   if(a==="pt-ec-tool"){ui.ecTool=v;render();return false;}
-  if(a==="pt-ec-meteo"){const m=ecMeteoRoll(ecSaison());E.meteo=m.k;E.jour=(E.jour||1)+1;ui.ecMetRoll=m.r;ptLog("Jour "+E.jour+" : "+EC_METEO[m.k].l+" (d20 = "+m.r+").");ecPush(true);return true;}
+  if(a==="pt-ec-meteo"){const plan=ecPlan(q);E.jour=(E.jour||1)+1;let k=plan[E.jour-1];if(!k){k=ecMeteoStep(ecMeteoStep(E.meteo||"clair",ecSaison()),ecSaison());plan.push(k);}E.meteo=k;ui.ecMetRoll=null;const d=scDays(q)[E.jour-1];ptLog("Jour "+E.jour+(d?" ("+d.titre+")":"")+" : "+EC_METEO[k].l+".");ecPush(true);return true;}
   if(a==="pt-ec-hours"){const k=ecMeteoStep(E.meteo||"clair",ecSaison()),was=E.meteo||"clair";E.meteo=k;ui.ecMetRoll=null;ptLog(k===was?"Quelques heures plus tard : toujours "+EC_METEO[k].l.toLowerCase()+".":"Quelques heures plus tard : "+EC_METEO[was].l.toLowerCase()+" → "+EC_METEO[k].l.toLowerCase()+".");ecPush(true);return true;}
   if(a==="pt-ec-big"){ui.ecBig=!ui.ecBig;render();return false;}
   if(a==="pt-ec-k"||a==="pt-ec-cal"||a==="pt-ec-calshow"){const cal=Object.assign({k:1},(ecDoc&&ecDoc.calib)||{});const d=+(document.getElementById("ec-diag")||{}).value;if(d>5)cal.diag=d;if(a==="pt-ec-k")cal.k=Math.max(0.5,Math.min(1.5,Math.round(((+cal.k||1)+(+v))*100)/100));if(a==="pt-ec-calshow")cal.show=!cal.show;
@@ -3153,6 +3163,34 @@ function ecChange(el){const E=ecP(),c=ecCard(),k=el.getAttribute("data-ec"),sel=
   else if(sel){if(k==="sn")sel.n=el.value.slice(0,30);else if(k==="torche")sel.torche=el.checked;else if(k==="dv")sel.dv=Math.max(0,Math.min(24,+el.value||0));else if(k==="r")sel.r=Math.max(1,Math.min(20,+el.value||4));else if(k==="vis")sel.vis=el.checked;else if(k==="magie")sel.flamme=!el.checked;}
   if(c)ecReveal(c);ptSave();ecUpd();ecPush(true);}
 
+/* ---------- Calendrier de Harptos (date de la campagne) ---------- */
+// 12 mois de 30 jours + fêtes ; Bouclerencontre (Shieldmeet) les années divisibles par 4. La date avance avec les quêtes.
+const HARPTOS=[["Hammer",30],["Mi-hiver",1,1],["Alturiak",30],["Ches",30],["Tarsakh",30],["Herbeverte",1,1],["Mirtul",30],["Kythorn",30],["Flamerule",30],["Mi-été",1,1],["Bouclerencontre",1,2],["Eleasis",30],["Eleint",30],["Hautes-Moissons",1,1],["Marpenoth",30],["Uktar",30],["Fête de la Lune",1,1],["Nightal",30]];
+let calDoc=null;
+function calLeap(an){return an%4===0;}
+function calLen(an){return calLeap(an)?366:365;}
+function calMult(){return Math.max(1,Math.min(30,+(calDoc&&calDoc.mult)||5));}
+function calNow(){return calDoc&&calDoc.an?{an:+calDoc.an,j:+calDoc.j||1}:{an:1492,j:123};}
+function calParts(an,j){let d=j;for(const m of HARPTOS){if(m[2]===2&&!calLeap(an))continue;if(d<=m[1])return {nom:m[0],jour:d,fete:!!m[2]};d-=m[1];}return {nom:"Nightal",jour:30,fete:false};}
+function calDoy(an,nom,jour){let d=0;for(const m of HARPTOS){if(m[2]===2&&!calLeap(an))continue;if(m[0]===nom)return d+Math.min(jour||1,m[1]);d+=m[1];}return 1;}
+// Saisons : équinoxe de printemps 19 Ches, solstice d'été 20 Kythorn, équinoxe d'automne 21 Eleint, solstice d'hiver 20 Nightal.
+function calSaison(an,j){const sp=calDoy(an,"Ches",19),su=calDoy(an,"Kythorn",20),au=calDoy(an,"Eleint",21),wi=calDoy(an,"Nightal",20);return j>=wi||j<sp?"hiver":j<su?"printemps":j<au?"ete":"automne";}
+function calLabel(c){const x=calParts(c.an,c.j);return (x.fete?x.nom:x.jour+" "+x.nom)+" "+c.an+" DR";}
+function calAdd(c,n){let an=c.an,j=c.j+n;while(j>calLen(an)){j-=calLen(an);an++;}while(j<1){an--;j+=calLen(an);}return {an,j};}
+function calParch(){const c=calNow(),sa=calSaison(c.an,c.j);return '<div class="calparch" title="Date de la campagne"><span class="cd">'+esc(calLabel(c))+'</span><span class="cs">'+esc(EC_SAISON[sa].l)+'</span></div>';}
+function calForm(){const c=calNow(),x=calParts(c.an,c.j);
+  return '<form class="calform" id="calform"><label for="cal-j">Jour<input id="cal-j" type="number" min="1" max="30" value="'+x.jour+'"></label><label for="cal-m">Mois ou fête<select id="cal-m">'+HARPTOS.filter(m=>m[2]!==2||calLeap(c.an)).map(m=>'<option'+(m[0]===x.nom?' selected':'')+'>'+esc(m[0])+'</option>').join("")+'</select></label><label for="cal-a">Année (DR)<input id="cal-a" type="number" min="1300" max="1600" value="'+c.an+'"></label><label for="cal-x">Temps hors mission (× jours de quête)<input id="cal-x" type="number" min="1" max="30" value="'+calMult()+'"></label><button class="mini gold" type="submit">Changer la date</button></form>';}
+/* ---------- Déroulement d'un scénario en jours ---------- */
+// Champ scenarios.jours : une ligne par jour « Titre | scènes | météo » (météo : auto, abri, ou une météo précise).
+function scDays(q){const t=String((scenarios[q.id]||{}).jours||"");return t.split("\n").map(l=>l.split("|").map(x=>x.trim())).filter(x=>x[0]).map((x,i)=>({n:i+1,titre:x[0].replace(/^Jour\s*\d+\s*[:\-–—]\s*/i,""),scenes:x[1]||"",meteo:(x[2]||"auto").toLowerCase()}));}
+// Plan météo de la quête : tiré une fois, cohérent avec la saison, de proche en proche d'un jour à l'autre.
+function ecPlan(q){const E=ecP(),D=scDays(q),sa=ecSaison(),ok=EC_OK[sa];if(E.plan&&E.plan.sa===sa&&E.plan.m.length>=Math.max(1,D.length))return E.plan.m;
+  const m=[];for(let i=0;i<Math.max(1,D.length);i++){const f=D[i]&&D[i].meteo;let k;if(f&&EC_METEO[f]&&ok.indexOf(f)>=0)k=f;else if(i===0)k=ecMeteoRoll(sa).k;else{k=ecMeteoStep(m[i-1],sa);if(Math.random()<0.4)k=ecMeteoStep(k,sa);}m.push(k);}
+  E.plan={sa,m};if(!E.jour||E.jour<1)E.jour=1;if(!E.meteoSet){E.meteo=m[0];E.meteoSet=true;}return m;}
+function ecDayBox(q){const D=scDays(q),E=ecP(),m=ecPlan(q),j=E.jour||1,cur=D[j-1];
+  return '<div class="ecdays"><strong>Jour '+j+(D.length?' / '+D.length:'')+'</strong>'+(cur?' · '+esc(cur.titre)+(cur.scenes?' <span class="desc">('+esc(cur.scenes)+')</span>':'')+(cur.meteo==="abri"?' <span class="desc">· à l\'abri, pas de météo</span>':''):'')+
+    (D.length?'<ol class="ecdl">'+D.map((d,i)=>'<li class="'+(i+1===j?'cur':'')+'">'+esc(d.titre)+' <span class="desc">'+(d.meteo==="abri"?'à l\'abri':(EC_METEO[m[i]]||EC_METEO.clair).i+' '+esc((EC_METEO[m[i]]||EC_METEO.clair).l))+'</span></li>').join("")+'</ol>':'')+'</div>';}
+
 function ptSide(q){
   const tab=ui.ptTab||"scenario",s=scenarios[q.id]||{};
   const ob=objsOf(q),od=(ui.pt.objectifs||[]).filter(i=>i<ob.length).length;
@@ -3160,6 +3198,7 @@ function ptSide(q){
   let h='<div class="pttabs" role="tablist">'+tabs.map(t=>'<button role="tab" aria-selected="'+(tab===t[0])+'" class="'+(tab===t[0]?'on':'')+(t[0]==="objectifs"&&od>=ob.length?' allok':'')+'" data-a="pt-tab" data-v="'+t[0]+'">'+t[1]+'</button>').join("")+'</div><div class="ptpanel">';
   if(tab==="objectifs")h+=ptObjectifs(q);
   else if(tab==="scenario"){
+    {const D=scDays(q);if(D.length){const m=ecPlan(q),j=ecP().jour||1;h+='<div class="ecdays sc"><strong>Déroulement : '+D.length+' jour'+(D.length>1?'s':'')+'</strong><ol class="ecdl">'+D.map((d,i)=>'<li class="'+(i+1===j?'cur':'')+'">'+esc(d.titre)+(d.scenes?' <span class="desc">· '+esc(d.scenes)+'</span>':'')+' <span class="desc">· '+(d.meteo==="abri"?'à l\'abri':(EC_METEO[m[i]]||EC_METEO.clair).i+' '+esc((EC_METEO[m[i]]||EC_METEO.clair).l))+'</span></li>').join("")+'</ol></div>';}}
     h+=s.scenario?ptScenario(q):'<p class="desc">Aucun scénario pour cette quête. <a href="#man/quetes/'+encodeURIComponent(q.id)+'">L\'écrire dans le manuel</a></p>';
     const ps=(s.pnj||[]).map(id=>pnjs.find(p=>p.id===id)).filter(Boolean).concat(pnjs.filter(p=>(p.quetes||[]).indexOf(q.id)>=0&&(s.pnj||[]).indexOf(p.id)<0));
     if(ps.length)h+='<h3>PNJ de la quête</h3>'+ps.map(p=>'<details class="ptpnj"><summary>'+(p.image?'<img src="'+esc(p.image)+'" alt="">':'')+'<strong>'+esc(p.nom)+'</strong>'+(p.role?' · '+esc(p.role):'')+'</summary>'+(p.voix?'<p><strong>Voix :</strong> '+esc(p.voix)+'</p>':'')+(p.apparence?'<p><strong>Apparence :</strong> '+esc(p.apparence)+'</p>':'')+(p.secrets?'<div class="wikibody"><strong>Secrets :</strong> '+md(manLinks(p.secrets))+'</div>':'')+(p.monstre?'<button class="ptadd" data-a="pt-sb" data-id="'+esc(p.monstre)+'">Bloc de stats</button>':'')+'</details>').join("");
@@ -3852,6 +3891,8 @@ function csqPick(q,C){const win=csqWin(q),all=csqParse((scenarios[q.id]||{}).con
   return '<fieldset class="pick csqpick"><legend>'+(objsOf(q).length?'Autres conséquences':'Conséquences pour le monde')+'</legend><p class="desc">Coche ce qui arrive. C\'est gardé dans ton rapport DM (jamais montré aux joueurs) et ça t\'attendra dans Évolution du monde.</p>'+
     (list.length?list.map(row).join(""):'<p class="desc">Aucune conséquence prévue dans le scénario.</p>')+
     '<label for="csq-autre">Autre conséquence (facultatif)<textarea id="csq-autre" rows="2" maxlength="1000" placeholder="Ex. Le lieutenant Garrow a vu le visage de Bob.">'+esc(C.csqx||"")+'</textarea></label></fieldset>';}
+function calBilan(q,C){const D=scDays(q),P=ui.pt&&ui.pt.id===q.id?ui.pt:null,dj=C.jours!=null?C.jours:Math.max(1,D.length,(P&&P.ecran&&P.ecran.jour)||1),m=calMult(),c=calNow(),n=calAdd(c,dj*m);
+  return '<fieldset class="xpbox"><legend>Calendrier</legend><label for="b-jrs">Durée de la mission (jours)<input id="b-jrs" type="number" min="0" max="60" value="'+dj+'"></label><p>'+dj+' jour'+(dj>1?'s':'')+' × '+m+' (temps hors mission) = <strong>'+(dj*m)+' jours</strong> : le calendrier passera du '+esc(calLabel(c))+' au <strong>'+esc(calLabel(n))+'</strong> ('+esc(EC_SAISON[calSaison(n.an,n.j)].l.toLowerCase())+'). <span class="desc">(Recalculer pour mettre à jour)</span></p></fieldset>';}
 function xpBilan(q,C){const cb=ptXpTotal(q.id),bn=+C.xpBonus||0,n=C.parts.length,sh=xpShare(cb+bn,n);
   return '<fieldset class="xpbox"><legend>Expérience</legend><p>Ennemis vaincus (Mode Partie) : <strong>'+cb.toLocaleString("fr-CA")+' XP</strong></p>'+
     '<label for="b-xpb">XP de quête (bonus total, facultatif)<input id="b-xpb" type="number" min="0" max="999999" step="1" value="'+bn+'"></label>'+
@@ -3868,7 +3909,7 @@ function readStep(){
     const all=csqParse((scenarios[C.id]||{}).consequences);C.csq=Array.from(document.querySelectorAll('#completeform input[data-csq]')).filter(c=>c.checked).map(c=>(all[+c.getAttribute("data-csq")]||{}).txt).filter(Boolean);
     const ax=document.getElementById("csq-autre");if(ax)C.csqx=String(ax.value).trim().slice(0,1000);if(r0&&r0!==C.rapport.resultat)C.parts.forEach(x=>{x.gain=null;x.gainN=null;});}
   if(C.step===2){C.parts.forEach((x,i)=>{x.aventurier=v0("m-adv"+i)||null;Object.keys(DEFAULT_MEFAITS).concat(BIENFAITS).forEach(k=>{x[k]=Math.max(0,Math.round(+v0("m-"+k+i)||0));});});}
-  if(C.step===3){const xb=document.getElementById("b-xpb");if(xb)C.xpBonus=Math.max(0,Math.round(+xb.value||0));C.parts.forEach((x,i)=>{const e=document.getElementById("b-xpp"+i);if(e)x.xpPerso=Math.max(0,Math.round(+e.value||0));});C.parts.forEach((x,i)=>{const el=document.getElementById("b-gain"+i),en=document.getElementById("b-gainn"+i);if(el&&!el.disabled)x.gain=Math.round(+el.value||0);if(en&&!en.disabled)x.gainN=Math.round(+en.value||0);});}
+  if(C.step===3){{const jr=document.getElementById("b-jrs");if(jr)C.jours=Math.max(0,Math.min(60,Math.round(+jr.value||0)));}const xb=document.getElementById("b-xpb");if(xb)C.xpBonus=Math.max(0,Math.round(+xb.value||0));C.parts.forEach((x,i)=>{const e=document.getElementById("b-xpp"+i);if(e)x.xpPerso=Math.max(0,Math.round(+e.value||0));});C.parts.forEach((x,i)=>{const el=document.getElementById("b-gain"+i),en=document.getElementById("b-gainn"+i);if(el&&!el.disabled)x.gain=Math.round(+el.value||0);if(en&&!en.disabled)x.gainN=Math.round(+en.value||0);});}
 }
 document.addEventListener("click",async e=>{
   const ml=e.target.closest&&e.target.closest('a[href^="#man/"]');
@@ -4178,6 +4219,8 @@ document.addEventListener("submit",async e=>{
     ui.compEdit=null;ui.compImg=undefined;ui.compPreview=false;
     const ok=await saveComp(id,data,isNew);if(ok)location.hash="#compendium-"+id;return;
   }
+  if(e.target.id==="calform"){if(!isAdmin)return;const an=Math.max(1300,Math.min(1600,Math.round(+v("cal-a")||1492))),nom=v("cal-m"),j=calDoy(an,nom,Math.max(1,Math.min(30,Math.round(+v("cal-j")||1)))),mult=Math.max(1,Math.min(30,Math.round(+v("cal-x")||5)));
+    await run("Calendrier",()=>setDoc(doc(db,"config","calendrier"),{an,j,mult,majLe:serverTimestamp()},{merge:true}));return;}
   if(e.target.id==="gsaddform"){const sec=e.target.getAttribute("data-sec"),nom=v("gs-n").slice(0,100);if(!nom||!isAdmin)return;const prix=sec==="tresor"?1:gsPo(v("gs-p"));
     await run("Boutique",()=>setDoc(doc(collection(db,"boutique")),{section:sec,nom,prix,desc:v("gs-d").slice(0,300),ordre:Date.now(),creeLe:serverTimestamp()}));return;}
   if(e.target.id==="gssellform"){const nom=v("gs-sn").slice(0,100),val=Math.max(0,+v("gs-sp")||0),rar=v("gs-sr"),vend=v("gs-sv").slice(0,60);if(!nom||!val||!isAdmin)return;
@@ -4236,6 +4279,7 @@ document.addEventListener("submit",async e=>{
         bt.set(doc(collection(db,"journal")),{aventurier:a.id,nom:a.nom,bureau:q.bureau,points:net,notoriete:netN,raison:"Quête : "+q.titre+" ("+(RESULTS[C.rapport.resultat]||"")+" : N +"+t.gN+", R "+(t.gR>=0?"+":"")+t.gR+(det?" ; "+det:"")+")",quete:q.id,date:serverTimestamp()});});
       Object.keys(seen).forEach(id=>{if(seen[id].r||seen[id].n)addPoints(bt,aventuriers.find(y=>y.id===id),q.bureau,seen[id].r,seen[id].n);});
       Object.keys(seen).forEach(id=>{const a=aventuriers.find(y=>y.id===id);if(a)gQuestEnd(bt,a,q,C.rapport.resultat);});
+      {const D=scDays(q),P=ui.pt&&ui.pt.id===q.id?ui.pt:null,dj=C.jours!=null?C.jours:Math.max(1,D.length,(P&&P.ecran&&P.ecran.jour)||1);if(dj>0){const n=calAdd(calNow(),dj*calMult());bt.set(doc(db,"config","calendrier"),{an:n.an,j:n.j,mult:calMult(),majLe:serverTimestamp()},{merge:true});}}
       {const sh=xpShare(ptXpTotal(q.id)+(+C.xpBonus||0),C.parts.length),done={};
         C.parts.forEach(x=>{const a=x.aventurier&&aventuriers.find(y=>y.id===x.aventurier);if(!a||done[a.id])return;done[a.id]=1;
           const bp=+x.xpPerso||0;if(!sh&&!bp)return;const x0=charXp(a),x1=x0+sh+bp,l0=levelOf(x0),l1=levelOf(x1);
