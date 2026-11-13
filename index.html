@@ -3463,13 +3463,16 @@ function statBureau(x,g,s,c){const B=EC_BUR[g.bid],SA=ecSaison(),R=ecRng(ecSeed(
     else if(t===","){const gb=grass[0];x.fillStyle=spMix(gb,(gHash(X>>1,Y>>1,1)-0.5)*0.12);x.fillRect(px,py,s+1,s+1);x.lineCap="round";for(let k=0;k<3;k++){const bx=px+s*gHash(X,Y,k+3),by=py+s*gHash(X,Y,k+6);x.strokeStyle=spMix(gb,gHash(X,Y,k+9)<0.5?0.2:-0.2);x.lineWidth=Math.max(1,s*0.03);x.beginPath();for(let q=-1;q<=1;q++){x.moveTo(bx,by);x.lineTo(bx+q*s*0.07,by-s*0.16);}x.stroke();}}
     else if(t==="%"){x.fillStyle=["#4a4540","#45403b","#504a44"][(X*3+Y*5)%3];x.fillRect(px,py,s+1,s+1);x.fillStyle="rgba(0,0,0,.18)";if((X*7+Y*11)%5===0){x.beginPath();x.arc(px+s*0.5,py+s*0.5,s*0.3,0,6.283);x.fill();}}
     else{// pavés arrondis, joints sombres, quelques plaques de terre
-      x.fillStyle="#6a6254";x.fillRect(px,py,s+1,s+1);const n=2,cw=s/n;for(let j=0;j<n;j++)for(let i=0;i<n;i++){const ox2=(j%2)*cw*0.5,cx=px+i*cw+ox2+cw*0.5,cy=py+j*cw+cw*0.5,h=gHash(X*n+i,Y*n+j,1);if(cx-cw*0.5>px+s)continue;
-        x.fillStyle=["#aaa292","#b6ae9d","#9e9686","#a69a84"][Math.floor(h*4)];const rw=cw*(0.36+gHash(X*n+i,Y*n+j,2)*0.12),rh=cw*(0.32+gHash(X*n+i,Y*n+j,3)*0.12),jx=(gHash(X*n+i,Y*n+j,4)-0.5)*cw*0.15,jy=(gHash(X*n+i,Y*n+j,5)-0.5)*cw*0.15;x.beginPath();x.ellipse(cx+jx,cy+jy,rw,rh,h*3,0,6.283);x.fill();x.strokeStyle="rgba(50,42,32,.5)";x.lineWidth=lw;x.stroke();x.fillStyle="rgba(255,248,230,.16)";x.beginPath();x.ellipse(cx+jx-rw*0.2,cy+jy-rh*0.25,rw*0.55,rh*0.45,0,0,6.283);x.fill();}
-      if(gHash(X>>1,Y>>1,9)<0.25){x.fillStyle="rgba(150,115,70,.35)";x.beginPath();x.ellipse(px+s*0.5,py+s*0.5,s*0.55,s*0.4,gHash(X,Y,3)*3,0,6.283);x.fill();}}};
+      x.fillStyle="#6a6254";x.fillRect(px,py,s+1,s+1);cob.push([X,Y]);}};
+  const cob=[];
   const inP=(X,Y)=>X>=ox&&Y>=oy&&X<ox+pw&&Y<oy+ph;
   for(let Y=0;Y<H;Y++)for(let X=0;X<W;X++){let t=tAt(X,Y,g.rows);if(!inP(X,Y)&&BUR_OUT.indexOf(t)<0)t=g.e<0?"%":" ";if(g.e>0&&BUR_OUT.indexOf(t)>=0){let t0=tAt(X,Y,g.r0);if(!inP(X,Y)&&BUR_OUT.indexOf(t0)<0)t0=" ";
       if(BUR_OUT.indexOf(t0)<0){x.fillStyle=(X+Y*2)%3?"#6a3a2a":"#5e3424";x.fillRect(X*s,Y*s,s+1,s+1);x.fillStyle="rgba(0,0,0,.25)";x.fillRect(X*s,Y*s+s*0.8,s,s*0.2);}else{ground(X,Y,t0);x.fillStyle="rgba(10,10,20,.45)";x.fillRect(X*s,Y*s,s+1,s+1);}}
     else if(BUR_OUT.indexOf(t)>=0)ground(X,Y,t);}
+  // pavés posés après tous les fonds : un pavé peut déborder sur la case voisine sans être coupé ; rangs décalés d'un demi-pavé
+  {const n=2,cw=s/n,lw=Math.max(1,s*0.03);cob.forEach(([X,Y])=>{for(let j=0;j<n;j++)for(let i=0;i<n;i++){const gj=Y*n+j,gi=X*n+i,h=gHash(gi,gj,1),cx=(gi+0.5+(gj%2)*0.5)*cw+(gHash(gi,gj,4)-0.5)*cw*0.25,cy=(gj+0.5)*cw+(gHash(gi,gj,5)-0.5)*cw*0.2,rw=cw*(0.4+gHash(gi,gj,2)*0.12),rh=cw*(0.36+gHash(gi,gj,3)*0.1);
+      x.fillStyle=["#aaa292","#b6ae9d","#9e9686","#a69a84"][Math.floor(h*4)];x.beginPath();x.ellipse(cx,cy,rw,rh,h*3,0,6.283);x.fill();x.strokeStyle="rgba(50,42,32,.5)";x.lineWidth=lw;x.stroke();x.fillStyle="rgba(255,248,230,.16)";x.beginPath();x.ellipse(cx-rw*0.2,cy-rh*0.25,rw*0.55,rh*0.45,0,0,6.283);x.fill();}});
+    cob.forEach(([X,Y])=>{if(gHash(X>>1,Y>>1,9)<0.22){x.fillStyle="rgba(150,115,70,.3)";x.beginPath();x.ellipse((X+0.5)*s,(Y+0.5)*s,s*0.7,s*0.5,gHash(X,Y,3)*3,0,6.283);x.fill();}});}
   gFloor(x,g.G,s,g.floor);
   ((burP(g.bid).rugs||{})[String(g.e)]||[]).forEach(r=>gFurn(x,{k:"rug",x:r[0]+ox,y:r[1]+oy,w:r[2],h:r[3],c:r[4]},s));
   g.furn.forEach(o=>gFurnB(x,o,s));gWalls(x,g.G,s,g.e<0?"#5a4430":B.wall[0],g.e<0?"#7e6244":B.wall[1]);
