@@ -3803,13 +3803,13 @@ function ecDynamic(x,c,s,t,dt,A,st){const g=ecGeo(c),TT=Date.now()/1000,gone=new
   // Faune : tirée au hasard pour cette ouverture de la carte (selon le lieu, la saison et l'heure) ; les bêtes sauvages détalent loin quand les aventuriers approchent
   const FA=ecFauna(c,st);FA.beasts.forEach(b=>{if(gone.has(b.id))return;const P0=EC_BEAST[b.kind];let hx=b.hx,hy=b.hy;if(b.herd){const h=FA.herds[b.herd];const tauH=TT*0.02+h.p;hx=h.x+3*Math.sin(tauH)+b.ox*2.2;hy=h.y+2*Math.sin(tauH*1.3+1)+b.oy*2.2;}
     const tau=TT*P0.wander+1.6*Math.sin(TT*0.011+b.p);const bx=hx+P0.range*(Math.sin(tau+b.p)*0.7+Math.sin(tau*1.7+b.q)*0.3),by=hy+P0.range*0.75*(Math.sin(tau*1.3+b.q)*0.7+Math.sin(tau*2.1+b.p)*0.3);
-    const F=ecFlee(A,b.id,bx,by,pjs,dt,P0.reach,P0.force);const X=bx+F.x,Y=by+F.y,m=ecHead(A,b.id,X,Y,dt);A.ph=A.ph||{};A.ph[b.id]=(A.ph[b.id]||0)+dt*Math.min(16,m.v*P0.step);A.pos[b.id]={x:X,y:Y,k:b.kind,n:P0.n};
+    const F=ecFlee(A,b.id,bx,by,pjs,dt,P0.reach,P0.force);const X=bx+F.x,Y=by+F.y,m=ecHead(A,b.id,X,Y,dt);A.ph=A.ph||{};A.ph[b.id]=(A.ph[b.id]||0)+dt*Math.min(16,m.v*P0.step);A.pos[b.id]={x:X,y:Y,k:b.kind,n:P0.n,a:m.a,sp:{t:"b",kind:b.kind,c:b.c||null,p:b.p||0}};
     if(X<-2||Y<-2||X>g.W+2||Y>g.H+2)return;ecBeast(x,b,X,Y,s,TT,m.a,m.v,A.ph[b.id]);});
   // Passants : horaire de passage tiré au hasard pour cette ouverture (même chose sur la télé et chez le DM), selon le lieu, l'heure et la météo
   const P=FA.period,cur=Math.floor(TT/P);for(let i=cur-14;i<=cur;i++){const R=ecRng(ecSeed(c.seed+"|"+(c.vie||"")+"w"+i));if(R()>FA.walkP)continue;const id="w"+i;if(gone.has(id))continue;
     const kind=ecPick(R,FA.walkers),K=EC_WALK[kind],dir=R()<0.5?1:-1,v=K.v*(0.85+R()*0.3)/g.road.len,u=(dir>0?0:1)+dir*v*(TT-i*P);if(u<-0.05||u>1.05)continue;
-    const pp=ecAt(g.road,Math.max(0,Math.min(1,u))),a=pp[2]+(dir<0?Math.PI:0),off=0.75*dir,X=pp[0]-Math.sin(pp[2])*off,Y=pp[1]+Math.cos(pp[2])*off,ph=TT*8+i*9;A.pos[id]={x:X,y:Y,k:kind,n:K.n};
-    ecWalker(x,{kind,c:EC_COLORS[Math.floor(R()*EC_COLORS.length)],h:["#3a2c22","#6b4a2b","#c9a24a","#2b2b2b"][Math.floor(R()*4)],pack:R()<0.4,n:2+Math.floor(R()*3),night:FA.night},X,Y,a,s,ph);}
+    const pp=ecAt(g.road,Math.max(0,Math.min(1,u))),a=pp[2]+(dir<0?Math.PI:0),off=0.75*dir,X=pp[0]-Math.sin(pp[2])*off,Y=pp[1]+Math.cos(pp[2])*off,ph=TT*8+i*9;const wo={kind,c:EC_COLORS[Math.floor(R()*EC_COLORS.length)],h:["#3a2c22","#6b4a2b","#c9a24a","#2b2b2b"][Math.floor(R()*4)],pack:R()<0.4,n:2+Math.floor(R()*3),night:FA.night};A.pos[id]={x:X,y:Y,k:kind,n:K.n,a,sp:Object.assign({t:"w"},wo)};
+    ecWalker(x,wo,X,Y,a,s,ph);}
   // Cimes des arbres (vent ; couleurs de la saison)
   const wf=A.wind?3.2:1,TP=ecTreePal();g.trees.forEach(tr=>{const col=TP[tr.c],sw=(Math.sin(TT*0.9*wf+tr.ph)*0.05*wf+(A.wind?0.06:0))*tr.r,X=(tr.x+sw)*s,Y=tr.y*s,r=tr.r*s;
     if(col.bare){x.strokeStyle="#4a3a2c";x.lineWidth=Math.max(1,s*0.06);for(let k=0;k<6;k++){const a=tr.ph+k*1.05;x.beginPath();x.moveTo(X,Y);x.lineTo(X+Math.cos(a)*r,Y+Math.sin(a)*r);x.stroke();}x.fillStyle="#5a4838";x.beginPath();x.arc(X,Y,r*0.18,0,6.283);x.fill();if(col.snow){x.fillStyle="rgba(240,245,250,.85)";x.beginPath();x.arc(X-r*0.1,Y-r*0.12,r*0.22,0,6.283);x.fill();}return;}
@@ -3898,6 +3898,10 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),t
     if(k.k==="lum"){ecLightSprite(x,k,X,Y,s,t,st,tv);return;}
     if(tv){if(k.k==="pj"){x.strokeStyle=k.c||"#d8b45e";x.lineWidth=Math.max(2,s*0.06);x.beginPath();x.arc(X,Y,s*0.47,0,6.283);x.stroke();return;}if(!k.vis||!seen)return;}
 
+    if(k.sp){const TT=Date.now()/1000,big={charrette:1.8,cavalier:1.4,colporteur:1.6,vache:0.95,cerf:0.8,biche:0.75,sanglier:0.65,pelerins:0.8,patrouille:0.8}[k.sp.kind]||0.5,dim=!tv&&!k.vis;x.globalAlpha=dim?0.55:1;
+      if(k.sp.t==="w")ecWalker(x,k.sp,k.x,k.y,k.a||0,s,0,true);else ecBeast(x,k.sp,k.x,k.y,s,TT,k.a||0,0,0);
+      const rc=k.k==="en"?"#c0392b":k.k==="pj"?(k.c||"#d8b45e"):"#4a8ab8";if(r.sel===k.id){x.strokeStyle="#fff";x.lineWidth=Math.max(3,s*0.1);x.beginPath();x.arc(X,Y,s*big+s*0.05,0,6.283);x.stroke();}
+      x.strokeStyle=rc;x.lineWidth=Math.max(2,s*0.07);if(dim)x.setLineDash([6,4]);x.beginPath();x.arc(X,Y,s*big,0,6.283);x.stroke();x.setLineDash([]);x.globalAlpha=1;return;}
     x.globalAlpha=(!tv&&k.k!=="pj"&&!k.vis)?0.55:1;x.fillStyle="rgba(0,0,0,.35)";x.beginPath();x.arc(X+s*0.04,Y+s*0.06,s*0.42,0,6.283);x.fill();
     x.fillStyle=k.k==="pj"?(k.c||"#d8b45e"):k.k==="en"?"#9b2c22":"#3f6b8a";x.beginPath();x.arc(X,Y,s*0.4,0,6.283);x.fill();x.strokeStyle=r.sel===k.id?"#fff":"rgba(0,0,0,.6)";x.lineWidth=r.sel===k.id?3:1.5;if(!tv&&k.k!=="pj"&&!k.vis)x.setLineDash([4,3]);x.stroke();x.setLineDash([]);
     x.fillStyle=k.k==="pj"?"#1b140c":"#fff";x.font="700 "+Math.round(s*0.42)+"px serif";x.textAlign="center";x.textBaseline="middle";x.fillText(String(k.n||"?").slice(0,1).toUpperCase(),X,Y+1);x.globalAlpha=1;});
@@ -4021,7 +4025,7 @@ function ecAfter(){if(ui.office==="ecran")return;const cv=document.getElementByI
   const end=()=>{if(drag){const rs=drag.resel;drag=null;ptSave();ecPush(true);if(rs)render();}};cv.addEventListener("pointerup",end);cv.addEventListener("pointercancel",end);}
 // Chasse ou rencontre : un clic sur un animal ou un passant le transforme en jeton (il quitte la vie de fond, partout).
 function ecPromote(p){const r=ecRenderers["ec-dm"],cc=ecCard();if(!r||!r.A||!r.A.pos||!cc)return false;let best=null,bd=0.8;Object.keys(r.A.pos).forEach(id=>{const q=r.A.pos[id],d=Math.hypot(q.x-p[0],q.y-p[1]);if(d<bd){bd=d;best=id;}});if(!best)return false;
-  const q=r.A.pos[best],wild=["cerf","biche","sanglier","renard","lievre"].indexOf(q.k)>=0,tk={id:ptUid(),k:wild?"en":"pnj",n:q.n,x:Math.max(0.5,Math.min(cc.w-0.5,Math.floor(q.x)+0.5)),y:Math.max(0.5,Math.min(cc.h-0.5,Math.floor(q.y)+0.5)),vis:true,bete:q.k};
+  const q=r.A.pos[best],wild=["cerf","biche","sanglier","renard","lievre"].indexOf(q.k)>=0,tk={id:ptUid(),k:wild?"en":"pnj",n:q.n,x:Math.max(0.5,Math.min(cc.w-0.5,Math.floor(q.x)+0.5)),y:Math.max(0.5,Math.min(cc.h-0.5,Math.floor(q.y)+0.5)),vis:true,bete:q.k,sp:q.sp||null,a:q.a||0};
   cc.tokens=(cc.tokens||[]).concat([tk]);cc.gone=(cc.gone||[]).concat([best]);ui.ecSel=tk.id;ptLog("Écran : "+q.n+" devient un jeton"+(wild?" (chasse)":"")+".");ptSave();ecPush(true);render();return true;}
 function ecUpd(){const r=ecRenderers["ec-dm"];const st=ecState();if(r&&st){st.tvv=ecDoc&&ecDoc.tv;r.sel=ui.ecSel;ecSet(r,st);}ecPush();}
 async function ecAction(a,id,b,v,q){const E=ecP(),c=ecCard();
