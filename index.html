@@ -95,7 +95,7 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .ectv-ord{position:absolute;top:2vh;right:1.5vw;pointer-events:none}.ectv-ord h3{margin:0 0 4px;color:#d8b45e;font-family:var(--display);font-size:clamp(13px,1vw,20px);letter-spacing:.12em;text-transform:uppercase;text-shadow:0 1px 3px #000}
 .ectv-ord ol{margin:0;padding:8px 14px 8px 30px;background:rgba(14,22,26,.78);border-radius:8px;color:#e9dfc6;font-size:clamp(14px,1.2vw,24px)}.ectv-ord li{padding:2px 0}.ectv-ord li.cur{color:#ffd877;font-weight:700}.ectv-ord li.cur::marker{content:"▸ "}
 .ectv-met{position:absolute;top:2vh;left:1.5vw;max-width:34vw;padding:8px 14px;background:rgba(14,22,26,.78);border-radius:8px;color:#e9dfc6;pointer-events:none;font-size:clamp(12px,1vw,20px)}.ectv-met:empty{display:none}.ectv-met strong{display:block;color:#d8b45e;font-family:var(--display);letter-spacing:.06em}
-.ecdm .ecmet{background:#efe4c6;border-radius:6px;padding:8px 12px;margin:8px 0;font-size:14px}.ecdm .ecmet ul{margin:4px 0 0;padding-left:18px}.ecdm .ecmet p{margin:4px 0 0}
+.ecdm .ecday{font-family:var(--display);font-size:13px;letter-spacing:.08em;padding:0 4px}.ecdm .ecmet{background:#efe4c6;border-radius:6px;padding:8px 12px;margin:8px 0;font-size:14px}.ecdm .ecmet ul{margin:4px 0 0;padding-left:18px}.ecdm .ecmet p{margin:4px 0 0}
 .ectv-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#d8b45e;font-family:var(--display);font-size:22px;text-align:center;padding:20px;pointer-events:none}.ectv-msg:empty{display:none}
 .ecdm .ecbar,.ecdm .ecrow,.ecdm .ecsel{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:8px 0}.ecdm label{display:flex;flex-direction:column;font-size:13px}.ecdm label.ecck{flex-direction:row;align-items:center;gap:5px}.ecdm .ecsp{flex:1}
 .ecdm .eccanvas{background:#0e161a;border-radius:8px;overflow:hidden;line-height:0}.ecdm canvas#ec-dm{width:100%;display:block;touch-action:none;cursor:crosshair;max-height:72vh;object-fit:contain}
@@ -2912,6 +2912,11 @@ const EC_METEO={
 // Tables aléatoires (d20) par saison
 const EC_SAISON={printemps:{l:"Printemps",t:[["clair",7],["nuageux",4],["brume",3],["pluie",3],["orage",1],["vent",2]]},ete:{l:"Été",t:[["clair",9],["nuageux",3],["brume",1],["pluie",1],["orage",3],["vent",1],["chaleur",2]]},
   automne:{l:"Automne",t:[["clair",5],["nuageux",4],["brume",3],["brouillard",2],["pluie",3],["orage",1],["vent",2]]},hiver:{l:"Hiver",t:[["clair",5],["nuageux",4],["brume",2],["brouillard",1],["neige",5],["vent",1],["froid",2]]}};
+// Cohérence : météos possibles selon la saison, et évolution de proche en proche au fil de la journée.
+const EC_OK={printemps:["clair","nuageux","brume","pluie","orage","vent"],ete:["clair","nuageux","brume","pluie","orage","vent","chaleur"],automne:["clair","nuageux","brume","brouillard","pluie","orage","vent"],hiver:["clair","nuageux","brume","brouillard","neige","vent","froid"]};
+const EC_NEXT={clair:["nuageux","vent","brume","chaleur"],nuageux:["clair","pluie","brume","vent","neige"],brume:["clair","nuageux","brouillard"],brouillard:["brume"],pluie:["nuageux","orage","brume"],orage:["pluie","vent"],vent:["clair","nuageux","orage"],neige:["nuageux","froid","vent"],froid:["clair","neige"],chaleur:["clair","orage"]};
+function ecSaison(){return (monde&&EC_SAISON[monde.saison])?monde.saison:"printemps";}
+function ecMeteoStep(cur,saison){const ok=EC_OK[saison]||EC_OK.printemps;if(ok.indexOf(cur)<0)return ecMeteoRoll(saison).k;if(Math.random()<0.5)return cur;const n=(EC_NEXT[cur]||[]).filter(k=>ok.indexOf(k)>=0);return n.length?shopPick(n):cur;}
 function ecMeteoRoll(saison){const T=(EC_SAISON[saison]||EC_SAISON.printemps).t,r=ptD(20);let acc=0;for(const x of T){acc+=x[1];if(r<=acc)return {k:x[0],r};}return {k:"clair",r};}
 const EC_COLORS=["#d8b45e","#5fa8d3","#c75c5c","#7bc47f","#b48ad8","#e08a3c","#e7e2d3","#4fc1b6"];
 function ecRng(seed){let a=seed>>>0;return function(){a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
@@ -3087,8 +3092,9 @@ function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc
   const sel=(c.tokens||[]).find(k=>k.id===ui.ecSel);
   h+='<div class="ecbar"><span class="ectool">'+[["move","✋ Déplacer"],["reveal","☀ Révéler"],["hide","☁ Cacher"]].map(x=>'<button class="chip'+((ui.ecTool||"move")===x[0]?' on':'')+'" data-a="pt-ec-tool" data-v="'+x[0]+'">'+x[1]+'</button>').join("")+'</span>'+
     '<label for="ec-lum">Lumière<select id="ec-lum" data-ec="lum">'+Object.keys(EC_LUM).map(k=>'<option value="'+k+'"'+(k===(E.lum||"jour")?' selected':'')+'>'+EC_LUM[k].l+'</option>').join("")+'</select></label>'+
-    '<label for="ec-met">Météo<select id="ec-met" data-ec="meteo">'+Object.keys(EC_METEO).map(k=>'<option value="'+k+'"'+(k===(E.meteo||"clair")?' selected':'')+'>'+EC_METEO[k].i+' '+EC_METEO[k].l+'</option>').join("")+'</select></label>'+
-    '<label for="ec-sai">Saison<select id="ec-sai" data-ec="saison">'+Object.keys(EC_SAISON).map(k=>'<option value="'+k+'"'+(k===(E.saison||"printemps")?' selected':'')+'>'+EC_SAISON[k].l+'</option>').join("")+'</select></label><button class="mini" data-a="pt-ec-meteo">🎲 Météo aléatoire</button>'+
+    '<label for="ec-sai">Saison (toute la campagne)<select id="ec-sai" data-ec="saison">'+Object.keys(EC_SAISON).map(k=>'<option value="'+k+'"'+(k===ecSaison()?' selected':'')+'>'+EC_SAISON[k].l+'</option>').join("")+'</select></label>'+
+    '<label for="ec-met">Météo (toute la quête)<select id="ec-met" data-ec="meteo">'+EC_OK[ecSaison()].map(k=>'<option value="'+k+'"'+(k===(E.meteo||"clair")?' selected':'')+'>'+EC_METEO[k].i+' '+EC_METEO[k].l+'</option>').join("")+'</select></label>'+
+    '<span class="ecday">Jour '+(E.jour||1)+'</span><button class="mini" data-a="pt-ec-hours">⏩ Quelques heures plus tard</button><button class="mini" data-a="pt-ec-meteo">🎲 Nouveau jour</button>'+
     '<label class="ecck"><input type="checkbox" data-ec="fog"'+(E.fog!==false?' checked':'')+'> Brouillard</label><label class="ecck"><input type="checkbox" data-ec="grid"'+(E.grid?' checked':'')+'> Grille</label></div>';
   {const M=EC_METEO[E.meteo||"clair"];if(M.fx.length||ui.ecMetRoll)h+='<div class="ecmet"><strong>'+M.i+' '+esc(M.l)+'</strong>'+(ui.ecMetRoll?' <span class="desc">(d20 = '+ui.ecMetRoll+')</span>':'')+(M.fx.length?'<ul>'+M.fx.map(f=>'<li>'+esc(f)+'</li>').join("")+'</ul>':'<span class="desc"> : aucun effet en combat.</span>')+(M.vis<999?'<p class="desc">Vision limitée à '+M.vis+' cases ('+(M.vis*5)+' pieds) sur l\'écran.</p>':'')+'</div>';}
   h+='<div class="eccanvas'+(ui.ecBig?' big':'')+'">'+(ui.ecBig?'<div class="ecbigbar">'+[["move","✋ Déplacer"],["reveal","☀ Révéler"],["hide","☁ Cacher"]].map(x=>'<button class="chip'+((ui.ecTool||"move")===x[0]?' on':'')+'" data-a="pt-ec-tool" data-v="'+x[0]+'">'+x[1]+'</button>').join("")+'<button class="btn gold sm" data-a="pt-ec-big">Réduire ✕</button></div>':'')+'<canvas id="ec-dm" aria-label="Carte DM : glisse les jetons"></canvas></div>'+(ui.ecBig?'':'<p class="ecbigp"><button class="mini" data-a="pt-ec-big">⛶ Agrandir la carte</button></p>');
@@ -3120,7 +3126,8 @@ async function ecAction(a,id,b,v,q){const E=ecP(),c=ecCard();
     const k={id:ptUid(),nom,type,seed:ptUid(),w,h,url,tokens:[],vu:"",cam:{x:0,y:0}};E.cartes=(E.cartes||[]).concat([k]);E.active=k.id;ecPush(true);return true;}
   if(a==="pt-ec-pick"){E.active=id;ui.ecSel=null;ecPush(true);return true;}
   if(a==="pt-ec-tool"){ui.ecTool=v;render();return false;}
-  if(a==="pt-ec-meteo"){const m=ecMeteoRoll(E.saison||"printemps");E.meteo=m.k;ui.ecMetRoll=m.r;ptLog("Météo : "+EC_METEO[m.k].l+" (d20 = "+m.r+").");ecPush(true);return true;}
+  if(a==="pt-ec-meteo"){const m=ecMeteoRoll(ecSaison());E.meteo=m.k;E.jour=(E.jour||1)+1;ui.ecMetRoll=m.r;ptLog("Jour "+E.jour+" : "+EC_METEO[m.k].l+" (d20 = "+m.r+").");ecPush(true);return true;}
+  if(a==="pt-ec-hours"){const k=ecMeteoStep(E.meteo||"clair",ecSaison()),was=E.meteo||"clair";E.meteo=k;ui.ecMetRoll=null;ptLog(k===was?"Quelques heures plus tard : toujours "+EC_METEO[k].l.toLowerCase()+".":"Quelques heures plus tard : "+EC_METEO[was].l.toLowerCase()+" → "+EC_METEO[k].l.toLowerCase()+".");ecPush(true);return true;}
   if(a==="pt-ec-big"){ui.ecBig=!ui.ecBig;render();return false;}
   if(a==="pt-ec-k"||a==="pt-ec-cal"||a==="pt-ec-calshow"){const cal=Object.assign({k:1},(ecDoc&&ecDoc.calib)||{});const d=+(document.getElementById("ec-diag")||{}).value;if(d>5)cal.diag=d;if(a==="pt-ec-k")cal.k=Math.max(0.5,Math.min(1.5,Math.round(((+cal.k||1)+(+v))*100)/100));if(a==="pt-ec-calshow")cal.show=!cal.show;
     ecDoc=Object.assign({},ecDoc||{},{calib:cal});await setDoc(doc(db,"prive","ecran"),{calib:cal},{merge:true}).catch(()=>{});try{ecBC&&ecBC.postMessage({calib:cal});}catch(e){}render();return false;}
@@ -3139,7 +3146,7 @@ async function ecAction(a,id,b,v,q){const E=ecP(),c=ecCard();
   if(a==="pt-ec-next"){E.ordre.idx=(E.ordre.idx||0)+1;ecPush(true);return true;}
   return false;}
 function ecChange(el){const E=ecP(),c=ecCard(),k=el.getAttribute("data-ec"),sel=c&&(c.tokens||[]).find(t=>t.id===ui.ecSel);
-  if(k==="meteo"){E.meteo=el.value;ui.ecMetRoll=null;ptSave();ecPush(true);render();return;}if(k==="saison"){E.saison=el.value;ptSave();render();return;}
+  if(k==="meteo"){E.meteo=el.value;ui.ecMetRoll=null;ptSave();ecPush(true);render();return;}if(k==="saison"){const sa=el.value;monde=Object.assign({},monde||{},{saison:sa});setDoc(doc(db,"prive","monde"),{saison:sa},{merge:true}).catch(e=>console.error(e));if((EC_OK[sa]||[]).indexOf(E.meteo||"clair")<0){E.meteo=ecMeteoRoll(sa).k;ptSave();ecPush(true);}render();return;}
   if(k==="lum")E.lum=el.value;else if(k==="fog")E.fog=el.checked;else if(k==="grid")E.grid=el.checked;else if(k==="info")E.info=el.value.slice(0,400);
   else if(k==="omode"){E.ordre=Object.assign({mode:"aucun",parole:"",idx:0},E.ordre||{},{mode:el.value});ptSave();ecPush(true);render();return;}
   else if(k==="parole"){E.ordre.parole=el.value.slice(0,400);E.ordre.idx=0;}
