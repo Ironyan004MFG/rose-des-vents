@@ -99,7 +99,7 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .gssell,.gsadd form{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:14px 0;max-width:760px}.gssell h3{width:100%;margin:0}.gssell .desc{width:100%;margin:0}.gssell label,.gsadd label{display:flex;flex-direction:column;font-size:13px}.gssell .toast{width:100%}.gsadd{margin-top:12px}
 .shopgen{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-bottom:8px}.shopgen label{display:flex;flex-direction:column;font-size:13px}
 details.shop{border:1px solid var(--parch-3,#d9c9a0);border-radius:8px;padding:8px 12px;margin:10px 0;background:rgba(255,255,255,.25)}details.shop>summary{cursor:pointer;font-size:16px}
-.shopwho{margin:6px 0;font-size:14.5px}.shopcash{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:14px;padding:6px 10px;background:#efe4c6;border-radius:6px}
+.shopcash .coins,.shopoffer .coins{font-size:13px;color:var(--ink-soft)}.shopwho{margin:6px 0;font-size:14.5px}.shopcash{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:14px;padding:6px 10px;background:#efe4c6;border-radius:6px}
 .shophaggle{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0;font-size:13.5px}.shophaggle .chip{font-size:12px;padding:3px 9px;color:var(--ink,#2a2118);border-color:var(--ink-soft,#6b5a44)}.shophaggle .chip.on{background:var(--ink,#2a2118);color:#f6ecd0}
 .shopinv{list-style:none;margin:6px 0;padding:0}.shopinv li{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,.08);font-size:14.5px}.shopinv .sn{flex:1;min-width:0}.shopinv .sp{white-space:nowrap;font-variant-numeric:tabular-nums}.shopinv .sq{width:56px;text-align:right;font-size:13px;color:var(--ink-soft)}.shopinv li.out .sn,.shopinv li.out .sp{opacity:.45;text-decoration:line-through}
 .rar{font-size:11px;font-family:var(--display);letter-spacing:.06em;padding:1px 6px;border-radius:3px;white-space:nowrap}.rar.r-classique{background:#e8e2d4}.rar.r-inhabituel{background:#cfe8c9;color:#1f4d18}.rar.r-rare{background:#cbdcf2;color:#16365e}.rar.r-epique{background:#e2cdf0;color:#4b1d66}.rar.r-legendaire{background:#f6d7b0;color:#6b3a06}
@@ -2702,7 +2702,7 @@ function shopPick(a){return a[Math.floor(Math.random()*a.length)];}
 function shopRnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
 function shopName(type,lieu,who){
   if(type==="temple")return shopPick(["Chapelle","Sanctuaire","Hospice","Autel"])+" de "+shopPick(SHOP_DEITIES);
-  if(lieu==="ambulant")return shopPick(["La Roulotte de ","Le Chariot de ","La Carriole de ","L'Étal de "])+who.split(" ")[0];
+  if(lieu==="ambulant"){const f=who.split(" ")[0];return shopPick(["La Roulotte ","Le Chariot ","La Carriole ","L'Étal "])+(/^[AEIOUYÉÈÊaeiouyéèê]/.test(f)?"d'":"de ")+f;}
   if(lieu==="rural"&&Math.random()<0.5)return "Chez "+who.split(" ")[0]+", "+SHOP_TAIL[type];
   const n=shopPick(SHOP_NOUNS[type]||SHOP_NOUNS.general),a=shopPick(SHOP_ADJ);
   if((lieu==="cite"||lieu==="ville")&&Math.random()<0.25)return "Maison "+who.split(" ").slice(1).join(" ")+", "+SHOP_TAIL[type];
@@ -2739,8 +2739,19 @@ function shopGen(type,lieu,bid){let findRoll=0;
   inv.sort((a,b)=>(a.trouvaille?1:0)-(b.trouvaille?1:0)||(a.rar?1:0)-(b.rar?1:0)||a.prix-b.prix);
   findRoll=findRoll||0;
   const fonds=shopRound(shopRnd(L.f[0],L.f[1])*(type==="arcane"?1.5:type==="provisions"?0.5:1));
-  return {id:ptUid(),nom:shopName(type,lieu,who),type,lieu,region:bid||"",marchand:who,espece:shopPick(SHOP_SPECIES),trait:shopPick(SHOP_TRAITS),fonds,fonds0:fonds,cap:L.cap,mod:0,inv,log:[],ouvert:true,findRoll,findMax:Math.round(shopFindP(lieu)*100)};
+  return {id:ptUid(),nom:shopName(type,lieu,who),type,lieu,region:bid||"",marchand:who,espece:shopPick(SHOP_SPECIES),trait:shopPick(SHOP_TRAITS),fonds,fonds0:fonds,cap:L.cap,mod:0,inv,log:[],ouvert:true,mix:shopMixGen(lieu),findRoll,findMax:Math.round(shopFindP(lieu)*100)};
 }
+// Composition de la caisse : part de la valeur en pp / po / pa / pc selon le lieu (comme une caisse : surtout de la petite monnaie courante).
+const SHOP_MIX={ambulant:{pp:0,po:0.5,pa:0.38,pc:0.12},rural:{pp:0,po:0.62,pa:0.3,pc:0.08},ville:{pp:0.08,po:0.7,pa:0.18,pc:0.04},cite:{pp:0.28,po:0.6,pa:0.1,pc:0.02}};
+// Plafonds de petite monnaie (nombre de pièces) : une caisse n'a jamais 30 000 pièces de cuivre.
+const SHOP_SMALL={ambulant:{pc:[80,200],pa:[60,150]},rural:{pc:[100,300],pa:[100,250]},ville:{pc:[150,400],pa:[200,500]},cite:{pc:[200,500],pa:[300,800]}};
+function shopMixGen(lieu){const b=SHOP_MIX[lieu]||SHOP_MIX.ville,m={};let t=0;["pp","po","pa","pc"].forEach(k=>{m[k]=b[k]?b[k]*(0.75+Math.random()*0.5):0;t+=m[k];});["pp","po","pa","pc"].forEach(k=>{m[k]=m[k]/t;});
+  const sm=SHOP_SMALL[lieu]||SHOP_SMALL.ville;m.cpc=shopRnd(sm.pc[0],sm.pc[1]);m.cpa=shopRnd(sm.pa[0],sm.pa[1]);return m;}
+// Répartit un montant (po) en pièces selon la composition ; le reste en po, pa puis pc.
+function coinsOf(amount,mix){const V={pp:10,po:1,pa:0.1,pc:0.01};let c=Math.round((+amount||0)*100);const r={pp:0,po:0,pa:0,pc:0},m=mix||SHOP_MIX.ville;
+  ["pp","po","pa","pc"].forEach(k=>{const n=Math.floor(c*(m[k]||0)/(V[k]*100));r[k]=n;});r.pc=Math.min(r.pc,m.cpc||300);r.pa=Math.min(r.pa,m.cpa||300);let used=r.pp*1000+r.po*100+r.pa*10+r.pc;c-=used;
+  r.po+=Math.floor(c/100);c%=100;r.pa+=Math.floor(c/10);r.pc+=c%10;return r;}
+function coinsTxt(r){return [["pp","pp"],["po","po"],["pa","pa"],["pc","pc"]].filter(x=>r[x[0]]).map(x=>r[x[0]].toLocaleString("fr-CA")+" "+x[1]).join(", ")||"rien";}
 function shopRate(S){return S.type==="fourgue"?0.4:0.5;}
 function shopPrice(S,it){return shopRound(it.prix*(1+(S.mod||0)));}
 function shopTab(q){const P=ui.pt,B=P.boutiques||[],bid=q.bureau,R=SHOP_REGION[bid];
@@ -2758,7 +2769,7 @@ function shopCard(S){const L=SHOP_LIEUX[S.lieu]||{},T=SHOP_TYPES[S.type]||{},o=u
   let h='<details class="shop"'+(S.ouvert?' open':'')+' data-shopid="'+esc(S.id)+'"><summary><strong>'+esc(S.nom)+'</strong> <span class="desc">'+esc(T.l||"")+' · '+esc(L.l||"")+'</span></summary>';
   if(S.findRoll)h+='<p class="shopfind">🎲 Trouvaille : d100 = <strong>'+S.findRoll+'</strong> (≤ '+S.findMax+' requis) · '+(S.inv.some(x=>x.trouvaille)?'<strong>un objet hors du commun !</strong>':'rien d\'extraordinaire cette fois')+'</p>';
   h+='<p class="shopwho"><strong>'+esc(S.marchand)+'</strong> ('+esc(S.espece)+') : '+esc(S.trait)+'</p>';
-  h+='<div class="shopcash"><span>Caisse : <strong>'+fmtPo(S.fonds,S.lieu==="cite")+'</strong></span><span>Rachète jusqu\'à <strong>'+fmtPo(Math.min(S.cap,S.fonds),S.lieu==="cite")+'</strong> par objet, à '+Math.round(shopRate(S)*100)+' % de sa valeur</span></div>';
+  h+='<div class="shopcash"><span>Caisse : <strong>'+fmtPo(S.fonds)+'</strong> <span class="coins">('+coinsTxt(coinsOf(S.fonds,S.mix||SHOP_MIX[S.lieu]))+')</span></span><span>Rachète jusqu\'à <strong>'+fmtPo(Math.min(S.cap,S.fonds),S.lieu==="cite")+'</strong> par objet, à '+Math.round(shopRate(S)*100)+' % de sa valeur</span></div>';
   h+='<div class="shophaggle"><span>Marchandage (Persuasion DD 15) :</span>'+[["-0.1","Réussi −10 %"],["0","Prix normal"],["0.1","Vexé +10 %"]].map(x=>'<button class="chip'+(String(S.mod||0)===x[0]?' on':'')+'" data-a="pt-shop-mod" data-id="'+esc(S.id)+'" data-v="'+x[0]+'" aria-pressed="'+(String(S.mod||0)===x[0])+'">'+x[1]+'</button>').join("")+'</div>';
   h+='<ul class="shopinv">'+S.inv.map((it,i)=>'<li class="'+(it.stock===0?'out':'')+(it.trouvaille?' find':'')+'"><span class="sn">'+(it.trouvaille?'<span class="findtag">✦ Trouvaille</span> ':'')+esc(it.nom)+(it.rar&&RAR[it.rar]?' <span class="rar r-'+it.rar+'">'+esc(RAR[it.rar][1])+'</span>':'')+(it.trouvaille?'<span class="findwhy">'+esc(it.trouvaille)+'</span>':'')+'</span><span class="sp">'+fmtPo(shopPrice(S,it),S.lieu==="cite")+'</span><span class="sq">'+(it.svc?'service':it.stock===0?'épuisé':'×'+it.stock)+'</span><button class="mini" data-a="pt-shop-buy" data-id="'+esc(S.id)+'" data-v="'+i+'"'+(it.stock===0?' disabled':'')+' title="Un joueur achète">Vendu</button></li>').join("")+'</ul>';
   h+='<div class="shopsell"><h4>Le groupe vend un objet</h4><label for="sv-n-'+esc(S.id)+'">Objet<input id="sv-n-'+esc(S.id)+'" maxlength="80" value="'+esc(o?o.nom:"")+'"></label><label for="sv-v-'+esc(S.id)+'">Valeur (po)<input id="sv-v-'+esc(S.id)+'" type="number" min="0" step="0.01" value="'+(o?o.val:"")+'"></label><button class="btn ghost sm" data-a="pt-shop-offer" data-id="'+esc(S.id)+'">Demander une offre</button>';
@@ -2779,8 +2790,9 @@ async function shopAction(a,id,b,v,q){const P=ui.pt;P.boutiques=P.boutiques||[];
     if(!val){ui.shopSell={id,nom,val,offre:0,txt:"Indique la valeur de l'objet."};return false;}
     if(juste>S.cap&&juste>S.fonds)offre=Math.min(S.cap,S.fonds);else if(juste>S.cap)offre=S.cap;else if(juste>S.fonds)offre=S.fonds;
     offre=shopRound(offre);
+    const pay=offre>0?' <span class="coins">Payé en '+coinsTxt(coinsOf(offre,S.mix||SHOP_MIX[S.lieu]))+'.</span>':'';
     txt=offre<=0?"« Désolé, je n'ai plus un sou en caisse. »":offre<juste?"Prix juste : "+fmtPo(juste,S.lieu==="cite")+". « Je n'ai pas cette somme. Je peux vous en donner <strong>"+fmtPo(offre,S.lieu==="cite")+"</strong>, pas un cuivre de plus. »":"« Je vous en donne <strong>"+fmtPo(offre,S.lieu==="cite")+"</strong>. »";
-    ui.shopSell={id,nom,val,offre,txt};return false;}
+    ui.shopSell={id,nom,val,offre,txt:txt+pay};return false;}
   if(a==="pt-shop-nooffer"){ui.shopSell=null;return false;}
   if(a==="pt-shop-sold"){const o=ui.shopSell;if(!o||o.id!==id||!(o.offre>0))return false;S.fonds=shopRound(S.fonds-o.offre);S.inv.push({nom:o.nom,prix:shopRound(o.val),base:o.val,stock:1,rachat:true});
     S.log.push("Acheté au groupe : "+o.nom+" pour "+fmtPo(o.offre,S.lieu==="cite"));ptLog(S.nom+" : achète "+o.nom+" au groupe ("+fmtPo(o.offre,S.lieu==="cite")+").");ui.shopSell=null;return true;}
