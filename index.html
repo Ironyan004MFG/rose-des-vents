@@ -97,6 +97,7 @@ details.shop{border:1px solid var(--parch-3,#d9c9a0);border-radius:8px;padding:8
 .shopinv{list-style:none;margin:6px 0;padding:0}.shopinv li{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,.08);font-size:14.5px}.shopinv .sn{flex:1;min-width:0}.shopinv .sp{white-space:nowrap;font-variant-numeric:tabular-nums}.shopinv .sq{width:56px;text-align:right;font-size:13px;color:var(--ink-soft)}.shopinv li.out .sn,.shopinv li.out .sp{opacity:.45;text-decoration:line-through}
 .rar{font-size:11px;font-family:var(--display);letter-spacing:.06em;padding:1px 6px;border-radius:3px;white-space:nowrap}.rar.r-classique{background:#e8e2d4}.rar.r-inhabituel{background:#cfe8c9;color:#1f4d18}.rar.r-rare{background:#cbdcf2;color:#16365e}.rar.r-epique{background:#e2cdf0;color:#4b1d66}.rar.r-legendaire{background:#f6d7b0;color:#6b3a06}
 .shopsell{margin-top:8px;padding-top:6px;border-top:1px dashed var(--parch-3,#d9c9a0);display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}.shopsell h4{width:100%;margin:0;font-size:14px}.shopsell label{display:flex;flex-direction:column;font-size:13px}.shopsell input{max-width:180px}.shopoffer{width:100%;margin:4px 0;font-size:14.5px}
+.shopinv li.find{background:linear-gradient(90deg,rgba(216,180,94,.22),transparent);border-radius:4px;padding-left:6px}.shopfind{font-size:13.5px;margin:4px 0;color:var(--ink-soft)}.findtag{font-family:var(--display);font-size:11px;letter-spacing:.08em;color:#8a5a12;white-space:nowrap}.findwhy{display:block;font-size:13px;font-style:italic;color:var(--ink-soft)}
 .shoplog ul{font-size:13.5px;margin:4px 0;padding-left:18px}.shopacts{font-size:13.5px;margin:8px 0 2px}.shophouse{margin-top:14px;font-size:14px}.shophouse textarea{width:100%;font-family:monospace;font-size:13px}
 .ptxpgain{margin:4px 0 0;font-size:14px;color:var(--ink-soft)}
 .gmerit{font-size:13px;color:var(--muted,#8a7d6a);margin:2px 0 0}
@@ -2678,6 +2679,15 @@ const SHOP_NOUNS={general:[["Le Comptoir","m"],["Le Bazar","m"],["La Besace","f"
   sellier:[["Le Fer à cheval","m"],["L'Étrier","m"],["La Selle","f"],["La Bride","f"]],provisions:[["La Chope","f"],["La Marmite","f"],["Le Tonneau","m"],["La Broche","f"],["Le Chaudron","m"]],
   fourgue:[["La Cave","f"],["Le Rat","m"],["L'Arrière-boutique","f"],["La Taupe","f"]]};
 const SHOP_TAIL={general:"bazar",forge:"forgeron",apo:"herbes et onguents",arcane:"curiosités arcaniques",sellier:"sellier",provisions:"provisions",fourgue:"pas de questions"};
+// Trouvaille : chance qu'un marchand possède un objet magique hors de l'ordinaire, et la rareté qu'il peut avoir.
+// Chance de base × multiplicateur du lieu : ambulant ×1, village ×2, ville ×5, cité ×10.
+const SHOP_FIND_BASE=0.05;
+const SHOP_FIND={ambulant:{m:1,r:[["inhabituel",0.8],["rare",0.2]]},rural:{m:2,r:[["inhabituel",0.8],["rare",0.2]]},ville:{m:5,r:[["inhabituel",0.6],["rare",0.4]]},cite:{m:10,r:[["inhabituel",0.4],["rare",0.6]]}};
+function shopFindP(lieu){const F=SHOP_FIND[lieu];return F?Math.min(1,SHOP_FIND_BASE*F.m):0;}
+const SHOP_FIND_WHY=["Acheté à un aventurier ruiné qui avait besoin d'argent vite.","Trouvé dans les affaires d'un client mort sans héritier.","Gagné aux dés contre un mercenaire ivre.",
+  "Repêché dans une épave sur la côte.","Héritage d'un oncle aventurier ; le marchand ignore ce qu'il fait vraiment.","Échangé contre un cheval… et le marchand pense avoir fait une mauvaise affaire.",
+  "Pièce d'exhibition accrochée au mur : « Pas à vendre. » (Sauf pour le bon prix.)","Saisi en paiement d'une dette.","Déterré par un fermier en labourant son champ.","Vendu par un elfe pressé qui ne voulait pas dire d'où il venait.",
+  "Le marchand jure qu'il est maudit et veut s'en débarrasser (il ne l'est pas… probablement).","Rapporté d'une ruine par son propre fils, qui n'est jamais revenu de la suivante."];
 function shopPick(a){return a[Math.floor(Math.random()*a.length)];}
 function shopRnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
 function shopName(type,lieu,who){
@@ -2694,7 +2704,7 @@ function fmtPo(p){const c=Math.round((+p||0)*100);if(c>=10000)return Math.round(
 function shopRound(p){return p>=20?Math.round(p):p>=1?Math.round(p*10)/10:Math.max(0.01,Math.round(p*100)/100);}
 // Objets maison (Espace DM) : « Nom | prix po | types | rareté | lieu min (0, 1, 2) »
 function shopHouse(){const t=(shopCfg&&shopCfg.maison)||"";return t.split("\n").map(l=>l.split("|").map(x=>x.trim())).filter(x=>x[0]&&!isNaN(parseFloat(x[1]))).map(x=>({nom:x[0],prix:parseFloat(x[1]),types:(x[2]||"general").toLowerCase(),rar:rarOf(x[3]),lv:Math.max(0,Math.min(2,parseInt(x[4])||((rarOf(x[3])==="rare"||rarOf(x[3])==="epique")?2:rarOf(x[3])==="inhabituel"?1:0)))}));}
-function shopGen(type,lieu,bid){
+function shopGen(type,lieu,bid){let findRoll=0;
   const L=SHOP_LIEUX[lieu],R=SHOP_REGION[bid]||{},who=shopPick(SHOP_FIRST)+" "+shopPick(SHOP_LAST);
   const vary=p=>{let m=1+L.mk+(Math.random()*0.2-0.1);if(type==="forge"&&R.forge)m+=R.forge;if(type==="fourgue")m-=0.1;return shopRound(p*m);};
   const qty=(it)=>it[4]==="s"?null:it[4]==="c"?shopRnd(3,12):it[1]>=200?1:shopRnd(1,3);
@@ -2712,9 +2722,14 @@ function shopGen(type,lieu,bid){
   const mp=(rar)=>SHOP_MAGIC.filter(m=>m[2]===rar&&m[3].split(" ").indexOf(type)>=0&&!inv.some(x=>x.nom===m[0])).sort(()=>Math.random()-0.5);
   const addM=(rar,k,chance)=>{const l=mp(rar);for(let i=0;i<k&&l.length;i++){if(chance!=null&&Math.random()>chance)continue;const m=l.pop();inv.push({nom:m[0],prix:vary(m[1]),base:m[1],stock:/^(Potion|Parchemin|Huile|Poussière|Élixir)/.test(m[0])?shopRnd(1,3):1,rar:m[2]});}};
   addM("classique",mn[0],lieu==="ambulant"?0.35:null);addM("inhabituel",mn[1],lieu==="ambulant"?0.25:null);if(mn[2])addM("rare",1,mn[2]);
-  inv.sort((a,b)=>(a.rar?1:0)-(b.rar?1:0)||a.prix-b.prix);
+  // Trouvaille : un objet magique inattendu, avec son histoire.
+  {const F=SHOP_FIND[lieu];findRoll=ptD(100);if(F&&findRoll<=Math.round(shopFindP(lieu)*100)){let x=Math.random(),rar=F.r[F.r.length-1][0];for(const r of F.r){if(x<r[1]){rar=r[0];break;}x-=r[1];}
+    const l=SHOP_MAGIC.filter(m=>m[2]===rar&&!inv.some(y=>y.nom===m[0]));if(l.length){const m=shopPick(l),why=shopPick(SHOP_FIND_WHY),expo=/exhibition/.test(why);
+      inv.push({nom:m[0],prix:shopRound(vary(m[1])*(expo?1.25:1)),base:m[1],stock:1,rar:m[2],trouvaille:why});}}}
+  inv.sort((a,b)=>(a.trouvaille?1:0)-(b.trouvaille?1:0)||(a.rar?1:0)-(b.rar?1:0)||a.prix-b.prix);
+  findRoll=findRoll||0;
   const fonds=shopRound(shopRnd(L.f[0],L.f[1])*(type==="arcane"?1.5:type==="provisions"?0.5:1));
-  return {id:ptUid(),nom:shopName(type,lieu,who),type,lieu,region:bid||"",marchand:who,espece:shopPick(SHOP_SPECIES),trait:shopPick(SHOP_TRAITS),fonds,fonds0:fonds,cap:L.cap,mod:0,inv,log:[],ouvert:true};
+  return {id:ptUid(),nom:shopName(type,lieu,who),type,lieu,region:bid||"",marchand:who,espece:shopPick(SHOP_SPECIES),trait:shopPick(SHOP_TRAITS),fonds,fonds0:fonds,cap:L.cap,mod:0,inv,log:[],ouvert:true,findRoll,findMax:Math.round(shopFindP(lieu)*100)};
 }
 function shopRate(S){return S.type==="fourgue"?0.4:0.5;}
 function shopPrice(S,it){return shopRound(it.prix*(1+(S.mod||0)));}
@@ -2723,6 +2738,7 @@ function shopTab(q){const P=ui.pt,B=P.boutiques||[],bid=q.bureau,R=SHOP_REGION[b
   let h='<div class="shopgen"><label for="sh-lieu">Lieu<select id="sh-lieu" data-shop="lieu">'+Object.keys(SHOP_LIEUX).map(k=>'<option value="'+k+'"'+(k===lieu?' selected':'')+'>'+esc(SHOP_LIEUX[k].l)+'</option>').join("")+'</select></label>'+
     '<label for="sh-type">Boutique<select id="sh-type" data-shop="type">'+types.map(k=>'<option value="'+k+'"'+(k===type?' selected':'')+'>'+esc(SHOP_TYPES[k].l)+'</option>').join("")+'</select></label>'+
     '<button class="btn gold sm" data-a="pt-shop-gen" data-v="'+type+'">🎲 Générer</button></div>';
+  h+='<p class="desc">Chance d\'une trouvaille magique ('+esc(SHOP_LIEUX[lieu].l.toLowerCase())+') : <strong>'+Math.round(shopFindP(lieu)*100)+' %</strong> (base '+Math.round(SHOP_FIND_BASE*100)+' % × '+SHOP_FIND[lieu].m+').</p>';
   if(R)h+='<p class="desc">'+esc((office(bid)||{}).nom||"")+' : '+esc(R.note)+'.</p>';
   if(!B.length)h+='<p class="desc">Aucune boutique pour cette quête. Elles n\'existent que le temps de la quête.</p>';
   h+=B.slice().reverse().map(S=>shopCard(S)).join("");
@@ -2730,10 +2746,11 @@ function shopTab(q){const P=ui.pt,B=P.boutiques||[],bid=q.bureau,R=SHOP_REGION[b
   return h;}
 function shopCard(S){const L=SHOP_LIEUX[S.lieu]||{},T=SHOP_TYPES[S.type]||{},o=ui.shopSell&&ui.shopSell.id===S.id?ui.shopSell:null;
   let h='<details class="shop"'+(S.ouvert?' open':'')+' data-shopid="'+esc(S.id)+'"><summary><strong>'+esc(S.nom)+'</strong> <span class="desc">'+esc(T.l||"")+' · '+esc(L.l||"")+'</span></summary>';
+  if(S.findRoll)h+='<p class="shopfind">🎲 Trouvaille : d100 = <strong>'+S.findRoll+'</strong> (≤ '+S.findMax+' requis) · '+(S.inv.some(x=>x.trouvaille)?'<strong>un objet hors du commun !</strong>':'rien d\'extraordinaire cette fois')+'</p>';
   h+='<p class="shopwho"><strong>'+esc(S.marchand)+'</strong> ('+esc(S.espece)+') : '+esc(S.trait)+'</p>';
   h+='<div class="shopcash"><span>Caisse : <strong>'+fmtPo(S.fonds)+'</strong></span><span>Rachète jusqu\'à <strong>'+fmtPo(Math.min(S.cap,S.fonds))+'</strong> par objet, à '+Math.round(shopRate(S)*100)+' % de sa valeur</span></div>';
   h+='<div class="shophaggle"><span>Marchandage (Persuasion DD 15) :</span>'+[["-0.1","Réussi −10 %"],["0","Prix normal"],["0.1","Vexé +10 %"]].map(x=>'<button class="chip'+(String(S.mod||0)===x[0]?' on':'')+'" data-a="pt-shop-mod" data-id="'+esc(S.id)+'" data-v="'+x[0]+'" aria-pressed="'+(String(S.mod||0)===x[0])+'">'+x[1]+'</button>').join("")+'</div>';
-  h+='<ul class="shopinv">'+S.inv.map((it,i)=>'<li class="'+(it.stock===0?'out':'')+'"><span class="sn">'+esc(it.nom)+(it.rar&&RAR[it.rar]?' <span class="rar r-'+it.rar+'">'+esc(RAR[it.rar][1])+'</span>':'')+'</span><span class="sp">'+fmtPo(shopPrice(S,it))+'</span><span class="sq">'+(it.svc?'service':it.stock===0?'épuisé':'×'+it.stock)+'</span><button class="mini" data-a="pt-shop-buy" data-id="'+esc(S.id)+'" data-v="'+i+'"'+(it.stock===0?' disabled':'')+' title="Un joueur achète">Vendu</button></li>').join("")+'</ul>';
+  h+='<ul class="shopinv">'+S.inv.map((it,i)=>'<li class="'+(it.stock===0?'out':'')+(it.trouvaille?' find':'')+'"><span class="sn">'+(it.trouvaille?'<span class="findtag">✦ Trouvaille</span> ':'')+esc(it.nom)+(it.rar&&RAR[it.rar]?' <span class="rar r-'+it.rar+'">'+esc(RAR[it.rar][1])+'</span>':'')+(it.trouvaille?'<span class="findwhy">'+esc(it.trouvaille)+'</span>':'')+'</span><span class="sp">'+fmtPo(shopPrice(S,it))+'</span><span class="sq">'+(it.svc?'service':it.stock===0?'épuisé':'×'+it.stock)+'</span><button class="mini" data-a="pt-shop-buy" data-id="'+esc(S.id)+'" data-v="'+i+'"'+(it.stock===0?' disabled':'')+' title="Un joueur achète">Vendu</button></li>').join("")+'</ul>';
   h+='<div class="shopsell"><h4>Le groupe vend un objet</h4><label for="sv-n-'+esc(S.id)+'">Objet<input id="sv-n-'+esc(S.id)+'" maxlength="80" value="'+esc(o?o.nom:"")+'"></label><label for="sv-v-'+esc(S.id)+'">Valeur (po)<input id="sv-v-'+esc(S.id)+'" type="number" min="0" step="0.01" value="'+(o?o.val:"")+'"></label><button class="btn ghost sm" data-a="pt-shop-offer" data-id="'+esc(S.id)+'">Demander une offre</button>';
   if(o){h+='<p class="shopoffer">'+o.txt+'</p>'+(o.offre>0?'<button class="btn gold sm" data-a="pt-shop-sold" data-id="'+esc(S.id)+'">Accepter ('+fmtPo(o.offre)+')</button>':'')+'<button class="btn ghost sm" data-a="pt-shop-nooffer" data-id="'+esc(S.id)+'">Refuser</button>';}
   h+='</div>';
