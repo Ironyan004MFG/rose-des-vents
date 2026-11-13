@@ -2709,7 +2709,7 @@ function shopName(type,lieu,who){
   return n[0]+" "+(n[1]==="f"?a[1]:a[0]);
 }
 // Prix en po → « 4 po 5 pa »
-function fmtPo(p){const c=Math.round((+p||0)*100);if(c>=100000)return Math.round(c/100).toLocaleString("fr-CA")+" po";const po=Math.floor(c/100),pa=Math.floor((c%100)/10),pc=c%10;
+function fmtPo(p,pp){const c=Math.round((+p||0)*100);if(pp&&c>=10000){const po=Math.round(c/100),P=Math.floor(po/10),r=po%10;return P.toLocaleString("fr-CA")+" pp"+(r?" "+r+" po":"");}if(c>=100000)return Math.round(c/100).toLocaleString("fr-CA")+" po";const po=Math.floor(c/100),pa=Math.floor((c%100)/10),pc=c%10;
   return [po?po.toLocaleString("fr-CA")+" po":"",pa?pa+" pa":"",pc?pc+" pc":""].filter(Boolean).join(" ")||"0 pc";}
 function shopRound(p){return p>=20?Math.round(p):p>=1?Math.round(p*10)/10:Math.max(0.01,Math.round(p*100)/100);}
 // Objets maison (Espace DM) : « Nom | prix po | types | rareté | lieu min (0, 1, 2) »
@@ -2758,11 +2758,11 @@ function shopCard(S){const L=SHOP_LIEUX[S.lieu]||{},T=SHOP_TYPES[S.type]||{},o=u
   let h='<details class="shop"'+(S.ouvert?' open':'')+' data-shopid="'+esc(S.id)+'"><summary><strong>'+esc(S.nom)+'</strong> <span class="desc">'+esc(T.l||"")+' · '+esc(L.l||"")+'</span></summary>';
   if(S.findRoll)h+='<p class="shopfind">🎲 Trouvaille : d100 = <strong>'+S.findRoll+'</strong> (≤ '+S.findMax+' requis) · '+(S.inv.some(x=>x.trouvaille)?'<strong>un objet hors du commun !</strong>':'rien d\'extraordinaire cette fois')+'</p>';
   h+='<p class="shopwho"><strong>'+esc(S.marchand)+'</strong> ('+esc(S.espece)+') : '+esc(S.trait)+'</p>';
-  h+='<div class="shopcash"><span>Caisse : <strong>'+fmtPo(S.fonds)+'</strong></span><span>Rachète jusqu\'à <strong>'+fmtPo(Math.min(S.cap,S.fonds))+'</strong> par objet, à '+Math.round(shopRate(S)*100)+' % de sa valeur</span></div>';
+  h+='<div class="shopcash"><span>Caisse : <strong>'+fmtPo(S.fonds,S.lieu==="cite")+'</strong></span><span>Rachète jusqu\'à <strong>'+fmtPo(Math.min(S.cap,S.fonds),S.lieu==="cite")+'</strong> par objet, à '+Math.round(shopRate(S)*100)+' % de sa valeur</span></div>';
   h+='<div class="shophaggle"><span>Marchandage (Persuasion DD 15) :</span>'+[["-0.1","Réussi −10 %"],["0","Prix normal"],["0.1","Vexé +10 %"]].map(x=>'<button class="chip'+(String(S.mod||0)===x[0]?' on':'')+'" data-a="pt-shop-mod" data-id="'+esc(S.id)+'" data-v="'+x[0]+'" aria-pressed="'+(String(S.mod||0)===x[0])+'">'+x[1]+'</button>').join("")+'</div>';
-  h+='<ul class="shopinv">'+S.inv.map((it,i)=>'<li class="'+(it.stock===0?'out':'')+(it.trouvaille?' find':'')+'"><span class="sn">'+(it.trouvaille?'<span class="findtag">✦ Trouvaille</span> ':'')+esc(it.nom)+(it.rar&&RAR[it.rar]?' <span class="rar r-'+it.rar+'">'+esc(RAR[it.rar][1])+'</span>':'')+(it.trouvaille?'<span class="findwhy">'+esc(it.trouvaille)+'</span>':'')+'</span><span class="sp">'+fmtPo(shopPrice(S,it))+'</span><span class="sq">'+(it.svc?'service':it.stock===0?'épuisé':'×'+it.stock)+'</span><button class="mini" data-a="pt-shop-buy" data-id="'+esc(S.id)+'" data-v="'+i+'"'+(it.stock===0?' disabled':'')+' title="Un joueur achète">Vendu</button></li>').join("")+'</ul>';
+  h+='<ul class="shopinv">'+S.inv.map((it,i)=>'<li class="'+(it.stock===0?'out':'')+(it.trouvaille?' find':'')+'"><span class="sn">'+(it.trouvaille?'<span class="findtag">✦ Trouvaille</span> ':'')+esc(it.nom)+(it.rar&&RAR[it.rar]?' <span class="rar r-'+it.rar+'">'+esc(RAR[it.rar][1])+'</span>':'')+(it.trouvaille?'<span class="findwhy">'+esc(it.trouvaille)+'</span>':'')+'</span><span class="sp">'+fmtPo(shopPrice(S,it),S.lieu==="cite")+'</span><span class="sq">'+(it.svc?'service':it.stock===0?'épuisé':'×'+it.stock)+'</span><button class="mini" data-a="pt-shop-buy" data-id="'+esc(S.id)+'" data-v="'+i+'"'+(it.stock===0?' disabled':'')+' title="Un joueur achète">Vendu</button></li>').join("")+'</ul>';
   h+='<div class="shopsell"><h4>Le groupe vend un objet</h4><label for="sv-n-'+esc(S.id)+'">Objet<input id="sv-n-'+esc(S.id)+'" maxlength="80" value="'+esc(o?o.nom:"")+'"></label><label for="sv-v-'+esc(S.id)+'">Valeur (po)<input id="sv-v-'+esc(S.id)+'" type="number" min="0" step="0.01" value="'+(o?o.val:"")+'"></label><button class="btn ghost sm" data-a="pt-shop-offer" data-id="'+esc(S.id)+'">Demander une offre</button>';
-  if(o){h+='<p class="shopoffer">'+o.txt+'</p>'+(o.offre>0?'<button class="btn gold sm" data-a="pt-shop-sold" data-id="'+esc(S.id)+'">Accepter ('+fmtPo(o.offre)+')</button>':'')+'<button class="btn ghost sm" data-a="pt-shop-nooffer" data-id="'+esc(S.id)+'">Refuser</button>';}
+  if(o){h+='<p class="shopoffer">'+o.txt+'</p>'+(o.offre>0?'<button class="btn gold sm" data-a="pt-shop-sold" data-id="'+esc(S.id)+'">Accepter ('+fmtPo(o.offre,S.lieu==="cite")+')</button>':'')+'<button class="btn ghost sm" data-a="pt-shop-nooffer" data-id="'+esc(S.id)+'">Refuser</button>';}
   h+='</div>';
   if((S.log||[]).length)h+='<details class="shoplog"><summary>Transactions ('+S.log.length+')</summary><ul>'+S.log.slice().reverse().map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul></details>';
   h+='<p class="shopacts"><button class="linkbtn" data-a="pt-shop-regen" data-id="'+esc(S.id)+'">Régénérer l\'inventaire</button> · <button class="linkbtn" data-a="pt-shop-pnj" data-id="'+esc(S.id)+'">Garder le marchand comme PNJ</button> · <button class="linkbtn" data-a="pt-shop-del" data-id="'+esc(S.id)+'">Supprimer</button></p>';
@@ -2773,17 +2773,17 @@ async function shopAction(a,id,b,v,q){const P=ui.pt;P.boutiques=P.boutiques||[];
   if(a==="pt-shop-house"){const t=String((document.getElementById("sh-house")||{}).value||"").slice(0,20000);await run("Objets maison",()=>setDoc(doc(db,"prive","boutiques"),{maison:t},{merge:true}));shopCfg=Object.assign({},shopCfg||{},{maison:t});return false;}
   if(!S)return false;
   if(a==="pt-shop-mod"){S.mod=+v||0;return true;}
-  if(a==="pt-shop-buy"){const it=S.inv[+v];if(!it||it.stock===0)return false;const p=shopPrice(S,it);if(it.stock!=null)it.stock--;S.fonds=shopRound(S.fonds+p);S.log.push("Vendu : "+it.nom+" pour "+fmtPo(p));ptLog(S.nom+" : vendu "+it.nom+" ("+fmtPo(p)+").");return true;}
+  if(a==="pt-shop-buy"){const it=S.inv[+v];if(!it||it.stock===0)return false;const p=shopPrice(S,it);if(it.stock!=null)it.stock--;S.fonds=shopRound(S.fonds+p);S.log.push("Vendu : "+it.nom+" pour "+fmtPo(p,S.lieu==="cite"));ptLog(S.nom+" : vendu "+it.nom+" ("+fmtPo(p,S.lieu==="cite")+").");return true;}
   if(a==="pt-shop-offer"){const nom=String((document.getElementById("sv-n-"+id)||{}).value||"").trim().slice(0,80)||"Objet",val=Math.max(0,+(document.getElementById("sv-v-"+id)||{}).value||0);
     const juste=shopRound(val*shopRate(S)*(1-(S.mod||0)));let offre=juste,txt;
     if(!val){ui.shopSell={id,nom,val,offre:0,txt:"Indique la valeur de l'objet."};return false;}
     if(juste>S.cap&&juste>S.fonds)offre=Math.min(S.cap,S.fonds);else if(juste>S.cap)offre=S.cap;else if(juste>S.fonds)offre=S.fonds;
     offre=shopRound(offre);
-    txt=offre<=0?"« Désolé, je n'ai plus un sou en caisse. »":offre<juste?"Prix juste : "+fmtPo(juste)+". « Je n'ai pas cette somme. Je peux vous en donner <strong>"+fmtPo(offre)+"</strong>, pas un cuivre de plus. »":"« Je vous en donne <strong>"+fmtPo(offre)+"</strong>. »";
+    txt=offre<=0?"« Désolé, je n'ai plus un sou en caisse. »":offre<juste?"Prix juste : "+fmtPo(juste,S.lieu==="cite")+". « Je n'ai pas cette somme. Je peux vous en donner <strong>"+fmtPo(offre,S.lieu==="cite")+"</strong>, pas un cuivre de plus. »":"« Je vous en donne <strong>"+fmtPo(offre,S.lieu==="cite")+"</strong>. »";
     ui.shopSell={id,nom,val,offre,txt};return false;}
   if(a==="pt-shop-nooffer"){ui.shopSell=null;return false;}
   if(a==="pt-shop-sold"){const o=ui.shopSell;if(!o||o.id!==id||!(o.offre>0))return false;S.fonds=shopRound(S.fonds-o.offre);S.inv.push({nom:o.nom,prix:shopRound(o.val),base:o.val,stock:1,rachat:true});
-    S.log.push("Acheté au groupe : "+o.nom+" pour "+fmtPo(o.offre));ptLog(S.nom+" : achète "+o.nom+" au groupe ("+fmtPo(o.offre)+").");ui.shopSell=null;return true;}
+    S.log.push("Acheté au groupe : "+o.nom+" pour "+fmtPo(o.offre,S.lieu==="cite"));ptLog(S.nom+" : achète "+o.nom+" au groupe ("+fmtPo(o.offre,S.lieu==="cite")+").");ui.shopSell=null;return true;}
   if(a==="pt-shop-regen"){const n=shopGen(S.type,S.lieu,S.region);S.inv=n.inv.concat(S.inv.filter(x=>x.rachat));return true;}
   if(a==="pt-shop-del"){P.boutiques=P.boutiques.filter(x=>x.id!==id);return true;}
   if(a==="pt-shop-pnj"){const T=SHOP_TYPES[S.type]||{};await run("PNJ",()=>setDoc(doc(collection(db,"pnj")),{nom:S.marchand,role:"Marchand : "+S.nom+" ("+(T.l||"")+")",espece:S.espece,voix:S.trait,lieu:S.nom,region:S.region||"",attitude:"neutre",quetes:[q.id],notes:"Créé depuis une boutique de session ("+(SHOP_LIEUX[S.lieu]||{}).l+")."}));
@@ -2796,10 +2796,10 @@ const GS_SECS=[["intendance","Intendance","Fournitures de mission. La Guilde ré
 const GS_DISC={bois:0,cuivre:5,fer:10,argent:15,or:20,mithral:25,rose:25};
 const GS_RANKMIN={inhabituel:"fer",rare:"argent",epique:"or",legendaire:"mithral"};
 const GS_SEED=[
-  ["intendance","Potion de soins",50,""],["intendance","Kit de soins",5,""],["intendance","Antitoxine",50,""],["intendance","Eau bénite (flasque)",25,""],["intendance","Rations (1 jour)",0.5,""],
-  ["intendance","Gourde",0.2,""],["intendance","Corde de chanvre (15 m)",1,""],["intendance","Torches (×10)",0.1,""],["intendance","Huile (×5 flasques)",0.5,""],["intendance","Boîte d'allume-feu",0.5,""],
+  ["intendance","Potion de soins",50,""],["intendance","Kit de soins",5,""],["intendance","Antitoxine",50,""],["intendance","Eau bénite (flasque)",25,""],["intendance","Rations (×10 jours)",5,""],
+  ["intendance","Gourdes (×5)",1,""],["intendance","Corde de chanvre (15 m)",1,""],["intendance","Torches (×20)",1,""],["intendance","Huile (×10 flasques)",1,""],["intendance","Boîtes d'allume-feu (×2)",1,""],
   ["intendance","Sac de couchage",1,""],["intendance","Tente (2 places)",2,""],["intendance","Sac à dos",2,""],["intendance","Pied-de-biche",2,""],["intendance","Grappin",2,""],["intendance","Lanterne à capuchon",5,""],
-  ["intendance","Pitons (×10)",0.5,""],["intendance","Flèches (20)",1,""],["intendance","Carreaux (20)",1,""],["intendance","Menottes",2,""],["intendance","Kit d'escalade",25,""],
+  ["intendance","Pitons (×20)",1,""],["intendance","Flèches (20)",1,""],["intendance","Carreaux (20)",1,""],["intendance","Menottes",2,""],["intendance","Kit d'escalade",25,""],
   ["intendance","Paquetage d'exploration",5,"Corde de chanvre, 10 torches, 5 rations, gourde, 10 pitons, craie."],["intendance","Paquetage de survie",6,"Sac de couchage, tente, 5 rations, gourde, boîte d'allume-feu."],
   ["intendance","Paquetage de chasseur de primes",5,"Menottes, filet, corde de chanvre, chausse-trapes."],["intendance","Paquetage de soigneur",140,"Kit de soins, 2 potions de soins, antitoxine."],
   ["services","Location : cheval de selle",5,"Pour une mission. À rendre au retour, sinon la Guilde facture 75 po."],["services","Location : mule",1,"Pour une mission. À rendre au retour, sinon 8 po."],
