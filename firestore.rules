@@ -354,6 +354,16 @@ service cloud.firestore {
         && str(request.resource.data.aventurier, 1, 80);
       allow delete: if isAdmin();
     }
+    // Boutique de la Guilde : menu public, tenu par le DM
+    match /boutique/{id} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['section', 'nom', 'prix', 'desc', 'rar', 'vendeur', 'ordre', 'creeLe', 'majLe'])
+        && request.resource.data.section in ['intendance', 'services', 'depot', 'tresor']
+        && str(request.resource.data.nom, 1, 100)
+        && request.resource.data.prix is number && request.resource.data.prix >= 0;
+      allow delete: if isAdmin();
+    }
     match /config/{id} {
       allow read: if true;
       allow write: if isAdmin();
