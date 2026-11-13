@@ -2258,7 +2258,7 @@ function dmStats(){
   return h;
 }
 // Cartes prégénérées : bureaux (avec étages), scènes de tous les scénarios, cartes aléatoires. Aperçu vivant ; la télé ne suit qu'après « Montrer aux joueurs ».
-function dmCartes(){ptSync("libre");return '<p class="desc">Ouvre une carte pour la voir vivre ici (vie, météo, lumière, étages). Rien ne change sur l\'écran de table tant que tu n\'as pas cliqué « Montrer aux joueurs ». « Créer une partie libre » ouvre le Mode Partie hors quête avec cette carte (combat, dés, règles, boutique).</p>'+ecTab(PT_LIBRE);}
+function dmCartes(){ptSync("libre");return '<p class="desc">Ouvre une carte pour la voir vivre ici (vie, météo, lumière, étages). Les cartes s\'ouvrent révélées (sans brouillard) pour que tu puisses les tester ; « Vue joueurs » montre ce que la télé afficherait. Rien ne change sur l\'écran de table tant que tu n\'as pas cliqué « Montrer aux joueurs ». « Créer une partie libre » ouvre le Mode Partie hors quête avec cette carte (combat, dés, règles, boutique) : le brouillard revient et la vue des joueurs suit leurs jetons.</p>'+ecTab(PT_LIBRE);}
 function dmSpaceView(){
   if(!isAdmin)return '<p class="empty">L\'Espace DM est réservé au Maître de la Guilde.</p>'+(user&&!user.isAnonymous?'':'<p><button class="btn board" data-a="dm">Mode DM</button></p>');
   const n=todoItems().length;
@@ -4491,9 +4491,9 @@ async function partyAction(a,id,b,e){
   else if(a==="pt-libre-reset"){if(!q.libre)return;if(!ui.libreReset){ui.libreReset=true;render();return;}ui.libreReset=false;const ec=P.ecran;Object.keys(P).forEach(k=>{if(k!=="id")delete P[k];});Object.assign(P,ptBlank("libre"),{ecran:ec});}
   else if(a==="pt-ec-show"){const E=ecP();E.tv=true;ptSave();ecPush(true);render();return;}
   else if(a==="pt-ec-unshow"){const E=ecP();E.tv=false;ch=true;}
-  else if(a==="pt-libre-go"){const E=ecP();E.tv=true;ptSave();ecPush(true);ui.ptTab="ecran";location.hash="#partie-libre";return;}
+  else if(a==="pt-libre-go"){const E=ecP();E.tv=true;E.fog=true;const cc=ecCard();if(cc){cc.vu="";ecReveal(cc);}ptSave();ecPush(true);ui.ptTab="ecran";location.hash="#partie-libre";return;}
   else if(a.indexOf("pt-shop")===0){ch=await shopAction(a,id,b,v,q);}
-  else if(a.indexOf("pt-ec-")===0){if(ui.office==="dm"&&["pt-ec-bureau","pt-ec-scene","pt-ec-rand","pt-ec-pick","pt-ec-new"].indexOf(a)>=0)ecP().tv=false;ch=await ecAction(a,id,b,v,q);}
+  else if(a.indexOf("pt-ec-")===0){if(ui.office==="dm"&&["pt-ec-bureau","pt-ec-scene","pt-ec-rand","pt-ec-pick","pt-ec-new"].indexOf(a)>=0){ecP().tv=false;ecP().fog=false;}ch=await ecAction(a,id,b,v,q);}
   else if(a==="pt-sel"){ui.ptSel=ui.ptSel===id?null:id;ui.ptCond=null;ui.ptEditC=null;render();const el=document.getElementById("pt-"+(ui.ptSel===P.cur?P.cur:ui.ptSel));if(el&&ui.ptSel)el.scrollIntoView({block:"nearest",behavior:"smooth"});return;}
   else if(a==="pt-selx"){ui.ptSel=null;ch=false;}
   else if(a==="pt-findadd"||a==="pt-findnew"){const g=k=>document.getElementById(k),nb=Math.max(1,Math.min(20,+(g("pt-find-nb")||{}).value||1)),camp=(g("pt-find-camp")||{}).value||"",bf=ptIds();let added=[];
