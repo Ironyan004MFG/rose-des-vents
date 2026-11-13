@@ -3557,14 +3557,15 @@ const EC_METEO={
   orage:{i:"⛈",l:"Orage",vis:14,dk:0.28,rain:2,wind:1,fx:["Zone légèrement obscurcie : désavantage aux tests de Perception basés sur la vue.","Vent fort : désavantage aux jets d'attaque à distance avec une arme et aux tests de Perception basés sur l'ouïe.","Les flammes nues s'éteignent ; le vol non magique est presque impossible."]},
   vent:{i:"🌬",l:"Vent fort",vis:999,dk:0.04,wind:1,fx:["Désavantage aux jets d'attaque à distance avec une arme et aux tests de Sagesse (Perception) basés sur l'ouïe.","Les flammes nues s'éteignent ; le brouillard se disperse."]},
   neige:{i:"🌨",l:"Neige",vis:16,dk:0.08,snow:1,fx:["Zone légèrement obscurcie : désavantage aux tests de Perception basés sur la vue.","Neige épaisse au sol : terrain difficile."]},
+  blizzard:{i:"🌨",l:"Tempête de neige",vis:3,dk:0.2,snow:2,wind:1,fx:["Visibilité quasi nulle : au-delà de 15 pi (3 cases), tout est fortement voilé.","Terrain difficile partout (neige épaisse).","Désavantage aux jets d'attaque à distance et aux tests de Sagesse (Perception) basés sur la vue ou l'ouïe.","Les flammes nues s'éteignent ; jet de sauvegarde de Constitution DD 10 par heure contre l'épuisement sans abri."]},
   froid:{i:"❄",l:"Froid extrême",vis:999,dk:0.03,snow:0.3,fx:["Chaque heure dehors : jet de sauvegarde de Constitution DD 10, sinon 1 niveau d'Épuisement (sauf résistance ou immunité au froid, ou vêtements chauds)."]},
   chaleur:{i:"🔥",l:"Chaleur extrême",vis:999,dk:0,heat:1,fx:["Chaque heure sans eau : jet de sauvegarde de Constitution (DD 5, +1 par heure), sinon 1 niveau d'Épuisement.","Désavantage à ce jet en armure intermédiaire ou lourde."]}};
 // Tables aléatoires (d20) par saison
 const EC_SAISON={printemps:{l:"Printemps",t:[["clair",7],["nuageux",4],["brume",3],["pluie",3],["orage",1],["vent",2]]},ete:{l:"Été",t:[["clair",9],["nuageux",3],["brume",1],["pluie",1],["orage",3],["vent",1],["chaleur",2]]},
-  automne:{l:"Automne",t:[["clair",5],["nuageux",4],["brume",3],["brouillard",2],["pluie",3],["orage",1],["vent",2]]},hiver:{l:"Hiver",t:[["clair",5],["nuageux",4],["brume",2],["brouillard",1],["neige",5],["vent",1],["froid",2]]}};
+  automne:{l:"Automne",t:[["clair",5],["nuageux",4],["brume",3],["brouillard",2],["pluie",3],["orage",1],["vent",2]]},hiver:{l:"Hiver",t:[["clair",5],["nuageux",4],["brume",2],["brouillard",1],["neige",4],["blizzard",1],["vent",1],["froid",2]]}};
 // Cohérence : météos possibles selon la saison, et évolution de proche en proche au fil de la journée.
-const EC_OK={printemps:["clair","nuageux","brume","pluie","orage","vent"],ete:["clair","nuageux","brume","pluie","orage","vent","chaleur"],automne:["clair","nuageux","brume","brouillard","pluie","orage","vent"],hiver:["clair","nuageux","brume","brouillard","neige","vent","froid"]};
-const EC_NEXT={clair:["nuageux","vent","brume","chaleur"],nuageux:["clair","pluie","brume","vent","neige"],brume:["clair","nuageux","brouillard"],brouillard:["brume"],pluie:["nuageux","orage","brume"],orage:["pluie","vent"],vent:["clair","nuageux","orage"],neige:["nuageux","froid","vent"],froid:["clair","neige"],chaleur:["clair","orage"]};
+const EC_OK={printemps:["clair","nuageux","brume","pluie","orage","vent"],ete:["clair","nuageux","brume","pluie","orage","vent","chaleur"],automne:["clair","nuageux","brume","brouillard","pluie","orage","vent"],hiver:["clair","nuageux","brume","brouillard","neige","blizzard","vent","froid"]};
+const EC_NEXT={clair:["nuageux","vent","brume","chaleur"],nuageux:["clair","pluie","brume","vent","neige"],brume:["clair","nuageux","brouillard"],brouillard:["brume"],pluie:["nuageux","orage","brume"],orage:["pluie","vent"],vent:["clair","nuageux","orage"],neige:["nuageux","froid","vent","blizzard"],blizzard:["neige"],froid:["clair","neige"],chaleur:["clair","orage"]};
 function ecSaison(){const c=calNow();return calSaison(c.an,c.j);}
 function ecMeteoStep(cur,saison){const ok=EC_OK[saison]||EC_OK.printemps;if(ok.indexOf(cur)<0)return ecMeteoRoll(saison).k;if(Math.random()<0.5)return cur;const n=(EC_NEXT[cur]||[]).filter(k=>ok.indexOf(k)>=0);return n.length?shopPick(n):cur;}
 function ecMeteoRoll(saison){const T=(EC_SAISON[saison]||EC_SAISON.printemps).t,r=ptD(20);let acc=0;for(const x of T){acc+=x[1];if(r<=acc)return {k:x[0],r};}return {k:"clair",r};}
@@ -3588,9 +3589,15 @@ function ecGeo(c){const key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h;if(ecGeoCache[key]
   const free=(x,y,m)=>ecDist(g.road,x,y)>m+0.6&&(!g.river||ecDist(g.river,x,y)>m+1.6)&&!g.fields.some(f=>x>f.x-1&&x<f.x+f.w+1&&y>f.y-1&&y<f.y+f.h+1)&&!g.houses.some(h=>x>h.x-1.5&&x<h.x+h.w+1.5&&y>h.y-1.5&&y<h.y+h.h+1.5);
   // Champs et fermes près de la route
   if(V==="collines")for(let i=0,n=3+Math.floor(R()*4);i<n;i++)g.hills.push({x:R()*W,y:R()*H,r:8+R()*14,a:R()*3});
-  for(let i=0,n=V==="route"?1+Math.floor(R()*3):0;i<n;i++){for(let k=0;k<40;k++){const w=12+R()*14,h=9+R()*9,x=-4+R()*(W-w+6),y=-4+R()*(H-h+6);
-    if(free(x+w/2,y+h/2,Math.max(w,h)/2)){g.fields.push({x,y,w,h,c:["#c9b45a","#a8a04a","#b98a4a","#8fa84e"][Math.floor(R()*4)],dir:R()<0.5});
-      if(R()<0.75){const hx=x+w+2,hy=y+R()*Math.max(0,h-5);g.houses.push({x:hx,y:hy,w:6+Math.floor(R()*2),h:4+Math.floor(R()*2),r:["#8b4a32","#6b5a44","#7a3b2a"][Math.floor(R()*3)]});if(R()<0.6)g.houses.push({x:hx,y:hy+6.5,w:8,h:5+Math.floor(R()*2),r:"#7a3a28",barn:1});}break;}}}
+  // Rien ne se chevauche : un champ ou une maison est testé sur toute sa surface (route, rivière, autres champs et maisons).
+  const samp=(x,y,w,h,fn)=>{for(let i=0;i<=w+0.01;i+=Math.min(1.5,w))for(let j=0;j<=h+0.01;j+=Math.min(1.5,h))if(fn(x+Math.min(i,w),y+Math.min(j,h)))return true;return fn(x+w,y+h)||fn(x+w,y)||fn(x,y+h);};
+  const hitRoad=(x,y,w,h)=>samp(x,y,w,h,(a,b)=>ecDist(g.road,a,b)<2),hitRiver=(x,y,w,h)=>!!g.river&&samp(x,y,w,h,(a,b)=>ecDist(g.river,a,b)<3.5);
+  const hitBox=(x,y,w,h,m)=>g.fields.concat(g.houses).some(f=>x<f.x+f.w+m&&x+w+m>f.x&&y<f.y+f.h+m&&y+h+m>f.y);
+  // Maison : jamais sur la route ni sur un champ ; si elle touche l'eau, elle est sur pilotis.
+  const addHouse=(o)=>{if(hitBox(o.x,o.y,o.w,o.h,0.8)||hitRoad(o.x,o.y,o.w,o.h)||o.x<-1||o.y<-1)return false;if(hitRiver(o.x,o.y,o.w,o.h))o.stilts=1;g.houses.push(o);return true;};
+  for(let i=0,n=V==="route"?1+Math.floor(R()*3):0;i<n;i++){for(let k=0;k<60;k++){const w=12+R()*14,h=9+R()*9,x=-4+R()*(W-w+6),y=-4+R()*(H-h+6);
+    if(!hitBox(x,y,w,h,1.2)&&!hitRoad(x,y,w,h)&&!hitRiver(x,y,w,h)){g.fields.push({x,y,w,h,c:["#c9b45a","#a8a04a","#b98a4a","#8fa84e"][Math.floor(R()*4)],dir:R()<0.5});
+      if(R()<0.75){const hx=x+w+2,hy=y+R()*Math.max(0,h-5);if(addHouse({x:hx,y:hy,w:6+Math.floor(R()*2),h:4+Math.floor(R()*2),r:["#8b4a32","#6b5a44","#7a3b2a"][Math.floor(R()*3)]})&&R()<0.6)addHouse({x:hx,y:hy+6.5,w:8,h:5+Math.floor(R()*2),r:"#7a3a28",barn:1});}break;}}}
   // Forêts : grappes d'arbres + arbres épars
   for(let i=0,n=V==="foret"?8+Math.floor(R()*5):V==="collines"?1+Math.floor(R()*2):3+Math.floor(R()*4);i<n;i++){const cx=R()*W,cy=R()*H,rad=V==="foret"?7+R()*9:4+R()*7;for(let k=0,m=Math.round(rad*rad*0.32);k<m;k++){const a=R()*6.283,d=Math.sqrt(R())*rad,x=cx+Math.cos(a)*d,y=cy+Math.sin(a)*d;if(x<-1||y<-1||x>W+1||y>H+1)continue;if(free(x,y,2.4)&&!g.trees.some(t=>Math.hypot(t.x-x,t.y-y)<t.r*0.9))g.trees.push({x,y,r:R()<0.2?0.7+R()*0.5:1.4+R()*1.6,c:Math.floor(R()*4),ph:R()*6.283});}}
   for(let k=0;k<Math.round(W*H/(V==="foret"?14:V==="collines"?160:90));k++){const x=R()*W,y=R()*H;if(free(x,y,V==="foret"?1.8:2.4)&&!g.trees.some(t=>Math.hypot(t.x-x,t.y-y)<t.r))g.trees.push({x,y,r:R()<0.35?0.6+R()*0.5:1.2+R()*1.4,c:Math.floor(R()*4),ph:R()*6.283});}
@@ -3623,7 +3630,10 @@ function ecStatic(c,s){const g=ecGeo(c),cv=document.createElement("canvas");cv.w
   if(g.V!=="foret"){x.save();const o=s*0.45;x.translate(0,-o);line(g.road,0.06,"rgba(90,70,40,.35)");x.translate(0,2*o);line(g.road,0.06,"rgba(90,70,40,.35)");x.restore();}
   if(g.bridge){const b=g.bridge;x.save();x.translate(b.x*s,b.y*s);x.rotate(b.a);x.scale(1.75,1.35);x.fillStyle="#7d7466";x.fillRect(-2.2*s,-1.35*s,4.4*s,2.7*s);x.fillStyle="#a39886";x.fillRect(-2*s,-1.1*s,4*s,2.2*s);
     x.strokeStyle="rgba(60,50,40,.4)";x.lineWidth=Math.max(1,s*0.04);for(let i=-1.8;i<2;i+=0.4){x.beginPath();x.moveTo(i*s,-1.1*s);x.lineTo(i*s,1.1*s);x.stroke();}x.restore();}
-  g.houses.forEach(h=>{x.fillStyle="rgba(0,0,0,.25)";x.fillRect((h.x+0.4)*s,(h.y+0.5)*s,h.w*s,h.h*s);x.fillStyle=h.r;x.fillRect(h.x*s,h.y*s,h.w*s,h.h*s);x.fillStyle="rgba(255,255,255,.15)";x.fillRect(h.x*s,h.y*s,h.w*s,h.h*s/2);x.strokeStyle="rgba(0,0,0,.25)";x.lineWidth=1;for(let q=0.5;q<h.h;q+=0.5){x.beginPath();x.moveTo(h.x*s,(h.y+q)*s);x.lineTo((h.x+h.w)*s,(h.y+q)*s);x.stroke();}if(!h.barn){x.fillStyle="#4a3a30";x.fillRect((h.x+h.w*0.72)*s,(h.y+0.6)*s,0.7*s,0.7*s);}x.strokeStyle="rgba(0,0,0,.35)";x.lineWidth=Math.max(1,s*0.05);x.beginPath();x.moveTo(h.x*s,(h.y+h.h/2)*s);x.lineTo((h.x+h.w)*s,(h.y+h.h/2)*s);x.stroke();});
+  g.houses.forEach(h=>{if(h.stilts){x.fillStyle="#6b4f32";x.fillRect((h.x-0.5)*s,(h.y-0.5)*s,(h.w+1)*s,(h.h+1)*s);x.strokeStyle="rgba(40,25,10,.5)";x.lineWidth=1;for(let q=-0.5;q<h.w+0.5;q+=0.5){x.beginPath();x.moveTo((h.x+q)*s,(h.y-0.5)*s);x.lineTo((h.x+q)*s,(h.y+h.h+0.5)*s);x.stroke();}
+      for(let q=-0.3;q<=h.w+0.31;q+=1.2)[-0.35,h.h+0.35].forEach(yy=>{x.fillStyle="rgba(0,0,0,.35)";x.beginPath();x.arc((h.x+q+0.08)*s,(h.y+yy+0.1)*s,0.2*s,0,6.283);x.fill();x.fillStyle="#3e2a16";x.beginPath();x.arc((h.x+q)*s,(h.y+yy)*s,0.17*s,0,6.283);x.fill();});
+      for(let q=0.9;q<h.h;q+=1.2)[-0.35,h.w+0.35].forEach(xx=>{x.fillStyle="#3e2a16";x.beginPath();x.arc((h.x+xx)*s,(h.y+q)*s,0.17*s,0,6.283);x.fill();});}
+    x.fillStyle="rgba(0,0,0,.25)";x.fillRect((h.x+0.4)*s,(h.y+0.5)*s,h.w*s,h.h*s);x.fillStyle=h.r;x.fillRect(h.x*s,h.y*s,h.w*s,h.h*s);x.fillStyle="rgba(255,255,255,.15)";x.fillRect(h.x*s,h.y*s,h.w*s,h.h*s/2);x.strokeStyle="rgba(0,0,0,.25)";x.lineWidth=1;for(let q=0.5;q<h.h;q+=0.5){x.beginPath();x.moveTo(h.x*s,(h.y+q)*s);x.lineTo((h.x+h.w)*s,(h.y+q)*s);x.stroke();}if(!h.barn){x.fillStyle="#4a3a30";x.fillRect((h.x+h.w*0.72)*s,(h.y+0.6)*s,0.7*s,0.7*s);}x.strokeStyle="rgba(0,0,0,.35)";x.lineWidth=Math.max(1,s*0.05);x.beginPath();x.moveTo(h.x*s,(h.y+h.h/2)*s);x.lineTo((h.x+h.w)*s,(h.y+h.h/2)*s);x.stroke();});
   g.rocks.forEach(r=>{const R=ecRng(r.s);x.fillStyle="rgba(0,0,0,.25)";x.beginPath();x.ellipse((r.x+0.12)*s,(r.y+0.15)*s,r.r*s,r.r*0.8*s,0,0,6.283);x.fill();x.fillStyle="#8d8a80";x.beginPath();for(let i=0;i<7;i++){const a=i/7*6.283,d=r.r*(0.75+R()*0.3);x.lineTo((r.x+Math.cos(a)*d)*s,(r.y+Math.sin(a)*d*0.8)*s);}x.closePath();x.fill();x.fillStyle="rgba(255,255,255,.18)";x.beginPath();x.arc((r.x-r.r*0.25)*s,(r.y-r.r*0.25)*s,r.r*0.35*s,0,6.283);x.fill();});
   g.trees.forEach(t=>{x.fillStyle="rgba(20,30,10,.35)";x.beginPath();x.ellipse((t.x+t.r*0.35)*s,(t.y+t.r*0.45)*s,t.r*s,t.r*0.85*s,0,0,6.283);x.fill();});
   return cv;}
@@ -3737,23 +3747,46 @@ function ecDynamic(x,c,s,t,dt,A,st){const g=ecGeo(c),TT=Date.now()/1000,gone=new
   // Ombres de nuages : glissent lentement (position tirée de l'heure)
   (g.clouds||[]).forEach(cl=>{const sp=cl.v*(A.wind?3:1),L=g.W+cl.r*2+4,X=((cl.x+TT*sp)%L+L)%L-cl.r-2,gr=x.createRadialGradient(X*s,cl.y*s,0,X*s,cl.y*s,cl.r*s);gr.addColorStop(0,"rgba(0,0,20,"+(A.cloudy?0.26:0.15)+")");gr.addColorStop(1,"rgba(0,0,20,0)");x.fillStyle=gr;x.fillRect((X-cl.r)*s,(cl.y-cl.r)*s,cl.r*2*s,cl.r*2*s);});}
 // Visibilité : cases vues par les PJ (selon la lumière) et cases éclairées
-function ecVision(st){const c=st.carte,W=c.w,H=c.h,vis=new Uint8Array(W*H),lit=new Float32Array(W*H),L0=EC_LUM[st.lum]||EC_LUM.jour,M=EC_METEO[st.meteo]||EC_METEO.clair,toks=st.tokens||[];
-  const L={vis:Math.min(L0.vis,M.vis),dark:Math.min(0.95,L0.dark+M.dk)},noFlame=!!(M.rain||M.wind);
+// ---------- Vision et brouillard de guerre « naturels » ----------
+// Lieux naturellement sombres : noirs hors de la lumière, quel que soit le moment de la journée.
+const EC_DARKPL={grotte:1,mine:1,egouts:1,donjon:1,cave:1};
+function ecDarkPlace(c){return !!EC_DARKPL[c.type]||((c.type==="bureau"||c.type==="tour"||c.type==="chateau")&&(+c.etage||0)<0);}
+// Voile de la météo au-delà de ce qu'on distingue : blanc (neige, brouillard), gris (pluie) ; jamais tout noir, sauf tempête de neige presque opaque.
+const EC_VEIL={brume:[[214,220,226],0.35],brouillard:[[220,224,228],0.7],pluie:[[78,88,100],0.3],orage:[[60,68,80],0.45],neige:[[236,240,245],0.4],blizzard:[[242,245,248],0.9]};
+// Ligne de vue sur la grille : les murs (W) arrêtent la vue et la lumière ; les portes laissent passer.
+function ecLos(G,W,x0,y0,x1,y1){let x=Math.floor(x0),y=Math.floor(y0);const tx=Math.floor(x1),ty=Math.floor(y1),dx=Math.abs(tx-x),dy=Math.abs(ty-y),sx=x<tx?1:-1,sy=y<ty?1:-1;let err=dx-dy;
+  while(x!==tx||y!==ty){const e2=2*err;if(e2>-dy){err-=dy;x+=sx;}if(e2<dx){err+=dx;y+=sy;}if(x===tx&&y===ty)return true;if(G[y*W+x]==="W")return false;}return true;}
+function ecVision(st){const c=st.carte,W=c.w,H=c.h,vis=new Uint8Array(W*H),lit=new Float32Array(W*H),toks=st.tokens||[],ind=ecIndoor(c.type)||c.type==="image",dp=ecDarkPlace(c);
+  // À l'intérieur, la météo ne compte pas ; dans un lieu sombre, il fait noir même en plein jour.
+  let L0=EC_LUM[st.lum]||EC_LUM.jour;if(dp&&L0.dark<EC_LUM.tenebres.dark)L0=EC_LUM.tenebres;const M=ind?EC_METEO.clair:(EC_METEO[st.meteo]||EC_METEO.clair);
+  const L={vis:Math.min(L0.vis,M.vis),dark:Math.min(0.95,L0.dark+M.dk)},noFlame=!ind&&!!(M.rain||M.wind);
+  const G=EC_GEN[c.type]&&c.type!=="image"&&ecIndoor(c.type)?ecGenGeo(c).G:null,see=(ax,ay,bx,by)=>!G||ecLos(G,W,ax,ay,bx,by);
   const lights=toks.filter(k=>(k.k==="lum"&&!(noFlame&&k.flamme!==false))||(k.k==="pj"&&k.torche&&!noFlame)).map(k=>({x:k.x,y:k.y,r:k.k==="lum"?(+k.r||4):4})).concat(ecGenLights(c).filter(l=>!l.nuit||L0.dark>0.2).filter(l=>!(l.nuit&&noFlame)));
-  for(let y=0;y<H;y++)for(let x=0;x<W;x++){let l=0;lights.forEach(o=>{const d=Math.hypot(x+0.5-o.x,y+0.5-o.y);if(d<=o.r)l=1;else if(d<=o.r*2)l=Math.max(l,1-(d-o.r)/o.r*0.6);});lit[y*W+x]=l;}
+  lights.forEach(o=>{const R=o.r*2;for(let y=Math.max(0,Math.floor(o.y-R));y<Math.min(H,Math.ceil(o.y+R));y++)for(let x=Math.max(0,Math.floor(o.x-R));x<Math.min(W,Math.ceil(o.x+R));x++){const d=Math.hypot(x+0.5-o.x,y+0.5-o.y),i=y*W+x;if(d>R||!see(o.x,o.y,x+0.5,y+0.5))continue;lit[i]=Math.max(lit[i],d<=o.r?1:1-(d-o.r)/o.r*0.6);}});
   toks.filter(k=>k.k==="pj").forEach(p=>{const vr=Math.min(M.vis,Math.max(L.vis,(+p.dv||0))),R=Math.min(Math.max(W,H),Math.max(vr,24));
-    for(let y=Math.max(0,Math.floor(p.y-R));y<Math.min(H,Math.ceil(p.y+R));y++)for(let x=Math.max(0,Math.floor(p.x-R));x<Math.min(W,Math.ceil(p.x+R));x++){const d=Math.hypot(x+0.5-p.x,y+0.5-p.y),i=y*W+x;if(d<=vr||(lit[i]>0&&d<=Math.min(24,M.vis*2)))vis[i]=1;}});
+    for(let y=Math.max(0,Math.floor(p.y-R));y<Math.min(H,Math.ceil(p.y+R));y++)for(let x=Math.max(0,Math.floor(p.x-R));x<Math.min(W,Math.ceil(p.x+R));x++){const d=Math.hypot(x+0.5-p.x,y+0.5-p.y),i=y*W+x;if((d<=vr||(lit[i]>0&&d<=Math.min(24,M.vis*2)))&&see(p.x,p.y,x+0.5,y+0.5))vis[i]=1;}});
   // Ce qu'une source de lumière éclaire est visible de tous, même sans PJ à côté
   for(let i=0;i<W*H;i++)if(lit[i]>=1)vis[i]=1;
-  // Plein jour à l'extérieur (sans brume ni brouillard) : tout est en vue, même sans jeton PJ
-  if(!ecIndoor(c.type)&&c.type!=="image"&&L.vis>=Math.max(W,H))vis.fill(1);
+  // Plein jour à l'extérieur sans brume ni brouillard : tout est en vue, même sans jeton PJ
+  if(!ind&&L.vis>=Math.max(W,H))vis.fill(1);
   // Zones cachées à la main par le DM (« Cacher ») : restent cachées tant qu'il ne les révèle pas
   const vu=(st.fog&&st.fog.vu)||"";for(let i=0;i<vu.length&&i<W*H;i++)if(vu[i]==="2")vis[i]=0;
-  return {vis,lit,dark:L.dark};}
+  return {vis,lit,dark:L.dark,L0,M,ind,dp};}
+// Brouillard « organique » :
+// - dehors, le terrain reste toujours là : de jour il est clair, à l'aube et au crépuscule il est assombri, la nuit il est noir hors de la vue et de la lumière ;
+// - la météo voile ce qui est loin (blanc pour la neige et le brouillard, gris pour la pluie) sans tout masquer ;
+// - à l'intérieur et dans les lieux sombres, ce qui n'a pas été vu reste noir ; ce qui a été exploré reste en mémoire, assombri ;
+// - les créatures non vues restent cachées dans tous les cas (gérées au rendu des jetons).
 function ecFogCanvas(st,V,forDm){const c=st.carte,W=c.w,H=c.h,cv=document.createElement("canvas");cv.width=W;cv.height=H;const x=cv.getContext("2d"),im=x.createImageData(W,H),vu=(st.fog&&st.fog.vu)||"",fogOn=!!(st.fog&&st.fog.on);
-  for(let i=0;i<W*H;i++){const seen=vu[i]==="1"||V.vis[i];let a,r=8,g=12,b=24;
-    if(fogOn&&!seen){a=forDm?0.72:1;r=g=b=0;}else if(V.vis[i])a=V.dark*(1-V.lit[i]*0.92);else a=fogOn?Math.max(0.62,V.dark):V.dark*(1-V.lit[i]*0.92);
-    if(forDm&&!(fogOn&&!seen))a=Math.min(a,0.38);im.data[i*4]=r;im.data[i*4+1]=g;im.data[i*4+2]=b;im.data[i*4+3]=Math.round(a*255);}
+  const out=!V.ind&&!V.dp,ld=V.L0.dark,vl=out?EC_VEIL[st.meteo]:null;
+  for(let i=0;i<W*H;i++){const seen=!!V.vis[i],mem=vu[i]==="1",hid=vu[i]==="2",d=V.dark*(1-V.lit[i]*0.92);let a=d,va=0;
+    if(!seen){
+      if(hid&&fogOn)a=1;
+      else if(out){if(ld<=0.01)a=d;else if(ld<0.5)a=Math.min(0.85,d+0.22);else a=fogOn?(mem?0.86:1):Math.max(d,0.8);if(vl)va=vl[1];}
+      else a=fogOn?(mem?(V.dp?0.82:0.72):1):Math.max(d,0.6);}
+    // mélange : noir (obscurité) puis voile coloré de la météo par-dessus
+    const A0=a+va*(1-a);let r=0,g=0,b=0;if(A0>0&&va){const k=va*(1-a)/A0;r=vl[0][0]*k;g=vl[0][1]*k;b=vl[0][2]*k;}
+    const A=forDm?Math.min(A0,seen?0.38:0.62):A0;im.data[i*4]=r;im.data[i*4+1]=g;im.data[i*4+2]=b;im.data[i*4+3]=Math.round(A*255);}
   x.putImageData(im,0,0);return cv;}
 // Un rendu = un canvas + son état ; la boucle anime tous les rendus présents dans la page.
 function ecBind(id,mode){const cv=document.getElementById(id);if(!cv){delete ecRenderers[id];return null;}let r=ecRenderers[id];if(!r||r.cv!==cv){r=ecRenderers[id]={cv,mode,key:"",A:null,st:null,stat:null,img:null,fog:null,fogKey:""};}if(!ecRaf)ecRaf=requestAnimationFrame(ecLoop);return r;}
