@@ -3515,6 +3515,34 @@ function statChateau(x,g,s,c){if(g.e<0){x.fillStyle="#141210";x.fillRect(0,0,c.w
 function gThrone(x,o,s){gRect(x,o.x-0.6,o.y-0.4,1.2,0.9,s,"#7a2228","#3a1014");x.fillStyle="#d4af37";x.fillRect((o.x-0.5)*s,(o.y-0.4)*s,1*s,0.15*s);}
 function gBars(x,o,s){x.strokeStyle="#5a5a5a";x.lineWidth=Math.max(1,s*0.06);for(let i=0;i<4;i++){x.beginPath();x.moveTo((o.x+i*0.25)*s,(o.y-0.05)*s);x.lineTo((o.x+i*0.25)*s,(o.y+0.05)*s);x.stroke();}x.beginPath();x.moveTo(o.x*s,o.y*s);x.lineTo((o.x+1)*s,o.y*s);x.stroke();}
 EC_MAPS.chateau={l:"Château (étages)",g:"int"};EC_GEN.chateau={geo:geoChateau,stat:statChateau,dyn:(x,g,s,t)=>dynFires(x,g,s,t),floors:true,niv:{min:-1,max:2}};
+/* ---------- Cave / cellier (sous une auberge ou une maison) ---------- */
+// Voûtes en piliers, tonneaux, casiers à vin, escalier vers l'étage, et souvent un mur effondré qui ouvre sur un tunnel (nid de bestioles).
+function geoCave(c,R){const W=c.w,H=c.h,G=gGrid(W,H,"."),g={G,furn:[],fires:[],lights:[],floor:"pierre",stairs:[],tun:[]},F=o=>g.furn.push(o);
+  const x0=3,y0=2,x1=W-Math.max(9,Math.floor(W*0.25)),y1=H-3;for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)G[y*W+x]=(x===x0||x===x1||y===y0||y===y1)?"W":"F";
+  // alcôve irrégulière
+  const ay=y0+2+Math.floor(R()*(y1-y0-8));for(let y=ay;y<ay+4;y++)for(let x=x0-2;x<=x0;x++)G[y*W+x]=(x===x0-2||y===ay||y===ay+3)?"W":"F";
+  // escalier vers l'étage (ouvert vers l'est)
+  const sy=y1-3;for(let y=sy;y<sy+2;y++)for(let x=x0+1;x<x0+4;x++)G[y*W+x]="F";const st={x:x0+1,y:sy,w:3,h:2,dir:"up",open:"e"};F(Object.assign({k:"stairs2"},st));g.stairs.push(st);
+  g.fires.push({x:x0+3.6,y:sy-0.4,r:0.15});g.lights.push({x:x0+3.6,y:sy,r:3});
+  const busy=(x,y,m)=>x<x0+1||y<y0+1||x>x1-1||y>y1-1||(x>st.x-m&&x<st.x+st.w+m&&y>st.y-m&&y<st.y+st.h+m);
+  // piliers des voûtes
+  for(let y=y0+4;y<y1-1;y+=4)for(let x=x0+5;x<x1-2;x+=5)if(!busy(x,y,1.5))F({k:"0",x,y,w:1,h:1});
+  // tonneaux le long du mur nord, casiers à vin au milieu, caisses en tas
+  for(let x=x0+1.5;x<x1-1;x+=1.05)if(R()<0.85)F({k:"barrel",x,y:y0+1.5});
+  for(let r=0;r<2;r++){const yy=y0+4+r*4,xx=x0+7+Math.floor(R()*3),L=4+Math.floor(R()*3);if(!busy(xx,yy,1)&&xx+L<x1-3)F({k:"Y",x:xx,y:yy,w:L,h:1,side:null,wine:1});}
+  for(let i=0;i<7;i++){const X=x1-4+R()*2.5,Y=y1-5+R()*3.5;if(!busy(X,Y,1))F({k:R()<0.6?"crate":"barrel",x:X,y:Y});}
+  for(let i=0;i<3;i++)F({k:"rubble",x:x0+2+R()*(x1-x0-4),y:y0+3+R()*(y1-y0-5)});
+  // mur effondré à l'est et tunnel jusqu'au bord de la carte
+  const by=Math.floor((y0+y1)/2)+Math.floor(R()*3)-1;G[by*W+x1]="F";G[(by+1)*W+x1]="F";F({k:"rubble",x:x1-0.3,y:by+0.4});F({k:"rubble",x:x1+0.6,y:by+1.6});
+  let ty=by;for(let x=x1+1;x<W;x++){if(R()<0.35)ty=Math.max(y0+1,Math.min(y1-2,ty+(R()<0.5?-1:1)));for(let d=0;d<2;d++){G[(ty+d)*W+x]="F";g.tun.push([x,ty+d]);}}
+  const nx=W-4,ny=ty;F({k:"bones",x:nx,y:ny+0.3});F({k:"bones",x:nx+1.2,y:ny+1.2});g.nest={x:nx+0.5,y:ny+1};
+  return g;}
+function statCave(x,g,s,c){x.fillStyle="#1d1915";x.fillRect(0,0,c.w*s,c.h*s);const G=g.G;
+  for(let y=0;y<G.H;y++)for(let X=0;X<G.W;X++){x.fillStyle=["#2a2520","#26211c","#2e2823"][(X*3+y*5)%3];x.fillRect(X*s,y*s,s+1,s+1);}
+  gFloor(x,G,s,"pierre");g.tun.forEach(([X,Y])=>{x.fillStyle=["#5a4a3a","#544536","#5e4e3e"][(X+Y)%3];x.fillRect(X*s,Y*s,s+1,s+1);});
+  if(g.nest){x.fillStyle="#8a7a4a";x.beginPath();x.ellipse(g.nest.x*s,g.nest.y*s,1.1*s,0.8*s,0,0,6.283);x.fill();x.strokeStyle="#5a4a2a";x.lineWidth=Math.max(1,s*0.04);for(let i=0;i<14;i++){const a=i*0.45;x.beginPath();x.moveTo((g.nest.x+Math.cos(a)*0.3)*s,(g.nest.y+Math.sin(a)*0.25)*s);x.lineTo((g.nest.x+Math.cos(a)*1)*s,(g.nest.y+Math.sin(a)*0.7)*s);x.stroke();}}
+  g.furn.forEach(o=>o.k==="stairs2"?gStairs(x,o,s,o.dir):o.k==="Y"||o.k==="0"?gFurnB(x,o,s):gFurn(x,o,s));gWalls(x,G,s,"#5a4430","#7e6244");}
+EC_MAPS.cave={l:"Cave / cellier",g:"int"};EC_GEN.cave={geo:geoCave,stat:statCave,dyn:(x,g,s,t)=>dynFires(x,g,s,t)};
 EC_GEN.donjon.floors=true;EC_GEN.donjon.niv={min:-2,max:0};
 
 function ecStaticGen(c,s){const g=ecGenGeo(c),cv=document.createElement("canvas");cv.width=Math.ceil(c.w*s);cv.height=Math.ceil(c.h*s);EC_GEN[c.type].stat(cv.getContext("2d"),g,s,c);return cv;}
@@ -3789,7 +3817,7 @@ function ecTvShell(){return '<div class="ectv"><canvas id="ec-tv"></canvas><div 
 function ecTvUpdate(){if(ui.office!=="ecran")return;const app=document.getElementById("app");if(!document.getElementById("ec-tv"))app.innerHTML=ecTvShell();
   const m=document.getElementById("ec-msg"),st=ecDoc;
   if(!isAdmin){m.textContent="Écran de table : connecte-toi avec le compte du Maître de la Guilde, puis recharge.";return;}
-  if(!st||!st.carte){m.textContent="En attente d'une carte… Dans le Mode Partie, onglet Écran, choisis « Afficher sur l'écran ».";const r=ecBind("ec-tv","tv");if(r)r.st=null;return;}
+  if(!st||!st.carte){m.textContent="En attente d'une carte… Ouvre une carte dans le Mode Partie (onglet Écran) ou dans l'Espace DM → Cartes (« Montrer aux joueurs »).";const r=ecBind("ec-tv","tv");if(r)r.st=null;return;}
   m.textContent="";const r=ecBind("ec-tv","tv");if(r)ecSet(r,st);
   {const M=EC_METEO[st.meteo]||EC_METEO.clair;document.getElementById("ec-met").innerHTML=(st.date?'<span class="dt">📜 '+esc(st.date)+'</span>':'')+(st.meteo&&st.meteo!=="clair"?'<strong>'+M.i+' '+esc(M.l)+'</strong>'+(M.fx.length?'<span>'+esc(M.fx[0])+'</span>':''):'');}
   document.getElementById("ec-info").innerHTML=st.info?'<p>'+esc(st.info).replace(/\n/g,"<br>")+'</p>':'';
