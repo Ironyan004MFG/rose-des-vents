@@ -90,6 +90,10 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .xpline{margin:4px 0 2px;font-size:15px}.xprow{display:flex;align-items:center;gap:10px;max-width:420px}.xpbar{flex:1;height:8px;border-radius:4px;background:rgba(0,0,0,.12);overflow:hidden}.xpnext{flex:none;font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}.xpbar i{display:block;height:100%;background:linear-gradient(90deg,#b8862f,#e3c06c)}
 .xpbox{margin:14px 0 6px;padding:10px 14px;border:1px solid var(--parch-3,#d9c9a0);border-radius:6px}.xpbox legend{font-family:var(--display);font-size:13px;letter-spacing:.12em;text-transform:uppercase;padding:0 6px}.xpbox label{display:inline-flex;flex-direction:column;max-width:240px}.xpbox ul{margin:6px 0 0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:6px}.xpbox li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}.xpbox li .xpp{flex-direction:row;align-items:center;gap:6px;font-size:14px}.xpbox li .xpp input{width:90px}
 .xphist{list-style:none;margin:6px 0;padding:0;max-width:560px;font-size:15px}.xphist li{display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.1)}.xphist .d{flex:none;width:92px;color:var(--ink-soft);font-size:13.5px;font-variant-numeric:tabular-nums}.xphist .t{flex:1;min-width:0}.xphist .x{flex:none;font-weight:700;font-variant-numeric:tabular-nums}.xphist .bp{display:block;font-size:13px;color:var(--ink-soft)}.xpline .nx{color:var(--ink-soft);font-size:14px}
+.gstabs{margin:6px 0 4px}.gs h2{margin-top:10px}.gsdisc{font-size:14.5px;margin:6px 0}
+.gslist{list-style:none;margin:10px 0;padding:0;max-width:760px}.gslist li{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--line,#d9c9a0)}.gslist .gn{flex:1;min-width:0}.gslist .gd{display:block;font-size:13.5px;color:var(--on-board-muted)}.gslist .gp{white-space:nowrap;font-weight:700;font-variant-numeric:tabular-nums}.gslist .gact{display:flex;gap:4px}
+.gsrank{font-size:12px;color:var(--on-board-muted);white-space:nowrap}.gs .gslist .mini{color:#f6ecd0;border-color:rgba(246,236,208,.45);background:transparent}.gs .gslist .mini.gold{background:#d8b45e;color:#1b140c}.gs .toast{color:#bfe3b4;font-style:normal}.gslist li.gsconf{background:#efe4c6;color:#2a2118;border-radius:6px;padding:8px 10px;flex-wrap:wrap}.gs .gslist li.gsconf .mini{color:#2a2118;border-color:#8a7a60}.gs .gslist li.gsconf .mini.gold{background:#d8b45e}.gslist li.gsconf label{display:flex;flex-direction:column;font-size:13px}
+.gssell,.gsadd form{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:14px 0;max-width:760px}.gssell h3{width:100%;margin:0}.gssell .desc{width:100%;margin:0}.gssell label,.gsadd label{display:flex;flex-direction:column;font-size:13px}.gssell .toast{width:100%}.gsadd{margin-top:12px}
 .shopgen{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-bottom:8px}.shopgen label{display:flex;flex-direction:column;font-size:13px}
 details.shop{border:1px solid var(--parch-3,#d9c9a0);border-radius:8px;padding:8px 12px;margin:10px 0;background:rgba(255,255,255,.25)}details.shop>summary{cursor:pointer;font-size:16px}
 .shopwho{margin:6px 0;font-size:14.5px}.shopcash{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:14px;padding:6px 10px;background:#efe4c6;border-radius:6px}
@@ -1092,7 +1096,7 @@ const DEFAULT_SCALE = [
 
 /* ---------- state ---------- */
 let evoPriv=null;
-let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, notoMap = {}, meritMap = {}, remisesMap = {}, niveauVuMap = {}, shopCfg = null, relations = [], priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], parties = [], modules = [], butins = [], crieur = null, pnjs = [], monstres = [], rencontres = [], scenarios = {};
+let fsBureaux = [], bureaux = SEED.bureaux.slice(), quetes = [], inscriptions = [], aventuriers = [], scaleDoc = null, wikiPages = [], journal = [], rangs = [], pointsMap = {}, notoMap = {}, meritMap = {}, remisesMap = {}, niveauVuMap = {}, shopCfg = null, gsAll = [], relations = [], priv = null, privUnsubs = [], compPublic = [], compAll = [], planifs = [], nouvelles = [], notesDm = [], evols = [], monde = null, dossiers = {}, factions = [], parties = [], modules = [], butins = [], crieur = null, pnjs = [], monstres = [], rencontres = [], scenarios = {};
 const loaded = {b:false, q:false, i:false, a:false, w:false, c:false};
 let user = null, isAdmin = false, adminChecked = false;
 let net = {state:"connexion", msg:""};
@@ -1177,6 +1181,7 @@ function listen(){
     rangs=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();
   },onErr);
   onSnapshot(query(collection(db,"compendium"),where("masque","==",false)),snap=>{compPublic=snap.docs.map(d=>Object.assign({id:d.id},d.data()));loaded.c=true;render();},onErr);
+  onSnapshot(collection(db,"boutique"),snap=>{gsAll=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},onErr);
   onSnapshot(collection(db,"nouvelles"),snap=>{nouvelles=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},onErr);
   onSnapshot(collection(db,"planif"),snap=>{planifs=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},onErr);
   onSnapshot(collection(db,"wiki"),snap=>{
@@ -1294,6 +1299,7 @@ function mapView(){
     h+='<a class="office" href="#'+esc(b.id)+'"><span class="nm">'+esc(b.nom)+(b.siege?'<span class="tag">Siège de la Guilde</span>':'')+'</span><span class="count'+(n?'':' zero')+'">'+n+' quête'+(n>1?'s':'')+'</span></a>';});
   h+='<a class="office regl" href="#compendium"><span class="nm">Compendium<span class="tag">PNJ, créatures, lieux, indices…</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#aventuriers"><span class="nm">Les aventuriers de la Guilde<span class="tag">La galerie des personnages</span></span><span aria-hidden="true">→</span></a>';
+  h+='<a class="office regl" href="#boutique"><span class="nm">Boutique de la Guilde<span class="tag">Intendance, services, dépôt, Trésor de la Rose</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#personnages"><span class="nm">Mes personnages<span class="tag">Ta fiche d\'aventurier</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#chroniques"><span class="nm">Chroniques de la Guilde<span class="tag">Les missions en cours et accomplies</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#wiki"><span class="nm">Wiki des règles maison<span class="tag">Outerworlders, Supercharged, renommée…</span></span><span aria-hidden="true">→</span></a>';
@@ -2336,7 +2342,7 @@ function statusPill(){
 }
 function render(){
   const wk=!!ui.office&&(ui.office==="wiki"||ui.office.indexOf("wiki-")===0);
-  if(ui.office&&ui.office!=="renommee"&&ui.office!=="chroniques"&&ui.office!=="personnages"&&ui.office!=="aventuriers"&&ui.office!=="dm"&&ui.office!=="compendium"&&ui.office.indexOf("compendium-")!==0&&ui.office.indexOf("perso-")!==0&&ui.office.indexOf("partie-")!==0&&!wk&&loaded.b&&!office(ui.office))ui.office=null;
+  if(ui.office&&ui.office!=="renommee"&&ui.office!=="chroniques"&&ui.office!=="personnages"&&ui.office!=="aventuriers"&&ui.office!=="dm"&&ui.office!=="compendium"&&ui.office!=="boutique"&&ui.office.indexOf("compendium-")!==0&&ui.office.indexOf("perso-")!==0&&ui.office.indexOf("partie-")!==0&&!wk&&loaded.b&&!office(ui.office))ui.office=null;
   const reg=ui.office==="renommee";
   const chr=ui.office==="chroniques";
   const perso=!!ui.office&&ui.office.indexOf("perso-")===0;
@@ -2344,18 +2350,19 @@ function render(){
   const gal=ui.office==="aventuriers";
   const dms=ui.office==="dm";
   const pty=!!ui.office&&ui.office.indexOf("partie-")===0;
+  const gsh=ui.office==="boutique";
   const comp=ui.office==="compendium",compE=!!ui.office&&ui.office.indexOf("compendium-")===0;
   const b=ui.office&&!reg?office(ui.office):null;
   let h='<div class="wrap">';
   h+='<header><svg width="72" height="72" viewBox="-110 -110 220 220" aria-hidden="true"><circle r="80" fill="none" stroke="#d8b45e" stroke-width="3" opacity=".6"></circle>'+rose(104,'#0e1b20')+'</svg>';
-  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(pty?'Mode Partie':dms?'Espace DM':comp||compE?'Compendium de la Guilde':gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(dms?'Le bureau secret du Maître de la Guilde':comp||compE?'Le savoir partagé des aventuriers':gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions en cours et accomplies par les aventuriers':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+dmPill()+statusPill()+'</header>';
+  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(pty?'Mode Partie':dms?'Espace DM':gsh?'Boutique de la Guilde':comp||compE?'Compendium de la Guilde':gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(dms?'Le bureau secret du Maître de la Guilde':gsh?'Intendance, services, dépôt et Trésor de la Rose':comp||compE?'Le savoir partagé des aventuriers':gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions en cours et accomplies par les aventuriers':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+dmPill()+statusPill()+'</header>';
   if(pty){const pq=ptQuest();h+='<a class="back" href="#'+(pq?esc(pq.bureau):'carte')+'"><span aria-hidden="true">←</span> Retour au babillard</a>';}
   else if(compE)h+='<a class="back" href="#compendium"><span aria-hidden="true">←</span> Compendium</a>';
   else if(perso)h+='<a class="back" href="#renommee"><span aria-hidden="true">←</span> Registre de renommée</a>';
-  else if(b||reg||wk||chr||mes||gal||comp||dms)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
+  else if(b||reg||wk||chr||mes||gal||comp||dms||gsh)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
   if(ui.authMsg)h+='<div class="dmbar"><span class="msg">'+esc(ui.authMsg)+'</span><button class="btn board" data-a="auth-ok">OK</button>'+(user&&!user.isAnonymous&&!isAdmin?'<button class="btn board" data-a="logout">Déconnexion</button>':'')+'</div>';
   if(ui.dm&&!pty)h+=dmPanel(b);
-  h+=pty?partyView():dms?dmSpaceView():comp?compendiumView():compE?compEntryView(ui.office.slice(11)):gal?galleryView():mes?myCharsView():perso?sheetView(ui.office.slice(6)):chr?chroniclesView():wk?wikiView():reg?renownView():b?boardView()+boardNews(b.id)+reputationSection(b.id,b.nom):mapView();
+  h+=pty?partyView():dms?dmSpaceView():gsh?gsView():comp?compendiumView():compE?compEntryView(ui.office.slice(11)):gal?galleryView():mes?myCharsView():perso?sheetView(ui.office.slice(6)):chr?chroniclesView():wk?wikiView():reg?renownView():b?boardView()+boardNews(b.id)+reputationSection(b.id,b.nom):mapView();
   const signed=user&&!user.isAnonymous;
   h+='<footer><span>Pour partir en mission : choisis une quête, appuie sur « Je veux y aller » et choisis ton personnage. Le DM confirme les inscriptions.</span>'+
     '<span class="who">'+(signed?'Connecté : '+esc(user.displayName||user.email||"aventurier")+' · <a href="#personnages">Mes personnages</a> · <button class="linkbtn" data-a="logout">Déconnexion</button>':'<button class="linkbtn" data-a="login">Se connecter</button>')+
@@ -2699,7 +2706,7 @@ function shopName(type,lieu,who){
   return n[0]+" "+(n[1]==="f"?a[1]:a[0]);
 }
 // Prix en po → « 4 po 5 pa »
-function fmtPo(p){const c=Math.round((+p||0)*100);if(c>=10000)return Math.round(c/100).toLocaleString("fr-CA")+" po";const po=Math.floor(c/100),pa=Math.floor((c%100)/10),pc=c%10;
+function fmtPo(p){const c=Math.round((+p||0)*100);if(c>=100000)return Math.round(c/100).toLocaleString("fr-CA")+" po";const po=Math.floor(c/100),pa=Math.floor((c%100)/10),pc=c%10;
   return [po?po.toLocaleString("fr-CA")+" po":"",pa?pa+" pa":"",pc?pc+" pc":""].filter(Boolean).join(" ")||"0 pc";}
 function shopRound(p){return p>=20?Math.round(p):p>=1?Math.round(p*10)/10:Math.max(0.01,Math.round(p*100)/100);}
 // Objets maison (Espace DM) : « Nom | prix po | types | rareté | lieu min (0, 1, 2) »
@@ -2778,6 +2785,61 @@ async function shopAction(a,id,b,v,q){const P=ui.pt;P.boutiques=P.boutiques||[];
   if(a==="pt-shop-del"){P.boutiques=P.boutiques.filter(x=>x.id!==id);return true;}
   if(a==="pt-shop-pnj"){const T=SHOP_TYPES[S.type]||{};await run("PNJ",()=>setDoc(doc(collection(db,"pnj")),{nom:S.marchand,role:"Marchand : "+S.nom+" ("+(T.l||"")+")",espece:S.espece,voix:S.trait,lieu:S.nom,region:S.region||"",attitude:"neutre",quetes:[q.id],notes:"Créé depuis une boutique de session ("+(SHOP_LIEUX[S.lieu]||{}).l+")."}));
     S.log.push("Marchand gardé comme PNJ dans le Manuel.");return true;}
+  return false;}
+
+/* ---------- Boutique de la Guilde (hors quête) : un menu d'objets et de prix ; le DM fait les ventes lui-même ---------- */
+const GS_SECS=[["intendance","Intendance","Fournitures de mission. La Guilde réapprovisionne sans cesse."],["services","Services","Location et assurance pour les membres."],
+  ["depot","Dépôt","Trésors revendus par les aventuriers. Chaque objet est unique : vendu, il disparaît."],["tresor","Trésor de la Rose","Récompenses hors-normes des Mithril : 1 étoile chacune. Uniques."]];
+const GS_DISC={bois:0,cuivre:5,fer:10,argent:15,or:20,mithral:25,rose:25};
+const GS_RANKMIN={inhabituel:"fer",rare:"argent",epique:"or",legendaire:"mithral"};
+const GS_SEED=[
+  ["intendance","Potion de soins",50,""],["intendance","Kit de soins",5,""],["intendance","Antitoxine",50,""],["intendance","Eau bénite (flasque)",25,""],["intendance","Rations (1 jour)",0.5,""],
+  ["intendance","Gourde",0.2,""],["intendance","Corde de chanvre (15 m)",1,""],["intendance","Torches (×10)",0.1,""],["intendance","Huile (×5 flasques)",0.5,""],["intendance","Boîte d'allume-feu",0.5,""],
+  ["intendance","Sac de couchage",1,""],["intendance","Tente (2 places)",2,""],["intendance","Sac à dos",2,""],["intendance","Pied-de-biche",2,""],["intendance","Grappin",2,""],["intendance","Lanterne à capuchon",5,""],
+  ["intendance","Pitons (×10)",0.5,""],["intendance","Flèches (20)",1,""],["intendance","Carreaux (20)",1,""],["intendance","Menottes",2,""],["intendance","Kit d'escalade",25,""],
+  ["intendance","Paquetage d'exploration",5,"Corde de chanvre, 10 torches, 5 rations, gourde, 10 pitons, craie."],["intendance","Paquetage de survie",6,"Sac de couchage, tente, 5 rations, gourde, boîte d'allume-feu."],
+  ["intendance","Paquetage de chasseur de primes",5,"Menottes, filet, corde de chanvre, chausse-trapes."],["intendance","Paquetage de soigneur",140,"Kit de soins, 2 potions de soins, antitoxine."],
+  ["services","Location : cheval de selle",5,"Pour une mission. À rendre au retour, sinon la Guilde facture 75 po."],["services","Location : mule",1,"Pour une mission. À rendre au retour, sinon 8 po."],
+  ["services","Location : chariot et mule",5,"Pour une mission. À rendre au retour, sinon 45 po."],["services","Location : cheval de guerre",40,"Pour une mission, réservé aux rangs Fer et plus. À rendre au retour, sinon 400 po."],
+  ["services","Assurance « Retour du corps »",10,"Par mission. Si tu tombes, la Guilde rapatrie ton corps au temple le plus proche, ce qui rend un Retour à la vie possible."],
+  ["tresor","Château avec fief et titre de noblesse",1,"Un domaine, son intendant… et ses voisins."],["tresor","Tour ou manoir en ville",1,"Une base dans la ville de ton choix."],
+  ["tresor","Navire volant et son équipage",1,"Un airship pour explorer la Sword Coast… et au-delà."],["tresor","Navire et son équipage",1,"Un bateau marchand armé, avec son capitaine."],
+  ["tresor","Objet légendaire",1,"Choisi avec le Maître de la Guilde."],["tresor","Deux objets très rares",1,"Choisis avec le Maître de la Guilde."],
+  ["tresor","Monture exceptionnelle",1,"Griffon, hippogriffe ou pégase, dressé pour toi."],["tresor","Réseau d'informateurs",1,"Des yeux et des oreilles dans toute une région."],
+  ["tresor","Faveur politique majeure",1,"Lever un mandat, obtenir une grâce, ouvrir une porte fermée."]];
+function gsItems(sec){return gsAll.filter(x=>x.section===sec).sort((a,b)=>(a.ordre||0)-(b.ordre||0)||String(a.nom).localeCompare(String(b.nom),"fr"));}
+function gsView(){
+  const sec=GS_SECS.some(s=>s[0]===ui.gsSec)?ui.gsSec:"intendance",S=GS_SECS.find(s=>s[0]===sec),dm=ui.dm&&isAdmin,L=gsItems(sec);
+  let h='<div class="chips gstabs" role="tablist" aria-label="Comptoirs de la boutique">'+GS_SECS.map(s=>'<button class="chip" role="tab" data-a="gs-sec" data-v="'+s[0]+'" aria-selected="'+(s[0]===sec)+'" aria-pressed="'+(s[0]===sec)+'">'+s[1]+'</button>').join("")+'</div>';
+  h+='<section class="gs"><h2>'+esc(S[1])+'</h2><p class="hint">'+esc(S[2])+' Pour acheter, adresse-toi au Maître de la Guilde.</p>';
+  if(sec==="intendance"){const mine=myChars();h+='<p class="gsdisc"><strong>Rabais membre selon le rang :</strong> '+GRANKS.filter(k=>k!=="rose").map(k=>esc(GRANK_LBL[k])+' '+(GS_DISC[k]?'−'+GS_DISC[k]+' %':'0 %')).join(" · ")+'</p>'+
+    (mine.length?'<p class="gsdisc">'+mine.map(a=>esc(a.nom)+' ('+esc(GRANK_LBL[grank(a)])+') : <strong>'+(GS_DISC[grank(a)]?'−'+GS_DISC[grank(a)]+' %':'pas de rabais')+'</strong>').join(" · ")+'</p>':'');}
+  if(sec==="tresor")h+='<p class="gsdisc">Chaque étoile de Mithril donne droit à <strong>une</strong> récompense. Après trois étoiles, un acte héroïque peut ouvrir le <strong>Conseil de la Rose</strong> : ses membres siègent aux côtés de Pax, choisissent quelle crise régionale la Guilde traite en priorité et peuvent fonder un nouveau comptoir.</p>';
+  if(!L.length)h+='<p class="empty">'+(sec==="depot"?'Le Dépôt est vide pour l\'instant.':'Rien ici pour l\'instant.')+'</p>'+(dm&&sec!=="depot"&&!gsAll.length?'<p><button class="btn gold" data-a="gs-seed">Installer le catalogue de départ</button></p>':'');
+  else h+='<ul class="gslist">'+L.map(x=>{const rm=GS_RANKMIN[x.rar];return '<li><span class="gn"><strong>'+esc(x.nom)+'</strong>'+(x.rar&&RAR[x.rar]?' <span class="rar r-'+x.rar+'">'+esc(RAR[x.rar][1])+'</span>':'')+(rm?' <span class="gsrank">Rang '+esc(GRANK_LBL[rm])+' et plus</span>':'')+(x.desc?'<span class="gd">'+esc(x.desc)+'</span>':'')+(dm&&x.vendeur?'<span class="gd">Vendu par '+esc(x.vendeur)+' <em>(DM)</em></span>':'')+'</span>'+
+      '<span class="gp">'+(sec==="tresor"?'1 étoile':fmtPo(x.prix))+'</span>'+(dm?'<span class="gact">'+(sec==="depot"?'<button class="mini" data-a="gs-sold" data-id="'+esc(x.id)+'">Vendu</button>':sec==="tresor"?'<button class="mini" data-a="gs-grant" data-id="'+esc(x.id)+'">Accorder</button>':'')+'<button class="mini" data-a="gs-del" data-id="'+esc(x.id)+'" aria-label="Retirer '+esc(x.nom)+'">✕</button></span>':'')+'</li>'+
+      (dm&&ui.gsConfirm===x.id?'<li class="gsconf">'+(sec==="tresor"?gsGrantForm(x):'<span>'+(sec==="depot"?'Confirmer la vente de « '+esc(x.nom)+' » ? Il disparaîtra du Dépôt.':'Retirer « '+esc(x.nom)+' » du menu ?')+'</span><button class="mini gold" data-a="gs-yes" data-id="'+esc(x.id)+'">Confirmer</button><button class="mini" data-a="gs-no">Annuler</button>')+'</li>':'');}).join("")+'</ul>';
+  if(sec==="depot"&&dm)h+=gsSellForm();
+  else if(dm&&sec!=="depot")h+='<details class="gsadd"><summary>Ajouter au menu</summary><form class="inline" id="gsaddform" data-sec="'+sec+'"><label for="gs-n">Nom<input id="gs-n" maxlength="100" required></label>'+(sec==="tresor"?'':'<label for="gs-p">Prix (po)<input id="gs-p" type="number" min="0" step="0.01" required></label>')+'<label for="gs-d">Description (facultatif)<input id="gs-d" maxlength="300"></label><button class="btn" type="submit">Ajouter</button></form></details>';
+  return h+'</section>';}
+function gsSellForm(){const m=ui.gsMsg;
+  return '<form class="gssell" id="gssellform"><h3>Vendre des objets à la Guilde</h3><p class="desc">La Guilde paie 50 % de la valeur totale et revend l\'objet au Dépôt à 75 %.</p>'+
+    '<label for="gs-sv">Vendeur (facultatif)<select id="gs-sv"><option value="">—</option>'+ranked().map(a=>'<option value="'+esc(a.nom)+'">'+esc(a.nom)+'</option>').join("")+'</select></label>'+
+    '<label for="gs-sn">Objet(s)<input id="gs-sn" maxlength="100" required placeholder="Ex. Épée longue +1"></label><label for="gs-sp">Valeur totale (po)<input id="gs-sp" type="number" min="0" step="0.01" required></label>'+
+    '<label for="gs-sr">Rareté<select id="gs-sr"><option value="">Non magique</option>'+RARES.filter(r=>r[0]!=="mediocre").map(r=>'<option value="'+r[0]+'">'+esc(r[1])+'</option>').join("")+'</select></label>'+
+    '<button class="btn gold" type="submit">Vendre à la Guilde</button>'+(m?'<p class="toast" role="status">'+m+'</p>':'')+'</form>';}
+function gsGrantForm(x){const el=ranked().filter(a=>grank(a)==="mithral"||grank(a)==="rose").filter(a=>stars(a)-(remisesMap[a.id]||0)>0);
+  return el.length?'<label for="gs-g">Accorder « '+esc(x.nom)+' » à<select id="gs-g">'+el.map(a=>'<option value="'+esc(a.id)+'">'+esc(a.nom)+' ('+(stars(a)-(remisesMap[a.id]||0))+' étoile'+(stars(a)-(remisesMap[a.id]||0)>1?'s':'')+' disponible'+(stars(a)-(remisesMap[a.id]||0)>1?'s':'')+')</option>').join("")+'</select></label><button class="mini gold" data-a="gs-grantyes" data-id="'+esc(x.id)+'">Accorder (1 étoile)</button><button class="mini" data-a="gs-no">Annuler</button>'
+    :'<span>Aucun Mithril n\'a d\'étoile disponible.</span><button class="mini" data-a="gs-no">OK</button>';}
+async function gsAction(a,id){
+  if(a==="gs-sec"){return false;}
+  if(a==="gs-seed"){await run("Catalogue",async()=>{const bt=writeBatch(db);GS_SEED.forEach((x,i)=>bt.set(doc(collection(db,"boutique")),{section:x[0],nom:x[1],prix:x[2],desc:x[3],ordre:i,creeLe:serverTimestamp()}));await bt.commit();});return true;}
+  if(a==="gs-del"||a==="gs-sold"||a==="gs-grant"){ui.gsConfirm=id;return true;}
+  if(a==="gs-no"){ui.gsConfirm=null;return true;}
+  if(a==="gs-yes"){const x=gsAll.find(y=>y.id===id);ui.gsConfirm=null;if(!x)return true;await run("Boutique",()=>deleteDoc(doc(db,"boutique",id)));return true;}
+  if(a==="gs-grantyes"){const x=gsAll.find(y=>y.id===id),aid=(document.getElementById("gs-g")||{}).value,av=aventuriers.find(y=>y.id===aid);ui.gsConfirm=null;if(!x||!av)return true;
+    await run("Trésor de la Rose",async()=>{const bt=writeBatch(db);bt.delete(doc(db,"boutique",id));bt.set(doc(db,"points",av.id),{remises:(remisesMap[av.id]||0)+1},{merge:true});
+      bt.set(doc(collection(db,"journal")),{aventurier:av.id,nom:av.nom,bureau:"",points:0,notoriete:0,raison:"Trésor de la Rose : "+x.nom+" (1 étoile)",quete:"",date:serverTimestamp()});await bt.commit();});return true;}
   return false;}
 
 function ptSide(q){
@@ -3502,6 +3564,7 @@ document.addEventListener("click",async e=>{
   const b=e.target.closest("[data-a]");if(!b)return;
   const a=b.getAttribute("data-a"),id=b.getAttribute("data-id");
   if(a.indexOf("pt-")===0){await partyAction(a,id,b,e);return;}
+  if(a.indexOf("gs-")===0){if(a==="gs-sec"){ui.gsSec=b.getAttribute("data-v");ui.gsConfirm=null;ui.gsMsg="";}else await gsAction(a,id);render();return;}
   if(a==="filter"){ui.filter=b.getAttribute("data-v");}
   else if(a==="dm"){
     if(ui.dm){ui.dm=false;}
@@ -3799,6 +3862,11 @@ document.addEventListener("submit",async e=>{
     ui.compEdit=null;ui.compImg=undefined;ui.compPreview=false;
     const ok=await saveComp(id,data,isNew);if(ok)location.hash="#compendium-"+id;return;
   }
+  if(e.target.id==="gsaddform"){const sec=e.target.getAttribute("data-sec"),nom=v("gs-n").slice(0,100);if(!nom||!isAdmin)return;const prix=sec==="tresor"?1:Math.max(0,+v("gs-p")||0);
+    await run("Boutique",()=>setDoc(doc(collection(db,"boutique")),{section:sec,nom,prix,desc:v("gs-d").slice(0,300),ordre:Date.now(),creeLe:serverTimestamp()}));return;}
+  if(e.target.id==="gssellform"){const nom=v("gs-sn").slice(0,100),val=Math.max(0,+v("gs-sp")||0),rar=v("gs-sr"),vend=v("gs-sv").slice(0,60);if(!nom||!val||!isAdmin)return;
+    const ok=await run("Dépôt",()=>setDoc(doc(collection(db,"boutique")),{section:"depot",nom,prix:shopRound(val*0.75),rar,vendeur:vend,desc:"",ordre:Date.now(),creeLe:serverTimestamp()}));
+    if(ok){ui.gsMsg='La Guilde paie <strong>'+fmtPo(val/2)+'</strong>'+(vend?' à '+esc(vend):'')+' pour « '+esc(nom)+' ». L\'objet est au Dépôt à '+fmtPo(shopRound(val*0.75))+' (75 %).';render();}return;}
   if(e.target.id==="sheetform"){
     const isNew=ui.sheetEdit==="new",cur=isNew?null:aventuriers.find(a=>a.id===ui.sheetEdit);
     const nom=v("p-nom").slice(0,60);if(!nom)return;
