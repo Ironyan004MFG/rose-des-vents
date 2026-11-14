@@ -3585,7 +3585,7 @@ function ecRoam(k,g,c,TT){if(!g||g.e!==0||!g.people)return null;const nav=burNav
       S=[home];if(dest.length){S.push(dest[Math.floor(R()*dest.length)]);S.push(Object.assign({},home));if(dest.length>1)S.push(dest[(Math.floor(R()*dest.length)+1)%dest.length]);}}
     g.roam[key]=S;}
   if(S.length<2)return null;const m=navTour(nav,S,0.7,TT,(k.x*13+k.y*7)%50);
-  if(k.look.pax)g.paxPos=[m.x,m.y];
+  if(k.look.pax){g.paxPos=[m.x,m.y];if(!g.paxTour||g.paxTour.S!==S){const A=[];let acc=0;for(let i=0;i<S.length;i++){A.push(acc);acc+=(S[i].w||0)+S._legs[i].tot/0.7;}g.paxTour={S,A,T:S._T,off:(k.x*13+k.y*7)%50};g.walkers=null;}}
   if(!k.look.pax){// un aventurier (jeton de joueur ou aventurier de passage) devant le comptoir : le préposé reste à son poste ; il ne repart qu'une fois revenu à son poste dans sa tournée
     const busy=(g.custPos||[]).concat(g.pjPos||[]).some(q=>Math.hypot(q[0]-k.x,q[1]-k.y)<2.7);g.hold=g.hold||{};
     if(busy)g.hold[key]=1;else if(g.hold[key]&&Math.hypot(m.x-k.x,m.y-k.y)<0.3)delete g.hold[key];
@@ -3653,23 +3653,31 @@ function burWalkers(x,g,s,c,TT){const W=c.w,H=c.h,wk=g.walk,ok=(X,Y)=>X>=0&&Y>=0
       const isC=(X,Y)=>g.furn.some(o=>o.k==="C"&&X>=o.x&&X<o.x+o.w&&Y>=o.y&&Y<o.y+o.h),front=[];(g.spots.p||[]).forEach(sp=>{[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{const cx=Math.floor(sp.x)+dx,cy=Math.floor(sp.y)+dy;if(!isC(cx,cy))return;for(let k2=1;k2<=2;k2++){const fx=cx+dx*k2,fy=cy+dy*k2;if(fx>=0&&fy>=0&&fx<W&&fy<H&&inn(fy*W+fx)){front.push({x:fx+0.5,y:fy+0.5,a:Math.atan2(-dy,-dx),counter:1});break;}if(!isC(fx,fy))break;}});});
       const board=[].concat(...g.furn.filter(o=>o.k==="Q").map(nearOf)),shop=[].concat(...g.furn.filter(o=>o.k==="P").map(nearOf));
       const taken=new Set((g.people||[]).map(p=>Math.round(p.x*2)+","+Math.round(p.y*2))),seats=(g.seats||[]).filter(q=>!taken.has(Math.round(q.x*2)+","+Math.round(q.y*2))&&ok2(q.x,q.y));
-      const na=Math.round(2+g.walkD*1.6),pick=(R,a)=>a[Math.floor(R()*a.length)];
+      const na=Math.round(2+g.walkD*1.6),pick=(R,a)=>a[Math.floor(R()*a.length)],PT=g.paxTour;
+      const kitchen=[].concat(...g.furn.filter(o=>o.k==="S"||o.k==="k").map(nearOf));
+      // rendez-vous avec Pax : une case libre à côté d'un de ses arrêts (on y arrive pile quand il y est)
+      const paxMeet=R=>{if(!PT)return null;const js=PT.S.map((q,j)=>j).filter(j=>(PT.S[j].w||0)>4);if(!js.length)return null;const j=pick(R,js),q=PT.S[j],cs=[];for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const X=Math.floor(q.x)+dx+0.5,Y=Math.floor(q.y)+dy+0.5,d=Math.hypot(X-q.x,Y-q.y);if(d>0.8&&d<1.8&&ok2(X,Y)&&!taken.has(Math.round(X*2)+","+Math.round(Y*2)))cs.push([X,Y]);}if(!cs.length)return null;const c1=pick(R,cs);return {x:c1[0],y:c1[1],a:Math.atan2(q.y-c1[1],q.x-c1[0]),w:PT.S[j].w,act:"pax",pj:j};};
       for(let k=0;k<na&&border.length&&hall.length;k++){const R=ecRng(ecSeed(c.seed+"|aventurier|"+k)),ent=pick(R,border),ex=R()<0.6?ent:pick(R,border),acts=[];
-        const pool=[["board",board,6+R()*6],["counter",front,8+R()*6],["eat",seats,22+R()*14],["shop",shop,6+R()*6],["pax",hall,10+R()*6],["hall",hall,4+R()*4]].filter(q=>q[1].length);
-        const n=2+Math.floor(R()*3);for(let j=0;j<n&&pool.length;j++){const q=pool.splice(Math.floor(R()*pool.length),1)[0],sp=pick(R,q[1]);if(q[0]==="eat"){const si=seats.indexOf(sp);if(si>=0)seats.splice(si,1);}
+        const pool=[["board",board,6+R()*6],["counter",front,8+R()*6],["eat",seats,22+R()*14],["shop",shop,6+R()*6],["hall",hall,4+R()*4]].filter(q=>q[1].length);if(PT)pool.push(["pax",[1],0]);
+        let hasPax=false;const n=2+Math.floor(R()*3);for(let j=0;j<n&&pool.length;j++){const q=pool.splice(Math.floor(R()*pool.length),1)[0];if(q[0]==="pax"){if(hasPax)continue;const m=paxMeet(R);if(m){acts.push(m);hasPax=true;}continue;}const sp=pick(R,q[1]);if(q[0]==="eat"){const si=seats.indexOf(sp);if(si>=0)seats.splice(si,1);}
           const st={x:sp.x,y:sp.y,a:sp.a,w:q[2],act:q[0]};if(q[0]==="eat"){let best=null,bd=1.6;g.furn.forEach(o=>{if(o.k!=="T"&&o.k!=="L"&&o.k!=="ltable")return;const qx=Math.max(o.x,Math.min(sp.x,o.x+(o.w||1))),qy=Math.max(o.y,Math.min(sp.y,o.y+(o.h||1))),d=Math.hypot(qx-sp.x,qy-sp.y);if(d<bd){bd=d;best=[qx,qy];}});st.a=best?Math.atan2(best[1]-sp.y,best[0]-sp.x):R()*6.28;st.f=Math.floor(R()*3);}
-          acts.push(st);}
+          if(q[0]==="eat"&&kitchen.length){const kp=pick(R,kitchen);acts.push({x:kp.x,y:kp.y,a:kp.a,w:2.5,act:"pick"});acts.push(st);acts.push({x:kp.x,y:kp.y,a:kp.a,w:1.5,act:"drop"});}else acts.push(st);}
         const stops=[{x:ent[0],y:ent[1],w:0}].concat(acts).concat([{x:ex[0],y:ex[1],w:0}]),legs=[];let ok=true;for(let j=0;j<stops.length-1;j++){const r=route([stops[j].x,stops[j].y],[stops[j+1].x,stops[j+1].y]);if(!r){ok=false;break;}legs.push(r);}if(!ok)continue;
-        const v=0.75*(0.85+R()*0.3),dur=legs.reduce((s2,r,j)=>s2+r.tot/v+(stops[j+1].w||0),0);L.push({adv:true,stops,legs,v,dur,T:dur+5+R()*15,o:R()*1000,look:advLook(R)});}}
+        const v=0.75*(0.85+R()*0.3),dur=legs.reduce((s2,r,j)=>s2+r.tot/v+(stops[j+1].w||0),0);let T=dur+5+R()*15,o=R()*1000;
+        // calé sur la tournée de Pax : même période (multiple) et arrivée au rendez-vous en même temps que lui
+        const mi=stops.findIndex(q=>q.act==="pax");if(mi>0&&PT){T=Math.ceil(T/PT.T)*PT.T;let B=0;for(let j=0;j<mi;j++)B+=legs[j].tot/v+(j>0?(stops[j].w||0):0);o=B-PT.A[stops[mi].pj]+PT.off;}
+        L.push({adv:true,stops,legs,v,dur,T,o,look:advLook(R)});}}
     g.walkers=L;}
   g.custPos=[];g.walkers.forEach((w,i)=>{
     if(w.adv){let tt=((TT+w.o)%w.T+w.T)%w.T;if(tt>=w.dur)return;let X,Y,an,still=false,st=null;
-      for(let j=0;j<w.legs.length;j++){const r=w.legs[j],d=r.tot/w.v;if(tt<d){const q=navAt(r,tt*w.v);X=q[0];Y=q[1];an=q[2];break;}tt-=d;const s2=w.stops[j+1];if(tt<(s2.w||0)){X=s2.x;Y=s2.y;still=true;st=s2;an=s2.a!=null?s2.a:0;break;}tt-=s2.w||0;}
+      let carry=null;for(let j=0;j<w.legs.length;j++){const r=w.legs[j],d=r.tot/w.v;if(tt<d){const q=navAt(r,tt*w.v);X=q[0];Y=q[1];an=q[2];if(w.stops[j].act==="pick")carry="full";else if(w.stops[j].act==="eat"&&w.stops[j+1].act==="drop")carry="empty";break;}tt-=d;const s2=w.stops[j+1];if(tt<(s2.w||0)){X=s2.x;Y=s2.y;still=true;st=s2;an=s2.a!=null?s2.a:0;break;}tt-=s2.w||0;}
       if(X==null)return;
       if(st&&st.act==="pax"&&g.paxPos){an=Math.atan2(g.paxPos[1]-Y,g.paxPos[0]-X);}
       if(st&&st.act==="counter")g.custPos.push([X,Y]);
       if(st&&st.act==="eat"){const f=Math.min(1,tt/(st.w*0.8)),px=X+Math.cos(an)*0.6,py=Y+Math.sin(an)*0.6;x.fillStyle="#e8e0cc";x.beginPath();x.arc(px*s,py*s,s*0.16,0,6.283);x.fill();x.strokeStyle="#8a7a60";x.lineWidth=Math.max(1,s*0.025);x.stroke();if(f<1){const l=1-f*0.9;x.fillStyle=["#8a4a2a","#c8a040","#6a8a3a"][st.f];x.beginPath();x.ellipse(px*s,py*s,s*0.09*l,s*0.07*l,an,0,6.283);x.fill();}}
+      if(st&&st.act==="pick"&&tt>st.w*0.5)carry="full";if(st&&st.act==="drop"&&tt<st.w*0.5)carry="empty";
       x.save();x.translate(X*s,Y*s);x.rotate(an);const sc=1.7*(w.look.sc||1);x.scale(sc,sc);spPerson(x,s,0,0,still?0:TT*8+i*9,Object.assign({move:!still},w.look));x.restore();
+      if(carry){const hx=X+Math.cos(an)*0.38,hy=Y+Math.sin(an)*0.38;x.fillStyle="#e8e0cc";x.beginPath();x.arc(hx*s,hy*s,s*0.13,0,6.283);x.fill();x.strokeStyle="#8a7a60";x.lineWidth=Math.max(1,s*0.02);x.stroke();if(carry==="full"){x.fillStyle="#8a4a2a";x.beginPath();x.arc(hx*s,hy*s,s*0.07,0,6.283);x.fill();x.fillStyle="rgba(240,240,240,.5)";x.beginPath();x.arc((hx+Math.sin(TT*3)*0.04)*s,(hy-0.15)*s,s*0.05,0,6.283);x.fill();}}
       if(st&&st.act==="eat"&&tt<st.w*0.8){const k3=(Math.sin(TT*2.2+i)+1)/2;if(k3>0.5){const f=(k3-0.5)/0.5,hx=X+Math.cos(an)*(0.15+0.4*f)+Math.cos(an+1.57)*0.12,hy=Y+Math.sin(an)*(0.15+0.4*f)+Math.sin(an+1.57)*0.12;x.fillStyle=w.look.skin||"#e2bf96";x.beginPath();x.arc(hx*s,hy*s,s*0.06,0,6.283);x.fill();}}
       // causette : petite bulle au-dessus des deux
       if(st&&st.act==="pax"&&g.paxPos&&Math.hypot(g.paxPos[0]-X,g.paxPos[1]-Y)<2.5&&Math.sin(TT*2+i)>0){x.fillStyle="rgba(255,255,255,.9)";x.beginPath();x.ellipse((X+0.35)*s,(Y-0.55)*s,s*0.2,s*0.13,0,0,6.283);x.fill();x.fillStyle="#555";for(let d=-1;d<=1;d++){x.beginPath();x.arc((X+0.35+d*0.08)*s,(Y-0.55)*s,s*0.025,0,6.283);x.fill();}}
