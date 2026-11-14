@@ -4463,7 +4463,7 @@ function ecLook(p){const T0=((p.espece||"")+" "+(p.apparence||"")+" "+(p.role||"
   const h=near(["cheveux","chignon","tresses","natte","queue de cheval"]),bc=near(["barbe"]);
   const giff=isSp(["giff","hippopotame"]),gnome=isSp(["gnome"]),half=isSp(["halfelin"]),dwarf=isSp(["nain"])&&!isSp(["naine"]),orc=isSp(["orque","orc"]),tief=isSp(["tieffelin","tiefling"]),elf=isSp(["elfe"]);
   let skin=null;if(has(["peau gris-vert","peau vert"]))skin="#8a9a72";else if(has(["peau lavande"]))skin="#b49ac8";else if(tief)skin="#b04a3a";else if(orc)skin="#8a9a6a";else if(has(["peau sombre","peau noire","ébène"]))skin="#6a4630";else if(has(["peau mate","hâlé","basané"]))skin="#c09070";
-  const L={c:"#3f6b8a",h:h||"#3a2c22",skin,sc:gnome||half?0.74:dwarf?0.86:orc?1.12:giff?1.12:1};
+  const L={c:"#3f6b8a",h:h||bc||"#3a2c22",skin,sc:gnome||half?0.74:dwarf?0.86:orc?1.12:giff?1.12:1};
   if(giff){const A=(p.apparence||"").toLowerCase();L.giff=1;L.skin=/peau rose|rosée/.test(A)?"#b88a8a":/brun/.test(A)?"#7a6458":"#8a7a86";}
   if(elf||tief)L.ears=1;if(tief){L.horns="#4a3a4a";if(has(["anneaux"]))L.hornRings="#e0c060";if(has(["queue fine","queue"]))L.tail=spMix(L.skin||"#b04a3a",-0.15);}
   if(bc||dwarf&&!has(["sans barbe"]))L.beard=bc||L.h;if(has(["nattes","tressée","tresses"])&&bc)L.braid=1;
