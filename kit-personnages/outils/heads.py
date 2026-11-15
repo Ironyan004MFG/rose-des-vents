@@ -5,7 +5,7 @@ from PIL import Image,ImageFilter
 from scipy import ndimage as ndi
 from skimage.segmentation import watershed
 NOSE=(262,285)                                    # bout du nez de la tête validée, sur la toile 512
-G={1:.8,2:.75,3:.75,4:.9,8:.72}
+G={1:.8,2:.75,3:.75,4:.9,8:.72,6:.7}
 def build(name,src,s,nose,seeds,er=0):
     im=Image.open(src).convert('RGBA');a=np.array(im).astype(float);al=a[...,3]>40;lum=ndi.gaussian_filter(a[...,:3].mean(-1),1.2)
     mk=np.zeros(al.shape,int)
@@ -31,7 +31,17 @@ HOOD=dict(src='../far/hood.png',s=0.38,nose=(628,700),seeds={
  2:[(545,597),(715,597),(580,603),(680,603)],
  3:[(560,705),(700,705),(628,760),(540,760),(720,760),(628,830),(580,800),(680,800),(505,690),(755,690),(628,790),(600,850),(655,850)],
  4:[(628,872),(628,926)]})
+WIDEHAT=dict(src='../far/widehat.png',s=0.38,nose=(628,695),seeds={       # calé sur le bout de la barbe (même barbe que la capuche)
+ 8:[(628,300),(628,400),(350,400),(900,400),(450,250),(800,250),(628,180),(400,550),(860,550),(628,600),(520,600),(740,600),(300,450),(950,450),(628,220),(540,330),(720,330),(628,625),(480,610),(780,610)],
+ 6:[(628,545),(540,527),(720,527),(470,470),(790,470),(450,420),(805,420)],
+ 1:[(628,690),(628,665),(610,700),(648,700),(565,668),(692,668)],
+ 3:[(560,715),(700,715),(628,770),(540,770),(720,770),(628,840),(580,810),(680,810),(490,700),(770,700),(628,800),(470,665),(790,665)],
+ 4:[(628,878),(628,925)]})
 if __name__=='__main__':
+    import sys
+    if len(sys.argv)>1 and sys.argv[1]=='widehat':
+        o,lab=build('widehat',**WIDEHAT);t=tint('widehat',{1:'#c98f6a',2:'#8a4a22',3:'#8a4a22',4:'#9aa0a6',8:'#8a7a5a',6:'#3a2a1c'});bg=Image.new('RGBA',(512,512),(140,105,70,255));bg.alpha_composite(t)
+        bg.crop((110,60,414,400)).resize((912,1020),Image.LANCZOS).save('../far/z_widehat.png');sys.exit()
     o,lab=build('hood',**HOOD)
     t=tint('hood',{1:'#c98f6a',2:'#8a4a22',3:'#8a4a22',4:'#9aa0a6',8:'#4a5a32'});bg=Image.new('RGBA',(512,512),(140,105,70,255));bg.alpha_composite(t)
     bg.crop((150,60,370,400)).resize((660,1020),Image.LANCZOS).save('../far/z_hood.png')

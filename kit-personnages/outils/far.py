@@ -143,11 +143,22 @@ def work(src='../far/work_al.png',tag='work'):
     for l,p in WFORK: lab[bodyseg.poly(p,(H,W))&al&(lab!=1)]=l
     _,ix=ndi.distance_transform_edt(lab==0,return_indices=True);lab=lab[ix[0],ix[1]];lab[~al]=0
     return a,lab
+
+def staff(a,lab):
+    """Bâton de marche tiré d'une pose à la fourche : on retire les dents et la douille, et on ferme le haut du manche par un bout arrondi."""
+    from PIL import ImageDraw
+    a=a.copy();lab=lab.copy();a[lab==4,3]=0;lab[lab==4]=0
+    H,W=lab.shape;cap=Image.new('L',(W,H),0);d=ImageDraw.Draw(cap);d.ellipse([250,268,326,312],fill=255);cm=np.array(cap)>0
+    edge=cm&~ndi.binary_erosion(cm,iterations=5);yy,xx=np.mgrid[:H,:W]
+    g=150-35*((yy-290)/22.0)                                                       # bois : plus clair en haut du bout arrondi
+    for j in range(3): a[...,j]=np.where(cm,np.where(edge,26,g),a[...,j])
+    a[...,3]=np.where(cm,255,a[...,3]);lab[cm]=28
+    return a,lab
 def char(a,lab,shirt,over,sk,hr,rope='#6b5a3a',pants='#5a4a32',ph=0):
     full.G.update({14:.85,6:.85,5:.75,26:.8,20:.8,21:.8,22:.8,23:.8,27:.85,24:.8,25:.8,28:.8,4:.9});cols={1:sk,2:hr,3:hr,6:'#3a2a1c'};c=Image.new('RGBA',(512,512));c.alpha_composite(legs.legs(pants,'#3a2a1c',ph))
     t=full.tint(a,lab,{14:shirt,5:over,1:sk,6:rope,7:'#3a2e26',**VEG,**HELD})
     c.alpha_composite(full.place(t,SC,(625,360)));c.alpha_composite(kit.tint('head_dwarf_braided_90',cols))
-    held=np.isin(lab,list(VEG)+list(HELD))
+    held=np.isin(lab,list(VEG)+([] if kit.HEAD and kit.HEAD[0]=='widehat' else list(HELD)))    # sous un grand chapeau, le manche reste sous le bord
     if held.any():                                                    # l'objet tenu repasse devant la barbe
         w=np.array(Image.fromarray((held*255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.5))).astype(float)/255
         h=np.array(t).astype(float);h[...,3]*=w;c.alpha_composite(full.place(Image.fromarray(h.astype('uint8')),SC,(625,360)))
