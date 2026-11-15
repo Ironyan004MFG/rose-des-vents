@@ -17,6 +17,10 @@ def normalize(path,out):
     cx=(l+r)/2;rcx=(REF[1]+REF[2])/2
     # x' = rcx + s*(x-cx) ; y' = REF_top + s*(y-top)
     o=im.transform((1254,1400),Image.AFFINE,(1/s,0,cx-rcx/s,0,1/s,top-REF[0]/s),Image.BICUBIC);o.save(out);return s,top,(l,r)
+def normalize_like(path,ref,out):
+    # même cadrage que l'image de référence (GPT repart de cette image : même toile, même échelle)
+    top,l,r=collar(ref);s=(REF[2]-REF[1])/(r-l);im=Image.open(path).convert('RGBA');cx=(l+r)/2;rcx=(REF[1]+REF[2])/2
+    im.transform((1254,1400),Image.AFFINE,(1/s,0,cx-rcx/s,0,1/s,top-REF[0]/s),Image.BICUBIC).save(out);return s
 if __name__=='__main__':
     import glob,os
     print('ref',REF);os.makedirs('../r2/n',exist_ok=True)
