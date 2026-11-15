@@ -8,7 +8,7 @@ Sauvegarde des pièces validées du générateur de personnages. **Rien ici n'es
 - Les masques de matières et la teinte sont faits par le code (`outils/`), pas par GPT.
 
 ## Contenu
-- `nain/tete/` : tête tressée d'origine, version aux oreilles repeintes (`head_fix.png`) et sa carte de matières (`head_fix_matieres.png` : valeur ÷ 20 → 1 peau, 2 cheveux, 3 barbe, 4 métal).
+- `nain/tete/` : tête tressée d'origine, version aux oreilles repeintes (`head_fix.png`) et sa carte de matières (`head_fix_matieres.png` : valeur ÷ 20 → 1 peau, 2 cheveux, 3 barbe, 4 métal). Capuche : `head_dwarf_hood_90.png` (dessin GPT), `head_hood.png` (remise à l'échelle de la tête validée, repère : bout du nez) et `head_hood_matieres.png` (valeur ÷ 20 → 1 peau, 2 sourcils, 3 barbe, 4 métal, 8 tissu de la capuche) ; `outils/heads.py`. Elle se pose sur tous les corps : pèlerin et veilleur (robe de mage), chasseur (aventurier).
 - `nain/corps/<tenue>/` : un dossier par tenue, une image 1254 × 1254 par pose. **On n'y dépose que les images validées au montage.**
   - `mage/` : robe à liseré — relaxed, reach, carry_plate, walk_1 à walk_4.
   - `aventurier/` : manteau court, épaulettes et ceinture de cuir — relaxed, reach, carry_plate, walk_1, walk_3. La marche alterne walk_1 → relaxed → walk_3 → relaxed.

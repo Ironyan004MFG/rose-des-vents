@@ -18,7 +18,10 @@ def labels(n):
     if n not in LAB: LAB[n]=np.load('head_fix_lab.npy') if n.startswith('head') else refine(n)
     return LAB[n]
 G={1:.8,2:.75,3:.75,5:.75,6:.7}
+HEAD=None                                   # (nom, couleurs en plus) : remplace la tête tressée par une autre tête de heads.py
 def tint(n,cols):
+    if n.startswith('head') and HEAD:
+        import heads;return heads.tint(HEAD[0],{**{k:v for k,v in cols.items() if k in (1,2,3)},4:'#9aa0a6',**HEAD[1]})
     a=np.array(Image.open('assets/head_fix.png' if n.startswith('head') else f'assets/{n}.png').convert('RGBA')).astype(float);lab=labels(n)
     lum=(a[...,0]*.3+a[...,1]*.59+a[...,2]*.11)/255;out=a.copy()
     for l,col in cols.items():
