@@ -1813,11 +1813,14 @@ function seuilMonde(){const v=monde&&monde.seuil;return typeof v==="number"&&v>0
 function doneIn(bid){return quetes.filter(q=>q.bureau===bid&&q.rapport&&(q.statut==="terminee"||q.statut==="archivee"));}
 function pendingIn(bid){const r=(monde&&monde.regions&&monde.regions[bid])||{},vues=r.vues||[];return doneIn(bid).filter(q=>vues.indexOf(q.id)<0);}
 function dueRegions(){return bureaux.filter(b=>pendingIn(b.id).length>=seuilMonde());}
-// Âge d'une quête ouverte = missions accomplies depuis sa publication (ou sa dernière évolution) : 1 dans sa région, ½ ailleurs.
-function ageMax(){const v=monde&&monde.ageMax;return typeof v==="number"&&v>0?v:4;}
+// Âge d'une quête ouverte = missions accomplies depuis sa publication (ou sa dernière évolution), pondérées : ½ dans sa région, ¼ ailleurs (réglable).
+function agePas(k,d){const v=monde&&monde[k];return typeof v==="number"&&v>=0?v:d;}
+function ageIci(){return agePas("ageIci",0.5);}
+function ageAilleurs(){return agePas("ageAilleurs",0.25);}
+function ageMax(){const v=monde&&monde.ageMax;return typeof v==="number"&&v>0?v:3;}
 function aggravSeuil(){const v=monde&&monde.aggravSeuil;return typeof v==="number"&&v>0?v:2;}
 function ageBase(q){return Math.max(tms(q.creeLe)||0,((monde&&monde.reset)||{})[q.id]||0);}
-function ageOf(q){const F=(monde&&monde.fini)||{},b=ageBase(q);let a=0;Object.keys(F).forEach(k=>{const e=F[k];if(k!==q.id&&e&&e.ms>b)a+=e.r===q.bureau?1:0.5;});return a;}
+function ageOf(q){const F=(monde&&monde.fini)||{},b=ageBase(q);let a=0;Object.keys(F).forEach(k=>{const e=F[k];if(k!==q.id&&e&&e.ms>b)a+=e.r===q.bureau?ageIci():ageAilleurs();});return Math.round(a*100)/100;}
 function agedIn(bid){return quetes.filter(q=>q.statut==="ouverte"&&(!bid||q.bureau===bid)&&ageOf(q)>=ageMax());}
 function aggravIn(bid){const r=(monde&&monde.regions&&monde.regions[bid])||{},A=r.aggrav||{},c=r.criseMs||0;return Object.keys(A).filter(k=>A[k]>c).length;}
 function criseRegions(){return bureaux.filter(b=>aggravIn(b.id)>=aggravSeuil());}
@@ -2227,7 +2230,9 @@ function dmEvol(){
   const row=(id,a,val,b,extra)=>'<label class="evset" for="'+id+'"><span>'+a+'</span><input id="'+id+'" type="number" '+extra+' value="'+val+'"><span>'+b+'</span></label>';
   let h='<form id="seuilform" class="evsets"><h3 class="subh">Réglages</h3>'+
     row("ev-seuil","Une région évolue après",X,"missions accomplies dans la région",'min="1" max="50"')+
-    row("ev-agemax","Une quête ignorée s\'aggrave à l\'âge",ageMax(),"(1 par mission dans sa région, ½ ailleurs)",'min="1" max="50" step="0.5"')+
+    row("ev-agemax","Une quête ignorée s\'aggrave à l\'âge",ageMax(),"",'min="1" max="50" step="0.5"')+
+    row("ev-ageici","Chaque mission accomplie dans sa région la vieillit de",ageIci(),"",'min="0" max="10" step="0.05"')+
+    row("ev-ageail","Chaque mission accomplie dans une autre région la vieillit de",ageAilleurs(),"",'min="0" max="10" step="0.05"')+
     row("ev-aggr","Crise régionale après",aggravSeuil(),"quêtes aggravées dans la région",'min="1" max="20"')+
     row("ev-modpas","Les modules avancent toutes les",modPas(),"missions de la Guilde",'min="1" max="20"')+
     row("ev-carte","Toute la carte évolue après",carteSeuil(),"évolutions de région du même sens",'min="1" max="20"')+
@@ -4943,7 +4948,7 @@ function evoChgCard(p){const q=p.type==="maj"?questById(p.quete):null,mo=p.type=
     (p.notes?'<details class="csqbox"><summary>Notes d\'évolution (privées)</summary><div class="wikibody">'+md(p.notes)+'</div></details>':'')+
     '<div class="actions">'+(ui.evoDel===p.pid?'<button class="btn danger sm" data-a="evo-rej-yes" data-id="'+esc(p.pid)+'">Confirmer le rejet</button><button class="btn ghost sm" data-a="evo-rej-no">Annuler</button>':'<button class="btn gold sm" data-a="evo-pub" data-id="'+esc(p.pid)+'">Appliquer</button><button class="btn ghost sm" data-a="evo-rej" data-id="'+esc(p.pid)+'">Rejeter</button>')+'</div></article>';}
 function agesCell(bid){const l=quetes.filter(q=>q.bureau===bid&&q.statut==="ouverte").map(q=>({q:q,a:ageOf(q)})).sort((x,y)=>y.a-x.a);if(!l.length)return '<span class="desc">—</span>';
-  return '<ul class="agelist">'+l.map(x=>{const pc=Math.min(100,Math.round(x.a/ageMax()*100));return '<li title="'+esc(x.q.titre)+'"><span class="agen">'+esc(x.q.titre)+'</span><span class="prog'+(x.a>=ageMax()?' over':x.a>=ageMax()-1?' near':'')+'"><i style="width:'+pc+'%"></i></span><span class="desc">'+fmtAge(x.a)+'</span></li>';}).join("")+'</ul>';}
+  return '<ul class="agelist">'+l.map(x=>{const pc=Math.min(100,Math.round(x.a/ageMax()*100));return '<li title="'+esc(x.q.titre)+'"><span class="agen">'+esc(x.q.titre)+'</span><span class="prog'+(x.a>=ageMax()?' over':x.a>=ageMax()-(ageIci()||1)?' near':'')+'"><i style="width:'+pc+'%"></i></span><span class="desc">'+fmtAge(x.a)+'</span></li>';}).join("")+'</ul>';}
 function csqSection(){const all=csqAll(),todo=all.filter(x=>!x.suite),done=all.filter(x=>x.suite);
   const byReg=l=>bureaux.map(b=>{const r=l.filter(x=>x.q.bureau===b.id);return r.length?'<h3 class="subh">'+esc(b.nom)+'</h3><ul class="csqitems">'+r.map(csqRow).join("")+'</ul>':'';}).join("");
   const pr=evoProps();
@@ -5854,7 +5859,7 @@ document.addEventListener("submit",async e=>{
     ui.manEdit=null;ui.manImg=undefined;ui.manDraft=null;if(type!=="dossiers"&&type!=="scenarios")ui.manId=id;
     await run("Manuel du DM",()=>setDoc(doc(db,S.coll,id),d,{merge:true}));return;
   }
-  if(e.target.id==="seuilform"){const n=Math.max(1,Math.min(50,Math.round(+v("ev-seuil")||3))),am=Math.max(1,Math.min(50,+v("ev-agemax")||4)),ag=Math.max(1,Math.min(20,Math.round(+v("ev-aggr")||2))),cs=Math.max(1,Math.min(20,Math.round(+v("ev-carte")||2))),mp=Math.max(1,Math.min(20,Math.round(+v("ev-modpas")||3)));await run("Réglages",()=>setDoc(doc(db,"prive","monde"),{seuil:n,ageMax:am,aggravSeuil:ag,carteSeuil:cs,modPas:mp},{merge:true}));return;}
+  if(e.target.id==="seuilform"){const n=Math.max(1,Math.min(50,Math.round(+v("ev-seuil")||3))),am=Math.max(1,Math.min(50,+v("ev-agemax")||3)),ag=Math.max(1,Math.min(20,Math.round(+v("ev-aggr")||2))),cs=Math.max(1,Math.min(20,Math.round(+v("ev-carte")||2))),mp=Math.max(1,Math.min(20,Math.round(+v("ev-modpas")||3))),pas=(id,d)=>{const x=parseFloat(String(v(id)).replace(",","."));return isFinite(x)?Math.max(0,Math.min(10,Math.round(x*100)/100)):d;},ai=pas("ev-ageici",0.5),aa=pas("ev-ageail",0.25);await run("Réglages",()=>setDoc(doc(db,"prive","monde"),{seuil:n,ageMax:am,aggravSeuil:ag,carteSeuil:cs,modPas:mp,ageIci:ai,ageAilleurs:aa},{merge:true}));return;}
   if(e.target.id==="noteform"){
     const titre=v("n-titre").slice(0,120);if(!titre)return;const isNew=ui.noteEdit==="new",id=isNew?doc(collection(db,"notesdm")).id:ui.noteEdit;
     const pin=document.getElementById("n-pin");
