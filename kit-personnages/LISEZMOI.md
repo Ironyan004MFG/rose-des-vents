@@ -11,7 +11,7 @@ Sauvegarde des pièces validées du générateur de personnages. **Rien ici n'es
 - `nain/tete/` : tête tressée d'origine, version aux oreilles repeintes (`head_fix.png`) et sa carte de matières (`head_fix_matieres.png` : valeur ÷ 20 → 1 peau, 2 cheveux, 3 barbe, 4 métal).
 - `nain/corps/<tenue>/` : un dossier par tenue, une image 1254 × 1254 par pose. **On n'y dépose que les images validées au montage.**
   - `mage/` : robe à liseré — relaxed, reach, carry_plate, walk_1 à walk_4.
-  - `aventurier/` : manteau court, épaulettes et ceinture de cuir — relaxed, reach, carry_plate.
+  - `aventurier/` : manteau court, épaulettes et ceinture de cuir — relaxed, reach, carry_plate, walk_1, walk_3. La marche alterne walk_1 → relaxed → walk_3 → relaxed.
   - `manteau_court/` : première version, à gros plis — relaxed (gardée pour référence).
 - `nain/jambes/` : jambes en pantalon avec bottes (pour les tenues courtes) et bottes seules (pour la robe).
 - `objets/` : assiette pleine/vide, livre, plume, fourche, pioche, poignée de charrette.
@@ -23,6 +23,6 @@ Sauvegarde des pièces validées du générateur de personnages. **Rien ici n'es
 - Bottes sous la robe : décalées de 60 px vers le bas. Jambes : même recalage que le corps.
 
 ## À faire
-- Marche de l'aventurier (walk_1, walk_3), puis les autres classes et morphologies.
+- Les autres classes, puis les autres morphologies.
 - Nettoyage des petits défauts de masques (liseré, cuir).
 - Intégration dans les bureaux.

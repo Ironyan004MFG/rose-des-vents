@@ -42,13 +42,13 @@ def auto_seg(path):
                 if kind[k] in(5,7) and x0+25<cx[k]<x1-25 and abs(cy[k]-ym)<95 and area[k]>1200 and area[k]<150000 and fs[k]<0.6: kind[k]=4
         for k in range(n):
             if kind[k]!=5 or near[k]>14 or area[k]>16000: continue
-            if side(k)>0.3: kind[k]=4                    # bracelet
+            if side(k)>0.3 and ml[k]>105: kind[k]=4      # bracelet (jamais une pièce sombre : cuir, sacoche)
             elif ml[k]>98: kind[k]=1                     # doigt, pouce
         lab[comp>0]=kind[comp[comp>0]-1]
         for _ in range(2):                               # rivets et deuxième bande, collés au bracelet
             mm=lab==4;nm=ndi.minimum(ndi.distance_transform_edt(~mm),comp,idx)
             for k in range(n):
-                if kind[k]==5 and nm[k]<10 and area[k]<16000 and near[k]<120 and side(k)>0.2: kind[k]=4
+                if kind[k]==5 and nm[k]<10 and area[k]<16000 and near[k]<120 and side(k)>0.2 and ml[k]>105: kind[k]=4
             lab[comp>0]=kind[comp[comp>0]-1]
     kind[(kind==5)&(ml>112)&(fat<20)&(area>600)]=9          # liseré : bandes claires et minces du vêtement
     lab[comp>0]=kind[comp[comp>0]-1]
