@@ -105,6 +105,21 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .ecdm .chip.here{border-color:#d8b45e;border-width:2px}.ecdm .ecday{font-family:var(--display);font-size:13px;letter-spacing:.08em;padding:0 4px}.ecdm .ecmet{background:#efe4c6;border-radius:6px;padding:8px 12px;margin:8px 0;font-size:14px}.ecdm .ecmet ul{margin:4px 0 0;padding-left:18px}.ecdm .ecmet p{margin:4px 0 0}
 .ectv-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#d8b45e;font-family:var(--display);font-size:22px;text-align:center;padding:20px;pointer-events:none}.ectv-msg:empty{display:none}
 .ecdm .ecbar,.ecdm .ecrow,.ecdm .ecsel{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:8px 0}.ecdm label{display:flex;flex-direction:column;font-size:13px}.ecdm label.ecck{flex-direction:row;align-items:center;gap:5px}.ecdm .ecsp{flex:1}
+/* Agrandir une image de fiche ; la montrer sur l'écran des joueurs */
+img.zoomable{cursor:zoom-in}img.zoomable:focus-visible{outline:3px solid #2a6fb0;outline-offset:2px}
+.zoomov{position:fixed;inset:0;z-index:200;background:rgba(5,10,12,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px}
+.zoomov figure{margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:0;flex:1 1 auto}
+.zoomov figure img{max-width:min(96vw,1500px);max-height:calc(100vh - 190px);object-fit:contain;border-radius:8px;border:3px solid #d8b45e;background:#0e161a}
+.zoomov figcaption{font-family:var(--display);color:#f6ecd0;font-size:clamp(20px,3vw,34px);text-align:center}
+.zoombar{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;justify-content:center}
+.zoombar label{display:flex;flex-direction:column;gap:2px;font-size:13px;color:#e9dfc6}.zoombar input{min-height:40px;padding:6px 10px;border-radius:6px;border:1px solid #d8b45e;background:#f6ecd0;color:#1c2a30;font:inherit;min-width:220px}
+.zoomov .btn,.vitchip .btn{border-color:#d8b45e}.zoomov .btn.ghost{color:#f6ecd0;border-color:#f6ecd0}
+.vitchip{position:fixed;left:12px;bottom:12px;z-index:190;display:flex;flex-wrap:wrap;gap:10px;align-items:center;max-width:calc(100vw - 24px);padding:8px 12px;background:rgba(14,22,26,.96);border:1px solid rgba(216,180,94,.7);border-radius:8px;color:#f6ecd0;font-size:14px;box-shadow:0 4px 18px rgba(0,0,0,.5)}
+.ptvit{background:none;border:1px solid var(--parch-3);border-radius:4px;padding:2px 8px;min-height:32px;min-width:36px;font:inherit;font-size:14px;cursor:pointer;color:var(--ink)}
+.ectv-fiche{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh;padding:3vh 3vw;background:rgba(5,10,12,.93);pointer-events:none;opacity:0;transition:opacity .35s}.ectv-fiche.on{opacity:1}
+.ectv-fiche img{max-width:92vw;max-height:80vh;min-height:0;object-fit:contain;border-radius:10px;border:4px solid #d8b45e;box-shadow:0 0 60px #000}
+.ectv-fiche h2{margin:0;font-family:var(--display);color:#f6ecd0;font-size:clamp(28px,4.5vw,76px);letter-spacing:.04em;text-shadow:0 2px 8px #000;text-align:center}
+@media (prefers-reduced-motion:reduce){.ectv-fiche{transition:none}}
 .ectvbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;margin:0 0 10px;border:1px solid rgba(216,180,94,.35);border-radius:8px;background:rgba(216,180,94,.08)}.ecshown{color:#9fd59a;font-weight:600}.eccat summary{cursor:pointer;font-weight:600;margin:6px 0}
 .ecdm .eccanvas{background:#0e161a;border-radius:8px;overflow:hidden;line-height:0}.ecdm canvas#ec-dm{width:100%;display:block;touch-action:none;cursor:crosshair;max-height:72vh;object-fit:contain}
 .ecdm .eccanvas.big{position:fixed;inset:2vh 2vw;z-index:80;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;box-shadow:0 0 0 100vmax rgba(0,0,0,.7)}.ecdm .eccanvas.big canvas#ec-dm{max-height:none;flex:1;width:100%;height:100%;object-fit:contain}.ecbigbar{display:flex;gap:6px;flex-wrap:wrap;line-height:1.2;margin-bottom:6px}.ecbigbar .chip{color:#f6ecd0;border-color:rgba(246,236,208,.5)}.ecbigp{margin:4px 0}
@@ -1126,6 +1141,7 @@ let save = {state:"idle", msg:""};
 const ui = {artKind:"pnj", artAll:false, artInstr:false, artCopied:null, manSec:"perso", manId:null, manEdit:null, manImg:undefined, manML:null, manQ:"", manQf:"actives", manDraft:null, confirmMan:null, party:{mode:"manuel",ids:[],nb:4,niv:3}, gen:{diff:"moderee",region:"",type:"",res:null}, dmTab:"todo", evolve:null, noteEdit:null, noteOpen:null, noteQ:"", confirmNote:null, confirmNews:null, newsEdit:null, gazAll:false, plan:null, compEdit:null, compImg:undefined, compPreview:false, compHist:null, compVer:null, compQ:"", compCat:"", compReg:"", confirmComp:null, confirmGroup:null, reportWrite:null, sheetEdit:null, sheetImg:undefined, promptSheet:false, needLogin:null, loginIntent:null, complete:null, adjust:false, wikiEdit:null, wikiPreview:false, confirmWiki:null, advForm:false, scaleEdit:false, confirmAdv:null, office:null, filter:"ouverte", rank:"all", dm:false, editing:null, confirmDel:null, signup:null, signupMsg:null, addName:null, importPreview:null, authMsg:"", busy:false};
 
 /* ---------- helpers ---------- */
+function zimg(cls,src,nom,coll,id){return '<img class="'+cls+' zoomable" src="'+esc(src)+'" alt="" data-zn="'+esc(nom||"")+'" data-zc="'+esc(coll||"")+'" data-zi="'+esc(id||"")+'" tabindex="0" role="button" aria-label="Agrandir l\'image'+(nom?' de '+esc(nom):'')+'">';}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k)||"null");localStorage.setItem(k,JSON.stringify(v));}catch(e){return null;}}
 ui.showPnj=!!store("rdv-showpnj");
@@ -1213,7 +1229,7 @@ function listen(){
 }
 // Données réservées au DM (points, journal, seuils) : lues seulement par un compte admin.
 function listenPrivate(on){
-  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};notoMap={};meritMap={};remisesMap={};niveauVuMap={};relations=[];journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;evoPriv=null;dossiers={};factions=[];parties=[];modules=[];butins=[];crieur=null;pnjs=[];monstres=[];rencontres=[];scenarios={};
+  privUnsubs.forEach(f=>{try{f();}catch(e){}});privUnsubs=[];pointsMap={};notoMap={};meritMap={};remisesMap={};niveauVuMap={};relations=[];journal=[];priv=null;compAll=[];notesDm=[];evols=[];monde=null;evoPriv=null;dossiers={};factions=[];parties=[];modules=[];butins=[];crieur=null;pnjs=[];monstres=[];rencontres=[];scenarios={};vitrine=null;vitUi();
   if(!on)return;
   const err=e=>console.error(e);
   privUnsubs.push(onSnapshot(collection(db,"points"),snap=>{const m={};const nm={};const mm={},rm={},nv={};snap.docs.forEach(d=>{m[d.id]=(d.data().parRegion)||{};nm[d.id]=(d.data().notoriete)||{};if(typeof d.data().merite==="number")mm[d.id]=d.data().merite;if(typeof d.data().remises==="number")rm[d.id]=d.data().remises;if(typeof d.data().niveauVu==="number")nv[d.id]=d.data().niveauVu;});pointsMap=m;notoMap=nm;meritMap=mm;remisesMap=rm;niveauVuMap=nv;render();},err));
@@ -1227,6 +1243,7 @@ function listenPrivate(on){
   privUnsubs.push(onSnapshot(doc(db,"prive","monde"),snap=>{monde=snap.exists()?snap.data():null;render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","ecran"),snap=>{const d=snap.exists()?snap.data():null;if(!d){ecDoc=null;}else if(!ecDoc||(+d.ms||0)>=(+ecDoc.ms||0))ecDoc=d;else ecDoc=Object.assign({},ecDoc,{tv:d.tv,calib:d.calib});
     if(ui.office==="ecran")ecTvUpdate();else if(ecRenderers["ec-dm"]&&ecRenderers["ec-dm"].st)ecRenderers["ec-dm"].st.tvv=ecDoc&&ecDoc.tv;},err));
+  privUnsubs.push(onSnapshot(doc(db,"prive","vitrine"),snap=>{const d=snap.exists()?snap.data():null;if(!d||!vitrine||(+d.ms||0)>=(+vitrine.ms||0))vitrine=d;vitUi();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","boutiques"),snap=>{shopCfg=snap.exists()?snap.data():null;},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","crieur"),snap=>{crieur=snap.exists()?snap.data():null;render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","evolution"),snap=>{evoPriv=snap.exists()?snap.data():null;render();},err));
@@ -1668,7 +1685,7 @@ function sheetView(id){
   const mine=user&&a.proprietaire===user.uid;
   if(ui.sheetEdit===a.id&&(mine||ui.dm))return '<div class="sheetwrap">'+sheetForm(a)+'</div>';
   let h='<article class="sheet">';
-  h+='<div class="sheet-top">'+(a.image?'<img class="portrait" src="'+esc(a.image)+'" alt="Portrait de '+esc(a.nom)+'">':'<span class="portrait ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+
+  h+='<div class="sheet-top">'+(a.image?zimg("portrait",a.image,a.nom,"aventuriers",a.id):'<span class="portrait ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+
     '<div class="sheet-id"><h2>'+esc(a.nom)+'</h2><p class="sheet-sub">'+esc([a.espece,a.classe,"Niveau "+charLevel(a)].filter(Boolean).join(" · "))+'</p>'+(a.joueur?'<p class="sheet-pl">Joué par '+esc(a.joueur)+'</p>':'')+'</div></div>';
   h+=gPlaque(a);
   if(mine||ui.dm)h+='<h3>Expérience</h3>'+xpLine(a)+'<details class="crrep"><summary>Historique d\'XP</summary>'+xpHist(a)+'</details>';
@@ -1694,13 +1711,13 @@ function myCharsView(){
   if(!mine.length)h='<p class="hint">Tu n\'as pas encore de personnage. Crée ta fiche pour pouvoir t\'inscrire aux quêtes.</p>'+h;
   return h;
 }
-function resizeImage(file,maxSize){
+function resizeImage(file,maxSize,q){
   return new Promise((res,rej)=>{
     const r=new FileReader();r.onerror=()=>rej(new Error("Lecture impossible"));
     r.onload=()=>{const im=new Image();im.onerror=()=>rej(new Error("Image illisible"));im.onload=()=>{
       const max=maxSize||360,sc=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement("canvas");
       c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);c.getContext("2d").drawImage(im,0,0,c.width,c.height);
-      res(c.toDataURL("image/jpeg",0.82));};im.src=r.result;};
+      res(c.toDataURL("image/jpeg",q||0.82));};im.src=r.result;};
     r.readAsDataURL(file);
   });
 }
@@ -1772,7 +1789,7 @@ function compEntryView(id){
       '<div class="actions">'+(ui.dm?'':canApprove(e)?'<button class="btn gold" data-a="comp-approve" data-id="'+esc(e.id)+'">Approuver</button>':signed&&p.par&&p.par.uid===user.uid?'<span class="desc">Tu ne peux pas approuver ta propre proposition.</span>':signed?'<span class="desc">Tu as déjà approuvé.</span>':'<button class="btn ghost" data-a="login">Se connecter pour approuver</button>')+
       (ui.dm?'<button class="btn gold" data-a="comp-force" data-id="'+esc(e.id)+'">Approuver (DM)</button><button class="btn danger" data-a="comp-reject" data-id="'+esc(e.id)+'">Refuser</button><span class="desc">Ton approbation suffit à publier.</span>':'')+'</div></div>';}
   h+='<div class="ctags"><span class="ccat">'+esc(d.categorie)+'</span><span class="creg">'+esc(regionName(d.region))+'</span>'+(e.masque?'<span class="ccat masq">Masquée par le DM</span>':'')+'</div>';
-  h+='<div class="sheet-top">'+(d.image?'<img class="portrait" src="'+esc(d.image)+'" alt="">':'')+'<div class="sheet-id"><h2>'+esc(d.titre)+'</h2><p class="sheet-pl">Consignée par '+esc((e.creePar&&e.creePar.nom)||"un aventurier")+(!isNew&&e.modifiePar&&e.modifiePar.nom?' · dernière version de '+esc(e.modifiePar.nom)+' le '+esc(fmtDate(e.majLe)):'')+'</p></div></div>';
+  h+='<div class="sheet-top">'+(d.image?zimg("portrait",d.image,d.titre):'')+'<div class="sheet-id"><h2>'+esc(d.titre)+'</h2><p class="sheet-pl">Consignée par '+esc((e.creePar&&e.creePar.nom)||"un aventurier")+(!isNew&&e.modifiePar&&e.modifiePar.nom?' · dernière version de '+esc(e.modifiePar.nom)+' le '+esc(fmtDate(e.majLe)):'')+'</p></div></div>';
   h+=(d.quete?questLink(d.quete):'')+'<div class="wikibody">'+md(d.contenu)+'</div>';
   h+='<div class="actions">'+(signed?'<button class="btn" data-a="comp-edit" data-id="'+esc(e.id)+'">'+(ui.dm?'Modifier':'Proposer une modification')+'</button>':'<button class="btn ghost" data-a="login">Se connecter pour contribuer</button>')+(isNew?'':'<button class="btn ghost" data-a="comp-hist" data-id="'+esc(e.id)+'">Historique</button>');
   if(ui.dm)h+='<button class="btn ghost" data-a="comp-mask" data-id="'+esc(e.id)+'">'+(e.masque?'Afficher aux joueurs':'Masquer aux joueurs')+'</button>'+(ui.confirmComp===e.id?'<button class="btn danger" data-a="comp-del-yes" data-id="'+esc(e.id)+'">Supprimer définitivement</button><button class="btn ghost" data-a="comp-del-no">Annuler</button>':'<button class="btn ghost" data-a="comp-del" data-id="'+esc(e.id)+'">Supprimer</button>');
@@ -1942,7 +1959,7 @@ function mdBlock(t,v){return v?'<h3>'+t+'</h3><div class="wikibody">'+md(manLink
 function linkChip(sec,x,label){return '<a class="lchip" href="#man/'+sec+'/'+encodeURIComponent(x.id)+'">'+label+'</a>';}
 function txtLine(t,v){return v?'<p class="sbl"><strong>'+t+'</strong> '+esc(v)+'</p>':'';}
 function statblock(m){
-  return '<div class="statblock">'+(m.image?'<img class="sbimg" src="'+esc(m.image)+'" alt="">':'')+'<h2>'+esc(m.nom)+'</h2><p class="sbsub">'+esc([(SIZES.find(s=>s[0]===m.taille)||[,""])[1],m.type].filter(Boolean).join(" · ")+(m.alignement?', '+m.alignement:''))+'</p><hr>'+
+  return '<div class="statblock">'+(m.image?zimg("sbimg",m.image,m.nom,"monstres",m.id):'')+'<h2>'+esc(m.nom)+'</h2><p class="sbsub">'+esc([(SIZES.find(s=>s[0]===m.taille)||[,""])[1],m.type].filter(Boolean).join(" · ")+(m.alignement?', '+m.alignement:''))+'</p><hr>'+
     '<p class="sbl"><strong>CA</strong> '+esc(m.ca==null?"—":m.ca)+' · <strong>PV</strong> '+esc(m.pv||"—")+' · <strong>Vitesse</strong> '+esc(m.vitesse||"—")+'</p>'+
     '<table class="abil"><thead><tr>'+ABIL.map(a=>'<th scope="col">'+a[1]+'</th>').join("")+'</tr></thead><tbody><tr>'+ABIL.map(a=>'<td>'+(m[a[0]]==null?'—':esc(m[a[0]])+' <span>('+mod(m[a[0]])+')</span>')+'</td>').join("")+'</tr></tbody></table><hr>'+
     txtLine("Jets de sauvegarde",m.jets)+txtLine("Compétences",m.competences)+txtLine("Résistances et immunités",m.resist)+txtLine("Sens",m.sens)+txtLine("Langues",m.langues)+
@@ -2003,7 +2020,7 @@ function secPerso(){
     const waitQ=quetes.filter(q=>q.statut==="ouverte"&&inscriptions.some(i=>i.quete===q.id&&i.aventurier===a.id&&i.statut==="attente"));
     const doneQ=questsOf(a),pm=pointsMap[a.id]||{},regs=bureaux.filter(b=>typeof pm[b.id]==="number"||renown(a,b.id)!==51);
     const ql=l=>l.length?'<ul class="todo">'+l.map(q=>'<li><span>'+rankSeal(q.rang)+' '+esc(q.titre)+' <em>('+esc((office(q.bureau)||{}).nom||"")+')</em></span><button class="mini" data-a="man-quest" data-id="'+esc(q.id)+'">Scénario</button></li>').join("")+'</ul>':'<p class="desc">Aucune.</p>';
-    let h=backLink("Personnages")+'<article class="dossier"><div class="sheet-top">'+(a.image?'<img class="portrait" src="'+esc(a.image)+'" alt="">':'<span class="portrait ph" aria-hidden="true">'+esc(String(a.nom).charAt(0))+'</span>')+'<div class="sheet-id"><h2>'+esc(a.nom)+'</h2><p class="sheet-sub">'+esc([a.espece,a.classe].filter(Boolean).join(" · ")||"Aventurier")+(d.niveau?' · niveau '+esc(d.niveau):'')+'</p>'+(a.joueur?'<p class="sheet-pl">Joué par '+esc(a.joueur)+'</p>':'')+'<p><a href="#perso-'+esc(a.id)+'">Voir la fiche publique</a></p></div></div>';
+    let h=backLink("Personnages")+'<article class="dossier"><div class="sheet-top">'+(a.image?zimg("portrait",a.image,a.nom,"aventuriers",a.id):'<span class="portrait ph" aria-hidden="true">'+esc(String(a.nom).charAt(0))+'</span>')+'<div class="sheet-id"><h2>'+esc(a.nom)+'</h2><p class="sheet-sub">'+esc([a.espece,a.classe].filter(Boolean).join(" · ")||"Aventurier")+(d.niveau?' · niveau '+esc(d.niveau):'')+'</p>'+(a.joueur?'<p class="sheet-pl">Joué par '+esc(a.joueur)+'</p>':'')+'<p><a href="#perso-'+esc(a.id)+'">Voir la fiche publique</a></p></div></div>';
     h+='<div class="dmgrid"><section class="dmcard"><h3>Le Système</h3><p><strong>Outerworlder :</strong> '+({oui:"Oui",non:"Non (natif)"}[d.outerworlder]||"À déterminer")+'</p>'+(d.donNom?'<p class="don-dm"><strong>Don : '+esc(d.donNom)+'</strong></p>'+(d.donDesc?'<div class="wikibody">'+md(d.donDesc)+'</div>':''):d.outerworlder==="non"?'':'<p class="warn">Aucun Don attribué.</p>')+(a.don&&!d.donNom?'<p class="desc">Ancien Don (fiche publique) : '+esc(a.don)+'</p>':'')+'</section>';
     h+='<section class="dmcard"><h3>En jeu</h3><p class="sbl"><strong>CA</strong> '+esc(d.ca==null?"—":d.ca)+' · <strong>PV max</strong> '+esc(d.pv==null?"—":d.pv)+' · <strong>Perception passive</strong> '+esc(d.percPassive==null?"—":d.percPassive)+'</p></section></div>';
     h+=mdBlock("Accroches et liens",d.accroches)+mdBlock("Notes du DM",d.notes);
@@ -2033,7 +2050,7 @@ function secGeneric(type){const S=MAN[type],list=manList(type);
       h+=mdBlock("Notes",x.notes);
       return h+manTools(type,x.id)+'</article>';}
     if(type==="factions"){const mem=factionMembers(x),qs=quetes.filter(q=>mem.some(p=>(p.quetes||[]).indexOf(q.id)>=0)),fl=ids=>(ids||[]).map(i=>factions.find(f=>f.id===i)).filter(Boolean);
-      h+='<div class="sheet-top">'+(x.image?'<img class="portrait emblem" src="'+esc(x.image)+'" alt="Emblème">':'<span class="portrait ph" aria-hidden="true">⚑</span>')+'<div class="sheet-id"><h2>'+esc(x.nom)+'</h2><p class="sheet-sub">'+esc(x.type||"Faction")+'</p><p class="ctags">'+(x.attitude?'<span class="ccat att-'+esc(x.attitude)+'">'+esc(ATT_LBL[x.attitude]||"")+'</span>':'')+(x.regions||[]).map(r=>'<span class="creg">'+esc(regionName(r))+'</span>').join("")+'</p>'+
+      h+='<div class="sheet-top">'+(x.image?zimg("portrait emblem",x.image,x.nom,"factions",x.id):'<span class="portrait ph" aria-hidden="true">⚑</span>')+'<div class="sheet-id"><h2>'+esc(x.nom)+'</h2><p class="sheet-sub">'+esc(x.type||"Faction")+'</p><p class="ctags">'+(x.attitude?'<span class="ccat att-'+esc(x.attitude)+'">'+esc(ATT_LBL[x.attitude]||"")+'</span>':'')+(x.regions||[]).map(r=>'<span class="creg">'+esc(regionName(r))+'</span>').join("")+'</p>'+
         (x.siege?'<p class="desc"><strong>Siège :</strong> '+esc(x.siege)+'</p>':'')+(x.chef?'<p class="desc"><strong>Chef :</strong> '+md(manLinks(x.chef)).replace(/^<p>|<\/p>\s*$/g,"")+'</p>':'')+'</div></div>';
       h+=mdBlock("Présentation",x.presentation)+mdBlock("Objectifs publics",x.objectifs)+mdBlock("Objectifs secrets et secrets",x.secrets);
       if(fl(x.allies).length||fl(x.rivaux).length)h+='<div class="linked">'+(fl(x.allies).length?'<p><span class="lk">Alliés</span>'+fl(x.allies).map(f=>linkChip("factions",f,esc(f.nom))).join("")+'</p>':'')+(fl(x.rivaux).length?'<p><span class="lk">Rivaux</span>'+fl(x.rivaux).map(f=>linkChip("factions",f,esc(f.nom))).join("")+'</p>':'')+'</div>';
@@ -2048,7 +2065,7 @@ function secGeneric(type){const S=MAN[type],list=manList(type);
       const qs=quetes.filter(q=>((scenarios[q.id]||{}).monstres||[]).indexOf(x.id)>=0);
       if(qs.length)h+='<h3>Quêtes</h3><p>'+qs.map(q=>linkChip("quetes",q,esc(q.titre))).join("")+'</p>';}
     else if(type==="pnj"){const m=monstres.find(y=>y.id===x.monstre);
-      h+='<div class="sheet-top">'+(x.image?'<img class="portrait" src="'+esc(x.image)+'" alt="">':'')+'<div class="sheet-id"><h2>'+esc(x.nom)+'</h2><p class="sheet-sub">'+esc([x.role,x.espece].filter(Boolean).join(" · "))+'</p><p class="ctags">'+(x.region?'<span class="creg">'+esc(regionName(x.region))+'</span>':'')+factionChips(x)+(x.attitude?'<span class="ccat att-'+esc(x.attitude)+'">'+esc(ATT_LBL[x.attitude]||x.attitude)+'</span>':'')+'</p>'+(x.lieu?'<p class="desc">Lieu : '+esc(x.lieu)+'</p>':'')+'</div></div>'+
+      h+='<div class="sheet-top">'+(x.image?zimg("portrait",x.image,x.nom,"pnj",x.id):'')+'<div class="sheet-id"><h2>'+esc(x.nom)+'</h2><p class="sheet-sub">'+esc([x.role,x.espece].filter(Boolean).join(" · "))+'</p><p class="ctags">'+(x.region?'<span class="creg">'+esc(regionName(x.region))+'</span>':'')+factionChips(x)+(x.attitude?'<span class="ccat att-'+esc(x.attitude)+'">'+esc(ATT_LBL[x.attitude]||x.attitude)+'</span>':'')+'</p>'+(x.lieu?'<p class="desc">Lieu : '+esc(x.lieu)+'</p>':'')+'</div></div>'+
         (x.apparence?'<h3>Apparence</h3><p class="desc">'+esc(x.apparence)+'</p>':'')+(x.voix?'<h3>Voix et manières</h3><p class="desc">'+esc(x.voix)+'</p>':'')+mdBlock("Secrets",x.secrets)+mdBlock("Notes",x.notes)+
         ((x.quetes||[]).length?'<h3>Quêtes liées</h3><ul class="todo">'+x.quetes.map(id=>questById(id)).filter(Boolean).map(q=>'<li><span>'+esc(q.titre)+'</span><button class="mini" data-a="man-quest" data-id="'+esc(q.id)+'">Scénario</button></li>').join("")+'</ul>':'')+
         (m?'<h3>Stats</h3>'+statblock(m):'');}
@@ -2142,7 +2159,7 @@ function secAtelier(){
     '<div class="artmeta"><strong>'+esc(i.nom)+'</strong><span>'+esc(i.sub)+'</span><div class="actions"><button class="btn" data-a="art-copy" data-id="'+esc(i.id)+'">'+(ui.artCopied===i.id?'Copié ✓':'Copier le prompt')+'</button><label class="btn ghost filebtn" for="art-f-'+esc(i.id)+'">Fichier…<input id="art-f-'+esc(i.id)+'" type="file" accept="image/*" data-artfile="'+esc(artColl())+'|'+esc(i.id)+'"></label>'+(i.x.image?'<button class="btn ghost" data-a="art-clear" data-id="'+esc(i.id)+'">Retirer</button>':'')+'</div></div></article>').join("")+'</div>';}
 async function artSave(target,file){const [coll,id]=target.split("|");if(!file||!/^image\//.test(file.type)){save={state:"error",msg:"Ce n'est pas une image."};render();return;}
   try{const url=await resizeImage(file,640);if(url.length>390000){save={state:"error",msg:"Image trop lourde."};render();return;}
-    await run("Image",()=>setDoc(doc(db,coll,id),{image:url,majLe:serverTimestamp()},{merge:true}));}catch(err){save={state:"error",msg:err.message};render();}}
+    await run("Image",()=>setDoc(doc(db,coll,id),{image:url,majLe:serverTimestamp()},{merge:true}));hdSave(coll,id,file);}catch(err){save={state:"error",msg:err.message};render();}}
 function copyText(t){return (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject()).catch(()=>{const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}ta.remove();});}
 
 function dmManual(){
@@ -2908,8 +2925,43 @@ async function gsAction(a,id){
 
 /* ---------- Écran de table : carte vivante à vol d'oiseau, brouillard, lumière, jetons ---------- */
 // État partagé avec la télé : document prive/ecran (DM seulement) + BroadcastChannel pour l'instantané dans le même navigateur.
+/* ---------- Agrandir une image de fiche ; la montrer sur l'écran des joueurs (image + nom seulement) ---------- */
+// La version haute définition d'une image vit à part (prive/hd_<collection>_<id>) : elle n'est lue qu'au moment d'agrandir, jamais avec les listes.
+let vitrine=null,zoomSt=null;
+const hdRef=(coll,id)=>doc(db,"prive","hd_"+coll+"_"+id);
+async function hdGet(coll,id){if(!isAdmin||!coll||!id)return "";try{const s=await getDoc(hdRef(coll,id));return s.exists()?(s.data().image||""):"";}catch(e){return "";}}
+function resizeHd(file){return [[1600,0.86],[1300,0.84],[1100,0.8],[900,0.78]].reduce((p,t)=>p.then(u=>u||resizeImage(file,t[0],t[1]).then(x=>x.length<=880000?x:"")),Promise.resolve(""));}
+function hdSave(coll,id,file){if(!isAdmin||!coll||!id||!file)return Promise.resolve();return resizeHd(file).then(u=>u?setDoc(hdRef(coll,id),{image:u,ms:Date.now()}):null).catch(e=>console.error(e));}
+function hdDel(coll,id){if(!isAdmin||!coll||!id)return Promise.resolve();return deleteDoc(hdRef(coll,id)).catch(()=>{});}
+function vitOn(){return !!(vitrine&&vitrine.image);}
+async function vitSet(v){vitrine=v;try{ecBC&&ecBC.postMessage({vitrine:v});}catch(e){}vitUi();
+  try{await setDoc(doc(db,"prive","vitrine"),v);}catch(e){console.error(e);save={state:"error",msg:"L'écran des joueurs n'a pas pu être mis à jour."};render();}}
+function vitShow(nom,image){if(!isAdmin||!image)return Promise.resolve();return vitSet({nom:String(nom||"").slice(0,80),image,ms:Date.now()});}
+function vitHide(){if(!isAdmin)return Promise.resolve();return vitSet({nom:"",image:"",ms:Date.now()});}
+// Pastille visible partout côté MJ tant qu'une image est sur l'écran des joueurs.
+function vitUi(){let c=document.getElementById("vitchip");const on=vitOn()&&isAdmin&&ui.office!=="ecran";
+  if(!on){if(c)c.remove();}
+  else{if(!c){c=document.createElement("div");c.id="vitchip";c.className="vitchip";document.body.appendChild(c);}
+    c.innerHTML='<span>📺 Sur l\'écran des joueurs : <strong>'+esc(vitrine.nom||"image sans nom")+'</strong></span><button class="btn sm" data-a="vit-hide">Retirer</button>';}
+  if(document.getElementById("zoomov"))zoomRender();
+  if(ui.office==="ecran")ecTvUpdate();}
+function zoomOpen(src,nom,coll,id,opener){if(!src||ui.office==="ecran")return;zoomClose(true);zoomSt={src,nom:nom||"",coll:coll||"",id:id||"",opener:opener||null};
+  const o=document.createElement("div");o.className="zoomov";o.id="zoomov";o.setAttribute("role","dialog");o.setAttribute("aria-modal","true");o.setAttribute("aria-label",nom?"Image de "+nom:"Image agrandie");
+  document.body.appendChild(o);zoomRender("zoom-close");
+  if(isAdmin&&coll&&id)hdGet(coll,id).then(u=>{if(u&&zoomSt&&zoomSt.coll===coll&&zoomSt.id===id){zoomSt.src=u;const im=document.querySelector("#zoomov figure img");if(im)im.src=u;}});}
+function zoomRender(focus){const o=document.getElementById("zoomov");if(!o||!zoomSt)return;const z=zoomSt,dm=isAdmin,cur=document.activeElement&&o.contains(document.activeElement)?document.activeElement.getAttribute("data-a")||document.activeElement.id:"";
+  if(dm){const n=document.getElementById("zoom-nom");if(n)z.vn=n.value;}
+  o.innerHTML='<figure><img src="'+esc(z.src)+'" alt="'+esc(z.nom?"Portrait de "+z.nom:"Image agrandie")+'">'+(z.nom?'<figcaption>'+esc(z.nom)+'</figcaption>':'')+'</figure><div class="zoombar">'+
+    (dm?'<label for="zoom-nom">Nom montré aux joueurs<input id="zoom-nom" type="text" maxlength="80" value="'+esc(z.vn!=null?z.vn:z.nom)+'"></label><button class="btn gold" data-a="vit-send">📺 Montrer aux joueurs</button>'+(vitOn()?'<button class="btn" data-a="vit-hide">Retirer de l\'écran des joueurs</button>':''):'')+
+    '<button class="btn ghost" data-a="zoom-close">Fermer</button></div>';
+  const f=focus||cur,t=f&&(o.querySelector('[data-a="'+f+'"]')||document.getElementById(f))||o.querySelector('[data-a="zoom-close"]');if(focus||cur)t&&t.focus();}
+function zoomClose(silent){const o=document.getElementById("zoomov");if(o)o.remove();const op=zoomSt&&zoomSt.opener;zoomSt=null;if(!silent&&op&&document.contains(op))try{op.focus();}catch(e){}}
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"&&document.getElementById("zoomov")){e.preventDefault();e.stopImmediatePropagation();zoomClose();return;}
+  if((e.key==="Enter"||e.key===" ")&&e.target&&e.target.matches&&e.target.matches("img.zoomable")){e.preventDefault();e.stopImmediatePropagation();const z=e.target;zoomOpen(z.getAttribute("src"),z.getAttribute("data-zn"),z.getAttribute("data-zc"),z.getAttribute("data-zi"),z);}
+},true);
 let ecDoc=null,ecBC=null,ecPushT=null,ecRenderers={},ecRaf=0;
-try{ecBC=new BroadcastChannel("rdv-ecran");ecBC.onmessage=e=>{if(ui.office==="ecran"&&e.data){ecDoc=Object.assign({},ecDoc||{},e.data);ecTvUpdate();}};}catch(e){}
+try{ecBC=new BroadcastChannel("rdv-ecran");ecBC.onmessage=e=>{if(e.data&&e.data.vitrine){vitrine=e.data.vitrine;vitUi();return;}if(ui.office==="ecran"&&e.data){ecDoc=Object.assign({},ecDoc||{},e.data);ecTvUpdate();}};}catch(e){}
 /* ---------- Générateurs de cartes (par type) ---------- */
 // g = « ext » (extérieur, météo), « int » (intérieur) ou « abri » (sous terre) : pas de météo à l'intérieur ni à l'abri.
 const EC_MAPS={route:{l:"Route",g:"ext"},foret:{l:"Forêt",g:"ext"},collines:{l:"Collines",g:"ext"},ville:{l:"Ville",g:"ext"},port:{l:"Côte et port",g:"ext"},marais:{l:"Marais",g:"ext"},
@@ -4437,11 +4489,15 @@ function ecLightSprite(x,k,X,Y,s,t,st,tv){const M=EC_METEO[st.meteo]||EC_METEO.c
   x.fillStyle="#5a3e22";x.fillRect(X-s*0.04,Y-s*0.04,s*0.08,s*0.25);if(!out)gFire(x,X/s,Y/s,s,t,0.22);}
 function ecPpi(st){const k=(st.calib&&+st.calib.k)||1,d=st.calib&&+st.calib.diag;if(d>5){const hyp=Math.hypot(screen.width,screen.height);return hyp/d*k;}return 48*k;}
 /* ----- Télé (#ecran) ----- */
-function ecTvShell(){return '<div class="ectv"><canvas id="ec-tv"></canvas><div class="ectv-met" id="ec-met"></div><div class="ectv-info" id="ec-info"></div><div class="ectv-ord" id="ec-ord"></div><div class="ectv-msg" id="ec-msg"></div></div>';}
+function ecTvShell(){return '<div class="ectv"><canvas id="ec-tv"></canvas><div class="ectv-met" id="ec-met"></div><div class="ectv-info" id="ec-info"></div><div class="ectv-ord" id="ec-ord"></div><div class="ectv-msg" id="ec-msg"></div><div class="ectv-fiche" id="ec-fiche"></div></div>';}
+function ecTvFiche(){const f=document.getElementById("ec-fiche");if(!f)return;const on=vitOn(),key=on?vitrine.ms+"|"+vitrine.nom:"";if(f.getAttribute("data-k")===key)return;f.setAttribute("data-k",key);
+  if(on){f.innerHTML='<img src="'+esc(vitrine.image)+'" alt="'+esc(vitrine.nom?"Portrait de "+vitrine.nom:"Image")+'">'+(vitrine.nom?'<h2>'+esc(vitrine.nom)+'</h2>':'');f.classList.add("on");}
+  else{f.classList.remove("on");setTimeout(()=>{if(!vitOn())f.innerHTML="";},400);}}
 function ecTvUpdate(){if(ui.office!=="ecran")return;const app=document.getElementById("app");if(!document.getElementById("ec-tv"))app.innerHTML=ecTvShell();
   const m=document.getElementById("ec-msg"),st=ecDoc;
   if(!isAdmin){m.textContent="Écran de table : connecte-toi avec le compte du Maître de la Guilde, puis recharge.";return;}
-  if(!st||!st.carte){m.textContent="En attente d'une carte… Ouvre une carte dans le Mode Partie (onglet Écran) ou dans l'Espace DM → Cartes (« Montrer aux joueurs »).";const r=ecBind("ec-tv","tv");if(r)r.st=null;return;}
+  ecTvFiche();
+  if(!st||!st.carte){m.textContent=vitOn()?"":"En attente d'une carte… Ouvre une carte dans le Mode Partie (onglet Écran) ou dans l'Espace DM → Cartes (« Montrer aux joueurs »).";const r=ecBind("ec-tv","tv");if(r)r.st=null;return;}
   m.textContent="";const r=ecBind("ec-tv","tv");if(r)ecSet(r,st);
   {const M=EC_METEO[st.meteo]||EC_METEO.clair;document.getElementById("ec-met").innerHTML=(st.date?'<span class="dt">📜 '+esc(st.date)+'</span>':'')+(st.meteo&&st.meteo!=="clair"?'<strong>'+M.i+' '+esc(M.l)+'</strong>'+(M.fx.length?'<span>'+esc(M.fx[0])+'</span>':''):'');}
   document.getElementById("ec-info").innerHTML=st.info?'<p>'+esc(st.info).replace(/\n/g,"<br>")+'</p>':'';
@@ -4673,7 +4729,7 @@ function ptSide(q){
     {const SM=scMaps(q),T=scTrajet(q),tot=T.a+scDuree(q)+T.r;if(SM.length||T.a+T.r){h+='<div class="ecdays sc"><strong>Durée : '+tot+' jour'+(tot>1?'s':'')+'</strong> <span class="desc">('+(T.a?T.a+' de trajet aller, ':'')+scDuree(q)+' sur place'+(T.r?', '+T.r+' de retour':'')+')</span>'+(SM.length?'<ol class="ecdl">'+SM.map(m=>'<li>'+esc(m.nom)+' <span class="desc">· '+esc(ecMapLbl(m.type))+' · '+esc((EC_LUM[m.lum]||{}).l||"")+(ecIndoor(m.type)?'':' · '+EC_METEO[ecSeasonize(m.meteo,ecSaison())].i+' '+esc(EC_METEO[ecSeasonize(m.meteo,ecSaison())].l))+'</span></li>').join("")+'</ol>':'')+'</div>';}}
     h+=q.libre?'<p class="desc">Partie libre, hors quête : pas de scénario.</p>':s.scenario?ptScenario(q):'<p class="desc">Aucun scénario pour cette quête. <a href="#man/quetes/'+encodeURIComponent(q.id)+'">L\'écrire dans le manuel</a></p>';
     const ps=(s.pnj||[]).map(id=>pnjs.find(p=>p.id===id)).filter(Boolean).concat(pnjs.filter(p=>(p.quetes||[]).indexOf(q.id)>=0&&(s.pnj||[]).indexOf(p.id)<0));
-    if(ps.length)h+='<h3>PNJ de la quête</h3>'+ps.map(p=>'<details class="ptpnj"><summary>'+(p.image?'<img src="'+esc(p.image)+'" alt="">':'')+'<strong>'+esc(p.nom)+'</strong>'+(p.role?' · '+esc(p.role):'')+'</summary>'+(p.voix?'<p><strong>Voix :</strong> '+esc(p.voix)+'</p>':'')+(p.apparence?'<p><strong>Apparence :</strong> '+esc(p.apparence)+'</p>':'')+(p.secrets?'<div class="wikibody"><strong>Secrets :</strong> '+md(manLinks(p.secrets))+'</div>':'')+(p.monstre?'<button class="ptadd" data-a="pt-sb" data-id="'+esc(p.monstre)+'">Bloc de stats</button>':'')+'</details>').join("");
+    if(ps.length)h+='<h3>PNJ de la quête</h3>'+ps.map(p=>'<details class="ptpnj"><summary>'+(p.image?zimg("",p.image,p.nom,"pnj",p.id):'')+'<strong>'+esc(p.nom)+'</strong>'+(p.role?' · '+esc(p.role):'')+'</summary>'+(p.image?'<button class="ptadd" data-a="vit-show" data-k="pnj" data-id="'+esc(p.id)+'">📺 Montrer aux joueurs</button>':'')+(p.voix?'<p><strong>Voix :</strong> '+esc(p.voix)+'</p>':'')+(p.apparence?'<p><strong>Apparence :</strong> '+esc(p.apparence)+'</p>':'')+(p.secrets?'<div class="wikibody"><strong>Secrets :</strong> '+md(manLinks(p.secrets))+'</div>':'')+(p.monstre?'<button class="ptadd" data-a="pt-sb" data-id="'+esc(p.monstre)+'">Bloc de stats</button>':'')+'</details>').join("");
     if(s.notes)h+=mdBlock("Notes",s.notes);
   }else if(tab==="tests"){
     const pcs=(ui.pt.liste||[]).filter(c=>c.kind==="pj"&&c.pp!==""&&c.pp!=null);
@@ -4761,7 +4817,7 @@ function ptRow(c){
   const pct=c.pvMax>0?Math.max(0,Math.min(100,Math.round(100*c.pv/c.pvMax))):0,hc=pct>50?"ok":pct>25?"mid":"low";
   let h='<li class="ptrow'+(cur&&fight?' cur':'')+(dead?' dead':'')+(down?' down':'')+' k-'+c.kind+' c-'+camp+'" id="pt-'+c.cid+'">';
   h+='<label class="ptinit"><span>Init.</span><input type="number" inputmode="numeric" class="pt-in" data-id="'+c.cid+'" data-f="init" value="'+esc(c.init===""||c.init==null?"":c.init)+'" aria-label="Initiative de '+esc(c.nom)+'"></label>';
-  h+='<div class="ptmain"><div class="ptname">'+(cur&&fight?'<span class="ptturn" aria-label="Tour actuel">▶</span>':'')+(c.kind==="monstre"&&monstres.some(m=>m.id===c.ref)?'<button class="ptlink" data-a="pt-sb" data-id="'+esc(c.ref)+'">'+esc(c.nom)+'</button>':'<strong>'+esc(c.nom)+'</strong>')+
+  h+='<div class="ptmain"><div class="ptname">'+(cur&&fight?'<span class="ptturn" aria-label="Tour actuel">▶</span>':'')+(c.kind==="monstre"&&monstres.some(m=>m.id===c.ref)?'<button class="ptlink" data-a="pt-sb" data-id="'+esc(c.ref)+'">'+esc(c.nom)+'</button>':'<strong>'+esc(c.nom)+'</strong>')+ptVitBtn(c)+
     '<span class="ptcamp '+camp+'">'+(camp==="allie"?'Allié':'Ennemi')+'</span><span class="ptca" title="Classe d\'armure">🛡 '+esc(c.ca===""?"—":c.ca)+'</span>'+(c.kind==="pj"&&c.pp!==""&&c.pp!=null?'<span class="ptca" title="Perception passive">👁 '+esc(c.pp)+'</span>':'')+(c.conc?'<span class="ptconc">Concentration</span>':'')+(dead?'<span class="ptdead">Vaincu</span>':'')+
     '<button class="ptmod" data-a="pt-edit" data-id="'+c.cid+'">✎ Modifier</button></div>';
   h+='<div class="pthp"><span class="bar"><span class="'+hc+'" style="width:'+pct+'%"></span></span><span class="num">'+c.pv+' / '+(c.pvMax||"?")+' PV'+(c.tmp>0?' <em>+'+c.tmp+' temp.</em>':'')+'</span></div>';
@@ -4945,6 +5001,8 @@ function ptAddBox(q,open){
   return h+'</details>';
 }
 function ptNotesBox(){const C=ui.pt.combat;if(!C)return "";return '<label class="ptnotes" for="pt-cnotes">📝 Notes de combat<textarea id="pt-cnotes" rows="3" maxlength="5000" placeholder="Ce qui se passe, décisions des joueurs, idées…">'+esc(C.notes||"")+'</textarea></label>';}
+function ptVitBtn(c){const k=c.kind==="monstre"?"monstres":c.kind==="pj"?"aventuriers":c.kind==="pnj"?"pnj":"",x=k&&c.ref?(k==="monstres"?monstres:k==="pnj"?pnjs:aventuriers).find(y=>y.id===c.ref):null;
+  return x&&x.image?'<button class="ptvit" data-a="vit-show" data-k="'+k+'" data-id="'+esc(c.ref)+'" data-n="'+esc(c.nom)+'" title="Montrer son image sur l\'écran des joueurs" aria-label="Montrer '+esc(c.nom)+' sur l\'écran des joueurs">📺</button>':'';}
 function ptCombatCol(q){
   const P=ui.pt,C=P.combat,o=ptOrder();let h='';
   if(!C){
@@ -5392,8 +5450,16 @@ document.addEventListener("click",async e=>{
   const ml=e.target.closest&&e.target.closest('a[href^="#man/"]');
   if(ml){e.preventDefault();const p=ml.getAttribute("href").slice(5).split("/");ui.dmTab="manuel";ui.manSec=p[0];ui.manId=p[1]?decodeURIComponent(p[1]):null;ui.manEdit=null;ui.confirmMan=null;ui.manQ="";
     if(location.hash!=="#dm"){ui.pendingMan=true;location.hash="#dm";}render();window.scrollTo(0,0);return;}
+  const zi=e.target.closest&&e.target.closest("img.zoomable");
+  if(zi){e.preventDefault();zoomOpen(zi.getAttribute("src"),zi.getAttribute("data-zn"),zi.getAttribute("data-zc"),zi.getAttribute("data-zi"),zi);return;}
+  if(e.target.id==="zoomov"||(e.target.tagName==="FIGURE"&&e.target.parentNode&&e.target.parentNode.id==="zoomov")){zoomClose();return;}
   const b=e.target.closest("[data-a]");if(!b)return;
   const a=b.getAttribute("data-a"),id=b.getAttribute("data-id");
+  if(a==="zoom-close"){zoomClose();return;}
+  if(a==="vit-hide"){await vitHide();return;}
+  if(a==="vit-send"){if(!zoomSt)return;const n=document.getElementById("zoom-nom");zoomSt.vn=n?n.value.trim():zoomSt.nom;await vitShow(zoomSt.vn,zoomSt.src);return;}
+  if(a==="vit-show"){const k=b.getAttribute("data-k"),x=(k==="monstres"?monstres:k==="pnj"?pnjs:k==="factions"?factions:aventuriers).find(y=>y.id===id);if(!x||!x.image)return;
+    b.disabled=true;const hd=await hdGet(k,id);await vitShow(b.getAttribute("data-n")||x.nom,hd||x.image);b.disabled=false;return;}
   if(a.indexOf("pt-")===0){await partyAction(a,id,b,e);return;}
   if(a.indexOf("cart-")===0){cartAct(a,id);render();return;}
   if(a.indexOf("gs-")===0){if(a==="gs-sec"){ui.gsSec=b.getAttribute("data-v");ui.gsConfirm=null;ui.gsMsg="";}else await gsAction(a,id);render();return;}
@@ -5485,20 +5551,20 @@ document.addEventListener("click",async e=>{
   else if(a==="art-show-instr"){ui.artInstr=!ui.artInstr;}
   else if(a==="art-copy-instr"){await copyText(ART_INSTR);ui.artCopied="instr";}
   else if(a==="art-copy"){const it=artItems().find(i=>i.id===id);if(!it)return;await copyText(artPrompt(ui.artKind,it.x));ui.artCopied=id;}
-  else if(a==="art-clear"){await run("Image retirée",()=>setDoc(doc(db,artColl(),id),{image:"",majLe:serverTimestamp()},{merge:true}));return;}
+  else if(a==="art-clear"){hdDel(artColl(),id);await run("Image retirée",()=>setDoc(doc(db,artColl(),id),{image:"",majLe:serverTimestamp()},{merge:true}));return;}
   else if(a==="man-sec"){ui.manSec=b.getAttribute("data-v");ui.manId=null;ui.manEdit=null;ui.manQ="";ui.confirmMan=null;ui.noteEdit=null;}
   else if(a==="man-open"){ui.dmTab="manuel";ui.manSec=b.getAttribute("data-sec");ui.manId=id;ui.manEdit=null;ui.confirmMan=null;if(location.hash!=="#dm"){ui.pendingMan=true;location.hash="#dm";}window.scrollTo(0,0);}
   else if(a==="man-quest"){ui.dmTab="manuel";ui.manSec="quetes";ui.manId=id;ui.manEdit=null;window.scrollTo(0,0);}
   else if(a==="man-back"){if(ui.manEdit&&ui.manId){ui.manEdit=null;}else{ui.manId=null;ui.manEdit=null;}ui.confirmMan=null;}
   else if(a==="man-qf"){ui.manQf=b.getAttribute("data-v");}
-  else if(a==="man-new"){ui.manEdit="new";ui.manId=null;ui.manImg=undefined;ui.manML=[];ui.manDraft=null;}
-  else if(a==="man-edit"){const t=ui.manSec,x=manList(t).find(y=>y.id===id);ui.manEdit=t==="perso"||t==="quetes"?true:id;ui.manImg=undefined;ui.manML=x&&x.monstres&&t==="rencontres"?x.monstres.map(r=>({id:r.id,nb:r.nb})):[];}
-  else if(a==="man-cancel"){ui.manEdit=null;ui.manImg=undefined;ui.manDraft=null;}
-  else if(a==="man-dup"){const x=manList(ui.manSec).find(y=>y.id===id);if(!x)return;const c=Object.assign({},x);delete c.id;c.nom=(c.nom||"")+" (copie)";ui.manDraft=c;ui.manEdit="new";ui.manId=null;ui.manImg=c.image||undefined;ui.manML=(c.monstres||[]).map(r=>({id:r.id,nb:r.nb}));}
+  else if(a==="man-new"){ui.manEdit="new";ui.manId=null;ui.manImg=undefined;ui.manImgFile=null;ui.manML=[];ui.manDraft=null;}
+  else if(a==="man-edit"){const t=ui.manSec,x=manList(t).find(y=>y.id===id);ui.manEdit=t==="perso"||t==="quetes"?true:id;ui.manImg=undefined;ui.manImgFile=null;ui.manML=x&&x.monstres&&t==="rencontres"?x.monstres.map(r=>({id:r.id,nb:r.nb})):[];}
+  else if(a==="man-cancel"){ui.manEdit=null;ui.manImg=undefined;ui.manImgFile=null;ui.manDraft=null;}
+  else if(a==="man-dup"){const x=manList(ui.manSec).find(y=>y.id===id);if(!x)return;const c=Object.assign({},x);delete c.id;c.nom=(c.nom||"")+" (copie)";ui.manDraft=c;ui.manEdit="new";ui.manId=null;ui.manImg=c.image||undefined;ui.manImgFile=null;ui.manML=(c.monstres||[]).map(r=>({id:r.id,nb:r.nb}));}
   else if(a==="man-del"){ui.confirmMan=id;}
   else if(a==="man-del-no"){ui.confirmMan=null;}
-  else if(a==="man-del-yes"){const c=MAN[ui.manSec].coll;ui.confirmMan=null;ui.manId=null;await run("Supprimé",()=>deleteDoc(doc(db,c,id)));return;}
-  else if(a==="mimg-clear"){ui.manImg="";}
+  else if(a==="man-del-yes"){const c=MAN[ui.manSec].coll;ui.confirmMan=null;ui.manId=null;hdDel(c,id);await run("Supprimé",()=>deleteDoc(doc(db,c,id)));return;}
+  else if(a==="mimg-clear"){ui.manImg="";ui.manImgFile=null;}
   else if(a==="ml-add"){const sel=document.getElementById("ml-pick");if(!sel||!sel.value)return;syncML();const r=(ui.manML||[]).find(x=>x.id===sel.value);if(r)r.nb++;else (ui.manML=ui.manML||[]).push({id:sel.value,nb:1});}
   else if(a==="ml-del"){syncML();ui.manML.splice(+id,1);}
   else if(a==="party-mode"){ui.party.mode=b.getAttribute("data-v");}
@@ -5617,7 +5683,7 @@ document.addEventListener("change",e=>{
   if(e.target.getAttribute&&e.target.getAttribute("data-artfile")){const f=e.target.files&&e.target.files[0];if(f)artSave(e.target.getAttribute("data-artfile"),f);return;}
   if(e.target.id==="n-img"){const f=e.target.files&&e.target.files[0];if(!f)return;resizeImage(f,640).then(url=>{ui.noteImg=url;render();});return;}
   if(e.target.id==="mf-img"){const f=e.target.files&&e.target.files[0];if(!f)return;
-    resizeImage(f,640).then(url=>{if(url.length>380000)save={state:"error",msg:"Image trop lourde."};else ui.manImg=url;render();}).catch(err=>{save={state:"error",msg:err.message};render();});return;}
+    resizeImage(f,640).then(url=>{if(url.length>380000)save={state:"error",msg:"Image trop lourde."};else{ui.manImg=url;ui.manImgFile=f;}render();}).catch(err=>{save={state:"error",msg:err.message};render();});return;}
   if(e.target.id==="c2-img"){const f=e.target.files&&e.target.files[0];if(!f)return;
     resizeImage(f).then(url=>{if(url.length>380000)save={state:"error",msg:"Image trop lourde."};else ui.compImg=url;render();}).catch(err=>{save={state:"error",msg:err.message};render();});return;}
   if(e.target.id==="p-img"){const f=e.target.files&&e.target.files[0];if(!f)return;
@@ -5775,6 +5841,7 @@ document.addEventListener("submit",async e=>{
     if(!id)return;if(S.fields.some(f=>f[3]&&!String(d[f[0]]||"").trim()))return;
     if(ui.manEdit==="new"&&ui.manDraft&&ui.manDraft.image&&d.image===undefined)d.image=ui.manDraft.image;
     d.majLe=serverTimestamp();const isNew=ui.manEdit==="new";if(isNew)d.creeLe=serverTimestamp();if(type==="monstres"||type==="pnj")d.aCompleter=false;
+    const hdF=ui.manImgFile;ui.manImgFile=null;if(S.fields.some(f=>f[2]==="image")){if(d.image&&hdF)hdSave(S.coll,id,hdF);else if(d.image==="")hdDel(S.coll,id);}
     ui.manEdit=null;ui.manImg=undefined;ui.manDraft=null;if(type!=="dossiers"&&type!=="scenarios")ui.manId=id;
     await run("Manuel du DM",()=>setDoc(doc(db,S.coll,id),d,{merge:true}));return;
   }
