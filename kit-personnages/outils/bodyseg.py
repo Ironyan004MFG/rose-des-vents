@@ -21,6 +21,13 @@ def auto_seg(path):
     kind[fs>0.5]=7
     hand=(fat>28)&(fat/np.sqrt(area)>0.24)&(area>2500)&(area<48000)&(np.abs(cx-627)>190)&(cy>520)&(ds>215)&(ml>HML)&(fs<0.2)
     kind[hand]=1
+    # un bracelet large et clair peut passer pour une main : de deux « mains » voisines du même côté, celle qui est vers l'épaule est le bracelet
+    hi=np.where(hand)[0]
+    for p in hi:
+        for q in hi:
+            if p>=q or (cx[p]-627)*(cx[q]-627)<0 or np.hypot(cx[p]-cx[q],cy[p]-cy[q])>230: continue
+            S=min(SHO,key=lambda t:(t[0]-cx[p])**2+(t[1]-cy[p])**2);dp=np.hypot(cx[p]-S[0],cy[p]-S[1]);dq=np.hypot(cx[q]-S[0],cy[q]-S[1])
+            kind[p if dp<dq else q]=4
     lab=np.zeros((H,W),int);lab[comp>0]=kind[comp[comp>0]-1];hm=lab==1
     if hm.any():
         dh=ndi.distance_transform_edt(~hm);near=ndi.minimum(dh,comp,idx)

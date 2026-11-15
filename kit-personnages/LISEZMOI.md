@@ -9,7 +9,10 @@ Sauvegarde des pièces validées du générateur de personnages. **Rien ici n'es
 
 ## Contenu
 - `nain/tete/` : tête tressée d'origine, version aux oreilles repeintes (`head_fix.png`) et sa carte de matières (`head_fix_matieres.png` : valeur ÷ 20 → 1 peau, 2 cheveux, 3 barbe, 4 métal).
-- `nain/corps/` : robe de mage en 7 poses (relaxed, reach, carry_plate, walk_1 à 4), manteau court (relaxed), aventurier validé (relaxed). Images 1254 × 1254.
+- `nain/corps/<tenue>/` : un dossier par tenue, une image 1254 × 1254 par pose. **On n'y dépose que les images validées au montage.**
+  - `mage/` : robe à liseré — relaxed, reach, carry_plate, walk_1 à walk_4.
+  - `aventurier/` : manteau court, épaulettes et ceinture de cuir — relaxed, reach, carry_plate.
+  - `manteau_court/` : première version, à gros plis — relaxed (gardée pour référence).
 - `nain/jambes/` : jambes en pantalon avec bottes (pour les tenues courtes) et bottes seules (pour la robe).
 - `objets/` : assiette pleine/vide, livre, plume, fourche, pioche, poignée de charrette.
 - `outils/` : scripts Python du banc d'essai (recalage par le col, masques automatiques, teinte, assemblage, marche). Ils viennent tels quels de l'espace de travail : **les chemins sont à adapter** avant de les relancer.
@@ -20,6 +23,6 @@ Sauvegarde des pièces validées du générateur de personnages. **Rien ici n'es
 - Bottes sous la robe : décalées de 60 px vers le bas. Jambes : même recalage que le corps.
 
 ## À faire
-- Poses de l'aventurier (main tendue, assiette, marche), puis les autres classes et morphologies.
+- Marche de l'aventurier (walk_1, walk_3), puis les autres classes et morphologies.
 - Nettoyage des petits défauts de masques (liseré, cuir).
 - Intégration dans les bureaux.
