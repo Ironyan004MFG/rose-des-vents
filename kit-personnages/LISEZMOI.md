@@ -17,6 +17,7 @@ Sauvegarde des pièces validées du générateur de personnages. **Rien ici n'es
   - `manteau_court/` : première version, à gros plis — relaxed (gardée pour référence).
 - `nain/jambes/` : jambes en pantalon avec bottes (pour les tenues courtes) et bottes seules (pour la robe).
 - `objets/` : assiette pleine/vide, livre, plume, fourche, pioche, poignée de charrette.
+- Boucliers (`objets/item_shield_heater.png` écu, `item_shield_round.png` rond, `item_shield_pavise.png` pavois, plus long) : dessinés bien de face ; `outils/shields.py` sépare le métal (4) de la face (5, couleur de faction), puis pose le bouclier DEVANT le personnage, grand et incliné, par-dessus l'avant-bras (réglages validés dans `FRONT`). Aucune pose spéciale : le bouclier cache le bras.
 - `outils/` : scripts Python du banc d'essai (recalage par le col, masques automatiques, teinte, assemblage, marche). Ils viennent tels quels de l'espace de travail : **les chemins sont à adapter** avant de les relancer.
 
 ## Réglages d'assemblage (toile 512 × 512)
