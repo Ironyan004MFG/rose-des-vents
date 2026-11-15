@@ -79,11 +79,34 @@ def basket(a,lab):
         if i==1: m&=(lum<80)&(yy>800)                                          # derrière les légumes : seulement l'ombre
         out[m]=l
     return out
-def char(a,lab,shirt,over,sk,hr,rope='#6b5a3a',pants='#5a4a32'):
-    full.G.update({14:.85,6:.85,5:.75,26:.8,20:.8,21:.8,22:.8,23:.8,27:.85,24:.8,25:.8});cols={1:sk,2:hr,3:hr,6:'#3a2a1c'};c=Image.new('RGBA',(512,512));c.alpha_composite(legs.legs(pants,'#3a2a1c'))
-    t=full.tint(a,lab,{14:shirt,5:over,1:sk,6:rope,7:'#3a2e26',**VEG})
+
+# Fourche tenue à la verticale (poses fork_*) : 4 métal, 28 bois ; main tracée à la main, le reste du côté est reclassé sans peau
+FORK=[(4,[(195,20),(400,20),(400,225),(345,240),(322,300),(255,292),(258,235),(200,225)]),
+ (28,[(252,292),(322,300),(305,330),(285,420),(262,520),(255,580),(203,575),(212,520),(232,420)]),
+ (28,[(168,742),(224,748),(192,930),(185,960),(150,975),(125,950),(128,915)]),
+ (1,[(108,625),(150,598),(200,578),(250,570),(278,592),(292,625),(272,660),(265,700),(250,742),(200,755),(160,745),(125,720),(105,690)])]
+HELD={4:'#9aa0a6',28:'#8a6a42'}
+HAND=[(100,625),(150,592),(200,572),(255,565),(285,588),(300,625),(280,665),(272,705),(258,750),(200,762),(155,752),(118,725),(98,690)]
+def fork(a,lab):
+    al=a[...,3]>60;lum=a[...,:3].mean(-1);out=lab.copy();H,W=lab.shape;yy,xx=np.mgrid[:H,:W]
+    out[(out==1)&(xx<627)]=0                                                    # aucune peau de ce côté hors de la main (retracée plus bas)
+    zone=bodyseg.poly([(0,280),(300,280),(300,830),(235,905),(0,1010)],(H,W))&al
+    line=(ndi.gaussian_filter(lum,1.0)<bodyseg.LT)&al;comp,k=ndi.label(al&~line);idx=np.arange(1,k+1)
+    ml=ndi.mean(lum,comp,idx);kind=np.where(ml>125,14,np.where(ml>88,5,6));m=zone&(comp>0);out[zone]=0;out[m]=kind[comp[m]-1]
+    out[zone&(out==5)&(yy<840)]=14                                              # plis sombres de la chemise
+    out[zone&(out==6)&(yy>875+(xx-215)*0.82)]=5                                 # sous la corde : salopette à l'ombre du manche
+    low=(xx<330)&(yy>875+(xx-215)*0.82);out[low&np.isin(out,(6,14))]=5           # bas de la salopette, côté fourche
+    for l,p in FORK[:3]: out[bodyseg.poly(p,(H,W))&al]=l
+    hp=bodyseg.poly(HAND,(H,W));fr=ndi.mean(hp.astype(float),comp,idx);ar=ndi.sum(al,comp,idx)
+    for i in range(k):
+        if fr[i]>0.6 and ml[i]>140 and ar[i]>60: out[comp==i+1]=1               # la main : régions fermées par le trait
+    _,ix=ndi.distance_transform_edt(out==0,return_indices=True);out=out[ix[0],ix[1]];out[~al]=0
+    return out
+def char(a,lab,shirt,over,sk,hr,rope='#6b5a3a',pants='#5a4a32',ph=0):
+    full.G.update({14:.85,6:.85,5:.75,26:.8,20:.8,21:.8,22:.8,23:.8,27:.85,24:.8,25:.8,28:.8,4:.9});cols={1:sk,2:hr,3:hr,6:'#3a2a1c'};c=Image.new('RGBA',(512,512));c.alpha_composite(legs.legs(pants,'#3a2a1c',ph))
+    t=full.tint(a,lab,{14:shirt,5:over,1:sk,6:rope,7:'#3a2e26',**VEG,**HELD})
     c.alpha_composite(full.place(t,SC,(625,360)));c.alpha_composite(kit.tint('head_dwarf_braided_90',cols))
-    held=np.isin(lab,list(VEG))
+    held=np.isin(lab,list(VEG)+list(HELD))
     if held.any():                                                    # l'objet tenu repasse devant la barbe
         w=np.array(Image.fromarray((held*255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.5))).astype(float)/255
         h=np.array(t).astype(float);h[...,3]*=w;c.alpha_composite(full.place(Image.fromarray(h.astype('uint8')),SC,(625,360)))
