@@ -120,6 +120,29 @@ def lead(src,tag,lab_left=None):
     if lab_left is not None: out[:,:627]=lab_left[:,:627]
     out[~al]=0
     return a,out
+
+# Travail aux champs (fork_work) : les deux mains sur la fourche, tenue en diagonale devant le ventre. Image remise à l'échelle avant (work_al.png).
+WSKIN=[[(225,735),(330,720),(400,760),(420,830),(390,900),(330,905),(280,880),(245,820)],
+       [(705,875),(760,860),(880,935),(860,990),(700,1090),(650,1150),(600,1200),(540,1195),(500,1150),(495,1095),(540,1060),(640,1040),(690,960)]]
+WFORK=[(4,[(560,1285),(660,1275),(765,1330),(765,1560),(580,1560),(560,1400)]),
+       (28,[(378,855),(418,845),(440,900),(495,1000),(545,1070),(505,1095),(455,1010),(400,910)]),(28,[(555,1190),(610,1180),(645,1290),(605,1300)])]
+def work(src='../far/work_al.png',tag='work'):
+    norm.normalize_like(src,'../adv/src3.png',f'../far/n_{tag}.png',H=1800)
+    a=np.array(Image.open(f'../far/n_{tag}.png').convert('RGBA')).astype(float);al=a[...,3]>60;lum=a[...,:3].mean(-1);H,W=al.shape
+    line=(ndi.gaussian_filter(lum,1.0)<bodyseg.LT)&al;comp,k=ndi.label(al&~line);idx=np.arange(1,k+1);ml=ndi.mean(lum,comp,idx);ar=ndi.sum(al,comp,idx)
+    cy,cx=np.array(ndi.center_of_mass(al,comp,idx)).T;shirt=bodyseg.poly([(545,215),(705,215),(705,560),(545,560)],(H,W));fs=ndi.mean(shirt.astype(float),comp,idx)
+    kind=np.where(ml>125,14,np.where(ml>88,5,6));kind[(fs>0.5)&(ml<100)]=7
+    sp=np.zeros((H,W),bool)
+    for p in WSKIN: sp|=bodyseg.poly(p,(H,W))
+    fr=ndi.mean(sp.astype(float),comp,idx);kind[(fr>0.6)&(ml>140)&(ar>60)]=1
+    lab=np.zeros((H,W),int);lab[comp>0]=kind[comp[comp>0]-1]
+    yy,xx=np.mgrid[:H,:W];lab[(lab==5)&(yy<695)]=6                                # bretelles et boucles
+    kp=bodyseg.poly([(430,870),(700,860),(700,960),(690,1015),(540,1015),(520,930),(440,910)],(H,W));l0=lab.copy()
+    lab[kp&(l0==5)]=6;lab[kp&(l0==6)]=5                                            # corde et noeud éclairés, salopette à l'ombre dessous
+    lab[~kp&(lab==6)&(yy>700)&(np.abs(xx-627)<240)]=5
+    for l,p in WFORK: lab[bodyseg.poly(p,(H,W))&al&(lab!=1)]=l
+    _,ix=ndi.distance_transform_edt(lab==0,return_indices=True);lab=lab[ix[0],ix[1]];lab[~al]=0
+    return a,lab
 def char(a,lab,shirt,over,sk,hr,rope='#6b5a3a',pants='#5a4a32',ph=0):
     full.G.update({14:.85,6:.85,5:.75,26:.8,20:.8,21:.8,22:.8,23:.8,27:.85,24:.8,25:.8,28:.8,4:.9});cols={1:sk,2:hr,3:hr,6:'#3a2a1c'};c=Image.new('RGBA',(512,512));c.alpha_composite(legs.legs(pants,'#3a2a1c',ph))
     t=full.tint(a,lab,{14:shirt,5:over,1:sk,6:rope,7:'#3a2e26',**VEG,**HELD})
