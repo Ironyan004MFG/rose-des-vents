@@ -1,6 +1,6 @@
 # Fermier : matières classées par leur valeur de gris (règle donnée à GPT) — 1 peau, 14 chemise, 5 salopette, 6 corde/bretelles, 7 intérieur du col
 import numpy as np
-from PIL import Image
+from PIL import Image,ImageFilter
 from scipy import ndimage as ndi
 import norm,bodyseg,full,kit,legs,r2
 def prep(src,tag,like='../adv/src3.png'):
@@ -56,9 +56,38 @@ def prep_pose(src,tag,base_src,base_tag):
     _,ix=ndi.distance_transform_edt(lab==0,return_indices=True);lab=lab[ix[0],ix[1]];lab[~al]=0
     print(tag,'décalage',dy,dx,'zone changée %',round(float((ch&al).mean()*100),1))
     return a,lab
+
+# Panier de légumes (pose carry) : contours tracés à la main sur l'image normalisée — 26 osier, 20 tomate, 21 feuillage, 22 chou, 23 oignon, 27 ail, 24 patate, 25 carotte
+def _el(cx,cy,rx,ry,n=40): return [(cx+rx*np.cos(t),cy+ry*np.sin(t)) for t in np.linspace(0,2*np.pi,n,endpoint=False)]
+BASKET=[(26,[(300,920),(340,935),(450,975),(625,990),(800,975),(905,935),(945,920),(935,985),(880,1050),(790,1090),(625,1100),(460,1090),(370,1055),(310,990)]),
+ (26,[(330,935),(340,830),(400,790),(520,790),(640,765),(760,790),(870,800),(910,850),(915,940),(800,980),(625,995),(450,980)]),
+ (20,_el(396,848,52,52)),(20,_el(487,868,60,55)),(21,_el(395,812,40,20)),(21,_el(490,842,38,24)),
+ (22,_el(637,852,113,88)),(22,_el(540,815,28,30)),
+ (21,[(745,805),(790,798),(860,803),(885,840),(885,915),(840,905),(780,870),(750,870)]),
+ (24,_el(577,915,60,38)),(24,_el(622,955,66,38)),
+ (25,[(700,895),(760,883),(778,905),(722,988),(668,988)]),(25,[(778,905),(822,893),(832,930),(792,978),(722,988)]),
+ (23,[(398,860),(422,860),(452,885),(490,915),(494,962),(470,978),(380,968),(366,930),(380,895)]),
+ (27,[(494,908),(512,908),(546,940),(556,988),(454,988),(464,945)])]
+VEG={26:'#a8763e',20:'#c23a2a',21:'#5f8a3a',22:'#a3c26c',23:'#d6a85a',27:'#ece4cf',24:'#b8925a',25:'#e07a2a'}
+def basket(a,lab):
+    al=a[...,3]>60;out=lab.copy();lum=a[...,:3].mean(-1);H,W=lab.shape;yy,xx=np.mgrid[:H,:W]
+    out[(out==6)&(yy>760)&~((np.abs(xx-650)<60)&(yy>1085)&(yy<1130))]=5      # sous les mains, la salopette à l'ombre reste de la salopette (seul le noeud de corde dépasse)
+    out[(out==5)&(yy<760)&((xx<325)|(xx>925))]=14                             # plis sombres des manches
+    for i,(l,p) in enumerate(BASKET):
+        m=bodyseg.poly(p,lab.shape)&al
+        if l==26: m&=(lab!=1)
+        if i==1: m&=(lum<80)&(yy>800)                                          # derrière les légumes : seulement l'ombre
+        out[m]=l
+    return out
 def char(a,lab,shirt,over,sk,hr,rope='#6b5a3a',pants='#5a4a32'):
-    full.G.update({14:.85,6:.85,5:.75});cols={1:sk,2:hr,3:hr,6:'#3a2a1c'};c=Image.new('RGBA',(512,512));c.alpha_composite(legs.legs(pants,'#3a2a1c'))
-    c.alpha_composite(full.place(full.tint(a,lab,{14:shirt,5:over,1:sk,6:rope,7:'#3a2e26'}),SC,(625,360)));c.alpha_composite(kit.tint('head_dwarf_braided_90',cols));full.G[6]=.7;return c
+    full.G.update({14:.85,6:.85,5:.75,26:.8,20:.8,21:.8,22:.8,23:.8,27:.85,24:.8,25:.8});cols={1:sk,2:hr,3:hr,6:'#3a2a1c'};c=Image.new('RGBA',(512,512));c.alpha_composite(legs.legs(pants,'#3a2a1c'))
+    t=full.tint(a,lab,{14:shirt,5:over,1:sk,6:rope,7:'#3a2e26',**VEG})
+    c.alpha_composite(full.place(t,SC,(625,360)));c.alpha_composite(kit.tint('head_dwarf_braided_90',cols))
+    held=np.isin(lab,list(VEG))
+    if held.any():                                                    # l'objet tenu repasse devant la barbe
+        w=np.array(Image.fromarray((held*255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.5))).astype(float)/255
+        h=np.array(t).astype(float);h[...,3]*=w;c.alpha_composite(full.place(Image.fromarray(h.astype('uint8')),SC,(625,360)))
+    full.G[6]=.7;return c
 if __name__=='__main__':
     import advp
     a,lab=prep('../far/relaxed2.png','relaxed2');b,lb=advp.prep('../adv/src3.png','rel')

@@ -12,7 +12,7 @@ Sauvegarde des pièces validées du générateur de personnages. **Rien ici n'es
 - `nain/corps/<tenue>/` : un dossier par tenue, une image 1254 × 1254 par pose. **On n'y dépose que les images validées au montage.**
   - `mage/` : robe à liseré — relaxed, reach, carry_plate, walk_1 à walk_4.
   - `aventurier/` : manteau court, épaulettes et ceinture de cuir — relaxed, reach, carry_plate, walk_1, walk_3. La marche alterne walk_1 → relaxed → walk_3 → relaxed.
-  - `fermier/` : chemise aux manches roulées, salopette rapiécée, corde — relaxed, reach, walk_1, walk_3. Matières séparées par leur gris (`outils/far.py`) ; les poses reprennent les matières du torse de relaxed, identique au pixel près.
+  - `fermier/` : chemise aux manches roulées, salopette rapiécée, corde — relaxed, reach, carry (panier de légumes), walk_1, walk_3. Matières séparées par leur gris (`outils/far.py`) ; les poses reprennent les matières du torse de relaxed, identique au pixel près. Le panier et ses légumes ont leurs masques tracés à la main (`far.basket`) et repassent devant la barbe au montage.
   - `manteau_court/` : première version, à gros plis — relaxed (gardée pour référence).
 - `nain/jambes/` : jambes en pantalon avec bottes (pour les tenues courtes) et bottes seules (pour la robe).
 - `objets/` : assiette pleine/vide, livre, plume, fourche, pioche, poignée de charrette.
