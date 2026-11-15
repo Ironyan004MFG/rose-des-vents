@@ -743,6 +743,9 @@ label.evset span:last-child{color:var(--ink-soft);font-size:14px}
 .prog{display:inline-block;width:110px;height:10px;border-radius:5px;background:#d9c9a0;vertical-align:middle;overflow:hidden}
 .prog i{display:block;height:100%;background:var(--gold)}
 .dmtable tr.due{background:#fbe7c6}
+.dmh{font-family:var(--display);font-size:18px;margin:22px 0 8px}
+.rgtable td{text-align:center}.rgtable tr.rgtot{background:#efe4c6;font-weight:600}
+.rgdot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;border:1px solid rgba(0,0,0,.35);vertical-align:baseline}
 .evq{border-bottom:1px solid #d9c9a0;padding:8px 0}
 .evfields{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin:6px 0 0 30px}
 .evfields .wide{grid-column:1/-1}
@@ -2272,6 +2275,12 @@ function dmStats(){
   h+='<div class="tablebox light"><table class="dmtable"><thead><tr><th scope="col">Comptoir</th><th scope="col">Ouvertes</th><th scope="col">En cours</th><th scope="col">Accomplies</th><th scope="col">Évolution</th><th scope="col">Le plus renommé</th></tr></thead><tbody>'+
     bureaux.map(b=>{const qs=quetes.filter(q=>q.bureau===b.id);let best=null,bp=-1e9;ranked().forEach(a=>{const p=ptsN(a,b.id);if(p>bp&&p>0){bp=p;best=a;}});
       return '<tr><th scope="row">'+esc(b.nom)+'</th><td>'+qs.filter(q=>q.statut==="ouverte").length+'</td><td>'+qs.filter(q=>q.statut==="encours").length+'</td><td>'+doneIn(b.id).length+'</td><td>'+pendingIn(b.id).length+' / '+X+'</td><td>'+(best?'<a href="#perso-'+esc(best.id)+'">'+esc(best.nom)+'</a> '+chip(renown(best,b.id))+' <span class="muted">N '+bp+' pts</span>':'<span class="muted">—</span>')+'</td></tr>';}).join("")+'</tbody></table></div>';
+  // Quêtes ouvertes par rang : une ligne par comptoir, une colonne par rang (« Rang inconnu » seulement s'il y en a)
+  const open=quetes.filter(q=>q.statut==="ouverte"),rk=q=>RANK_ORDER.includes(q.rang)?q.rang:"inconnu",cols=RANK_ORDER.concat(open.some(q=>rk(q)==="inconnu")?["inconnu"]:[]);
+  const cell=(n,l)=>'<td data-label="'+esc(l)+'">'+(n?n:'<span class="muted">—</span>')+'</td>',row=(nom,qs,cls)=>'<tr'+(cls?' class="'+cls+'"':'')+'><th scope="row">'+esc(nom)+'</th>'+cols.map(k=>cell(qs.filter(q=>rk(q)===k).length,RANKS[k].label)).join("")+'<td data-label="Total"><strong>'+qs.length+'</strong></td></tr>';
+  const ids=new Set(bureaux.map(b=>b.id)),orph=open.filter(q=>!ids.has(q.bureau));
+  h+='<h3 class="dmh">Quêtes ouvertes par rang</h3><div class="tablebox light"><table class="dmtable rgtable"><thead><tr><th scope="col">Comptoir</th>'+cols.map(k=>'<th scope="col"><span class="rgdot" style="background:'+RANKS[k].c+'" aria-hidden="true"></span>'+esc(RANKS[k].label)+'</th>').join("")+'<th scope="col">Total</th></tr></thead><tbody>'+
+    bureaux.map(b=>row(b.nom,open.filter(q=>q.bureau===b.id))).join("")+(orph.length?row("Sans comptoir",orph):"")+row("Tous les comptoirs",open,"rgtot")+'</tbody></table></div>';
   return h;
 }
 // Cartes prégénérées : bureaux (avec étages), scènes de tous les scénarios, cartes aléatoires. Aperçu vivant ; la télé ne suit qu'après « Montrer aux joueurs ».
