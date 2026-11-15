@@ -102,6 +102,24 @@ def fork(a,lab):
         if fr[i]>0.6 and ml[i]>140 and ar[i]>60: out[comp==i+1]=1               # la main : régions fermées par le trait
     _,ix=ndi.distance_transform_edt(out==0,return_indices=True);out=out[ix[0],ix[1]];out[~al]=0
     return out
+
+# Longe (poses lead_*) : le bras de droite tient un bout de corde ; la peau n'est admise que dans le contour de l'avant-bras et de la main
+LSKIN=[(995,712),(1180,708),(1190,760),(1180,800),(1188,870),(1175,940),(1100,975),(1035,960),(992,900),(992,845),(1030,812),(1002,770)]
+LROPE=[[(1196,703),(1230,712),(1218,780),(1195,822),(1188,852),(1158,848),(1165,818),(1180,770)],[(955,945),(1000,905),(1050,885),(1055,915),(1010,945),(975,975),(958,968)]]
+def lead(src,tag,lab_left=None):
+    a,lab=prep(src,tag,like='../adv/src3.png');al=a[...,3]>60;lum=a[...,:3].mean(-1);H,W=lab.shape;yy,xx=np.mgrid[:H,:W];out=lab.copy()
+    line=(ndi.gaussian_filter(lum,1.0)<bodyseg.LT)&al;comp,k=ndi.label(al&~line);idx=np.arange(1,k+1)
+    sp=bodyseg.poly(LSKIN,(H,W));fr=ndi.mean(sp.astype(float),comp,idx);ml=ndi.mean(lum,comp,idx);ar=ndi.sum(al,comp,idx)
+    right=xx>627;out[right&(out==1)]=14
+    out[right&(out==14)&(yy>880+(xx-960)*0.3)&(xx<1000)]=5
+    for i in range(k):
+        if fr[i]>0.6 and ml[i]>140 and ar[i]>60: out[(comp==i+1)]=1
+    for p in LROPE: out[bodyseg.poly(p,(H,W))&al&(out!=1)]=6
+    _,lb=prep('../far/relaxed2.png','relaxed2');out[right&(xx<1000)&(lb==6)&(out==5)]=6      # bretelle et corde de taille : matières du fermier validé
+    rp=ndi.binary_closing((out==6)&right&(yy>780)&(xx<1020),iterations=3);cc,kk=ndi.label((out==5)&right&(yy>800)&(xx>900)&(xx<1020))
+    if lab_left is not None: out[:,:627]=lab_left[:,:627]
+    out[~al]=0
+    return a,out
 def char(a,lab,shirt,over,sk,hr,rope='#6b5a3a',pants='#5a4a32',ph=0):
     full.G.update({14:.85,6:.85,5:.75,26:.8,20:.8,21:.8,22:.8,23:.8,27:.85,24:.8,25:.8,28:.8,4:.9});cols={1:sk,2:hr,3:hr,6:'#3a2a1c'};c=Image.new('RGBA',(512,512));c.alpha_composite(legs.legs(pants,'#3a2a1c',ph))
     t=full.tint(a,lab,{14:shirt,5:over,1:sk,6:rope,7:'#3a2e26',**VEG,**HELD})
