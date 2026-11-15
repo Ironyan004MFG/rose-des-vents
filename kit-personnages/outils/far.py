@@ -17,20 +17,44 @@ def prep(src,tag,like='../adv/src3.png'):
     return a,lab
 SC=0.29
 def prep_pose(src,tag,base_src,base_tag):
-    """Pose dérivée d'une image validée : le torse est identique au pixel près, donc on reprend ses matières telles quelles
-    et on ne classe que la zone qui a changé (bras, mains, objet)."""
+    """Pose dérivée d'une image validée : on reprend les matières du torse validé partout où le dessin n'a pas changé
+    (à un petit décalage près), et on ne classe que la zone des bras."""
+    from skimage.segmentation import watershed
     b,lb=prep(base_src,base_tag);norm.normalize_like(src,'../adv/src3.png',f'../far/n_{tag}.png')
     a=np.array(Image.open(f'../far/n_{tag}.png').convert('RGBA')).astype(float);al=a[...,3]>60;lum=a[...,:3].mean(-1)
-    ch=ndi.binary_dilation(ndi.binary_opening(np.abs(a-b).max(-1)>10,iterations=1),iterations=6)
-    ls=ndi.gaussian_filter(lum,1.0);line=(ls<bodyseg.LT)&al;l3=ndi.gaussian_filter(lum,2.5)
-    from skimage.segmentation import watershed
-    mk=np.where(ch,0,lb)                                             # le torse validé sert de graines
-    mk[ndi.binary_erosion(ch&al&(l3>185),iterations=3)]=1            # cœur clair des mains
-    core=ch&al&~line
-    mk[ndi.binary_erosion(core&(l3>135)&(l3<168),iterations=6)&(mk==0)]=14   # manche
-    mk[ndi.binary_erosion(core&(l3>88)&(l3<118),iterations=6)&(mk==0)]=5     # salopette
-    lab=watershed(255-ls,mk,mask=al)
+    lb_=b[...,:3].mean(-1)*(b[...,3]>60);la_=lum*al;z=(slice(330,1150),slice(420,840));best=(1e9,0,0)
+    for dy in range(-8,9,2):
+        for dx in range(-8,9,2):
+            e=np.abs(np.roll(np.roll(lb_,dy,0),dx,1)[z]-la_[z]).mean()
+            if e<best[0]: best=(e,dy,dx)
+    _,dy,dx=best;lbs=np.roll(np.roll(lb,dy,0),dx,1);bs=np.roll(np.roll(lb_,dy,0),dx,1)
+    d=np.abs(ndi.gaussian_filter(bs,2.5)-ndi.gaussian_filter(la_,2.5))
+    ch=ndi.binary_dilation(ndi.binary_opening(d>24,iterations=3),iterations=8)|(al&(lbs==0))
+    ls=ndi.gaussian_filter(lum,1.0);l3=ndi.gaussian_filter(lum,2.5)
+    tex=np.sqrt(ndi.gaussian_filter((lum-ndi.gaussian_filter(lum,5))**2,5))          # la chemise a des plis, la peau est lisse
+    lab=np.where(ch,0,lbs);found=[]
+    for LT2 in (95,75,bodyseg.LT):                                    # trait de plus en plus permissif : on ferme d'abord les contours faibles (bord de manche)
+        free=al&ch&(ls>=LT2)&(lab==0)
+        for c in found: free&=~c
+        comp,k=ndi.label(free)
+        if not k: continue
+        idx=np.arange(1,k+1);ml=ndi.mean(lum,comp,idx);area=ndi.sum(al,comp,idx);sd=ndi.standard_deviation(l3,comp,idx);cy,cx=np.array(ndi.center_of_mass(al,comp,idx)).T
+        for i in range(k):
+            if area[i]<150: continue
+            if LT2>bodyseg.LT and sd[i]>16 and area[i]>6000: continue     # encore deux matières mélangées : on réessaie avec un trait plus permissif
+            m=comp==i+1
+            if ml[i]>122: found.append(m)                                 # clair : manche ou peau, tranché plus bas selon la position le long du bras
+            else: lab[m]=5 if ml[i]>88 else 6
+    # le long de chaque bras, la manche est près de l'épaule et la peau (avant-bras, main) au bout
+    for side,S in ((-1,bodyseg.SHO[0]),(1,bodyseg.SHO[1])):
+        cs=[(m,np.hypot(*(np.array(ndi.center_of_mass(m))[::-1]-np.array(S)))) for m in found if (np.array(ndi.center_of_mass(m))[1]-627)*side>150]
+        if not cs: continue
+        dmax=max(d for _,d in cs)
+        for m,d in cs: lab[m]=1 if d>0.62*dmax else 14
+    for m in found:
+        if abs(ndi.center_of_mass(m)[1]-627)<=150: lab[m]=14
     _,ix=ndi.distance_transform_edt(lab==0,return_indices=True);lab=lab[ix[0],ix[1]];lab[~al]=0
+    print(tag,'décalage',dy,dx,'zone changée %',round(float((ch&al).mean()*100),1))
     return a,lab
 def char(a,lab,shirt,over,sk,hr,rope='#6b5a3a',pants='#5a4a32'):
     full.G.update({14:.85,6:.85,5:.75});cols={1:sk,2:hr,3:hr,6:'#3a2a1c'};c=Image.new('RGBA',(512,512));c.alpha_composite(legs.legs(pants,'#3a2a1c'))
