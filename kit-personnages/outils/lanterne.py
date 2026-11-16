@@ -101,6 +101,10 @@ def garde_reach(tab,bord,metal='#aeb4bc',glow='#ffd98a',emb=None,H=700,**kw):
         g=ndi.binary_opening((lum>212)&(a[...,3]>60)&(xx<420)&(yy>1150),iterations=3);gc,gk=ndi.label(g);g=np.isin(gc,[i+1 for i,v in enumerate(ndi.sum(g,gc,range(1,gk+1))) if v>420]);lab[ndi.binary_dilation(g,iterations=3)&(lum>190)&(xx<420)&(yy>1150)]=30      # seulement les vitres, pas les rivets
         gy,gx=np.where(lab==30);box=(xx<gx.max()+75)&(yy>gy.min()-330);lab[box&np.isin(lab,(6,15,16,9))&(lum>120)]=4          # la lanterne et le gantelet : métal
         lab[np.isin(lab,(6,16))&(yy>1090)&~box]=9
+        m16=(lab==16)&~box;dk=(ndi.gaussian_filter(lum,1.0)<grd.bodyseg.LT);c16,k16=ndi.label(ndi.binary_erosion(m16&~ndi.binary_dilation(dk,iterations=2),iterations=2));kind16=np.zeros(k16+1,int)
+        for i,sl in enumerate(ndi.find_objects(c16)):
+            h16=sl[0].stop-sl[0].start;w16=sl[1].stop-sl[1].start;kind16[i+1]=6 if (w16>1.3*h16 and sl[0].start>820 and sl[0].stop<1110) else 9;print('16:',sl[1].start,sl[1].stop,sl[0].start,sl[0].stop,kind16[i+1])
+        _,ix=ndi.distance_transform_edt(c16==0,return_indices=True);lab[m16]=kind16[c16[ix[0],ix[1]]][m16]                # la ceinture reste en cuir, les lisières prennent la couleur de bordure
         lb=box&np.isin(lab,(4,30));cb,kb=ndi.label(ndi.binary_dilation(lb,iterations=4));lb=ndi.binary_fill_holes(cb==cb[gy[0],gx[0]])&box&(a[...,3]>60)      # la lanterne et le gantelet, d'un bloc
         sm,sk=ndi.label(np.isin(lab,(5,9,16,6))&ndi.binary_dilation(lb,iterations=22));ssz=ndi.sum(sm>0,sm,range(1,sk+1))
         for i in range(sk):
