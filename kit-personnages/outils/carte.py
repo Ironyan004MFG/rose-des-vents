@@ -39,3 +39,7 @@ def chasseur(char):
     tous deux dessinés SOUS le personnage. Les deux mains restent libres : toutes les poses et marches existantes fonctionnent."""
     al=np.array(char)[...,3];yr=int(np.argmax(al[:,320:345].max(1)>60));c=Image.new('RGBA',char.size)
     items.put(c,items.layer('bow',400,rot=30),(246,280));items.put(c,items.layer('quiver',215,rot=-16),(338,yr+62));c.alpha_composite(char);return c
+def colporteur(char):
+    """Réglage VALIDÉ : ballot dans le dos (hauteur 150, centré en (256,150)), dessiné SOUS le personnage. Cette grandeur vaut pour toutes les têtes ;
+    sous le grand chapeau, seule la couverture roulée dépasse."""
+    c=Image.new('RGBA',char.size);items.put(c,items.layer('bundle',150),(256,150));c.alpha_composite(char);return c
