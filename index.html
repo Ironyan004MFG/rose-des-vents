@@ -3691,8 +3691,12 @@ function burOrders(g,c){if(g.orders!==undefined)return g.orders;g.orders=null;co
 function burRel(O,o,TT){return ((TT-o.a+O.PRE)%O.P+O.P)%O.P-O.PRE;}
 function burOrdMeal(O,o,rel){const d=o.c.d,E=O.E;if(rel<d+0.5||rel>=2*d+E+1.5)return {st:"none"};if(rel<d+1)return {st:"eat",f:0};const f=(rel-d-1)/(E*0.9);return f<1?{st:"eat",f}:{st:"empty"};}
 // Phase du repas d'un client attablé : celle de sa commande en cours, sinon table libre
-function burMeal(g,p,TT){const O=g.orders;if(!O)return {st:"eat",f:((TT*0.01+p.p)%1)*0.6};
+// Seuls ceux qui commandent ont une assiette. Sans cuisine dans le bureau, ou pour un client qui ne commande jamais, c'est une ration tirée du sac, de temps en temps.
+function burMeal(g,p,TT){const O=g.orders,rat=()=>{const ph=((TT/90+(p.p||0)/6.283)%1+1)%1;return ph<0.5?{st:"ration",f:ph/0.5}:{st:"none"};};if(!O)return rat();
+  if(p._cmd===undefined)p._cmd=O.list.some(o=>o.c.p===p);if(!p._cmd)return rat();
   for(const o of O.list){if(o.c.p!==p)continue;const rel=burRel(O,o,TT);if(rel>=0&&rel<o.L)return burOrdMeal(O,o,rel);}return {st:"none"};}
+// Ration : pain et fromage sur un linge ; elle diminue (f de 0 à 1) puis disparaît
+function burRation(x,s,px,py,an,f){if(f>=1)return;const l=1-f*0.85,u=s*0.15;x.save();x.translate(px*s,py*s);x.rotate(an);x.fillStyle="rgba(0,0,0,.2)";x.fillRect(-u+s*0.02,-u+s*0.03,u*2,u*2);x.fillStyle="#cdb98a";x.fillRect(-u,-u,u*2,u*2);x.strokeStyle="#8a7a60";x.lineWidth=Math.max(1,s*0.02);x.strokeRect(-u,-u,u*2,u*2);x.fillStyle="#b07a3a";x.beginPath();x.ellipse(-s*0.03,-s*0.03,s*0.1*l,s*0.07*l,0.5,0,6.283);x.fill();x.fillStyle="#e8c44a";x.beginPath();x.arc(s*0.07,s*0.06,s*0.045*l,0,6.283);x.fill();x.restore();}
 function burPlateHand(x,s,p,an,kind,TT){const hx=p.x+Math.cos(an)*0.38,hy=p.y+Math.sin(an)*0.38;x.fillStyle="#e8e0cc";x.beginPath();x.arc(hx*s,hy*s,s*0.13,0,6.283);x.fill();x.strokeStyle="#8a7a60";x.lineWidth=Math.max(1,s*0.02);x.stroke();
   if(kind==="full"){x.fillStyle="#8a4a2a";x.beginPath();x.arc(hx*s,hy*s,s*0.07,0,6.283);x.fill();x.fillStyle="rgba(240,240,240,.5)";x.beginPath();x.arc((hx+Math.sin(TT*3)*0.04)*s,(hy-0.15)*s,s*0.05,0,6.283);x.fill();}
   else{x.fillStyle="#d8ccb0";x.beginPath();x.arc((hx+0.03)*s,(hy-0.03)*s,s*0.1,0,6.283);x.fill();x.stroke();}}
@@ -3783,7 +3787,7 @@ function burWalkers(x,g,s,c,TT){const W=c.w,H=c.h,wk=g.walk,ok=(X,Y)=>X>=0&&Y>=0
       if(st&&st.act==="pax"&&g.paxPos){an=Math.atan2(g.paxPos[1]-Y,g.paxPos[0]-X);}
       if(st&&st.act==="counter")g.custPos.push([X,Y]);
       // l'aventurier de passage ne va plus se servir en cuisine : il sort sa ration (pain et fromage sur un linge), la mange à table, puis elle disparaît
-      if(st&&st.act==="eat"){const f=Math.min(1,tt/(st.w*0.8)),px=X+Math.cos(an)*0.6,py=Y+Math.sin(an)*0.6;if(f<1){const l=1-f*0.85,u=s*0.15;x.save();x.translate(px*s,py*s);x.rotate(an);x.fillStyle="rgba(0,0,0,.2)";x.fillRect(-u+s*0.02,-u+s*0.03,u*2,u*2);x.fillStyle="#cdb98a";x.fillRect(-u,-u,u*2,u*2);x.strokeStyle="#8a7a60";x.lineWidth=Math.max(1,s*0.02);x.strokeRect(-u,-u,u*2,u*2);x.fillStyle="#b07a3a";x.beginPath();x.ellipse(-s*0.03,-s*0.03,s*0.1*l,s*0.07*l,0.5,0,6.283);x.fill();x.fillStyle="#e8c44a";x.beginPath();x.arc(s*0.07,s*0.06,s*0.045*l,0,6.283);x.fill();x.restore();}}
+      if(st&&st.act==="eat")burRation(x,s,X+Math.cos(an)*0.6,Y+Math.sin(an)*0.6,an,Math.min(1,tt/(st.w*0.8)));
       x.save();x.translate(X*s,Y*s);x.rotate(an);const sc=1.7*(w.look.sc||1);x.scale(sc,sc);spPerson(x,s,0,0,still?0:TT*8+i*9,Object.assign({move:!still},w.look));x.restore();
       if(st&&st.act==="eat"&&tt<st.w*0.8){const k3=(Math.sin(TT*2.2+i)+1)/2;if(k3>0.5){const f=(k3-0.5)/0.5,hx=X+Math.cos(an)*(0.15+0.4*f)+Math.cos(an+1.57)*0.12,hy=Y+Math.sin(an)*(0.15+0.4*f)+Math.sin(an+1.57)*0.12;x.fillStyle=w.look.skin||"#e2bf96";x.beginPath();x.arc(hx*s,hy*s,s*0.06,0,6.283);x.fill();}}
       // causette : petite bulle au-dessus des deux
@@ -3799,10 +3803,10 @@ function dynBureau(x,g,s,t,dt,A,c){const TT=Date.now()/1000;
   burDiners(x,g,s,c,TT);
   // Repas d'un client attablé : commande servie par le cuisinier -> il mange (l'assiette se vide) -> assiette vide -> desservie par le serveur -> table libre jusqu'à sa prochaine commande
   g.people.forEach(p=>{const e=p.eat,M=e?burMeal(g,p,TT):null;
-    if(e)burPlate(x,s,e.x,e.y,e.an,M,e.f,e.m,TT,p.p);
+    if(e&&M&&M.st==="ration")burRation(x,s,e.x,e.y,e.an,M.f);else if(e)burPlate(x,s,e.x,e.y,e.an,M,e.f,e.m,TT,p.p);
     gPerson(x,p,s,TT);
     // bouchées : la main va de l'assiette à la bouche tant qu'il reste à manger
-    if(e&&M&&M.st==="eat"){const k=(Math.sin(TT*2.2+p.p*3)+1)/2;if(k>0.45){const f=(k-0.45)/0.55,hx=(p.x+(e.x-p.x)*(0.25+0.55*f)+Math.cos(e.an+1.57)*0.12)*s,hy=(p.y+(e.y-p.y)*(0.25+0.55*f)+Math.sin(e.an+1.57)*0.12)*s;x.fillStyle="#e8c9a0";x.beginPath();x.arc(hx,hy,s*0.06,0,6.283);x.fill();x.strokeStyle="#9a9a9a";x.lineWidth=Math.max(1,s*0.015);x.beginPath();x.moveTo(hx,hy);x.lineTo(hx+Math.cos(e.an)*s*0.12,hy+Math.sin(e.an)*s*0.12);x.stroke();}}});
+    if(e&&M&&(M.st==="eat"||M.st==="ration")){const k=(Math.sin(TT*2.2+p.p*3)+1)/2;if(k>0.45){const f=(k-0.45)/0.55,hx=(p.x+(e.x-p.x)*(0.25+0.55*f)+Math.cos(e.an+1.57)*0.12)*s,hy=(p.y+(e.y-p.y)*(0.25+0.55*f)+Math.sin(e.an+1.57)*0.12)*s;x.fillStyle="#e8c9a0";x.beginPath();x.arc(hx,hy,s*0.06,0,6.283);x.fill();x.strokeStyle="#9a9a9a";x.lineWidth=Math.max(1,s*0.015);x.beginPath();x.moveTo(hx,hy);x.lineTo(hx+Math.cos(e.an)*s*0.12,hy+Math.sin(e.an)*s*0.12);x.stroke();}}});
   (g.fishers||[]).forEach((f,i)=>burFisher(x,f,s,TT,i));
   g.extra.forEach(o=>{if(o.k==="wagon"){ecWalker(x,{kind:"charrette",c:"#7a3b2a",h:"#3a2c22"},o.x,o.y,o.a,s,0);}
     else if(o.k==="horse"){x.save();x.translate(o.x*s,o.y*s);x.rotate(o.a+Math.sin(TT*0.3+o.p)*0.06);x.scale(1.9,1.9);x.fillStyle=["#5b4128","#2b2018","#8a6a44"][Math.floor(o.p)%3];x.beginPath();x.ellipse(0,0,0.36*s,0.13*s,0,0,6.283);x.fill();x.beginPath();x.ellipse((0.42+Math.sin(TT*0.8+o.p)*0.03)*s,0,0.13*s,0.07*s,0,0,6.283);x.fill();x.restore();}});
