@@ -52,3 +52,21 @@ def armed(G,weapon,dy=160,H=720,metal='#aeb4bc',**kw):
     fx,fy=256+(gx-625)*.29,229+(gy-360)*.29+dy;t,(wx,wy)=weapons.layer(weapon,metal=metal);c.alpha_composite(t,(round(fx-wx),round(fy-wy)))
     a,lab=P;b=np.array(full.tint(a,lab,{1:kw.get('sk','#c98f6a')})).astype(float);b[...,3]*=np.array(Image.fromarray((fist*255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.0))).astype(float)/255
     im=Image.fromarray(b.astype('uint8'));w0,h0=im.size;im=im.resize((round(w0*.29),round(h0*.29)),Image.LANCZOS);o=Image.new('RGBA',(512,H));o.paste(im,(round(256-625*.29),round(229-360*.29)+dy));c.alpha_composite(o);return c
+# --- Tenailles dans l'AUTRE main (le poing de droite, bras le long du corps) : GPT a dessiné le poing ET les tenailles d'un seul tenant (obj/hand_tongs.png),
+# coupé net au poignet. On RETIRE le poing vide de la pose sous le poignet, puis on pose cette main à la largeur exacte de l'avant-bras à cet endroit.
+OFF=dict(k=.86,cut=778,x0=985,wrist=(643,927,228),
+ seeds={1:[(780,330),(700,280),(880,300),(640,350),(820,440),(760,480),(900,400),(800,240),(700,240),(900,240)],28:[(640,470),(620,540),(760,560),(750,530),(655,425)],
+        4:[(590,640),(710,680),(560,740),(660,780),(570,885),(420,960),(390,1050),(600,960),(680,1020),(560,1130),(420,1120)]})
+def offhand_pose(P):
+    """Pose sans son poing de droite + (centre, largeur) du poignet dans l'image normalisée."""
+    a,lab=P;a=a.copy();H,W=lab.shape;yy,xx=np.mgrid[:H,:W];X0,Y=brb.nrm(OFF['x0'],OFF['cut']);Y=int(Y);run=np.where((lab[Y]==1)&(np.arange(W)>X0))[0];cx,w=(run.min()+run.max())/2,run.max()-run.min()+1
+    fist=(lab==1)&(xx>X0)&(yy>Y+30);fist=ndi.binary_dilation(fist,iterations=5)&(yy>Y+30)&(xx>X0-10);a[fist,3]=0;return (a,lab),(cx,Y,w)
+def offhand(c,wr,dy=0,sk='#c98f6a',metal='#aeb4bc',wood='#8a6a42'):
+    """c : personnage monté avec la pose de offhand_pose (toile 512, décalé de dy) ; wr : son poignet. Pose la main aux tenailles."""
+    from skimage.segmentation import watershed
+    a=np.array(Image.open('../obj/hand_tongs.png').convert('RGBA')).astype(float);al=a[...,3]>60;mk=np.zeros(al.shape,int)
+    for l,pts in OFF['seeds'].items():
+        for x,y in pts: mk[y-3:y+4,x-3:x+4]=l
+    lab=watershed(255-ndi.gaussian_filter(a[...,:3].mean(-1),1.2),mk,mask=al);full.G.update({1:.8,4:.95,28:.8});x0,x1,y0=OFF['wrist'];yy=np.mgrid[:al.shape[0],:al.shape[1]][0]
+    a[...,3]*=np.clip((yy-y0-10)/70,0,1);t=full.tint(a,lab,{1:sk,4:metal,28:wood});cx,Y,w=wr;s=w*.29/(x1-x0)*OFF['k'];t=t.resize((round(t.size[0]*s),round(t.size[1]*s)),Image.LANCZOS)
+    fx,fy=256+(cx-625)*.29,229+(Y-360)*.29+dy;c.alpha_composite(t,(round(fx-(x0+x1)/2*s),round(fy-y0*s)));return c
