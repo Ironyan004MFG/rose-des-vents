@@ -171,16 +171,29 @@ def split_map(path,n=8,rows=2):
     m=np.array(Image.open(path).convert('RGB')).astype(int);fg=(m.max(-1)-m.min(-1)>60);fg=ndi.binary_fill_holes(ndi.binary_closing(fg,iterations=2));c,k=ndi.label(fg);sz=ndi.sum(fg,c,range(1,k+1));ids=[i+1 for i in np.argsort(sz)[::-1][:n]]
     obs=ndi.find_objects(c);mid=m.shape[0]/rows;cells=sorted([(obs[i-1],i) for i in ids],key=lambda t:(int(((t[0][0].start+t[0][0].stop)/2)//mid),t[0][1].start));out=[]
     for sl,i in cells:
-        p=m[sl];r,g,b=p[...,0],p[...,1],p[...,2];lab=np.zeros(r.shape,np.uint8);lab[(r>150)&(g<110)&(b<110)]=1;lab[(b>150)&(r<110)&(g<110)]=2;lab[(g>150)&(r<130)&(b<130)]=4;lab[c[sl]!=i]=0;out.append(lab)
+        p=m[sl];r,g,b=p[...,0],p[...,1],p[...,2];lab=np.zeros(r.shape,np.uint8);lab[(r>150)&(g<110)&(b<110)]=1;lab[(b>150)&(r<110)&(g<110)]=2;lab[(g>150)&(r<130)&(b<130)]=4;lab[(r>150)&(g>150)&(b<110)]=8;lab[(r>150)&(b>150)&(g<120)]=31;lab[(g>150)&(b>150)&(r<120)]=6;lab[c[sl]!=i]=0;out.append(lab)      # jaune = tissu de coiffe (8), magenta = plume (31), cyan = cuir (6)
     return out
 def build_map(name,src,nose,mlab,up=0,s=0.62):
     im=Image.open(src).convert('RGBA');a=np.array(im);al=a[...,3]>40;w,h=im.size;L=np.array(Image.fromarray(mlab).resize((w,h),Image.NEAREST))
     _,ix=ndi.distance_transform_edt(L==0,return_indices=True);L=L[ix[0],ix[1]];L[~al]=0                     # bords mal recouverts : matière la plus proche
     sm=im.resize((round(w*s),round(h*s)),Image.LANCZOS);o=Image.new('RGBA',(512,512));off=(round(NOSE[0]-nose[0]*s),round(NOSE[1]-nose[1]*s)+up);o.paste(sm,off)
     Ls=Image.fromarray(L.astype('uint8')).resize(sm.size,Image.NEAREST);lo=Image.new('L',(512,512));lo.paste(Ls,off);o.save(f'assets/head_{name}.png');np.save(f'assets/head_{name}_lab.npy',np.array(lo));return L
+def split_sheet(path,out,n=8,rows=2):
+    """Découpe une planche grise en n têtes (out % k), rangées par ligne puis par colonne."""
+    im=np.array(Image.open(path).convert('RGB')).astype(float);lum=im.mean(-1);c,k=ndi.label(lum>236);edge=np.unique(np.r_[c[0],c[-1],c[:,0],c[:,-1]]);bg=ndi.binary_dilation(np.isin(c,edge[edge>0]),iterations=3)
+    fig=ndi.binary_fill_holes(~bg);cc,kk=ndi.label(fig);sz=ndi.sum(fig,cc,range(1,kk+1));ids=[i+1 for i in np.argsort(sz)[::-1][:n]];obs=ndi.find_objects(cc);mid=im.shape[0]/rows
+    cells=sorted([(obs[i-1],i) for i in ids],key=lambda t:(int(((t[0][0].start+t[0][0].stop)/2)//mid),t[0][1].start))
+    for q,(sl,i) in enumerate(cells):
+        m=cc[sl]==i;al=ndi.gaussian_filter(m.astype(float),0.7)*m*255;Image.fromarray(np.dstack([im[sl],al]).round().astype('uint8')).save(out%(q+1))
+G.update({31:.9,6:.75,8:.8})
 def build_lot1(mp='../lot1/map.png'):
     M=split_map(mp)
     for k,n in LOT1.items(): build_map(f'l1_{k}',f'../lot1/t{k}.png',n,M[k-1],UP1.get(k,0))
+LOT2={1:(127,240),2:(150,268),3:(125,262),4:(175,268),5:(132,268),6:(132,262),7:(132,308),8:(165,318)}      # lot 2 : moine, noble à toque, noble au cercle, noble au chapeau, marin, érudit, forgeron, barde
+UP2={1:-24,8:-24,7:-12,4:-12}
+def build_lot2(mp='../lot2/map.png'):
+    M=split_map(mp)
+    for k,n in LOT2.items(): build_map(f'l2_{k}',f'../lot2/t{k}.png',n,M[k-1],UP2.get(k,0),s=0.66)
 if __name__=='__main__':
     import sys
     if len(sys.argv)>1 and sys.argv[1]=='helm':
