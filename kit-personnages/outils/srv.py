@@ -21,3 +21,21 @@ def char(P,shirt='#f0ece2',bodice='#7a2e2e',skirt='#3e4a5e',apron='#f4f1ea',ribb
     if head:
         hd=Image.new('RGBA',(512,H));hd.alpha_composite(kit.tint('head_dwarf_braided_90',{1:sk,2:hr,3:hr,6:'#3a2a1c'}) if head=='nain' else heads.tint(head,{1:sk,2:hr,3:hr,4:'#c4c8ce',15:'#6a6e76',8:'#f2eee4'}));c.alpha_composite(hd,(0,hdy)) if hdy>=0 else c.alpha_composite(hd.crop((0,-hdy,512,H)),(0,0))
     return c
+# --- Bras qui porte une assiette VIDE (srv/carry.png), d'un seul tenant. 38 = assiette ; les menus de cui.py se posent dessus.
+CA={7:SEEDS[7],
+ 14:[(628,585),(480,545),(780,545),(420,430),(840,430),(628,170),(450,280),(810,280),(230,400),(1030,400),(150,450),(1100,450),(200,520),(1060,480),(250,590),(170,610),(1000,560),(1100,590)],
+ 49:[(340,300),(920,300),(330,450),(930,450),(400,650),(860,640),(500,700),(450,740),(700,640),(560,640),(540,740),(680,740)],
+ 36:[(450,780),(600,790),(700,800),(660,850),(700,900),(705,1000),(300,690),(140,520),(130,585),(1100,520),(1130,560)],
+ 35:[(600,900),(550,1000),(640,1000),(600,1040),(500,880)],
+ 37:SEEDS[37],
+ 50:[(250,800),(230,900),(300,1050),(500,1130),(760,1150),(628,1150),(740,1080)],
+ 1:[(110,700),(80,740),(140,830),(170,860),(150,660),(1010,625),(960,640),(1080,625)],
+ 38:[(990,870),(990,662),(990,1060),(790,870),(1200,870),(850,720),(1140,1030),(850,1030),(1140,720)]}
+PLATE=dict(c=(990,870),r=200)
+def carry(src='../srv/carry.png',ref='../srv/relaxed.png'):
+    P=prep(src,'carry',CA,ref=ref);return P,brb.nrm(*PLATE['c'])
+def served(C,food=None,plate='#c9c4b8',**kw):
+    P,(px,py)=C;a,lab=P;full.G.update({38:.9});a2=np.array(full.tint(a,lab,{38:plate})).astype(float);c=char((a2,np.where(lab==38,0,lab)),**kw)
+    if food is not None:
+        d=round(2*PLATE['r']*cui.SC*.29*1.12);f=food.resize((d,round(d*food.size[1]/food.size[0])),Image.LANCZOS);fx,fy=256+(px-625)*.29,229+(py-360)*.29;c.alpha_composite(f,(round(fx-f.size[0]/2),round(fy-f.size[1]/2)))
+    return c
