@@ -64,3 +64,35 @@ def bard(P,wood='#c89a5a',neck='#4a2e1c',H=560,**kw):
     b=np.array(char(P,extra={28:wood,55:neck},H=H,**dict(kw,head=None)));top=Image.fromarray(b)
     mk=Image.fromarray((m*255).astype('uint8'));w,h=mk.size;mk=mk.resize((round(w*.29),round(h*.29)),Image.LANCZOS);M=Image.new('L',(512,H));M.paste(mk,(round(256-625*.29),round(229-360*.29)));M=M.filter(ImageFilter.GaussianBlur(0.6))
     top.putalpha(Image.fromarray(np.minimum(np.array(top.split()[3]),np.array(M))));c.alpha_composite(top);return c
+# --- Érudit au livre (prp/book.png) : un bras porte un grand livre ouvert, main cachée dessous. 56 = pages, 57 = couverture, 58 = ruban marque-page.
+BK={7:SEEDS[7],
+ 5:[p for p in SEEDS[5] if p not in ((850,650),(1130,680))]+[(1050,560),(950,560)],
+ 6:[(400,925),(500,950),(300,880)],4:SEEDS[4],
+ 1:[(130,820),(100,850),(170,860),(140,800)],
+ 56:[(820,760),(1050,760),(800,850),(1080,850),(900,700),(1000,700),(750,800),(1150,800),(780,690),(1120,690),(880,880),(1010,880),(730,895),(820,905),(700,860),(900,912),(760,870),(840,880),(720,840),(1060,905),(1150,900),(1190,880)],
+ 57:[(668,905),(1218,910),(1222,720),(1100,938),(800,930),(690,700),(940,925)],
+ 58:[(1020,965),(1022,935),(1030,995)]}
+def book(src='../prp/book.png',ref='../prp/relaxed.png'):
+    a,lab=prep(src,'book',BK,ref=ref);bk=ndi.binary_fill_holes(ndi.binary_closing(np.isin(lab,(56,57,58)),iterations=12));lab=lab.copy();lab[bk&np.isin(lab,(5,9))]=56;return a,lab      # un morceau de page pris pour de l'étoffe ou du galon
+def _front(c,P,labs,extra,H,kw):
+    """Repose par-dessus la tête (donc devant la barbe) les matières `labs` d'un personnage déjà monté."""
+    from PIL import ImageFilter
+    a,lab=P;m=np.isin(lab,labs);m=(ndi.binary_dilation(m,iterations=4)&(a[...,3]>60)&~np.isin(lab,(5,9,4,7,6)))|m
+    top=char(P,extra=extra,H=H,**dict(kw,head=None));mk=Image.fromarray((m*255).astype('uint8'));w,h=mk.size;mk=mk.resize((round(w*.29),round(h*.29)),Image.LANCZOS);M=Image.new('L',(512,H));M.paste(mk,(round(256-625*.29),round(229-360*.29)));M=M.filter(ImageFilter.GaussianBlur(0.6))
+    top.putalpha(Image.fromarray(np.minimum(np.array(top.split()[3]),np.array(M))));c.alpha_composite(top);return c
+def scholar(P,pages='#efe6cf',cover='#6a2e2a',ribbon='#b0343a',H=560,**kw):
+    """Le livre repasse devant la barbe."""
+    ex={56:pages,57:cover,58:ribbon};return _front(char(P,extra=ex,H=H,**kw),P,(56,57,58),ex,H,kw)
+# --- Bourse du marchand (obj/item_purse.png) : petit objet posé à plat dans la paume d'un bras tendu. 6 cuir, 59 cordon, 4 pièces.
+PURSE={6:[(628,900),(400,800),(850,800),(628,1050),(450,330),(800,330),(628,250),(400,400),(850,400),(500,500),(760,480),(900,860),(790,940),(628,700),(350,700),(900,700)],
+ 59:[(500,580),(600,620),(740,600),(720,640),(800,750),(860,740),(420,520),(810,520),(760,575),(830,800)],
+ 4:[(540,370),(680,340),(610,440),(700,380),(520,400),(650,420)]}
+def purse(leather='#6a4a2e',cord='#c9b98a',coins='#e8c44a',size=58):
+    a=np.array(Image.open('../obj/item_purse.png').convert('RGBA')).astype(float);al=a[...,3]>40;mk=np.zeros(al.shape,int)
+    for l,pts in PURSE.items():
+        for x,y in pts: mk[y-3:y+4,x-3:x+4]=l
+    lab=watershed(255-ndi.gaussian_filter(a[...,:3].mean(-1),1.2),mk,mask=al);full.G.update({6:.72,59:.85,4:.95});t=full.tint(a,lab,{6:leather,59:cord,4:coins});ys,xs=np.where(al);t=t.crop((xs.min(),ys.min(),xs.max()+1,ys.max()+1))
+    return t.resize((round(size*t.size[0]/t.size[1]),size),Image.LANCZOS)
+def hold(c,C,item,dy=0,up=9):
+    """Pose un petit objet (image RGBA) dans la paume : C = le résultat de reach() d'un corps (prp, brb, plt, frg, rob)."""
+    px,py=C[1];x,y=256+(px-625)*.29,229+(py-360)*.29+dy;c.alpha_composite(item,(round(x-item.size[0]/2),round(y-item.size[1]/2-up)));return c      # 'up' : remonté de quelques pixels pour reposer dans la main
