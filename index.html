@@ -176,6 +176,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 .legend{display:flex;flex-wrap:wrap;gap:8px 20px;color:var(--on-board-muted);font-size:15px}
 .legend .seal{color:var(--on-board-muted)}
 footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
+.charcount{display:block;text-align:right;font-size:13px;color:#6b5a3a;margin-top:3px;font-weight:400}.charcount.full{color:#a3271a;font-weight:700}
 .linkbtn{background:none;border:none;color:var(--on-board-muted);text-decoration:underline;cursor:pointer;font:inherit;font-size:14px;padding:6px 0;min-height:32px}
 .linkbtn:hover{color:var(--on-board)}
 @media (max-width:520px){.note{transform:none!important}.facts{grid-template-columns:1fr}.facts dt{padding-top:6px}}
@@ -1677,7 +1678,7 @@ function sheetForm(a){
     '<label for="p-classe">Classe<input id="p-classe" maxlength="60" placeholder="ex. Guerrier, Magicien…" value="'+esc(a.classe)+'"></label>'+
     '<label class="wide" for="p-desc">Description<textarea id="p-desc" maxlength="2000" placeholder="Apparence, personnalité…">'+esc(a.description)+'</textarea></label>'+
     (ui.dm&&isAdmin?'<label class="pickrow wide" for="p-pnj"><input type="checkbox" id="p-pnj"'+(a.pnj?' checked':'')+'><span>PNJ de la Guilde : hors classement de renommée et hors galerie (réservé au DM)</span></label>':'')+
-    '<label class="wide" for="p-bg">Background (facultatif)<textarea id="p-bg" maxlength="4000" placeholder="D\'où vient ton personnage ? Outerworlder ou natif de la Sword Coast ?">'+esc(a.background)+'</textarea></label>'+
+    '<label class="wide" for="p-bg">Background (facultatif)<textarea id="p-bg" maxlength="7000" data-count="p-bg-n" placeholder="D\'où vient ton personnage ? Outerworlder ou natif de la Sword Coast ?">'+esc(a.background)+'</textarea><span class="charcount" id="p-bg-n" aria-live="polite">'+(a.background||"").length.toLocaleString("fr-CA")+' / 7\u202f000 caractères</span></label>'+
     '<div class="actions wide"><button class="btn" type="submit">Enregistrer la fiche</button><button class="btn ghost" type="button" data-a="sheet-cancel">Annuler</button></div></form>';
 }
 function questsOf(a){return quetes.filter(q=>q.rapport&&(q.rapport.participants||[]).some(x=>x.aventurier===a.id));}
@@ -5833,7 +5834,7 @@ document.addEventListener("submit",async e=>{
   if(e.target.id==="sheetform"){
     const isNew=ui.sheetEdit==="new",cur=isNew?null:aventuriers.find(a=>a.id===ui.sheetEdit);
     const nom=v("p-nom").slice(0,60);if(!nom)return;
-    const data={nom,espece:v("p-espece").slice(0,60),classe:v("p-classe").slice(0,60),description:((document.getElementById("p-desc")||{}).value||"").slice(0,2000),background:((document.getElementById("p-bg")||{}).value||"").slice(0,4000),majLe:serverTimestamp()};
+    const data={nom,espece:v("p-espece").slice(0,60),classe:v("p-classe").slice(0,60),description:((document.getElementById("p-desc")||{}).value||"").slice(0,2000),background:((document.getElementById("p-bg")||{}).value||"").slice(0,7000),majLe:serverTimestamp()};
     const img=ui.sheetImg!==undefined?ui.sheetImg:(cur&&cur.image)||"";data.image=img;
     const pc=document.getElementById("p-pnj");if(pc&&isAdmin)data.pnj=pc.checked;
     let id=cur?cur.id:(nom.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"perso").slice(0,40)+"-"+Date.now().toString(36).slice(-4);
@@ -6031,6 +6032,8 @@ document.addEventListener("paste",e=>{const z=document.activeElement&&document.a
   const it=Array.from((e.clipboardData&&e.clipboardData.items)||[]).find(i=>i.type&&i.type.indexOf("image/")===0);if(!it)return;e.preventDefault();artSave(z.getAttribute("data-paste"),it.getAsFile());});
 document.addEventListener("dragover",e=>{if(e.target.closest&&e.target.closest("[data-paste]")){e.preventDefault();e.target.closest("[data-paste]").classList.add("over");}});
 document.addEventListener("dragleave",e=>{const z=e.target.closest&&e.target.closest("[data-paste]");if(z)z.classList.remove("over");});
+// Compteur de caractères : tout champ portant data-count="<id du compteur>" et un maxlength
+document.addEventListener("input",e=>{const t=e.target,id=t&&t.dataset&&t.dataset.count;if(!id)return;const o=document.getElementById(id),max=+t.getAttribute("maxlength")||0;if(!o)return;const n=t.value.length;o.textContent=n.toLocaleString("fr-CA")+" / "+max.toLocaleString("fr-CA")+" caractères";o.classList.toggle("full",max>0&&n>=max);});
 document.addEventListener("drop",e=>{const z=e.target.closest&&e.target.closest("[data-paste]");if(!z)return;e.preventDefault();const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(f)artSave(z.getAttribute("data-paste"),f);});
 
 /* ---------- start ---------- */

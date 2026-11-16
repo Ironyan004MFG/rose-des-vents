@@ -305,7 +305,7 @@ service cloud.firestore {
                                'background', 'image', 'don', 'pnj', 'rangGuilde', 'etoiles', 'xp', 'xpLog', 'creeLe', 'majLe'])
         && str(d.nom, 1, 60)
         && optStr(d, 'joueur', 60) && optStr(d, 'espece', 60) && optStr(d, 'classe', 60)
-        && optStr(d, 'description', 2000) && optStr(d, 'background', 4000) && optStr(d, 'don', 500)
+        && optStr(d, 'description', 2000) && optStr(d, 'background', 7000) && optStr(d, 'don', 500)
         && optStr(d, 'image', 400000)
         && (!('pnj' in d) || d.pnj is bool)
         && (!('rangGuilde' in d) || d.rangGuilde in ['bois', 'cuivre', 'fer', 'argent', 'or', 'mithral', 'rose'])
