@@ -70,3 +70,9 @@ def offhand(c,wr,dy=0,sk='#c98f6a',metal='#aeb4bc',wood='#8a6a42'):
     lab=watershed(255-ndi.gaussian_filter(a[...,:3].mean(-1),1.2),mk,mask=al);full.G.update({1:.8,4:.95,28:.8});x0,x1,y0=OFF['wrist'];yy=np.mgrid[:al.shape[0],:al.shape[1]][0]
     a[...,3]*=np.clip((yy-y0-10)/70,0,1);t=full.tint(a,lab,{1:sk,4:metal,28:wood});cx,Y,w=wr;s=w*.29/(x1-x0)*OFF['k'];t=t.resize((round(t.size[0]*s),round(t.size[1]*s)),Image.LANCZOS)
     fx,fy=256+(cx-625)*.29,229+(Y-360)*.29+dy;c.alpha_composite(t,(round(fx-(x0+x1)/2*s),round(fy-y0*s)));return c
+# --- Bras tendu (frg/reach.png) : main ouverte, paume vers le haut, pour tendre ou recevoir la marchandise. PALM = centre de la paume (image de GPT).
+RE=dict(SEEDS);RE[35]=[p for p in SEEDS[35] if p not in ((300,900),(250,890))]+[(340,960),(400,1000)]
+RE[1]=SEEDS[1]+[(130,840),(100,900),(200,920),(60,790),(180,790),(150,950),(240,900),(130,700)]
+PALM=(140,830)
+def reach(src='../frg/reach.png',ref='../frg/relaxed.png'):
+    P=prep(src,'reach',RE,ref=ref);return P,brb.nrm(*PALM)
