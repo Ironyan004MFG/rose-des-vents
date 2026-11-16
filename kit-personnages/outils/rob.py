@@ -15,3 +15,19 @@ def char(P,cloth='#5a2a4a',trim='#c9a23a',front='#d8c8a8',lace='#f2eee4',metal='
     im=full.tint(a,lab,{1:sk,5:cloth,9:trim,51:front,37:lace,4:metal,7:'#2a2622'});w,h=im.size;t=im.resize((round(w*.29),round(h*.29)),Image.LANCZOS);o=Image.new('RGBA',(512,H));o.paste(t,(round(256-625*.29),round(229-360*.29)));c.alpha_composite(o)
     if head: hd=Image.new('RGBA',(512,H));hd.alpha_composite(heads.tint(head,{1:sk,2:hr,3:hr,4:'#c4c8ce',15:'#6a6e76',8:'#f2eee4'}));c.alpha_composite(hd)
     return c
+# --- Marche (un pas dessiné, l'autre en miroir : la robe est symétrique) et bras tendu. Pas de jambes : seule la pose des bras change.
+_C=[p for p in SEEDS[5]]
+W1=dict(SEEDS);W1[1]=[(200,620),(180,600),(230,612),(210,640),(960,760),(940,740),(990,772),(970,790)]
+W1[37]=[(190,540),(160,562),(240,545),(215,525),(1000,660),(960,690),(1050,668),(1010,700),(1000,640)]
+RE=dict(SEEDS);RE[1]=[(220,620),(180,640),(250,650),(210,690),(160,610),(260,700),(1020,690),(1050,700),(1000,670)]
+RE[37]=[(230,500),(200,520),(300,565),(260,505),(310,600),(1030,600),(1090,615),(990,612),(1040,575)]
+PALM=(215,625)
+def walk(R,W,t,**kw):
+    import math
+    u=min(1,max(0,(abs(t)-.3)/.4));u=u*u*(3-2*u);base=char(R,**kw)
+    if u<=0: return base
+    o=char(W if t>0 else brb.mirror(W),**kw);return Image.blend(base,o,u) if u<1 else o
+def reach(src='../rob/reach.png',ref='../rob/relaxed.png'):
+    P=prep(src,'reach',RE,ref=ref);return P,brb.nrm(*PALM)
+W1[37]=W1[37]+[(140,545),(150,570),(255,560),(175,520),(235,575),(265,540),(930,690),(1075,690),(1040,650),(950,650),(1060,705)]
+RE[5]=[p for p in SEEDS[5] if p!=(200,480)]+[(230,430),(200,400),(260,455),(185,445),(290,470)]
