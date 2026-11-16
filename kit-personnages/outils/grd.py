@@ -21,10 +21,22 @@ def prep(src,tag,like='../adv/src3.png',dbg=False):
     m15=ndi.binary_closing(lab==15,iterations=9);lab[m15&np.isin(lab,(9,16,0))&~line]=15           # petites mailles isolées
     _,ix=ndi.distance_transform_edt(lab==0,return_indices=True);lab=lab[ix[0],ix[1]];lab[~al]=0
     return a,lab
-G={4:.95,5:.8,9:.8,15:.75,16:.7,6:.7,7:.6}
+
+# Pose « main qui tient » : le poing de gauche serre un bout de manche (28 = bois). L'arme, dessinée à part, se glisse dans ce poing.
+GRIP=(257,770)                                    # centre du poing, sur l'image normalisée ; le manche est vertical, large d'environ 50
+def grip(src,tag):
+    a,lab=prep(src,tag);H,W=lab.shape;yy,xx=np.mgrid[:H,:W]
+    lab[(lab==5)&(xx>222)&(xx<300)&(yy>615)&(yy<955)]=28
+    return a,lab
+def fist(a,lab):
+    """Calque du gantelet seul (doigts), à reposer par-dessus le manche de l'arme."""
+    H,W=lab.shape;yy,xx=np.mgrid[:H,:W];m=(lab==4)&(xx>195)&(xx<330)&(yy>690)&(yy<860)
+    w=np.array(Image.fromarray((m*255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.2))).astype(float)/255
+    return w
+G={4:.95,5:.8,9:.8,15:.75,16:.7,6:.7,7:.6,28:.8}
 def char(a,lab,tab,bord,sk='#c98f6a',hr='#8a4a22',metal='#aeb4bc',mail='#6a6e76',under='#3e3a3a',belt='#3a2a1c',pants='#4a4a52',ph=0):
     full.G.update(G);cols={1:sk,2:hr,3:hr,6:'#3a2a1c'};c=Image.new('RGBA',(512,512));c.alpha_composite(legs.legs(pants,'#3a2a1c',ph))
-    t=full.tint(a,lab,{4:metal,5:tab,9:bord,15:mail,16:under,6:belt,7:'#2a2622'});c.alpha_composite(full.place(t,0.29,(625,360)));c.alpha_composite(kit.tint('head_dwarf_braided_90',cols));return c
+    t=full.tint(a,lab,{4:metal,5:tab,9:bord,15:mail,16:under,6:belt,7:'#2a2622',28:'#8a6a42'});c.alpha_composite(full.place(t,0.29,(625,360)));c.alpha_composite(kit.tint('head_dwarf_braided_90',cols));return c
 if __name__=='__main__':
     a,lab=prep('../grd/relaxed.png','relaxed',dbg=True)
     t=full.tint(a,lab,{4:'#aeb4bc',5:'#7a2a26',9:'#c9a23a',15:'#6a6e76',16:'#3e3a3a',6:'#3a2a1c',7:'#2a2622'}) if not full.G.update(G) else None
