@@ -56,3 +56,27 @@ def coif(P):
     pa=a[y-r:y+r,x-r:x+r,:3];row=np.hstack([pa,pa[:,::-1]]);T=np.tile(np.vstack([row,row[::-1]]),(20,20,1))[:lab.shape[0],:lab.shape[1]]
     hole=lab==7;dd=ndi.distance_transform_edt(hole);sh=np.clip(0.55+dd/70.0,0.55,1.0)[...,None]              # ombre au bord, sous le gorgerin
     a[hole,:3]=(T*sh)[hole];lab[hole]=15;return a,lab,plast
+
+# --- Main qui tient (plt/grip.png) : le gantelet de gauche serre un bout de manche ; l'arme (weapons.py) se glisse dedans ----------------------
+def _n(x,y):
+    import norm
+    top,l,r=norm.collar(REFSRC);s=(norm.REF[2]-norm.REF[1])/(r-l);return (norm.REF[1]+norm.REF[2])/2+s*(x-(l+r)/2),norm.REF[0]+s*(y-top)
+def grip(src='../plt/grip.png',tag='grip'):
+    """Renvoie (P, point de prise, masque des doigts) dans l'image normalisée."""
+    a,lab,plast=prep(src,tag);H,W=lab.shape;yy,xx=np.mgrid[:H,:W];al=a[...,3]>60;lum=a[...,:3].mean(-1)
+    (x0,y0),(x1,y1)=_n(236,570),_n(306,890);line=(ndi.gaussian_filter(lum,1.0)<grd.bodyseg.LT)&al;comp,k=ndi.label(al&~line);st=np.zeros((H,W),bool)
+    for i,sl in enumerate(ndi.find_objects(comp)):
+        cy,cx=ndi.center_of_mass(comp==i+1);w=sl[1].stop-sl[1].start
+        if x0<cx<x1 and y0<cy<y1 and w<(x1-x0)*0.95 and not ( _n(0,655)[1]<cy<_n(0,835)[1] ): st|=comp==i+1                # les deux bouts du manche, au-dessus et au-dessous du poing
+    st=ndi.binary_dilation(st,iterations=3)&al;lab=lab.copy();lab[st]=28;sx=np.where(st)[1].mean()
+    (fx0,fy0),(fx1,fy1)=_n(196,648),_n(338,842);fist=(lab==4)&(xx>fx0)&(xx<fx1)&(yy>fy0)&(yy<fy1);fist=ndi.binary_dilation(fist,iterations=3)&al&~st
+    return (a,lab,plast),(sx,(fy0+fy1)/2),fist
+def armed(G,weapon,trim,metal='#aeb4bc',mail='#6a6e76',dy=160,H=720,**kw):
+    """Corps en pose « main qui tient » + arme dans le poing (les doigts du gantelet repassent par-dessus le manche)."""
+    import weapons
+    P,(gx,gy),fist=G;c=Image.new('RGBA',(512,H));c.alpha_composite(char(P,trim,metal=metal,mail=mail,H=H-dy,**kw),(0,dy))
+    fx,fy=256+(gx-625)*.29,229+(gy-360)*.29+dy;t,(wx,wy)=weapons.layer(weapon,metal=metal);c.alpha_composite(t,(round(fx-wx),round(fy-wy)))
+    a,lab,_=P;full.G.update({4:.95,9:.85,15:.75,6:.7});b=np.array(full.tint(a,lab,{4:metal,9:trim,15:mail,6:'#3a2a1c',7:'#2a2622',28:'#8a6a42'})).astype(float)
+    from PIL import ImageFilter
+    b[...,3]*=np.array(Image.fromarray((fist*255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.0))).astype(float)/255
+    im=Image.fromarray(b.astype('uint8'));w0,h0=im.size;im=im.resize((round(w0*.29),round(h0*.29)),Image.LANCZOS);o=Image.new('RGBA',(512,H));o.paste(im,(round(256-625*.29),round(229-360*.29)+dy));c.alpha_composite(o);return c
