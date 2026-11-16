@@ -194,6 +194,12 @@ UP2={1:-24,8:-24,7:-12,4:-12}
 def build_lot2(mp='../lot2/map.png'):
     M=split_map(mp)
     for k,n in LOT2.items(): build_map(f'l2_{k}',f'../lot2/t{k}.png',n,M[k-1],UP2.get(k,0),s=0.66)
+# lot 3 (femmes) : nattes, chignon, âgée au bonnet de laine, érudite, marchande au turban, barde, capuchonnée, fermière au chapeau de paille.
+# Têtes sans barbe : le repère est le MENTON (x du nez, y du bas du visage), posé sur NOSE comme la naine. Dans ce calque, CYAN (6) = paille.
+LOT3={1:(155,322),2:(157,402),3:(160,388),4:(155,366),5:(170,337),6:(188,381),7:(170,354),8:(205,327)}
+def build_lot3(mp='../lot3/map.png'):
+    M=split_map(mp)
+    for k,n in LOT3.items(): build_map(f'l3_{k}',f'../lot3/t{k}.png',n,M[k-1],0,s=0.52)
 if __name__=='__main__':
     import sys
     if len(sys.argv)>1 and sys.argv[1]=='helm':
