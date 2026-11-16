@@ -47,3 +47,11 @@ def pose(ga,glab,src='../plt/relaxed2.png'):
     def over(X,Y):
         x=X[...,3:]/255;y=Y[...,3:]/255;oa=x+y*(1-x);o=np.zeros_like(X);o[...,:3]=(X[...,:3]*x+Y[...,:3]*y*(1-x))/np.maximum(oa,1e-6);o[...,3:]=oa*255;return o
     o=over(E_,over(G,T));l=np.where(E_[...,3]>60,lab,np.where(G[...,3]>60,gl,tl));l[o[...,3]<=60]=0;return o,l,plast
+
+def coif(P):
+    """Pour une tête sans barbe ni cou visible (heaume fermé sur les autres races) : l'INTÉRIEUR de l'encolure est rempli de mailles, à plat,
+    dans l'anneau du gorgerin. On ne voit donc jamais le trou du col, et rien ne dépasse sur le plastron (pas de bavette)."""
+    a,lab,plast=P;a=a.copy();lab=lab.copy();m=lab==15;c,k=ndi.label(m);big=c==(np.argmax(ndi.sum(m,c,range(1,k+1)))+1);d=ndi.distance_transform_edt(big);y,x=np.unravel_index(np.argmax(d),d.shape);r=int(d[y,x]*0.68)
+    pa=a[y-r:y+r,x-r:x+r,:3];row=np.hstack([pa,pa[:,::-1]]);T=np.tile(np.vstack([row,row[::-1]]),(20,20,1))[:lab.shape[0],:lab.shape[1]]
+    hole=lab==7;dd=ndi.distance_transform_edt(hole);sh=np.clip(0.55+dd/70.0,0.55,1.0)[...,None]              # ombre au bord, sous le gorgerin
+    a[hole,:3]=(T*sh)[hole];lab[hole]=15;return a,lab,plast
