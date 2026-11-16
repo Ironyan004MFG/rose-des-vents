@@ -33,10 +33,16 @@ def fist(a,lab):
     H,W=lab.shape;yy,xx=np.mgrid[:H,:W];m=(lab==4)&(xx>195)&(xx<330)&(yy>690)&(yy<860)
     w=np.array(Image.fromarray((m*255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.2))).astype(float)/255
     return w
+CHEST=(257,372);CHEST_SIZE=150                  # centre et taille de l'emblème sur le devant du tabard (toile 512) ; la barbe et la ceinture passent par-dessus
 G={4:.95,5:.8,9:.8,15:.75,16:.7,6:.7,7:.6,28:.8}
-def char(a,lab,tab,bord,sk='#c98f6a',hr='#8a4a22',metal='#aeb4bc',mail='#6a6e76',under='#3e3a3a',belt='#3a2a1c',pants='#4a4a52',ph=0):
+def char(a,lab,tab,bord,sk='#c98f6a',hr='#8a4a22',metal='#aeb4bc',mail='#6a6e76',under='#3e3a3a',belt='#3a2a1c',pants='#4a4a52',ph=0,emb=None):
     full.G.update(G);cols={1:sk,2:hr,3:hr,6:'#3a2a1c'};c=Image.new('RGBA',(512,512));c.alpha_composite(legs.legs(pants,'#3a2a1c',ph))
-    t=full.tint(a,lab,{4:metal,5:tab,9:bord,15:mail,16:under,6:belt,7:'#2a2622',28:'#8a6a42'});c.alpha_composite(full.place(t,0.29,(625,360)));c.alpha_composite(kit.tint('head_dwarf_braided_90',cols));return c
+    t=full.tint(a,lab,{4:metal,5:tab,9:bord,15:mail,16:under,6:belt,7:'#2a2622',28:'#8a6a42'});c.alpha_composite(full.place(t,0.29,(625,360)))
+    if emb is not None:                                                          # emblème sur la poitrine du tabard, AVANT la tête : la barbe passe par-dessus
+        m=full.place(Image.fromarray(((lab==5)*255).astype('uint8')).convert('RGBA'),0.29,(625,360)).split()[0]
+        e=Image.new('RGBA',(512,512));e.alpha_composite(emb,(round(CHEST[0]-emb.size[0]/2),round(CHEST[1]-emb.size[1]/2)))
+        e.putalpha(Image.fromarray(np.minimum(np.array(e.split()[3]),np.array(m))));c.alpha_composite(e)
+    c.alpha_composite(kit.tint('head_dwarf_braided_90',cols));return c
 if __name__=='__main__':
     a,lab=prep('../grd/relaxed.png','relaxed',dbg=True)
     t=full.tint(a,lab,{4:'#aeb4bc',5:'#7a2a26',9:'#c9a23a',15:'#6a6e76',16:'#3e3a3a',6:'#3a2a1c',7:'#2a2622'}) if not full.G.update(G) else None
