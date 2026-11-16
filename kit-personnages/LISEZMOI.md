@@ -50,3 +50,12 @@ Une région peut avoir plusieurs gardes. L'Église de Lathandre n'est pas une ga
 | Silverymoon | Chevaliers d'Argent | bleu roi / argent | croissant et étoile (lore) |
 | Daggerford | Milice de Daggerford | bleu profond / argent | dague ensanglantée (lore) |
 | Luskan | Nefs Kurth, Baram, Suljack, Taerl, Rethnor | marine, bordeaux, vert, ardoise, noir / blanc cassé | ancre (inventé) |
+
+## Objets de la carte
+
+`objets/item_lantern.png`, `item_bow.png`, `item_quiver.png`, `item_bundle.png`, `item_woodaxe.png` : dessins isolés sur fond blanc (retiré en code), matières et teintes dans `outils/items.py`, montages dans `outils/carte.py`.
+
+- **Chasseur (validé)** : aventurier + capuche ; arc en travers du dos et carquois derrière l'autre épaule (`carte.chasseur`), aperçu dans `planches/chasseur.png`. Aucune main ne tient l'arc : les essais de « main qui tient l'arc » (greffe ou dessin GPT) ont été abandonnés.
+- **Colporteur** : aventurier + ballot dans le dos. Le grand chapeau cache le ballot ; il se voit bien avec une capuche.
+- **Bûcheron** : fermier, pose à la fourche, où tout l'outil est remplacé par la hache (`carte.axe_farmer`). Pas encore validé.
+- **Lanterne** : pas encore validée. Version simple : pendue au poing relâché, l'anneau sortant sous les doigts (`carte.lantern_under`). La greffe d'un poing dessiné par GPT sur le bras tendu (`advlant.py`, non déposé) donnait une jonction main-manche difforme.
