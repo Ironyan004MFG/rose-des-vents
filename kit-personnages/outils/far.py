@@ -4,7 +4,7 @@ from PIL import Image,ImageFilter
 from scipy import ndimage as ndi
 import norm,bodyseg,full,kit,legs,r2
 def prep(src,tag,like='../adv/src3.png'):
-    norm.normalize_like(src,like,f'../far/n_{tag}.png') if like else norm.normalize(src,f'../far/n_{tag}.png')
+    if like!='DEJA': norm.normalize_like(src,like,f'../far/n_{tag}.png') if like else norm.normalize(src,f'../far/n_{tag}.png')      # 'DEJA' : ../far/n_<tag>.png est déjà normalisé
     a=np.array(Image.open(f'../far/n_{tag}.png').convert('RGBA')).astype(float);al=a[...,3]>60;lum=a[...,:3].mean(-1)
     line=(ndi.gaussian_filter(lum,1.0)<bodyseg.LT)&al;comp,k=ndi.label(al&~line);idx=np.arange(1,k+1)
     area=ndi.sum(al,comp,idx);cy,cx=np.array(ndi.center_of_mass(al,comp,idx)).T;ml=ndi.mean(lum,comp,idx)
@@ -169,3 +169,91 @@ if __name__=='__main__':
     O=Image.new('RGBA',(512*4,512),(140,105,70,255))
     O.alpha_composite(char(a,lab,'#d8cdb0','#5a6f8a','#c98f6a','#8a4a22'),(0,0));O.alpha_composite(char(a,lab,'#b9a27a','#6a4a32','#8a5a3c','#2a2422'),(512,0));O.alpha_composite(char(a,lab,'#e6dfd0','#4a6a3a','#e2b592','#c9a23a'),(1024,0));O.alpha_composite(advp.char(b,lb,*r2.V[0]),(1536,0))
     O.crop((0,40,2048,512)).resize((1920,442),Image.LANCZOS).save('../far_cmp2.png')
+# --- Pêcheur (far/fish.png) : les deux mains serrent la poignée d'une canne devant le ventre. GPT ne dessine que la poignée ;
+# la canne, le fil et le bouchon sont dessinés en code (rod), ce qui permet de les animer (canne qui plie, bouchon qui danse).
+def fisher(src='../far/fish.png'):
+    a,lab=prep(src,'fish');sh=lab.shape;arm=bodyseg.poly([(250,800),(420,790),(690,810),(690,945),(480,970),(250,960)],sh)|bodyseg.poly([(560,950),(700,930),(850,790),(1045,770),(1045,930),(905,975),(760,1060),(560,1095)],sh)
+    lab=lab.copy();lab[(lab==1)&~arm]=14;lab[arm&np.isin(lab,(14,1))]=1;      # seuls les avant-bras et les mains sont de la peau ; les manches claires sont de la chemise
+    yy,xx=np.mgrid[:sh[0],:sh[1]];st=(lab>0)&(xx>595)&(xx<665)&(((yy>745)&(yy<818))|((yy>1088)&(yy<1206)));lab[st]=28;return a,lab
+WATER=520                                         # ligne d'eau sur la toile 512 : juste devant les bottes
+ROD=(257.5,346)                                   # haut de la poignée sur la toile 512 : il tient la canne PAR LE BAS, elle monte de là
+def rod(c,dy=0,length=520,bend=0.0,bob=0.0,wood='#8a6a42',line=70,tilt=0.0):
+    """c : toile, personnage décalé de dy (dy >= length+line-240). bend : flexion de la canne (-1..1), bob : enfoncement du bouchon (0..1)."""
+    from PIL import ImageDraw
+    S=3;o=Image.new('RGBA',(c.size[0]*S,c.size[1]*S));d=ImageDraw.Draw(o);import math;x0,y0=ROD[0],ROD[1]+dy+(22 if tilt else 0);n=24;pts=[];sn,cs=math.sin(math.radians(tilt)),math.cos(math.radians(tilt))      # inclinée : elle sort du poing (départ caché sous la main)
+    for i in range(n+1):
+        u=i/n;pts.append((x0-sn*length*u+bend*40*u*u*cs,y0-cs*length*u,7.5*(1-u)+1.6*u))
+    for col,g in (('#2a1c12',1.4),(wood,0)):
+        L=[((x-w-g)*S,y*S) for x,y,w in pts];R=[((x+w+g)*S,y*S) for x,y,w in pts][::-1];d.polygon(L+R,fill=col)
+    for k in (0.6,0.8,1.0):                           # anneaux
+        x,y,w=pts[int(n*k)];d.ellipse([(x-w-2.2)*S,(y-2)*S,(x+w+2.2)*S,(y+2)*S],outline='#9aa0a6',width=S)
+    tx,ty,_=pts[-1];bx,by=tx+bend*10,dy+WATER+line      # l'eau est DEVANT lui (bas de l'image) : le fil retombe du bout de la canne jusqu'au bouchon, devant ses pieds
+    d.line([(tx*S,ty*S),(bx*S,by*S)],fill=(235,235,225,220),width=S)
+    r=6-2*bob;d.ellipse([(bx-r)*S,(by-r)*S,(bx+r)*S,(by+r)*S],fill='#f2eee4',outline='#2a1c12',width=S);d.pieslice([(bx-r)*S,(by-r)*S,(bx+r)*S,(by+r)*S],180,360,fill='#c23a2a',outline='#2a1c12',width=S)
+    c.alpha_composite(o.resize(c.size,Image.LANCZOS));return c
+def fisherman(P,shirt,over,sk,hr,dy=360,**kw):
+    """Ordre : corps < tête < canne < mains et poignée. La canne est tenue DEVANT lui : avec la perspective, elle passe devant la barbe et la tête."""
+    a,lab=P;c=Image.new('RGBA',(512,512+dy+140));rk={k:kw.pop(k) for k in ('length','bend','bob','line','tilt') if k in kw}
+    if rk.get('tilt'): a=a.copy();a[(lab==28)&(np.mgrid[:lab.shape[0],:lab.shape[1]][0]<830),3]=0      # canne inclinée : le bout de poignée du haut (vertical) est retiré
+    orig=kit.tint;kit.tint=lambda n,cols:Image.new('RGBA',(512,512)) if n.startswith('head') else orig(n,cols)
+    try: body=char(a,lab,shirt,over,sk,hr,**kw)
+    finally: kit.tint=orig
+    c.alpha_composite(body,(0,dy));c.alpha_composite(kit.tint('head_dwarf_braided_90',{1:sk,2:hr,3:hr,6:'#3a2a1c'}),(0,dy));rod(c,dy,**rk)
+    full.G.update({14:.85,5:.75,28:.8});t=np.array(full.tint(a,lab,{1:sk,28:HELD[28]})).astype(float);m=np.isin(lab,(1,28))&(np.abs(np.mgrid[:lab.shape[0],:lab.shape[1]][1]-627)<140)
+    t[...,3]*=np.array(Image.fromarray((m*255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.2))).astype(float)/255;c.alpha_composite(full.place(Image.fromarray(t.astype('uint8')),SC,(625,360)),(0,dy));return c
+
+# --- Pêcheur, pose inclinée (far/fish2.png) : GPT a dessiné la canne entière, en biais, tenue à deux mains. Elle dépasse au-dessus du cadre :
+# la toile normalisée a OFF lignes de plus en haut. La canne (28) et les mains repassent devant la tête ; le fil et le bouchon restent en code.
+OFF=300;F2=dict(s=1.219,cx=622,top=266,rod=((222,12),(722,1000)),tip=(226,14),
+ arms=[[(400,730),(560,720),(660,740),(660,850),(560,860),(420,840)],[(600,830),(700,800),(770,790),(800,840),(720,940),(610,950)]])
+def _f2(p): return 623+F2['s']*(p[0]-F2['cx']),165+OFF+F2['s']*(p[1]-F2['top'])
+def fisher2(src='../far/fish2.png'):
+    s=F2['s'];Image.open(src).convert('RGBA').transform((1254,1400+OFF),Image.AFFINE,(1/s,0,F2['cx']-623/s,0,1/s,F2['top']-(165+OFF)/s),Image.BICUBIC).save('../far/n_fish2.png')
+    a,lab=prep(src,'fish2',like='DEJA');sh=lab.shape;yy,xx=np.mgrid[:sh[0],:sh[1]];lum=a[...,:3].mean(-1);(x0,y0),(x1,y1)=_f2(F2['rod'][0]),_f2(F2['rod'][1])
+    d=np.abs((xx-x0)*(y1-y0)-(yy-y0)*(x1-x0))/np.hypot(x1-x0,y1-y0);rodm=(lab>0)&(d<20*s)&(ndi.gaussian_filter(lum,1.5)<178)&(yy<y1+10)
+    arm=np.zeros(sh,bool)
+    for pl in F2['arms']: arm|=bodyseg.poly([_f2(p) for p in pl],sh)
+    lab=lab.copy();lab[(lab==1)&~arm]=14;lab[arm&np.isin(lab,(14,1))&~rodm]=1;rodm=ndi.binary_opening(rodm&(lab!=1),iterations=2);lab[rodm]=28;return a,lab
+def fisherman2(P,shirt,over,sk,hr,rope='#6b5a3a',pants='#5a4a32',wood='#8a6a42',ph=0,bob=0.0,line=60,top=140):
+    """Toile 512 x (512+top). Ordre : jambes < corps < tête < canne et mains."""
+    from PIL import ImageDraw
+    a,lab=P;dy=top;c=Image.new('RGBA',(512,512+top));c.alpha_composite(legs.legs(pants,'#3a2a1c',ph),(0,dy));full.G.update({14:.85,6:.85,5:.75,28:.8,1:.8,7:.6})
+    t=full.tint(a,lab,{14:shirt,5:over,1:sk,6:rope,7:'#3a2e26',28:wood});pl=lambda im:full.place(im,SC,(625,360+OFF))
+    def put(im):
+        p=pl(im);o=Image.new('RGBA',c.size);o.alpha_composite(p,(0,dy)) if p.size[1]<=512 else o.alpha_composite(p.crop((0,0,512,min(p.size[1],512+top))),(0,dy));return o
+    body=put(t);c.alpha_composite(body);c.alpha_composite(kit.tint('head_dwarf_braided_90',{1:sk,2:hr,3:hr,6:'#3a2a1c'}),(0,dy))
+    m=(lab==28)|((lab==1)&(np.abs(np.mgrid[:lab.shape[0],:lab.shape[1]][1]-_f2((650,0))[0])<95));h=np.array(t).astype(float);h[...,3]*=np.array(Image.fromarray((m*255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.2))).astype(float)/255;c.alpha_composite(put(Image.fromarray(h.astype('uint8'))))
+    tx,ty=_f2(F2['tip']);tx,ty=256+(tx-625)*.29,229+(ty-360-OFF)*.29+dy;d=ImageDraw.Draw(c);bx,by=tx-10,ty-line*0+line*0;bx,by=tx-18,ty+line
+    d.line([(tx,ty),(bx,by)],fill=(235,235,225,220),width=1);r=5-1.5*bob;d.ellipse([bx-r,by-r,bx+r,by+r],fill='#f2eee4',outline='#2a1c12');d.pieslice([bx-r,by-r,bx+r,by+r],180,360,fill='#c23a2a',outline='#2a1c12');return c
+
+# --- Pêcheur (pose retenue, far/fish3.png) : GPT dessine le corps du fermier à l'identique et, dans les deux mains, un court manche EN BIAIS.
+# Le code prolonge ce manche en canne (même direction), puis le fil retombe du bout jusqu'au bouchon dans l'eau, DEVANT lui (bas de l'image).
+F3=dict(rod=((165,160),(675,1045)),arms=[[(225,740),(300,690),(470,650),(600,700),(600,840),(480,865),(300,870),(225,850)],[(540,830),(700,790),(830,740),(940,720),(1030,740),(1030,900),(830,965),(720,1010),(560,990)]])
+def _tr3():
+    top,l,r=norm.collar('../adv/src3.png');s=(norm.REF[2]-norm.REF[1])/(r-l);cx=(l+r)/2;rcx=(norm.REF[1]+norm.REF[2])/2;return lambda p:(rcx+s*(p[0]-cx),norm.REF[0]+s*(p[1]-top)),s
+def fisher3(src='../far/fish3.png'):
+    a,lab=prep(src,'fish3');tr,s=_tr3();sh=lab.shape;yy,xx=np.mgrid[:sh[0],:sh[1]];lum=ndi.gaussian_filter(a[...,:3].mean(-1),1.5);(x0,y0),(x1,y1)=tr(F3['rod'][0]),tr(F3['rod'][1]);L=np.hypot(x1-x0,y1-y0)
+    d=np.abs((xx-x0)*(y1-y0)-(yy-y0)*(x1-x0))/L;u=((xx-x0)*(x1-x0)+(yy-y0)*(y1-y0))/L**2;rodm=(lab>0)&(d<34*s)&(lum<172)&(u>-.03)&(u<1.03)
+    arm=np.zeros(sh,bool)
+    for pl in F3['arms']: arm|=bodyseg.poly([tr(p) for p in pl],sh)
+    lab=lab.copy();lab[(lab==1)&~arm]=14;lab[arm&np.isin(lab,(14,1))&~rodm]=1;rodm=ndi.binary_opening(rodm&(lab!=1),iterations=2);lab[rodm]=28;lab[(lab==28)&arm&(lum<108)]=1;return a,lab      # les plis sombres des doigts restent de la peau
+def fisherman3(P,shirt,over,sk,hr,rope='#6b5a3a',pants='#5a4a32',wood='#8a6a42',ph=0,length=430,bend=0.0,bob=0.0,mx=170,dy=300,below=110):
+    """Toile (512+mx) x (512+dy+below), personnage décalé de (mx, dy). Ordre : jambes < corps < tête < canne (manche de GPT + prolongement en code) < mains."""
+    from PIL import ImageDraw
+    a,lab=P;tr,s=_tr3();W,H=512+mx,512+dy+below;c=Image.new('RGBA',(W,H));c.alpha_composite(legs.legs(pants,'#3a2a1c',ph),(mx,dy));full.G.update({14:.85,6:.85,5:.75,28:.8,1:.8,7:.6})
+    t=full.tint(a,lab,{14:shirt,5:over,1:sk,6:rope,7:'#3a2e26',28:wood});c.alpha_composite(full.place(t,SC,(625,360)),(mx,dy));c.alpha_composite(kit.tint('head_dwarf_braided_90',{1:sk,2:hr,3:hr,6:'#3a2a1c'}),(mx,dy))
+    part=lambda m:full.place(Image.fromarray(np.dstack([np.array(t)[...,:3],np.array(t)[...,3]*np.array(Image.fromarray((m*255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.2))).astype(float)/255]).astype('uint8')),SC,(625,360))
+    c.alpha_composite(part(lab==28),(mx,dy))
+    cv=lambda p:(mx+256+(p[0]-625)*.29,dy+229+(p[1]-360)*.29);(x0,y0),(x1,y1)=cv(tr(F3['rod'][0])),cv(tr(F3['rod'][1]));L=np.hypot(x0-x1,y0-y1);ux,uy=(x0-x1)/L,(y0-y1)/L;px,py=-uy,ux
+    if px<0: px,py=-px,-py                                         # perpendiculaire tournée vers l'avant (le bas de l'image)
+    if py<0: px,py=-px,-py
+    S=3;o=Image.new('RGBA',(W*S,H*S));d=ImageDraw.Draw(o);n=24;w0=7.0;pts=[]
+    for i in range(n+1):
+        v=i/n;k=bend*70*v*v;pts.append((x0-ux*10+ux*length*v+px*k,y0-uy*10+uy*length*v+py*k,w0*(1-v)+1.5*v))
+    for col,g in (('#2a1c12',1.3),(wood,0)):
+        A=[((x+px*(w+g))*S,(y+py*(w+g))*S) for x,y,w in pts];B=[((x-px*(w+g))*S,(y-py*(w+g))*S) for x,y,w in pts][::-1];d.polygon(A+B,fill=col)
+    for k in (0.5,0.75,1.0):
+        x,y,w=pts[int(n*k)];d.ellipse([(x-w-2)*S,(y-w-2)*S,(x+w+2)*S,(y+w+2)*S],outline='#9aa0a6',width=S)
+    tx,ty,_=pts[-1];bx,by=tx,dy+WATER+60;d.line([(tx*S,ty*S),(bx*S,by*S)],fill=(235,235,225,220),width=S)
+    r=6-2*bob;d.ellipse([(bx-r)*S,(by-r)*S,(bx+r)*S,(by+r)*S],fill='#f2eee4',outline='#2a1c12',width=S);d.pieslice([(bx-r)*S,(by-r)*S,(bx+r)*S,(by+r)*S],180,360,fill='#c23a2a',outline='#2a1c12',width=S)
+    c.alpha_composite(o.resize((W,H),Image.LANCZOS));c.alpha_composite(part((lab==1)&(np.abs(np.mgrid[:lab.shape[0],:lab.shape[1]][1]-627)<160)),(mx,dy));return c

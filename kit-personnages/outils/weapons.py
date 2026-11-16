@@ -6,7 +6,7 @@ from scipy import ndimage as ndi
 import bodyseg,full,grd
 # prise : hauteur (pixels de l'image d'origine) où le poing serre l'arme ; len : raccourci en hauteur
 W={'spear':dict(grip=1060,len=.9,longer=(450,740,300)),'halberd':dict(grip=1060,len=.9,longer=(450,740,300)),'axe':dict(grip=930,len=.8,flip=True),'mace':dict(grip=1050,len=.8),'sword':dict(grip=1010,len=.8),
-   'hammer':dict(k=1.55,grip=900,len=.8,split=405,cap=(195,85)),'tongs':dict(k=1.0,grip=1350,len=.8,split=965,cap=(0,0),one='right')}       # marteau de forge : tête en métal au-dessus de 'split', bout du manche (cap) en bois
+   'hammer':dict(k=1.55,grip=900,len=.8,split=405,cap=(195,85)),'tongs':dict(k=1.0,grip=1350,len=.8,split=965,cap=(0,0),one='right'),'pick':dict(k=1.4,behind=True,grip=800,len=.8,split=205,cap=(62,36))}       # marteau de forge : tête en métal au-dessus de 'split', bout du manche (cap) en bois
 SHAFT=15.5                                        # largeur du manche sur le personnage (couvre le bout de manche de la pose)
 C={}
 def prep(n):

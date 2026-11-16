@@ -45,13 +45,17 @@ def grip(src='../frg/grip.png',ref='../frg/relaxed.png'):
     a,lab=prep(src,'grip',GR,ref=ref);H,W=lab.shape;yy,xx=np.mgrid[:H,:W];(x0,y0),(x1,y1)=brb.nrm(178,688),brb.nrm(330,865)
     fist=(lab==1)&(xx>x0)&(xx<x1)&(yy>y0)&(yy<y1);fist=ndi.binary_dilation(fist,iterations=3)&(a[...,3]>60)&(lab!=28);gx,gy=brb.nrm(247,775);return (a,lab),(gx,gy),fist
 def armed(G,weapon,dy=160,H=720,metal='#aeb4bc',**kw):
+    """Outil ou arme dans la main qui tient. Si weapons.W[outil]['behind'] : l'outil passe DERRIÈRE la tête (pioche portée derrière le cou)."""
     import weapons
     from PIL import ImageFilter
-    P,(gx,gy),fist=G;P=(P[0].copy(),P[1]);P[0][P[1]==28,3]=0;c=Image.new('RGBA',(512,H));          # le bout de manche de la pose est retiré : l'arme le remplace
-    c.alpha_composite(char(P,metal=metal,H=H-dy,**kw),(0,dy))
+    P,(gx,gy),fist=G;P=(P[0].copy(),P[1]);P[0][P[1]==28,3]=0;behind=weapons.W[weapon].get('behind');sk=kw.get('sk','#c98f6a');hr=kw.get('hr','#8a4a22')
+    c=Image.new('RGBA',(512,H));c.alpha_composite(char(P,metal=metal,H=H-dy,**dict(kw,head=not behind)),(0,dy))
     fx,fy=256+(gx-625)*.29,229+(gy-360)*.29+dy;t,(wx,wy)=weapons.layer(weapon,metal=metal);c.alpha_composite(t,(round(fx-wx),round(fy-wy)))
-    a,lab=P;b=np.array(full.tint(a,lab,{1:kw.get('sk','#c98f6a')})).astype(float);b[...,3]*=np.array(Image.fromarray((fist*255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.0))).astype(float)/255
-    im=Image.fromarray(b.astype('uint8'));w0,h0=im.size;im=im.resize((round(w0*.29),round(h0*.29)),Image.LANCZOS);o=Image.new('RGBA',(512,H));o.paste(im,(round(256-625*.29),round(229-360*.29)+dy));c.alpha_composite(o);return c
+    a,lab=P;b=np.array(full.tint(a,lab,{1:sk})).astype(float);b[...,3]*=np.array(Image.fromarray((fist*255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.0))).astype(float)/255
+    im=Image.fromarray(b.astype('uint8'));w0,h0=im.size;im=im.resize((round(w0*.29),round(h0*.29)),Image.LANCZOS);o=Image.new('RGBA',(512,H));o.paste(im,(round(256-625*.29),round(229-360*.29)+dy));c.alpha_composite(o)
+    if behind and kw.get('head',True):
+        hd=Image.new('RGBA',(512,H));hd.alpha_composite(kit.tint('head_dwarf_braided_90',{1:sk,2:hr,3:hr,6:'#3a2a1c'}),(0,dy));c.alpha_composite(hd)
+    return c
 # --- Tenailles dans l'AUTRE main (le poing de droite, bras le long du corps) : GPT a dessiné le poing ET les tenailles d'un seul tenant (obj/hand_tongs.png),
 # coupé net au poignet. On RETIRE le poing vide de la pose sous le poignet, puis on pose cette main à la largeur exacte de l'avant-bras à cet endroit.
 OFF=dict(k=.86,cut=778,x0=985,wrist=(643,927,228),
