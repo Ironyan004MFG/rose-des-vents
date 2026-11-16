@@ -5,9 +5,10 @@ from PIL import Image
 from scipy import ndimage as ndi
 import grd,full,kit,legs
 CHEST=(256,350);CHEST_SIZE=92;DY=34                      # emblème sur le plastron ; les bottes sont descendues (le corps est plus long)
+REFSRC='../plt/relaxed2.png'                             # toutes les poses de ce corps partagent le cadrage de la pose validée (torse identique)
 def prep(src='../plt/relaxed.png',tag='relaxed'):
     import norm
-    top,l,r=norm.collar(src);s=(norm.REF[2]-norm.REF[1])/(r-l);cx=(l+r)/2;rcx=(norm.REF[1]+norm.REF[2])/2
+    top,l,r=norm.collar(REFSRC);s=(norm.REF[2]-norm.REF[1])/(r-l);cx=(l+r)/2;rcx=(norm.REF[1]+norm.REF[2])/2
     Image.open(src).convert('RGBA').transform((1254,1500),Image.AFFINE,(1/s,0,cx-rcx/s,0,1/s,top-norm.REF[0]/s),Image.BICUBIC).save(f'../plt/n_{tag}.png')
     a=np.array(Image.open(f'../plt/n_{tag}.png').convert('RGBA')).astype(float);al=a[...,3]>60;lum=a[...,:3].mean(-1);H,W=al.shape
     line=(ndi.gaussian_filter(lum,1.0)<grd.bodyseg.LT)&al;comp,k=ndi.label(al&~line);idx=np.arange(1,k+1);ml=ndi.mean(lum,comp,idx);ar=ndi.sum(al,comp,idx);cy,cx=np.array(ndi.center_of_mass(al,comp,idx)).T
