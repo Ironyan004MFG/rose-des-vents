@@ -69,3 +69,22 @@ def menu(n):
     for l,pts in M['seeds'].items():
         for x,y in pts: mk[y-3:y+4,x-3:x+4]=l
     lab=watershed(255-ndi.gaussian_filter(a[...,:3].mean(-1),1.2),mk,mask=al);full.G.update({k:.85 for k in M['cols']});t=full.tint(a,lab,M['cols']);ys,xs=np.where(al);return t.crop((xs.min(),ys.min(),xs.max()+1,ys.max()+1))
+# --- Objets de table : assiette seule (obj/item_plate.png, parfaitement ronde, à plat) et chopes (obj/item_mug_1..3.png : anse à gauche, en haut, à droite).
+def plate(col='#c9c4b8',food=None,size=120):
+    a=np.array(Image.open('../obj/item_plate.png').convert('RGBA')).astype(float);lab=(a[...,3]>60)*38;full.G.update({38:.9});t=full.tint(a,lab,{38:col}).resize((size,size),Image.LANCZOS)
+    if food is not None:
+        d=round(size*.80);f=food.resize((d,round(d*food.size[1]/food.size[0])),Image.LANCZOS);t.alpha_composite(f,((size-f.size[0])//2,(size-f.size[1])//2))
+    return t
+def mug(i,foam='#f3ead2',wood='#8a6a42',metal='#aeb4bc',size=70):
+    """Matières : 39 mousse, 28 bois (douelles, anse), 4 métal (cercle et rivets, sous la mousse)."""
+    a=np.array(Image.open(f'../obj/item_mug_{i}.png').convert('RGBA')).astype(float);al=a[...,3]>60;lum=ndi.gaussian_filter(a[...,:3].mean(-1),1.5)
+    fo=ndi.binary_opening(al&(lum>165),iterations=8);c,k=ndi.label(fo);fo=ndi.binary_fill_holes(c==(np.argmax(ndi.sum(fo,c,range(1,k+1)))+1));from skimage.morphology import convex_hull_image;fo=ndi.binary_erosion(convex_hull_image(ndi.binary_dilation(fo,iterations=6)&al&(lum>95)),iterations=2)
+    cy,cx=ndi.center_of_mass(fo);R=np.sqrt(fo.sum()/np.pi);yy,xx=np.mgrid[:al.shape[0],:al.shape[1]];rr=np.hypot(xx-cx,yy-cy)
+    me=al&~fo&(lum>118)&(yy>cy+R*.35)&(rr>R*1.12)&(rr<R*1.75);me=ndi.binary_closing(ndi.binary_opening(me,iterations=2),iterations=7)&al&~fo
+    lab=np.where(al,28,0);lab[me]=4;lab[fo]=39;full.G.update({39:.97,28:.8,4:.95});t=full.tint(a,lab,{39:foam,28:wood,4:metal})
+    return t.resize((round(size*t.size[0]/t.size[1]),size),Image.LANCZOS)
+def mug_empty(i,wood='#8a6a42',metal='#aeb4bc',size=70):
+    """Chope vide (obj/item_mug_empty_1..3.png, mêmes anses que les pleines) : bois partout, cercle et rivets en métal."""
+    a=np.array(Image.open(f'../obj/item_mug_empty_{i}.png').convert('RGBA')).astype(float);al=a[...,3]>60;lum=ndi.gaussian_filter(a[...,:3].mean(-1),1.5);yy,xx=np.mgrid[:al.shape[0],:al.shape[1]];ys,xs=np.where(al)
+    me=al&(lum>150)&(yy>ys.min()+(ys.max()-ys.min())*.5);me=ndi.binary_closing(ndi.binary_opening(me,iterations=2),iterations=7)&al
+    lab=np.where(al,28,0);lab[me]=4;full.G.update({28:.8,4:.95});t=full.tint(a,lab,{28:wood,4:metal});return t.resize((round(size*t.size[0]/t.size[1]),size),Image.LANCZOS)
