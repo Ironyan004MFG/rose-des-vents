@@ -31,4 +31,22 @@ Sauvegarde des pièces validées du générateur de personnages. **Rien ici n'es
 - Intégration dans les bureaux.
 
 - Armes (`objets/item_spear.png` lance, `item_halberd.png` hallebarde, `item_axe.png` hache, `item_mace.png` masse, `item_sword.png` épée) : dessinées à part, verticales, sur fond blanc (retiré en code). `outils/weapons.py` sépare métal (4), bois (28) et cuir (6), cale la taille sur l'épaisseur du manche et glisse l'arme dans le poing de la pose grip ; les doigts du gantelet repassent par-dessus. La hache est retournée pour que sa lame soit vers l'extérieur ; la hallebarde garde sa lame vers l'intérieur. La lance et la hallebarde (armes d'allonge) ont la hampe allongée en code, sans déformer la pointe.
-- Emblèmes de faction : dessinés en code, simplifiés (`outils/emblems.py` : poing, capitaines, lathandre pour l'instant, avec les couleurs de leur tenue). Posés au centre de l'écu et du pavois (jamais sur le bouclier rond, qui garde son umbo) et sur la poitrine du tabard, centré entre la barbe et la ceinture (réglage validé : `CHEST=(257,358)`, `CHEST_SIZE=84`) : l'emblème est dessiné AVANT la tête, donc la barbe (et la ceinture) passent par-dessus (`grd.char(..., emb=…)`, `CHEST`, `CHEST_SIZE`). Les gardes sont ceux de la faction de la région (Poing Enflammé à Baldur's Gate…) ; la Guilde n'emploie pas de gardes.
+- Emblèmes de faction : dessinés en code, simplifiés (`outils/emblems.py` : 11 emblèmes et la liste validée `GARDES` des 15 gardes par région, avec leurs couleurs ; aperçu dans `planches/`). Posés au centre de l'écu et du pavois (jamais sur le bouclier rond, qui garde son umbo) et sur la poitrine du tabard, centré entre la barbe et la ceinture (réglage validé : `CHEST=(257,358)`, `CHEST_SIZE=84`) : l'emblème est dessiné AVANT la tête, donc la barbe (et la ceinture) passent par-dessus (`grd.char(..., emb=…)`, `CHEST`, `CHEST_SIZE`). Les gardes sont ceux de la faction de la région (Poing Enflammé à Baldur's Gate…) ; la Guilde n'emploie pas de gardes.
+
+## Gardes par région (liste validée)
+
+Une région peut avoir plusieurs gardes. L'Église de Lathandre n'est pas une garde : son emblème servira aux clercs et paladins.
+
+| Région | Garde | Tabard / bordure | Emblème |
+|---|---|---|---|
+| Baldur's Gate | Poing Enflammé | rouge / acier | poing dans les flammes (lore) |
+| Baldur's Gate | Guet de la Haute-Ville | bleu nuit / or | porte à herse (inventé) |
+| Neverwinter | Garde de Neverwinter | bleu / argent | trois flocons et volute (lore) |
+| Neverwinter | Veilleurs de Wintershield | bleu pâle / blanc | un grand flocon (inventé) |
+| Waterdeep | Guet de la Cité | vert / or | croissant de lune sur l'eau (inventé) |
+| Waterdeep | Garde de la Cité | noir / or | tour crénelée (inventé) |
+| Triboar | Les Douze | rouge sang / noir | hure de sanglier (lore) |
+| Mirabar | La Hache de Mirabar | noir / rouille | hache double dressée (lore) |
+| Silverymoon | Chevaliers d'Argent | bleu roi / argent | croissant et étoile (lore) |
+| Daggerford | Milice de Daggerford | bleu profond / argent | dague ensanglantée (lore) |
+| Luskan | Nefs Kurth, Baram, Suljack, Taerl, Rethnor | marine, bordeaux, vert, ardoise, noir / blanc cassé | ancre (inventé) |
