@@ -100,10 +100,16 @@ def garde_reach(tab,bord,metal='#aeb4bc',glow='#ffd98a',emb=None,H=700,**kw):
         a,lab=grd.prep('../grd/rl_pad.png','rl',like='../grd/rl_pad.png',H=1900);yy,xx=np.mgrid[:lab.shape[0],:lab.shape[1]];lum=a[...,:3].mean(-1)
         g=ndi.binary_opening((lum>212)&(a[...,3]>60)&(xx<420)&(yy>1150),iterations=3);gc,gk=ndi.label(g);g=np.isin(gc,[i+1 for i,v in enumerate(ndi.sum(g,gc,range(1,gk+1))) if v>420]);lab[ndi.binary_dilation(g,iterations=3)&(lum>190)&(xx<420)&(yy>1150)]=30      # seulement les vitres, pas les rivets
         gy,gx=np.where(lab==30);box=(xx<gx.max()+75)&(yy>gy.min()-330);lab[box&np.isin(lab,(6,15,16,9))&(lum>120)]=4          # la lanterne et le gantelet : métal
-        lab[np.isin(lab,(6,16))&(yy>1090)&~box]=9;GR['p']=(a,lab);GR['box']=box                                                  # la bordure du bas du tabard
+        lab[np.isin(lab,(6,16))&(yy>1090)&~box]=9
+        lb=box&np.isin(lab,(4,30));cb,kb=ndi.label(ndi.binary_dilation(lb,iterations=4));lb=ndi.binary_fill_holes(cb==cb[gy[0],gx[0]])&box&(a[...,3]>60)      # la lanterne et le gantelet, d'un bloc
+        sm,sk=ndi.label(np.isin(lab,(5,9,16,6))&ndi.binary_dilation(lb,iterations=22));ssz=ndi.sum(sm>0,sm,range(1,sk+1))
+        for i in range(sk):
+            if ssz[i]<1600: lab[sm==i+1]=4;lb|=sm==i+1                                  # petits morceaux isolés sur l'anse et ses pivots : métal
+        ly,lx=np.where(lb);piv=(xx>gx.max()-10)&(xx<gx.max()+62)&(yy>gy.min()-190)&(yy<gy.min()-40)&np.isin(lab,(5,9,16,6))&(lum>55);print('pivot',int(piv.sum()));lab[piv]=4;lb|=piv   # pivot droit de l'anse
+        odd=lb&~np.isin(lab,(4,30));lab[odd&(lum>110)]=4;lab[odd&(lum<=110)]=6;GR['p']=(a,lab);GR['box']=box;GR['lantp']=lb                                                  # la bordure du bas du tabard
     a,lab=GR['p'];grd.G[30]=1.0;c=grd.char(a[:1400],lab[:1400],tab,bord,metal=metal,emb=emb,**kw)
     full.G.update(grd.G);full.G.update({30:1.0});t=np.array(full.tint(a,lab,{4:metal,30:glow,5:tab,9:bord,15:'#6a6e76',16:'#3e3a3a',6:'#3a2a1c',7:'#2a2622'})).astype(float)
-    yy,xx=np.mgrid[:lab.shape[0],:lab.shape[1]];m=GR['box']&(lab>0)&~np.isin(lab,(5,9))
+    m=ndi.binary_dilation(GR['lantp'],iterations=3)&(lab>0)&np.isin(lab,(4,30,6))
     w=np.array(Image.fromarray((m*255).astype('uint8')).filter(ImageFilter.GaussianBlur(0.8))).astype(float)/255;t[...,3]*=w
     c2=Image.new('RGBA',(512,H));c2.alpha_composite(c);c2.alpha_composite(tall(Image.fromarray(t.astype('uint8')),H));return c2
 
