@@ -3657,10 +3657,57 @@ function ecRoam(k,g,c,TT){if(!g||g.e!==0||!g.people)return null;const nav=burNav
     if(busy)g.hold[key]=1;else if(g.hold[key]&&Math.hypot(m.x-k.x,m.y-k.y)<0.3)delete g.hold[key];
     if(g.hold[key])return {x:k.x,y:k.y,a:S[0].a!=null?S[0].a:k.a,still:true};}
   return m;}
-// Employés sans nom : un cuisinier qui va de la cuisine aux tables (assiette en main) et revient, un marchand derrière ses étals de boutique
-// Phase du repas d'un client : calée sur l'heure où le cuisinier arrive à sa table (même horloge partout)
-function burMeal(g,p,TT){const S=g.staff,C=S&&S.cook;if(!C||!C._legs||p.eat.si==null)return {st:"eat",f:((TT*0.01+p.p)%1)*0.6};
-  const T=C._T,ph=((TT+C.off-C._A[p.eat.si])%T+T)%T/T;return ph<0.5?{st:"eat",f:ph/0.5}:ph<0.62?{st:"empty"}:{st:"none"};}
+// Employés sans nom : un cuisinier et un serveur qui servent À LA COMMANDE, un marchand derrière ses étals de boutique
+// Service à la commande. Une liste de 50 commandes est tirée une fois (même graine sur la télé et chez le DM) puis jouée en boucle, donc les deux écrans
+// sont identiques sans rien partager. Chaque commande = une place : soit un client déjà attablé, soit un aventurier « repas » qui entre et s'assoit.
+// Déroulé d'une commande : le client est assis -> le cuisinier part de la cuisine avec l'assiette -> il mange (l'assiette se vide) ->
+// repas terminé -> le serveur vient desservir -> l'aventurier repart. Les commandes se suivent une à une : jamais deux services en même temps.
+const BUR_MEAL={N:50,E:40,v:0.8,va:0.75};
+function burTableDir(g,q){let best=null,bd=1.6;g.furn.forEach(o=>{if(o.k!=="T"&&o.k!=="L"&&o.k!=="ltable")return;const qx=Math.max(o.x,Math.min(q.x,o.x+(o.w||1))),qy=Math.max(o.y,Math.min(q.y,o.y+(o.h||1))),d=Math.hypot(qx-q.x,qy-q.y);if(d<bd){bd=d;best=[qx,qy];}});return best?Math.atan2(best[1]-q.y,best[0]-q.x):null;}
+// Places réservées aux aventuriers « repas » : une place libre sur deux parmi celles qui ont une table (les autres restent aux mangeurs de ration)
+function burMealSeats(g){if(g.mealSeats)return g.mealSeats;const taken=new Set((g.people||[]).map(p=>Math.round(p.x*2)+","+Math.round(p.y*2))),L=[];
+  (g.seats||[]).forEach(q=>{if(taken.has(Math.round(q.x*2)+","+Math.round(q.y*2)))return;const an=burTableDir(g,q);if(an!=null)L.push({q,an});});
+  g.mealSeats=L.filter((m,i)=>i%2===0);g.mealSeats.forEach(m=>{m.q.meal=1;});return g.mealSeats;}
+function burOrders(g,c){if(g.orders!==undefined)return g.orders;g.orders=null;const nav=burNav(g,c),kit=g.furn.filter(o=>o.k==="S"||o.k==="k");if(!kit.length)return null;const n0=nav.near(kit[0]);if(!n0.length)return null;
+  const kc=[kit[0].x+kit[0].w/2,kit[0].y+kit[0].h/2],hm=p=>({x:p[0],y:p[1],a:Math.atan2(kc[1]-p[1],kc[0]-p[0])}),home=hm(n0[0]),home2=hm(n0[Math.min(1,n0.length-1)]),v=BUR_MEAL.v,va=BUR_MEAL.va,E=BUR_MEAL.E,AN=g.advNav,cand=[];
+  const spot=(px,py)=>{let best=null,bd=9;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const X=Math.floor(px)+dx+0.5,Y=Math.floor(py)+dy+0.5;if(nav.okc(X,Y)){const d=Math.hypot(X-px,Y-py);if(d<bd&&d>0.3){bd=d;best=[X,Y];}}}return best;};
+  const add=(o,px,py)=>{const b=spot(px,py);if(!b)return;const go=nav.route([home.x,home.y],b),back=nav.route(b,[home.x,home.y]);if(!go||!back)return;o.go=go;o.back=back;o.b=b;o.d=Math.max(go.tot,back.tot)/v+0.01;o.sa=Math.atan2(py-b[1],px-b[0]);o.end=-1e9;o.first=null;cand.push(o);};
+  (g.people||[]).filter(p=>p.eat).forEach(p=>add({p},p.x,p.y));
+  if(AN&&AN.border.length)burMealSeats(g).forEach(m=>add({seat:m.q,an:m.an},m.q.x,m.q.y));
+  if(!cand.length)return null;
+  const N=BUR_MEAL.N,R=ecRng(ecSeed(c.seed+"|repas")),list=[];let PRE=2,pa=0,pd=null;
+  // les commandes s'enchaînent : la suivante part dès que le cuisinier est rentré (et assez tard pour que le serveur ait fini la desserte précédente)
+  for(let i=0;i<N;i++){const ord=cand.map((o,k)=>[R(),k]).sort((u,w)=>u[0]-w[0]).map(u=>cand[u[1]]);let done=false;
+    for(const cd of ord){const a=pd==null?0:pa+2*pd+2+Math.max(0,pd-cd.d),L=2*cd.d+E+2,o={a,c:cd,L,pre:0,f:Math.floor(R()*3),m:R()<0.6};
+      if(cd.seat){const ent=AN.border[Math.floor(R()*AN.border.length)],ex=R()<0.6?ent:AN.border[Math.floor(R()*AN.border.length)],rin=AN.route(ent,[cd.seat.x,cd.seat.y]),rout=AN.route([cd.seat.x,cd.seat.y],ex);if(!rin||!rout)continue;
+        o.rin=rin;o.rout=rout;o.tin=rin.tot/va;o.tout=rout.tot/va;o.pre=o.tin+1;o.look=advLook(R);}
+      if(cd.end>a-o.pre-3)continue;                                    // la place doit être libre
+      cd.end=a+L+(o.tout||0);if(cd.first==null){cd.first=a-o.pre;o.one=1;}PRE=Math.max(PRE,o.pre+2);list.push(o);pa=a;pd=cd.d;done=true;break;}
+    if(!done&&pd!=null){pa+=2*pd+2;pd=0;}}
+  if(!list.length)return null;const P=pa+2*pd+2+Math.max(0,pd-list[0].c.d)+PRE;
+  for(let i=list.length-1;i>0;i--){const o=list[i];if(!o.one&&o.a+o.L+(o.tout||0)-P>o.c.first-3)list.splice(i,1);}      // bouclage : une place encore occupée en fin de liste ne peut pas resservir au début
+  g.orders={list,P,PRE,E,home,home2};return g.orders;}
+// temps écoulé depuis le départ du cuisinier pour cette commande (négatif : l'aventurier est encore en chemin)
+function burRel(O,o,TT){return ((TT-o.a+O.PRE)%O.P+O.P)%O.P-O.PRE;}
+function burOrdMeal(O,o,rel){const d=o.c.d,E=O.E;if(rel<d+0.5||rel>=2*d+E+1.5)return {st:"none"};if(rel<d+1)return {st:"eat",f:0};const f=(rel-d-1)/(E*0.9);return f<1?{st:"eat",f}:{st:"empty"};}
+// Phase du repas d'un client attablé : celle de sa commande en cours, sinon table libre
+function burMeal(g,p,TT){const O=g.orders;if(!O)return {st:"eat",f:((TT*0.01+p.p)%1)*0.6};
+  for(const o of O.list){if(o.c.p!==p)continue;const rel=burRel(O,o,TT);if(rel>=0&&rel<o.L)return burOrdMeal(O,o,rel);}return {st:"none"};}
+function burPlateHand(x,s,p,an,kind,TT){const hx=p.x+Math.cos(an)*0.38,hy=p.y+Math.sin(an)*0.38;x.fillStyle="#e8e0cc";x.beginPath();x.arc(hx*s,hy*s,s*0.13,0,6.283);x.fill();x.strokeStyle="#8a7a60";x.lineWidth=Math.max(1,s*0.02);x.stroke();
+  if(kind==="full"){x.fillStyle="#8a4a2a";x.beginPath();x.arc(hx*s,hy*s,s*0.07,0,6.283);x.fill();x.fillStyle="rgba(240,240,240,.5)";x.beginPath();x.arc((hx+Math.sin(TT*3)*0.04)*s,(hy-0.15)*s,s*0.05,0,6.283);x.fill();}
+  else{x.fillStyle="#d8ccb0";x.beginPath();x.arc((hx+0.03)*s,(hy-0.03)*s,s*0.1,0,6.283);x.fill();x.stroke();}}
+// Assiette (et chope) posée sur la table, selon la phase du repas
+function burPlate(x,s,ex,ey,an,M,fk,mug,TT,ph){if(!M||M.st==="none")return;const X=ex*s,Y=ey*s;x.fillStyle="rgba(0,0,0,.25)";x.beginPath();x.arc(X+s*0.03,Y+s*0.04,s*0.17,0,6.283);x.fill();x.fillStyle="#e8e0cc";x.beginPath();x.arc(X,Y,s*0.16,0,6.283);x.fill();x.strokeStyle="#8a7a60";x.lineWidth=Math.max(1,s*0.025);x.stroke();
+  if(M.st==="eat"){const left=1-M.f*0.85;x.fillStyle=["#8a4a2a","#c8a040","#6a8a3a"][fk];x.beginPath();x.ellipse(X,Y,s*0.09*left,s*0.07*left,an,0,6.283);x.fill();if(M.f<0.25){x.fillStyle="rgba(240,240,240,"+(0.5*(1-M.f*4))+")";x.beginPath();x.arc((X+Math.sin(TT*3+ph)*s*0.04),Y-s*0.18,s*0.05,0,6.283);x.fill();}}
+  else{x.strokeStyle="rgba(120,90,60,.45)";x.lineWidth=Math.max(1,s*0.02);x.beginPath();x.arc(X,Y,s*0.08,0.3,2.4);x.stroke();}
+  if(mug){const mx=X+Math.cos(an+1.4)*s*0.24,my=Y+Math.sin(an+1.4)*s*0.24;x.fillStyle="#7a5432";x.beginPath();x.arc(mx,my,s*0.08,0,6.283);x.fill();if(M.st==="eat"){x.fillStyle="#e8d8a8";x.beginPath();x.arc(mx,my,s*0.055,0,6.283);x.fill();}}}
+// Aventuriers « repas » : ils entrent, s'assoient à leur place, sont servis, mangent, sont desservis, puis repartent
+function burDiners(x,g,s,c,TT){const O=g.orders;if(!O)return;const va=BUR_MEAL.va;
+  O.list.forEach((o,i)=>{if(!o.c.seat)return;const rel=burRel(O,o,TT);if(rel<-o.pre||rel>=o.L+o.tout)return;const q=o.c.seat;let X=q.x,Y=q.y,an=o.c.an,still=true;
+    if(rel<-1){const z=navAt(o.rin,(rel+o.pre)*va);X=z[0];Y=z[1];an=z[2];still=false;}else if(rel>=o.L){const z=navAt(o.rout,(rel-o.L)*va);X=z[0];Y=z[1];an=z[2];still=false;}
+    const M=still?burOrdMeal(O,o,rel):null;if(M)burPlate(x,s,X+Math.cos(an)*0.6,Y+Math.sin(an)*0.6,an,M,o.f,o.m,TT,i);
+    x.save();x.translate(X*s,Y*s);x.rotate(an);const sc=1.7*(o.look.sc||1);x.scale(sc,sc);spPerson(x,s,0,0,still?0:TT*8+i*9,Object.assign({move:!still},o.look));x.restore();
+    if(M&&M.st==="eat"&&M.f>0){const k3=(Math.sin(TT*2.2+i)+1)/2;if(k3>0.5){const f=(k3-0.5)/0.5,hx=X+Math.cos(an)*(0.15+0.4*f)+Math.cos(an+1.57)*0.12,hy=Y+Math.sin(an)*(0.15+0.4*f)+Math.sin(an+1.57)*0.12;x.fillStyle=o.look.skin||"#e2bf96";x.beginPath();x.arc(hx*s,hy*s,s*0.06,0,6.283);x.fill();}}});}
 // Aventurier au hasard : espèce (teint, oreilles, cornes, taille, barbe), cheveux, tenue, armure, cape, coiffe et équipement variés
 function advLook(R){const pk=a=>a[Math.floor(R()*a.length)],race=pk(["humain","humain","humain","elfe","elfe","nain","nain","halfelin","gnome","demi-orc","tieffelin","drakéide","demi-elfe"]);
   const skins={humain:["#f0d0b0","#e2bf96","#c8966a","#8a5a3a","#5a3a24"],elfe:["#f4dcc4","#e2bf96","#a8c0a0","#7a6a9a"],"demi-elfe":["#f0d0b0","#c8966a","#8a5a3a"],nain:["#e8c0a0","#c8966a","#8a5a3a"],halfelin:["#f0d0b0","#e2bf96","#c8966a"],gnome:["#f0d0b0","#e2bf96","#c8a888"],"demi-orc":["#8a9a6a","#7a8a5a","#9aa070"],tieffelin:["#b04a3a","#8a3a5a","#c05a4a","#6a4a8a"],drakéide:["#a83a2a","#3a6a8a","#c8a040","#3a7a4a","#d8d8d8"]};
@@ -3674,26 +3721,22 @@ function advLook(R){const pk=a=>a[Math.floor(R()*a.length)],race=pk(["humain","h
 // Uniforme de la Guilde : tunique bleu nuit à liseré doré, rose des vents brodée sur la cape
 const EC_UNIF={c:"#1f3358",cape:"#263a62",trim:"#d8b45e",emblem:"#d8b45e",belt:"#3a2a18",collar:"#e8e0cc"};
 function burStaff(x,g,s,c,TT){const nav=burNav(g,c);
-  if(!g.staff){const S={cook:null,shop:null},kit=g.furn.filter(o=>o.k==="S"||o.k==="k");
-    if(kit.length){const n0=nav.near(kit[0]);if(n0.length){const home={x:n0[0][0],y:n0[0][1],w:6,a:Math.atan2(kit[0].y+kit[0].h/2-n0[0][1],kit[0].x+kit[0].w/2-n0[0][0])},stops=[home];
-      (g.people||[]).filter(p=>p.eat).forEach(p=>{p.eat.si=null;let best=null,bd=9;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const X=Math.floor(p.x)+dx+0.5,Y=Math.floor(p.y)+dy+0.5;if(nav.okc(X,Y)){const d=Math.hypot(X-p.x,Y-p.y);if(d<bd&&d>0.3){bd=d;best=[X,Y];}}}if(best){p.eat.si=stops.length;stops.push({x:best[0],y:best[1],w:3,a:Math.atan2(p.y-best[1],p.x-best[0]),serve:1});stops.push(Object.assign({},home));}});S.cook=stops;S.cook.off=3;
-      // serveur ou serveuse : même trajet, décalé pour passer ramasser l'assiette une fois vide
-      S.waiter=stops.map(o=>Object.assign({},o));const R=ecRng(ecSeed(c.seed+"|serveur"));S.wlook=Object.assign({},EC_UNIF,{apron:"#c84a3a",h:["#a83a22","#2b1d14","#d8b860","#6b4a2b"][Math.floor(R()*4)],hat:R()<0.5?"hood":null});}}
+  if(!g.staff){const S={shop:null},R=ecRng(ecSeed(c.seed+"|serveur"));S.wlook=Object.assign({},EC_UNIF,{apron:"#c84a3a",h:["#a83a22","#2b1d14","#d8b860","#6b4a2b"][Math.floor(R()*4)],hat:R()<0.5?"hood":null});
     const sh=g.furn.filter(o=>o.k==="P");if(sh.length){let cells=[];sh.forEach(o=>cells=cells.concat(nav.near(o).map(p=>({x:p[0],y:p[1],o}))));if(cells.length){let A=cells[0],B=cells[0],bd=0;cells.forEach(p=>cells.forEach(q=>{const d=Math.hypot(p.x-q.x,p.y-q.y);if(d>bd){bd=d;A=p;B=q;}}));
       const mid=cells[Math.floor(cells.length/2)],f=p=>({x:p.x,y:p.y,w:4,a:Math.atan2(p.o.y+p.o.h/2-p.y,p.o.x+p.o.w/2-p.x)});S.shop=bd>0.5?[f(A),f(mid),f(B),f(mid)]:[f(A)];}}
     g.staff=S;}
   const S=g.staff,draw=(X,Y,a,ph,o)=>{x.save();x.translate(X*s,Y*s);x.rotate(a);x.scale(1.8,1.8);spHero(x,s,ph,o);x.restore();};
-  const arr=st=>{if(st._A||!st._legs)return;const A=[];let acc=0;for(let i=0;i<st.length;i++){A.push(acc);acc+=(st[i].w||0)+st._legs[i].tot/0.8;}st._A=A;};
-  if(S.cook&&S.cook.length>1){navTour(nav,S.cook,0.8,0,0);arr(S.cook);}
-  if(S.waiter&&S.cook&&S.cook._T){const T=S.cook._T,p=navTour(nav,S.waiter,0.8,TT,S.cook.off-0.62*T),an=p.a!=null?p.a:S.waiter[0].a;draw(p.x,p.y,an,p.still?0:TT*8,Object.assign({move:!p.still},S.wlook));
-    // il rapporte l'assiette vide vers la cuisine
-    let back=false;if(!p.still){let tt=((TT+S.cook.off-0.62*T)%T+T)%T;for(let i=0;i<S.waiter.length;i++){tt-=S.waiter[i].w||0;const d=S.waiter._legs[i].tot/0.8;if(tt<d){back=!!S.waiter[i].serve;break;}tt-=d;}}
-    if(back){const hx=p.x+Math.cos(an)*0.36,hy=p.y+Math.sin(an)*0.36;x.fillStyle="#e8e0cc";x.beginPath();x.arc(hx*s,hy*s,s*0.12,0,6.283);x.fill();x.strokeStyle="#8a7a60";x.lineWidth=Math.max(1,s*0.02);x.stroke();x.fillStyle="#d8ccb0";x.beginPath();x.arc((hx+0.03)*s,(hy-0.03)*s,s*0.1,0,6.283);x.fill();x.stroke();}}
-  if(S.cook){const p=S.cook.length>1?navTour(nav,S.cook,0.8,TT,S.cook.off):{x:S.cook[0].x,y:S.cook[0].y,a:S.cook[0].a,still:true},an=p.a!=null?p.a:S.cook[0].a;
-    draw(p.x,p.y,an,p.still?0:TT*8,Object.assign({move:!p.still},EC_UNIF,{chef:1,apron:"#f6f3ea",h:"#3a2c22",item:"ladle"}));
-    // il porte une assiette fumante en allant vers les tables
-    let toward=false;if(!p.still&&S.cook._legs){const T=S.cook._T;let tt=((TT+S.cook.off)%T+T)%T;for(let i=0;i<S.cook.length;i++){tt-=S.cook[i].w||0;const d=S.cook._legs[i].tot/0.8;if(tt<d){toward=!!S.cook[(i+1)%S.cook.length].serve;break;}tt-=d;}}
-    if(toward){const hx=p.x+Math.cos(an)*0.38,hy=p.y+Math.sin(an)*0.38;x.fillStyle="#e8e0cc";x.beginPath();x.arc(hx*s,hy*s,s*0.13,0,6.283);x.fill();x.strokeStyle="#8a7a60";x.lineWidth=Math.max(1,s*0.02);x.stroke();x.fillStyle="#8a4a2a";x.beginPath();x.arc(hx*s,hy*s,s*0.07,0,6.283);x.fill();x.fillStyle="rgba(240,240,240,.5)";x.beginPath();x.arc((hx+Math.sin(TT*3)*0.04)*s,(hy-0.15)*s,s*0.05,0,6.283);x.fill();}}
+  const O=burOrders(g,c);
+  if(O){const v=BUR_MEAL.v;let ck=null,wt=null;O.list.forEach(o=>{const rel=burRel(O,o,TT),d=o.c.d,w=d+1+O.E;if(rel>=0&&rel<2*d+1)ck=[o,rel];if(rel>=w&&rel<w+2*d+1)wt=[o,rel-w];});
+    // position d'un employé pendant sa course : aller, une seconde à la table, retour ; sinon à son poste en cuisine
+    const pos=(q,H,cook)=>{if(!q)return {x:H.x,y:H.y,a:H.a,still:true};const cd=q[0].c,u=q[1],d=cd.d;
+      if(u<d){if(u*v<cd.go.tot){const z=navAt(cd.go,u*v);return {x:z[0],y:z[1],a:z[2],carry:cook?"full":null};}return {x:cd.b[0],y:cd.b[1],a:cd.sa,still:true,carry:cook?"full":null};}
+      if(u<d+1)return {x:cd.b[0],y:cd.b[1],a:cd.sa,still:true,carry:cook?(u<d+0.5?"full":null):(u>d+0.5?"empty":null)};
+      const u2=(u-d-1)*v;if(u2<cd.back.tot){const z=navAt(cd.back,u2);return {x:z[0],y:z[1],a:z[2],carry:cook?null:"empty"};}return {x:H.x,y:H.y,a:H.a,still:true,carry:cook?null:"empty"};};
+    // le serveur ne part desservir que lorsque le repas est terminé ; il rapporte l'assiette vide à la cuisine
+    const pw=pos(wt,O.home2,false);draw(pw.x,pw.y,pw.a,pw.still?0:TT*8,Object.assign({move:!pw.still},S.wlook));if(pw.carry)burPlateHand(x,s,pw,pw.a,pw.carry,TT);
+    // le cuisinier ne part que lorsqu'un client est assis ; il porte l'assiette fumante jusqu'à sa table
+    const pc=pos(ck,O.home,true);draw(pc.x,pc.y,pc.a,pc.still?0:TT*8,Object.assign({move:!pc.still},EC_UNIF,{chef:1,apron:"#f6f3ea",h:"#3a2c22",item:"ladle"}));if(pc.carry)burPlateHand(x,s,pc,pc.a,pc.carry,TT);}
   if(S.shop){const p=S.shop.length>1?navTour(nav,S.shop,0.45,TT,7):{x:S.shop[0].x,y:S.shop[0].y,a:S.shop[0].a,still:true};draw(p.x,p.y,p.a!=null?p.a:S.shop[0].a,p.still?0:TT*6,Object.assign({move:!p.still},EC_UNIF,{h:"#8a8a8a",glasses:1,item:"ledger",apron:"#b8946a"}));}}
 // Passants autour du bureau : beaucoup dans une cité, quelques-uns dans un bourg. Chacun suit un trajet tiré au hasard (même tirage sur la télé et chez le DM),
 // fait de lignes droites qui ne traversent ni maisons ni étals, et le parcourt en aller-retour.
@@ -3718,7 +3761,7 @@ function burWalkers(x,g,s,c,TT){const W=c.w,H=c.h,wk=g.walk,ok=(X,Y)=>X>=0&&Y>=0
       const hall=(g.hall||[]).filter(h=>inn(Math.floor(h.y)*W+Math.floor(h.x)));
       const isC=(X,Y)=>g.furn.some(o=>o.k==="C"&&X>=o.x&&X<o.x+o.w&&Y>=o.y&&Y<o.y+o.h),front=[];(g.spots.p||[]).forEach(sp=>{[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{const cx=Math.floor(sp.x)+dx,cy=Math.floor(sp.y)+dy;if(!isC(cx,cy))return;for(let k2=1;k2<=2;k2++){const fx=cx+dx*k2,fy=cy+dy*k2;if(fx>=0&&fy>=0&&fx<W&&fy<H&&inn(fy*W+fx)){front.push({x:fx+0.5,y:fy+0.5,a:Math.atan2(-dy,-dx),counter:1});break;}if(!isC(fx,fy))break;}});});
       const board=[].concat(...g.furn.filter(o=>o.k==="Q").map(nearOf)),shop=[].concat(...g.furn.filter(o=>o.k==="P").map(nearOf));
-      const taken=new Set((g.people||[]).map(p=>Math.round(p.x*2)+","+Math.round(p.y*2))),seats=(g.seats||[]).filter(q=>!taken.has(Math.round(q.x*2)+","+Math.round(q.y*2))&&ok2(q.x,q.y));
+      const taken=new Set((g.people||[]).map(p=>Math.round(p.x*2)+","+Math.round(p.y*2))),seats=(burMealSeats(g),g.seats||[]).filter(q=>!q.meal&&!taken.has(Math.round(q.x*2)+","+Math.round(q.y*2))&&ok2(q.x,q.y));g.advNav={route,border};
       const na=Math.round(2+g.walkD*1.6),pick=(R,a)=>a[Math.floor(R()*a.length)],PT=g.paxTour;
       // rendez-vous avec Pax : une case libre à côté d'un de ses arrêts (on y arrive pile quand il y est)
       const paxMeet=R=>{if(!PT)return null;const js=PT.S.map((q,j)=>j).filter(j=>(PT.S[j].w||0)>4);if(!js.length)return null;const j=pick(R,js),q=PT.S[j],cs=[];for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const X=Math.floor(q.x)+dx+0.5,Y=Math.floor(q.y)+dy+0.5,d=Math.hypot(X-q.x,Y-q.y);if(d>0.8&&d<1.8&&ok2(X,Y)&&!taken.has(Math.round(X*2)+","+Math.round(Y*2)))cs.push([X,Y]);}if(!cs.length)return null;const c1=pick(R,cs);return {x:c1[0],y:c1[1],a:Math.atan2(q.y-c1[1],q.x-c1[0]),w:PT.S[j].w,act:"pax",pj:j};};
@@ -3753,12 +3796,10 @@ function dynBureau(x,g,s,t,dt,A,c){const TT=Date.now()/1000;
   dynFires(x,g,s,t);
   if(g.e===0&&g.walk)burWalkers(x,g,s,c,TT);
   burStaff(x,g,s,c,TT);
-  // Repas : servi par le cuisinier -> le client mange (l'assiette se vide) -> assiette vide -> ramassée par le serveur -> table libre jusqu'au prochain service
+  burDiners(x,g,s,c,TT);
+  // Repas d'un client attablé : commande servie par le cuisinier -> il mange (l'assiette se vide) -> assiette vide -> desservie par le serveur -> table libre jusqu'à sa prochaine commande
   g.people.forEach(p=>{const e=p.eat,M=e?burMeal(g,p,TT):null;
-    if(e&&M&&M.st!=="none"){const X=e.x*s,Y=e.y*s;x.fillStyle="rgba(0,0,0,.25)";x.beginPath();x.arc(X+s*0.03,Y+s*0.04,s*0.17,0,6.283);x.fill();x.fillStyle="#e8e0cc";x.beginPath();x.arc(X,Y,s*0.16,0,6.283);x.fill();x.strokeStyle="#8a7a60";x.lineWidth=Math.max(1,s*0.025);x.stroke();
-      if(M.st==="eat"){const left=1-M.f*0.85;x.fillStyle=["#8a4a2a","#c8a040","#6a8a3a"][e.f];x.beginPath();x.ellipse(X,Y,s*0.09*left,s*0.07*left,e.an,0,6.283);x.fill();if(M.f<0.25){x.fillStyle="rgba(240,240,240,"+(0.5*(1-M.f*4))+")";x.beginPath();x.arc((X+Math.sin(TT*3+p.p)*s*0.04),Y-s*0.18,s*0.05,0,6.283);x.fill();}}
-      else{x.strokeStyle="rgba(120,90,60,.45)";x.lineWidth=Math.max(1,s*0.02);x.beginPath();x.arc(X,Y,s*0.08,0.3,2.4);x.stroke();}
-      if(e.m){const mx=X+Math.cos(e.an+1.4)*s*0.24,my=Y+Math.sin(e.an+1.4)*s*0.24;x.fillStyle="#7a5432";x.beginPath();x.arc(mx,my,s*0.08,0,6.283);x.fill();if(M.st==="eat"){x.fillStyle="#e8d8a8";x.beginPath();x.arc(mx,my,s*0.055,0,6.283);x.fill();}}}
+    if(e)burPlate(x,s,e.x,e.y,e.an,M,e.f,e.m,TT,p.p);
     gPerson(x,p,s,TT);
     // bouchées : la main va de l'assiette à la bouche tant qu'il reste à manger
     if(e&&M&&M.st==="eat"){const k=(Math.sin(TT*2.2+p.p*3)+1)/2;if(k>0.45){const f=(k-0.45)/0.55,hx=(p.x+(e.x-p.x)*(0.25+0.55*f)+Math.cos(e.an+1.57)*0.12)*s,hy=(p.y+(e.y-p.y)*(0.25+0.55*f)+Math.sin(e.an+1.57)*0.12)*s;x.fillStyle="#e8c9a0";x.beginPath();x.arc(hx,hy,s*0.06,0,6.283);x.fill();x.strokeStyle="#9a9a9a";x.lineWidth=Math.max(1,s*0.015);x.beginPath();x.moveTo(hx,hy);x.lineTo(hx+Math.cos(e.an)*s*0.12,hy+Math.sin(e.an)*s*0.12);x.stroke();}}});
