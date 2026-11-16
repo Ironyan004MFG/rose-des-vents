@@ -33,7 +33,7 @@ def fist(a,lab):
     H,W=lab.shape;yy,xx=np.mgrid[:H,:W];m=(lab==4)&(xx>195)&(xx<330)&(yy>690)&(yy<860)
     w=np.array(Image.fromarray((m*255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.2))).astype(float)/255
     return w
-CHEST=(257,372);CHEST_SIZE=150                  # centre et taille de l'emblème sur le devant du tabard (toile 512) ; la barbe et la ceinture passent par-dessus
+CHEST=(257,358);CHEST_SIZE=84                   # centre et taille de l'emblème sur le devant du tabard (toile 512) ; la barbe et la ceinture passent par-dessus
 G={4:.95,5:.8,9:.8,15:.75,16:.7,6:.7,7:.6,28:.8}
 def char(a,lab,tab,bord,sk='#c98f6a',hr='#8a4a22',metal='#aeb4bc',mail='#6a6e76',under='#3e3a3a',belt='#3a2a1c',pants='#4a4a52',ph=0,emb=None):
     full.G.update(G);cols={1:sk,2:hr,3:hr,6:'#3a2a1c'};c=Image.new('RGBA',(512,512));c.alpha_composite(legs.legs(pants,'#3a2a1c',ph))
