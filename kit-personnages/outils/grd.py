@@ -4,8 +4,8 @@ import numpy as np
 from PIL import Image,ImageFilter
 from scipy import ndimage as ndi
 import norm,bodyseg,full,kit,legs
-def prep(src,tag,like='../adv/src3.png',dbg=False):
-    norm.normalize_like(src,like,f'../grd/n_{tag}.png')
+def prep(src,tag,like='../adv/src3.png',dbg=False,H=1400):
+    norm.normalize_like(src,like,f'../grd/n_{tag}.png',H=H)
     a=np.array(Image.open(f'../grd/n_{tag}.png').convert('RGBA')).astype(float);al=a[...,3]>60;lum=a[...,:3].mean(-1);H,W=al.shape
     line=(ndi.gaussian_filter(lum,1.0)<bodyseg.LT)&al;comp,k=ndi.label(al&~line);idx=np.arange(1,k+1)
     inner=ndi.binary_erosion(comp>0,iterations=5)&~ndi.binary_dilation(line,iterations=4)

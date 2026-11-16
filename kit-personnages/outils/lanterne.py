@@ -90,6 +90,49 @@ def veilleur(cl,sk,hr,inn,trim='#c9a23a',metal='#9aa0a8',glow='#ffd98a',H=700):
     import r2,full,kit
     a0,l0=r2.raw('robe_reach');a,lab,info=graft2(a0,l0);cols={5:cl,1:sk,2:hr,3:hr,6:'#3a2a1c'};c=Image.new('RGBA',(512,H));c.alpha_composite(r2.boots(cols,0))
     full.G.update({4:.9,30:1.0});c.alpha_composite(tall(full.tint(a,lab,{5:cl,1:sk,7:inn,9:trim,4:metal,30:glow}),H));full.G[4]=1.0;hd=Image.new('RGBA',(512,H));hd.alpha_composite(kit.tint('head_dwarf_braided_90',cols));c.alpha_composite(hd);return c,info
+
+GR={}
+def garde_reach(tab,bord,metal='#aeb4bc',glow='#ffd98a',emb=None,H=700,**kw):
+    """Garde, bras tendu, lanterne tenue par le gantelet : pose COMPLÈTE dessinée par GPT (grd/rl_pad.png), sans aucune greffe.
+    Ici : seulement les matières (vitres de la lanterne) et une toile plus haute."""
+    import grd,full
+    if 'p' not in GR:
+        a,lab=grd.prep('../grd/rl_pad.png','rl',like='../grd/rl_pad.png',H=1900);yy,xx=np.mgrid[:lab.shape[0],:lab.shape[1]];lum=a[...,:3].mean(-1)
+        g=ndi.binary_opening((lum>212)&(a[...,3]>60)&(xx<420)&(yy>1150),iterations=3);gc,gk=ndi.label(g);g=np.isin(gc,[i+1 for i,v in enumerate(ndi.sum(g,gc,range(1,gk+1))) if v>420]);lab[ndi.binary_dilation(g,iterations=3)&(lum>190)&(xx<420)&(yy>1150)]=30      # seulement les vitres, pas les rivets
+        gy,gx=np.where(lab==30);box=(xx<gx.max()+75)&(yy>gy.min()-330);lab[box&np.isin(lab,(6,15,16,9))&(lum>120)]=4          # la lanterne et le gantelet : métal
+        lab[np.isin(lab,(6,16))&(yy>1090)&~box]=9;GR['p']=(a,lab);GR['box']=box                                                  # la bordure du bas du tabard
+    a,lab=GR['p'];grd.G[30]=1.0;c=grd.char(a[:1400],lab[:1400],tab,bord,metal=metal,emb=emb,**kw)
+    full.G.update(grd.G);full.G.update({30:1.0});t=np.array(full.tint(a,lab,{4:metal,30:glow,5:tab,9:bord,15:'#6a6e76',16:'#3e3a3a',6:'#3a2a1c',7:'#2a2622'})).astype(float)
+    yy,xx=np.mgrid[:lab.shape[0],:lab.shape[1]];m=GR['box']&(lab>0)&~np.isin(lab,(5,9))
+    w=np.array(Image.fromarray((m*255).astype('uint8')).filter(ImageFilter.GaussianBlur(0.8))).astype(float)/255;t[...,3]*=w
+    c2=Image.new('RGBA',(512,H));c2.alpha_composite(c);c2.alpha_composite(tall(Image.fromarray(t.astype('uint8')),H));return c2
+
+def garde_reach2(tab,bord,metal='#aeb4bc',glow='#ffd98a',emb=None,H=700,**kw):
+    """Patrouille de nuit : le garde VALIDÉ (tabard, bordure, gorgerin, épaulières, bras droit) + seulement le bras tendu et la lanterne dessinés par GPT,
+    glissés sous l'épaulière validée. Là où l'ancien bras relâché laisse un vide, on voit le torse de GPT, qui se superpose au validé."""
+    import grd,full
+    if 'q' not in GR:
+        garde_reach(tab,bord);an,ln=GR['p'];Hh,W=ln.shape;a0,l0=grd.prep('../grd/relaxed.png','relaxed');av=np.zeros((Hh,W,4));av[:a0.shape[0]]=a0;lv=np.zeros((Hh,W),int);lv[:l0.shape[0]]=l0
+        yy,xx=np.mgrid[:Hh,:W];left=xx<627
+        def comps(lab,img):
+            m=(lab==4)&left;cl,k=ndi.label(m);cy=np.array(ndi.center_of_mass(m,cl,range(1,k+1)))[:,0];sz=ndi.sum(m,cl,range(1,k+1));return cl,cy,sz
+        cl,cy,sz=comps(lv,av);paul=np.isin(cl,[i+1 for i in range(len(cy)) if cy[i]<610 and sz[i]>400]);lumv=av[...,:3].mean(-1)
+        K=ndi.binary_dilation(paul,iterations=5)&(av[...,3]>60)&((lumv<58)|paul);K=ndi.median_filter(K.astype(np.uint8),size=9)>0                                  # épaulière validée et son trait : au-dessus
+        armv=left&(yy>540)&(np.isin(lv,(15,))&(xx<345)|((lv==4)&~paul&(xx<345)));armv=(ndi.binary_dilation(armv,iterations=6)&(av[...,3]>60)&((lumv<95)|armv))&~K   # l'ancien bras relâché
+        cn,cyn,szn=comps(ln,an);pauln=np.isin(cn,[i+1 for i in range(len(cyn)) if cyn[i]<610 and szn[i]>400]);lumn=an[...,:3].mean(-1)
+        armn=left&(yy>540)&(xx<345)&(np.isin(ln,(15,))|((ln==4)&~pauln));lb=GR['box']&np.isin(ln,(4,30));cb,kb=ndi.label(ndi.binary_dilation(lb,iterations=4));gy0,gx0=np.where(ln==30);lb=ndi.binary_fill_holes(cb==cb[gy0[0],gx0[0]])&GR['box'];GR['lant']=lb;armn|=lb;armn=ndi.binary_dilation(armn,iterations=5)&(an[...,3]>60)&((lumn<95)|armn)&~ndi.binary_dilation(pauln,iterations=2)
+        V=av.copy();V[armv,3]=0;V[K,3]=0;A=an.copy();A[~armn,3]=0;Kl=av.copy();Kl[~K,3]=0
+        def over(T,U):
+            t=T[...,3:]/255;u=U[...,3:]/255;oa=t+u*(1-t);o=np.zeros_like(T);o[...,:3]=(T[...,:3]*t+U[...,:3]*u*(1-t))/np.maximum(oa,1e-6);o[...,3:]=oa*255;return o
+        sil=(V[...,3]>60)|(A[...,3]>60)|K;hole=ndi.binary_fill_holes(ndi.binary_closing(sil,iterations=12))&~sil&armv&(xx>150)      # vide laissé par l'ancien bras, contre le tabard
+        good=(V[...,3]>60)&np.isin(lv,(16,))&(lumv>62);_,ix=ndi.distance_transform_edt(~good,return_indices=True);V[hole]=av[ix[0],ix[1]][hole];V[hole,3]=255;lv=lv.copy();lv[hole]=16
+        o=over(Kl,over(A,V));lab=np.where(K,lv,np.where(armn,ln,lv));lab[o[...,3]<=60]=0
+        gy,gx=np.where(lab==30);piv=GR['lant']&(lab>0)&~np.isin(lab,(4,30));lab[piv&(o[...,:3].mean(-1)>110)]=4;lab[piv&(o[...,:3].mean(-1)<=110)]=6
+        GR['q']=(o,lab);Image.fromarray(o.round().astype('uint8')).save('../grd/n_guard_reach_lantern.png')
+    a,lab=GR['q'];grd.G[30]=1.0;c=grd.char(a[:1400],lab[:1400],tab,bord,metal=metal,emb=emb,**kw)
+    full.G.update(grd.G);full.G.update({30:1.0});t=np.array(full.tint(a,lab,{4:metal,30:glow,5:tab,9:bord,15:'#6a6e76',16:'#3e3a3a',6:'#3a2a1c',7:'#2a2622'})).astype(float)
+    m=ndi.binary_dilation(GR['lant'],iterations=4)&(lab>0)&np.isin(lab,(4,30,6));w=np.array(Image.fromarray((m*255).astype('uint8')).filter(ImageFilter.GaussianBlur(0.8))).astype(float)/255;t[...,3]*=w
+    c2=Image.new('RGBA',(512,H));c2.alpha_composite(c);c2.alpha_composite(tall(Image.fromarray(t.astype('uint8')),H));return c2
 def overlay(c,a,lab,tint_cols,H):
     """Repose le poing et la lanterne par-dessus le personnage monté (bottes, tête) : ils sont au premier plan."""
     import full
