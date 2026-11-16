@@ -79,6 +79,33 @@ NAINE=dict(src='../far/naine.png',s=0.27,nose=(628,945),seeds={                 
  2:[(628,250),(420,330),(840,330),(360,480),(900,480),(400,600),(860,600),(520,640),(740,640),(628,640),(628,690),(520,690),(740,690),(450,690),(810,690),(410,700),(850,700),(420,740),(840,740),
     (480,738),(530,755),(575,770),(680,770),(725,755),(775,738)],
  1:[(628,755),(560,735),(690,735),(500,800),(760,800),(628,820),(628,900),(560,870),(700,870),(378,680),(880,680),(455,790),(800,790),(520,785),(735,785),(628,790)]})
+DAME=dict(src='../far/dame.png',s=0.27,nose=(628,950),seeds={                     # dame noble : chignon tressé sous résille de perles, diadème à pierre (52). Posée haut comme la naine.
+ 2:[(628,500),(450,560),(800,560),(400,640),(860,640),(520,520),(740,520),(628,300),(450,300),(800,300),(500,420),(760,420),(628,400),(400,380),(860,380),(420,700),(840,700),(628,230)],
+ 1:[(628,850),(540,820),(720,820),(628,900),(378,680),(880,680),(480,800),(780,800),(560,880),(700,880),(628,700),(520,690),(740,690),(628,670),(628,790),(540,788),(715,788),(505,778),(752,778),(580,795),(675,795),(470,740),(790,740),(600,740),(655,740),(540,715),(715,715)],
+ 52:[(628,605),(628,590),(628,620)]})
+def _brows(lab,lum):
+    """Sourcils des têtes de dame : tout le visage est d'abord de la peau, puis seuls les poils sombres de la bande des sourcils deviennent des cheveux.
+    (Avec des graines, l'ombre des paupières se confondait avec les sourcils : gros pâtés carrés.)"""
+    yy,xx=np.mgrid[:512,:512];f=lambda y:NOSE[1]+(y-950)*.27;g=lambda x:NOSE[0]+(x-628)*.27;lab=lab.copy()
+    face=(lab==1)
+    band=face&(yy>f(722))&(yy<f(766))&(np.abs(xx-g(628))>(602-628)*-.27)&(xx>g(476))&(xx<g(780));ref=ndi.maximum_filter(ndi.gaussian_filter(lum,1.5),9)
+    br=band&(lum<ref*0.80);br=ndi.binary_opening(br,iterations=1);lab[br]=2;return lab
+def build_dame():
+    """Comme build, puis le métal (diadème, résille, perles) est repéré par sa clarté dans les cheveux : trop fin pour des graines."""
+    o,lab=build('dame',**DAME)   # pas de graines sur les sourcils : _brows s'en charge
+    a=np.array(o).astype(float);lum=a[...,:3].mean(-1);yy=np.mgrid[:512,:512][0];dy=NOSE[1]+(612-950)*.27;m=(lab==2)&(lum>ndi.gaussian_filter(lum,4)+34)&(lum>150)&(yy<dy-24);band=(lab>0)&(lum>150)&(np.abs(yy-dy)<5)&(lab!=52)
+    lab=lab.copy();lab[m|band]=4;xx=np.mgrid[:512,:512][1];f=lambda y:NOSE[1]+(y-950)*.27;g=lambda x:NOSE[0]+(x-628)*.27
+    lab=_brows(lab,lum)
+    np.save('assets/head_dame_lab.npy',lab);return o,lab
+# --- Dames : même visage que DAME (GPT n'a changé que la coiffure), donc mêmes graines de peau et de sourcils ; seuls les cheveux changent.
+BROWS=[(500,742),(545,748),(585,758),(672,758),(712,748),(757,742)]
+LADY={'dame2':[(560,560),(700,560),(500,560),(760,560),(420,620),(840,620),(400,700),(860,700),(450,480),(800,480),(628,300),(500,300),(760,300),(400,400),(860,400),(628,480),(380,520),(880,520),(520,440),(740,440),(450,250),(800,250),(628,350)],
+      'dame3':[(560,560),(700,560),(450,600),(800,600),(400,700),(860,700),(420,450),(830,450),(500,300),(760,300),(628,200),(380,560),(880,560),(628,420),(450,330),(800,330),(560,480),(700,480),(350,480),(900,480)]}
+def build_lady(name):
+    """Tête de dame : bijoux et perles (4) repérés par leur clarté dans les cheveux ; sourcils limités à leur bande."""
+    o,lab=build(name,src=f'../far/{name}.png',s=0.27,nose=(628,950),seeds={2:LADY[name],1:DAME['seeds'][1]});a=np.array(o).astype(float);lum=a[...,:3].mean(-1);yy,xx=np.mgrid[:512,:512];f=lambda y:NOSE[1]+(y-950)*.27;g=lambda x:NOSE[0]+(x-628)*.27
+    lab=lab.copy();lab[(lab==2)&(lum>ndi.gaussian_filter(lum,4)+34)&(lum>150)&(yy<f(640))]=4
+    lab=_brows(lab,lum);np.save(f'assets/head_{name}_lab.npy',lab);return o,lab
 if __name__=='__main__':
     import sys
     if len(sys.argv)>1 and sys.argv[1]=='helm':

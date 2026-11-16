@@ -75,3 +75,8 @@ def armed(G,weapon,dy=160,H=720,metal='#aeb4bc',wood='#8a6a42',**kw):
     fx,fy=256+(gx-625)*.29,229+(gy-360)*.29+dy;t,(wx,wy)=weapons.layer(weapon,metal=metal);c.alpha_composite(t,(round(fx-wx),round(fy-wy)))
     a,lab=P;b=np.array(full.tint(a,lab,{1:kw.get('sk','#c98f6a')})).astype(float);b[...,3]*=np.array(Image.fromarray((fist*255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.0))).astype(float)/255
     im=Image.fromarray(b.astype('uint8'));w0,h0=im.size;im=im.resize((round(w0*.29),round(h0*.29)),Image.LANCZOS);o=Image.new('RGBA',(512,H));o.paste(im,(round(256-625*.29),round(229-360*.29)+dy));c.alpha_composite(o);return c
+# --- Bras tendu (brb/reach.png) : main ouverte, paume vers le haut. PALM = centre de la paume (image de GPT).
+RE=dict(SEEDS);RE[1]=SEEDS[1]+[(170,860),(120,900),(200,920),(80,830),(230,850),(160,640)]
+PALM=(165,850)
+def reach(src='../brb/reach.png',ref='../brb/relaxed.png'):
+    P=prep(src,'reach',RE,ref=ref);return P,nrm(*PALM)

@@ -11,12 +11,12 @@ SEEDS={7:[(628,420),(628,300),(540,400),(720,400),(628,500)],
  6:[(400,925),(850,925),(500,950),(750,955),(300,880),(950,880)],
  4:[(585,960),(668,960),(628,937),(628,985)],
  1:[(130,820),(1120,820),(100,850),(1150,850),(170,860),(1080,860),(140,800),(1110,800)]}
-def prep(src,tag,seeds=SEEDS,ref=None,btn=(560,925)):
+def prep(src,tag,seeds=SEEDS,ref=None,btn=(560,925),gal_thr=112):
     a=np.array(Image.open(src).convert('RGBA')).astype(float);al=a[...,3]>40;l0=a[...,:3].mean(-1);lum=ndi.gaussian_filter(l0,1.2);mk=np.zeros(al.shape,int)
     for l,pts in seeds.items():
         for x,y in pts: mk[y-3:y+4,x-3:x+4]=l
     lab=watershed(255-lum,mk,mask=al);yy,xx=np.mgrid[:al.shape[0],:al.shape[1]]
-    gal=(lab==5)&(ndi.gaussian_filter(l0,2.0)>112);gal=ndi.binary_opening(gal,iterations=1);lab[gal]=9                      # galons, col, manchettes : les bandes claires de l'étoffe
+    gal=(lab==5)&(ndi.gaussian_filter(l0,2.0)>gal_thr);gal=ndi.binary_opening(gal,iterations=1);lab[gal]=9                      # galons, col, manchettes : les bandes claires de l'étoffe
     bt=(lab!=1)&(lab!=7)&(l0>168)&(np.abs(xx-628)<34)&(yy>btn[0])&(yy<btn[1]);bt=ndi.binary_dilation(ndi.binary_opening(bt,iterations=2),iterations=5)&al&(l0>95);lab[bt]=4        # boutons
     top,l,r=brb.norm.collar(ref or src);s=cui.SC;cx=(l+r)/2;rcx=(brb.norm.REF[1]+brb.norm.REF[2])/2;M=(1/s,0,cx-rcx/s,0,1/s,top-brb.norm.REF[0]/s)
     A=np.array(Image.fromarray(a.astype('uint8')).transform((1254,1500),Image.AFFINE,M,Image.BICUBIC)).astype(float);L=np.array(Image.fromarray(lab.astype('uint8')).transform((1254,1500),Image.AFFINE,M,Image.NEAREST)).astype(int)
@@ -37,3 +37,15 @@ def walk(R,W,t,**kw):
     u=min(1,max(0,(abs(t)-.3)/.4));u=u*u*(3-2*u);base=char(R,ph=t*math.pi/2,**kw)
     if u<=0: return base
     o=char(W if t>0 else brb.mirror(W),ph=t*math.pi/2,**kw);return Image.blend(base,o,u) if u<1 else o
+# --- Bras tendu (prp/reach.png) : main ouverte, paume vers le haut, pour payer ou recevoir. PALM = centre de la paume (image de GPT), pour y poser une pièce.
+RE={7:SEEDS[7],
+ 5:[(400,650),(850,650),(300,450),(950,450),(1100,600),(200,400),(1050,400),(450,300),(800,300),(400,1050),(850,1050),(500,800),(760,800),(300,1000),(950,1000),(1130,680),(500,1100),(760,1100),(150,520),(120,600),(250,560),(170,655),(200,640),(130,670)],
+ 6:SEEDS[6],4:SEEDS[4],
+ 1:[(1120,820),(1150,850),(1080,860),(1110,800),(160,740),(120,780),(190,790),(100,820),(150,830),(70,740),(200,730)]}
+PALM=(150,770)
+def reach(src='../prp/reach.png',ref='../prp/relaxed.png'):
+    P=prep(src,'reach',RE,ref=ref);return P,brb.nrm(*PALM)
+def coin(c,C,dy=0,col='#e8c44a'):
+    """Pose une pièce dans la paume (c : personnage monté avec la pose de reach())."""
+    from PIL import ImageDraw
+    px,py=C[1];x,y=256+(px-625)*.29,229+(py-360)*.29+dy;d=ImageDraw.Draw(c);d.ellipse([x-6,y-5,x+6,y+5],fill='#3a2a1c');d.ellipse([x-4.6,y-3.8,x+4.6,y+3.8],fill=col);d.ellipse([x-3,y-3,x,y-.5],fill='#fff2b0');return c

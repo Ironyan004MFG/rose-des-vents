@@ -80,3 +80,6 @@ def armed(G,weapon,trim,metal='#aeb4bc',mail='#6a6e76',dy=160,H=720,**kw):
     from PIL import ImageFilter
     b[...,3]*=np.array(Image.fromarray((fist*255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.0))).astype(float)/255
     im=Image.fromarray(b.astype('uint8'));w0,h0=im.size;im=im.resize((round(w0*.29),round(h0*.29)),Image.LANCZOS);o=Image.new('RGBA',(512,H));o.paste(im,(round(256-625*.29),round(229-360*.29)+dy));c.alpha_composite(o);return c
+# --- Bras tendu (plt/reach.png) : gantelet ouvert, paume vers le haut. PALM = centre de la paume (image normalisée).
+def reach(src='../plt/reach.png',tag='reach'):
+    P=prep(src,tag);return P,_n(150,810)
