@@ -106,6 +106,81 @@ def build_lady(name):
     o,lab=build(name,src=f'../far/{name}.png',s=0.27,nose=(628,950),seeds={2:LADY[name],1:DAME['seeds'][1]});a=np.array(o).astype(float);lum=a[...,:3].mean(-1);yy,xx=np.mgrid[:512,:512];f=lambda y:NOSE[1]+(y-950)*.27;g=lambda x:NOSE[0]+(x-628)*.27
     lab=lab.copy();lab[(lab==2)&(lum>ndi.gaussian_filter(lum,4)+34)&(lum>150)&(yy<f(640))]=4
     lab=_brows(lab,lum);np.save(f'assets/head_{name}_lab.npy',lab);return o,lab
+# --- Lots de têtes (planche de GPT découpée en ../lot<N>/t<k>.png) : pas de graines. Les cheveux, la barbe et les sourcils sont repérés par leur
+# TEXTURE (mèches peintes), la peau par son aspect lisse ; les anneaux de métal sont les petites zones lisses et claires hors du visage.
+LOT1={1:(135,240),2:(135,262),3:(135,335),4:(165,250),5:(140,265),6:(133,328),7:(137,250),8:(133,325)}        # bout du nez de chaque tête (dans son image découpée)
+SKIN1={3:[(92,345,180,400)]}
+RINGS1={3:[(105,58,165,80)],4:[(92,362,138,388),(182,362,228,388)],8:[(100,76,170,100),(115,343,152,364),(115,378,152,412)]}        # anneaux de métal : boîtes (x0,y0,x1,y1)
+UP1={5:-24,7:-22,3:-10}                          # têtes sans barbe : posées plus haut (menton au bord de l'encolure)
+def build_auto(name,src,nose,s=0.62,thr=4.6,rings=(),up=0,skin=()):
+    im=Image.open(src).convert('RGBA');a=np.array(im).astype(float);al=a[...,3]>40;lum=a[...,:3].mean(-1);hp=lum-ndi.gaussian_filter(lum,1.0);e=np.sqrt(ndi.gaussian_filter(hp*hp,4.0))      # échelle fine : les mèches (traits fins) comptent, pas les rides ni les ombres douces
+    hair=(e>thr)&al;smooth=ndi.binary_opening(al&~hair,iterations=2);c,k=ndi.label(smooth);lab=np.where(al,2,0);W=al.shape[1]
+    if k:
+        idx=range(1,k+1);sz=ndi.sum(smooth,c,idx);cy,cx=np.array(ndi.center_of_mass(smooth,c,idx)).T;face=int(np.argmax(sz))
+        for i in range(k):
+            if sz[i]>=120 and (i==face or abs(cx[i]-nose[0])>0.3*W or (abs(cx[i]-nose[0])<0.25*W and abs(cy[i]-nose[1])<0.3*W)): lab[c==i+1]=1        # visage, crâne, oreilles
+        sk=ndi.binary_closing(lab==1,iterations=3)&al&(e<thr*1.25);lab[sk&(lab==2)]=1
+        # le trait de contour autour d'une zone de peau (crâne chauve, oreilles) n'est pas des cheveux
+        rim=(lab==2)&(ndi.distance_transform_edt(al)<7)&(ndi.distance_transform_edt(lab!=1)<8);lab[rim]=1
+    yy,xx=np.mgrid[:al.shape[0],:W];e2=np.sqrt(ndi.gaussian_filter(hp*hp,1.6));sl=ndi.gaussian_filter(lum,1.2)
+    # oreilles : zones lisses et claires sur les côtés, à la hauteur des yeux (la texture y est mesurée de près : le contour épais des oreilles déborde sinon)
+    side=al&(np.abs(xx-nose[0])>88)&(yy>nose[1]-135)&(yy<nose[1]+15)&(e2<thr*2.4)&(sl>88);side=ndi.binary_opening(side,iterations=1);c2,k2=ndi.label(side)
+    for i in range(1,k2+1):
+        m=c2==i
+        if m.sum()>=70: lab[ndi.binary_dilation(m,iterations=5)&al&(sl>70)&(np.abs(xx-nose[0])>80)]=1
+    for x0,y0,x1,y1 in skin: lab[al&(xx>=x0)&(xx<x1)&(yy>=y0)&(yy<y1)&(e2<thr*1.6)]=1                                   # peau isolée du visage (menton sous une moustache)
+    for x0,y0,x1,y1 in rings: lab[al&(xx>=x0)&(xx<x1)&(yy>=y0)&(yy<y1)&(ndi.gaussian_filter(lum,1.2)>112)]=4
+    w,h=im.size;sm=im.resize((round(w*s),round(h*s)),Image.LANCZOS);o=Image.new('RGBA',(512,512));off=(round(NOSE[0]-nose[0]*s),round(NOSE[1]-nose[1]*s)+up);o.paste(sm,off)
+    L=Image.fromarray(lab.astype('uint8')).resize(sm.size,Image.NEAREST);lo=Image.new('L',(512,512));lo.paste(L,off);o.save(f'assets/head_{name}.png');np.save(f'assets/head_{name}_lab.npy',np.array(lo));return o,np.array(lo)
+# La séparation par la texture seule laisse des artefacts (joues et oreilles couleur cheveux, crâne rasé couleur cheveux). Méthode retenue :
+# un POLYGONE de peau par tête (visage, crâne chauve ou rasé) + des boîtes d'oreilles. Hors du polygone : cheveux. Dans le polygone : peau,
+# sauf ce qui est nettement texturé (sourcils, moustache, barbe qui déborde). Le crâne rasé est donc toujours couleur peau.
+FACE1={1:[(40,150),(33,85),(60,25),(135,1),(210,25),(238,85),(232,150),(215,200),(185,215),(165,250),(105,250),(85,215),(55,200)],
+ 2:[(62,150),(80,140),(135,150),(190,140),(208,150),(212,215),(190,250),(165,275),(105,275),(80,250),(58,215)],
+ 3:[(50,240),(135,255),(220,240),(232,290),(215,345),(190,385),(135,395),(80,385),(55,345),(38,290)],
+ 4:[(100,165),(165,150),(230,165),(240,215),(225,250),(165,268),(105,250),(90,215)],
+ 5:[(60,190),(100,170),(150,185),(200,170),(232,190),(235,240),(215,285),(175,308),(125,308),(85,285),(58,240)],
+ 6:[(8,215),(10,165),(42,105),(88,84),(80,160),(105,220),(133,250),(160,220),(185,160),(178,84),(224,105),(256,165),(258,215),(240,265),(200,290),(165,330),(100,330),(65,290),(32,265)],
+ 7:[(75,110),(70,60),(100,15),(140,5),(180,15),(210,60),(205,110),(225,170),(228,215),(205,255),(170,285),(105,285),(70,255),(48,215),(52,170)],
+ 8:[(45,240),(135,255),(225,240),(238,290),(222,330),(185,345),(165,330),(105,330),(85,345),(48,330),(32,290)]}
+EARS1={1:[(0,95,42,168),(230,95,270,168)],2:[(0,135,48,208),(222,135,267,208)],3:[(0,212,42,288),(230,212,269,288)],4:[],5:[(3,168,48,228),(238,168,284,228)],
+ 6:[(0,198,38,268),(232,198,266,268)],7:[(8,112,50,190),(228,112,270,190)],8:[(0,212,38,283),(232,212,267,283)]}
+THR1={6:9.5,7:9.0}
+BEARD1={1:True,2:True,3:False,4:True,5:False,6:True,7:False,8:True}
+SKULL1={1:165,6:255,7:185}                       # au-dessus de cette ligne (image découpée), tout le polygone est de la peau                               # seuil de texture dans le visage (plus haut : repousse du crâne rasé, rides du front)
+def build_poly(name,src,nose,face,ears=(),rings=(),up=0,s=0.62,thr=7.0,beard=True,skull=None):
+    from PIL import ImageDraw
+    im=Image.open(src).convert('RGBA');a=np.array(im).astype(float);al=a[...,3]>40;lum=a[...,:3].mean(-1);hp=lum-ndi.gaussian_filter(lum,1.0);e=np.sqrt(ndi.gaussian_filter(hp*hp,3.0));sl=ndi.gaussian_filter(lum,1.2)
+    pm=Image.new('L',im.size,0);ImageDraw.Draw(pm).polygon([tuple(p) for p in face],fill=255);pm=np.array(pm)>0;yy,xx=np.mgrid[:al.shape[0],:al.shape[1]]
+    lab=np.where(al,2,0);tex=ndi.binary_opening((e>thr)&pm,iterations=1);tex=ndi.binary_closing(tex,iterations=2);c,k=ndi.label(tex);sz=ndi.sum(tex,c,range(1,k+1));tex=np.isin(c,[i+1 for i in range(k) if sz[i]>=90])
+    eye=(np.abs(xx-nose[0])<78)&(yy>nose[1]-80)&(yy<nose[1]-8)                       # orbites : sombres mais c'est de la peau
+    dark=(sl<=108)&~eye&(yy>nose[1]-15) if beard else np.zeros(al.shape,bool)        # tête barbue : sous le nez, ce qui est sombre et lisse est de la barbe ; sans barbe, c'est l'ombre du menton
+    lab[pm&al&~tex&~dark]=1
+    if skull is not None: lab[pm&al&(yy<skull)]=1                                    # crâne chauve ou rasé : toujours couleur peau, jamais couleur cheveux
+    for x0,y0,x1,y1 in ears: lab[al&(xx>=x0)&(xx<x1)&(yy>=y0)&(yy<y1)&(e<11)]=1
+    # le trait de contour d'une zone de peau au bord de la silhouette (crâne chauve ou rasé, oreilles) n'est pas des cheveux
+    lab[(lab==2)&(ndi.distance_transform_edt(al)<9)&(ndi.distance_transform_edt(lab!=1)<11)&(e<14)]=1
+    for v,mn in ((1,70),(2,45)):                                                     # miettes : petits îlots de peau dans les cheveux, et l'inverse
+        c,k=ndi.label(lab==v);sz=ndi.sum(lab==v,c,range(1,k+1));lab[np.isin(c,[i+1 for i in range(k) if sz[i]<mn])]=3-v
+    for x0,y0,x1,y1 in rings: lab[al&(xx>=x0)&(xx<x1)&(yy>=y0)&(yy<y1)&(sl>112)]=4
+    w,h=im.size;sm=im.resize((round(w*s),round(h*s)),Image.LANCZOS);o=Image.new('RGBA',(512,512));off=(round(NOSE[0]-nose[0]*s),round(NOSE[1]-nose[1]*s)+up);o.paste(sm,off)
+    L=Image.fromarray(lab.astype('uint8')).resize(sm.size,Image.NEAREST);lo=Image.new('L',(512,512));lo.paste(L,off);o.save(f'assets/head_{name}.png');np.save(f'assets/head_{name}_lab.npy',np.array(lo));return o,np.array(lo)
+# --- Calque de matières (méthode retenue pour les lots) : GPT repeint la planche en aplats (peau ROUGE, poils BLEU, métal VERT).
+# Chaque tête du calque est recalée sur sa tête grise (boîte sur boîte), puis sert d'étiquettes. Plus rien n'est deviné.
+def split_map(path,n=8,rows=2):
+    m=np.array(Image.open(path).convert('RGB')).astype(int);fg=(m.max(-1)-m.min(-1)>60);fg=ndi.binary_fill_holes(ndi.binary_closing(fg,iterations=2));c,k=ndi.label(fg);sz=ndi.sum(fg,c,range(1,k+1));ids=[i+1 for i in np.argsort(sz)[::-1][:n]]
+    obs=ndi.find_objects(c);mid=m.shape[0]/rows;cells=sorted([(obs[i-1],i) for i in ids],key=lambda t:(int(((t[0][0].start+t[0][0].stop)/2)//mid),t[0][1].start));out=[]
+    for sl,i in cells:
+        p=m[sl];r,g,b=p[...,0],p[...,1],p[...,2];lab=np.zeros(r.shape,np.uint8);lab[(r>150)&(g<110)&(b<110)]=1;lab[(b>150)&(r<110)&(g<110)]=2;lab[(g>150)&(r<130)&(b<130)]=4;lab[c[sl]!=i]=0;out.append(lab)
+    return out
+def build_map(name,src,nose,mlab,up=0,s=0.62):
+    im=Image.open(src).convert('RGBA');a=np.array(im);al=a[...,3]>40;w,h=im.size;L=np.array(Image.fromarray(mlab).resize((w,h),Image.NEAREST))
+    _,ix=ndi.distance_transform_edt(L==0,return_indices=True);L=L[ix[0],ix[1]];L[~al]=0                     # bords mal recouverts : matière la plus proche
+    sm=im.resize((round(w*s),round(h*s)),Image.LANCZOS);o=Image.new('RGBA',(512,512));off=(round(NOSE[0]-nose[0]*s),round(NOSE[1]-nose[1]*s)+up);o.paste(sm,off)
+    Ls=Image.fromarray(L.astype('uint8')).resize(sm.size,Image.NEAREST);lo=Image.new('L',(512,512));lo.paste(Ls,off);o.save(f'assets/head_{name}.png');np.save(f'assets/head_{name}_lab.npy',np.array(lo));return L
+def build_lot1(mp='../lot1/map.png'):
+    M=split_map(mp)
+    for k,n in LOT1.items(): build_map(f'l1_{k}',f'../lot1/t{k}.png',n,M[k-1],UP1.get(k,0))
 if __name__=='__main__':
     import sys
     if len(sys.argv)>1 and sys.argv[1]=='helm':
