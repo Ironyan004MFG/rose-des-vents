@@ -5,13 +5,15 @@ from PIL import Image,ImageFilter
 from scipy import ndimage as ndi
 import bodyseg,full,grd
 # prise : hauteur (pixels de l'image d'origine) où le poing serre l'arme ; len : raccourci en hauteur
-W={'spear':dict(grip=760,len=.9),'halberd':dict(grip=760,len=.9,flip=True),'axe':dict(grip=930,len=.8,flip=True),'mace':dict(grip=1050,len=.8),'sword':dict(grip=1010,len=.8)}
+W={'spear':dict(grip=1060,len=.9,longer=(450,740,300)),'halberd':dict(grip=1060,len=.9,longer=(450,740,300)),'axe':dict(grip=930,len=.8,flip=True),'mace':dict(grip=1050,len=.8),'sword':dict(grip=1010,len=.8)}
 SHAFT=15.5                                        # largeur du manche sur le personnage (couvre le bout de manche de la pose)
 C={}
 def prep(n):
     if n in C: return C[n]
     a=np.array(Image.open(f'../obj/item_{n}.png').convert('RGBA')).astype(float)
     if W[n].get('flip'): a=a[:,::-1].copy()        # lame tournée vers l'extérieur, loin de la tête
+    if W[n].get('longer'):                         # arme d'allonge : on étire seulement un tronçon de hampe nue, au-dessus de la prise (la pointe garde sa forme)
+        y0,y1,add=W[n]['longer'];mid=np.array(Image.fromarray(a[y0:y1].astype('uint8')).resize((a.shape[1],y1-y0+add),Image.BICUBIC)).astype(float);a=np.concatenate([a[:y0],mid,a[y1:]],0)
     lum=a[...,:3].mean(-1)
     if (a[...,3]>200).mean()>0.9:                 # fond blanc opaque : on retire tout ce qu'on atteint depuis le bord sans traverser un trait
         free=lum>225;lab,k=ndi.label(free);edge=np.unique(np.r_[lab[0],lab[-1],lab[:,0],lab[:,-1]]);out=np.isin(lab,edge[edge>0])
