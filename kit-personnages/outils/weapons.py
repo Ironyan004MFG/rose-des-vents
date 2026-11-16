@@ -5,7 +5,8 @@ from PIL import Image,ImageFilter
 from scipy import ndimage as ndi
 import bodyseg,full,grd
 # prise : hauteur (pixels de l'image d'origine) où le poing serre l'arme ; len : raccourci en hauteur
-W={'spear':dict(grip=1060,len=.9,longer=(450,740,300)),'halberd':dict(grip=1060,len=.9,longer=(450,740,300)),'axe':dict(grip=930,len=.8,flip=True),'mace':dict(grip=1050,len=.8),'sword':dict(grip=1010,len=.8)}
+W={'spear':dict(grip=1060,len=.9,longer=(450,740,300)),'halberd':dict(grip=1060,len=.9,longer=(450,740,300)),'axe':dict(grip=930,len=.8,flip=True),'mace':dict(grip=1050,len=.8),'sword':dict(grip=1010,len=.8),
+   'hammer':dict(k=1.55,grip=900,len=.8,split=405,cap=(195,85))}       # marteau de forge : tête en métal au-dessus de 'split', bout du manche (cap) en bois
 SHAFT=15.5                                        # largeur du manche sur le personnage (couvre le bout de manche de la pose)
 C={}
 def prep(n):
@@ -21,11 +22,13 @@ def prep(n):
     al=a[...,3]>60;line=(ndi.gaussian_filter(lum,1.0)<bodyseg.LT)&al;comp,k=ndi.label(al&~line);idx=np.arange(1,k+1);ml=ndi.mean(lum,comp,idx)
     kind=np.where(ml>128,4,np.where(ml>92,28,6));lab=np.zeros(al.shape,int);lab[comp>0]=kind[comp[comp>0]-1]
     _,ix=ndi.distance_transform_edt(lab==0,return_indices=True);lab=lab[ix[0],ix[1]];lab[~al]=0
+    if 'split' in W[n]:
+        yy,xx=np.mgrid[:al.shape[0],:al.shape[1]];sp=W[n]['split'];cy,cw=W[n]['cap'];lab[al&(yy<sp)]=4;lab[al&(yy>=sp)]=28;lab[al&(yy<cy)&(np.abs(xx-al.shape[1]/2)<cw)]=28
     g=W[n]['grip'];xs=np.where(al[g])[0];C[n]=(a,lab,(xs.min()+xs.max())/2,xs.max()-xs.min()+1);return C[n]
 def layer(n,metal='#aeb4bc',wood='#8a6a42',leather='#4a3424'):
     """Arme teintée, à l'échelle du personnage ; renvoie (image, point de prise dans cette image)."""
     a,lab,cx,wd=prep(n);full.G.update({4:.95,28:.8,6:.75});t=full.tint(a,lab,{4:metal,28:wood,6:leather})
-    sx=SHAFT/wd;sy=sx*W[n]['len'];w,h=t.size;t=t.resize((round(w*sx),round(h*sy)),Image.LANCZOS);return t,(cx*sx,W[n]['grip']*sy)
+    sx=SHAFT/wd*W[n].get('k',1);sy=sx*W[n]['len'];w,h=t.size;t=t.resize((round(w*sx),round(h*sy)),Image.LANCZOS);return t,(cx*sx,W[n]['grip']*sy)
 def char(P,n,tab,bord,dy=150,H=680,**kw):
     """Garde (pose grip) + arme n dans le poing. Toile 512 × H, personnage décalé de dy vers le bas."""
     a,lab=P;c=Image.new('RGBA',(512,H));c.alpha_composite(grd.char(a,lab,tab,bord,**kw),(0,dy))
