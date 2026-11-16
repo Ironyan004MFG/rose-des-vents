@@ -83,3 +83,4 @@ Aucun corps à redemander à GPT : toutes les tenues, poses et marches du nain s
 - **Marteau de forge (validé)** : `objets/item_hammer.png`, dans `weapons.W['hammer']` (grossi par `k=1.55`, tête en métal au-dessus de `split`, bout du manche en bois).
 - **Pas de corps « tablier à bretelles »** : trop proche du fermier (essai refusé). Le cuisinier et le serveur restent à décider (fermier recoloré ou corps à tablier de taille).
 - **Prompts d'objets** : ne pas écrire « vu de face » pour un outil ou une arme (GPT refuse) ; écrire « posé à plat, bien droit, manche vers le bas ».
+- **Tenailles de forge (validées)** : `objets/item_tongs.png`, dans `weapons.W['tongs']`. Variante de la main qui tient, comme le marteau : le poing ne serre qu'UNE poignée (`one='right'`, mise à la largeur du manche de la pose), l'autre poignée part vers l'extérieur, par-dessus l'avant-bras. Aperçu `planches/forgeron_tenailles.png`.

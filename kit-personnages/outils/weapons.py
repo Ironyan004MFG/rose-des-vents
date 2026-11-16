@@ -6,7 +6,7 @@ from scipy import ndimage as ndi
 import bodyseg,full,grd
 # prise : hauteur (pixels de l'image d'origine) où le poing serre l'arme ; len : raccourci en hauteur
 W={'spear':dict(grip=1060,len=.9,longer=(450,740,300)),'halberd':dict(grip=1060,len=.9,longer=(450,740,300)),'axe':dict(grip=930,len=.8,flip=True),'mace':dict(grip=1050,len=.8),'sword':dict(grip=1010,len=.8),
-   'hammer':dict(k=1.55,grip=900,len=.8,split=405,cap=(195,85))}       # marteau de forge : tête en métal au-dessus de 'split', bout du manche (cap) en bois
+   'hammer':dict(k=1.55,grip=900,len=.8,split=405,cap=(195,85)),'tongs':dict(k=1.0,grip=1350,len=.8,split=965,cap=(0,0),one='right')}       # marteau de forge : tête en métal au-dessus de 'split', bout du manche (cap) en bois
 SHAFT=15.5                                        # largeur du manche sur le personnage (couvre le bout de manche de la pose)
 C={}
 def prep(n):
@@ -24,7 +24,10 @@ def prep(n):
     _,ix=ndi.distance_transform_edt(lab==0,return_indices=True);lab=lab[ix[0],ix[1]];lab[~al]=0
     if 'split' in W[n]:
         yy,xx=np.mgrid[:al.shape[0],:al.shape[1]];sp=W[n]['split'];cy,cw=W[n]['cap'];lab[al&(yy<sp)]=4;lab[al&(yy>=sp)]=28;lab[al&(yy<cy)&(np.abs(xx-al.shape[1]/2)<cw)]=28
-    g=W[n]['grip'];xs=np.where(al[g])[0];C[n]=(a,lab,(xs.min()+xs.max())/2,xs.max()-xs.min()+1);return C[n]
+    g=W[n]['grip'];xs=np.where(al[g])[0]
+    if W[n].get('one'):                            # outil à deux poignées : le poing n'en serre qu'une ('right' ou 'left'), l'autre passe à côté
+        cut=np.where(np.diff(xs)>5)[0][0];xs=xs[cut+1:] if W[n]['one']=='right' else xs[:cut+1]
+    C[n]=(a,lab,(xs.min()+xs.max())/2,xs.max()-xs.min()+1);return C[n]
 def layer(n,metal='#aeb4bc',wood='#8a6a42',leather='#4a3424'):
     """Arme teintée, à l'échelle du personnage ; renvoie (image, point de prise dans cette image)."""
     a,lab,cx,wd=prep(n);full.G.update({4:.95,28:.8,6:.75});t=full.tint(a,lab,{4:metal,28:wood,6:leather})
