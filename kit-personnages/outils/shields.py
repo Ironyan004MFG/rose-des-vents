@@ -23,7 +23,7 @@ def front(n,face,metal='#aeb4bc',w=150,tilt=0.86,rot=10):
     t=flat(n,face,metal);w0,h0=t.size;t=t.resize((w,max(1,round(h0*w/w0*tilt))),Image.LANCZOS)
     return t.rotate(rot,Image.BICUBIC,expand=True)
 # Réglages validés du bouclier tenu devant : largeur, raccourci en hauteur, rotation, décalage par rapport au centre de l'avant-bras
-FRONT={'heater':dict(w=182,tilt=0.86,rot=18,off=(-30,62)),'round':dict(w=172,tilt=0.86,rot=18,off=(-30,62)),'pavise':dict(w=176,tilt=1.04,rot=18,off=(-26,56))}   # 'pavise' = le pavois, plus long que les autres
+FRONT={'heater':dict(w=182,tilt=0.86,rot=18,off=(-30,62)),'round':dict(w=172,tilt=0.86,rot=18,off=(-6,24)),'pavise':dict(w=176,tilt=1.04,rot=18,off=(-26,56))}   # 'pavise' = le pavois, plus long que les autres
 def put(canvas,sh,center):
     canvas.alpha_composite(sh,(round(center[0]-sh.size[0]/2),round(center[1]-sh.size[1]/2)));return canvas
 def arm_anchor(lab,side=1):
