@@ -9,7 +9,7 @@ TETES={
  'm_s_capuche':('aventurier','mage'),'m_s_grand_chapeau':CIVIL,'m_s_toque':('cuisinier',),'m_s_moine':('pourpoint','mage'),
  # nobles : seulement sur le corps de noble (pourpoint, robe) ; jamais sur un forgeron, un fermier ou un aventurier
  'm_s_noble_toque':('pourpoint',),'m_s_noble_cercle':('pourpoint',),'m_s_noble_chapeau':('pourpoint',),
- 'm_s_marin':CIVIL,'m_s_erudit':('mage','pourpoint'),'m_s_forgeron':('forgeron',),'m_s_barde':('pourpoint',),
+ 'm_s_marin':CIVIL,'m_s_erudit':('mage','pourpoint'),'m_s_forgeron':('forgeron','barbare'),'m_s_barde':('pourpoint',),
  'm_s_rodeur':('aventurier',),'m_s_roublard':('aventurier',),'m_s_fermier':('fermier',),'m_s_druide':('mage',),
  'm_s_mineur':('fermier','forgeron','aventurier'),'m_s_mendiant':('fermier',),
  # casques : gardes et armures seulement ; les PETITS casques (nasal, barbute) vont aussi sur l'aventurier

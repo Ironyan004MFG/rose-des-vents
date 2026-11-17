@@ -169,3 +169,4 @@ Aucun corps à redemander à GPT : toutes les tenues, poses et marches du nain s
   - Têtes de métier sur leur métier : toque → cuisinier ; bandeau → forgeron ; chapeau de paille → fermier ; rôdeur et roublard → aventurier ; druide → mage.
   - Femmes : serveuse ou robe ; la cervelière de femme sur garde ou plates. Il n'existe pas de corps d'aventurière.
   - **Têtes génériques (m_v_01 à 09, f_v_*) : sur n'importe quel corps de leur sexe**, ce qui donne des métiers « sans » leur chapeau (cuisinier tête nue, mage tête nue…). **Le garde est toujours casqué, peu importe le casque** : aucune tête générique sur lui.
+  - Le bandeau de forgeron va aussi sur le barbare, pour varier.
