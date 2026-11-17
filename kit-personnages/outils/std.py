@@ -223,3 +223,14 @@ def farmer_lead(P): return snap(paint(P,LEAD_FARMER),(1000,580,1240,860),thr=80,
 def adventurer(grey='../std/adv_relaxed.png',mp='../std/adv_relaxed_map.png'):
     """Aventurier standard au repos ; le bord de l'encolure est le col de la tunique (14), pas de la peau."""
     return collar(prep(grey,mp),14)
+
+# BARBARE FEMME : le flot retrouve le bras ; restent à poser la main ouverte (bras tendu) et les deux bouts du manche (prise d'arme, 68 = bois).
+REACH_BARB_F=[(1,[(100,822),(295,822),(295,1070),(100,1070)])]
+GRIP_BARB_F=[(68,[(298,605),(352,605),(352,668),(298,668)]),(68,[(296,800),(350,800),(350,855),(296,855)])]
+def barb_f_reach(P): return _brace(paint(paint_light(P,REACH_BARB_F,thr=120),[(1,[(100,852),(300,852),(328,862),(330,1070),(100,1070)])]),(165,762,292,836))      # sous le bracelet, toute la main est de la peau (ombres comprises)
+def barb_f_grip(P):
+    A,L=paint(P,GRIP_BARB_F);g=ndi.gaussian_filter(A[...,:3].mean(-1),2);m=(L==68)&(g>150)&(np.arange(L.shape[0])[:,None]>640);L[m]=1;return A,L      # le haut du pouce reste en peau
+
+def _brace(P,box):
+    """Bracelet clouté d'un bras qui a bougé : dans la boîte, ce qui est très clair est un clou (métal), le reste est du cuir."""
+    A,L=P;L=L.copy();x0,y0,x1,y1=box;g=ndi.gaussian_filter(A[...,:3].mean(-1),1.5)[y0:y1,x0:x1];al=A[y0:y1,x0:x1,3]>40;s=L[y0:y1,x0:x1];s[al&(g>168)]=4;s[al&(g<=168)]=6;return A,L
