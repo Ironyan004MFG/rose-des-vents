@@ -39,3 +39,28 @@ def prep_from(grey,ref):
     L=cv2.remap(L0.astype('uint8'),xx+fl[...,0],yy+fl[...,1],cv2.INTER_NEAREST);W=cv2.remap(G0,xx+fl[...,0],yy+fl[...,1],cv2.INTER_LINEAR)
     bad=ndi.binary_opening(np.abs(W.astype(float)-G1)>60,iterations=2);L=L.astype(int);L[bad]=0
     _,ix=ndi.distance_transform_edt(L==0,return_indices=True);L=L[ix[0],ix[1]];L[~al]=0;print('déplacement max :',round(float(np.hypot(fl[...,0],fl[...,1])[al].max())),'px ; points non retrouvés :',round(100*bad[al].mean(),1),'%');return A,L
+
+def paint(P,polys):
+    """Retouche des matières d'une pose : polys = [(matière, [(x,y),...]), ...] sur la toile normalisée (1254 x 1500), appliqués dans l'ordre.
+    Pour un membre qui change de forme (bras tendu) : le flot optique ne le retrouve pas, on pose ses bandes à la main."""
+    from PIL import ImageDraw
+    A,L=P;L=L.copy()
+    for lab,pts in polys:
+        m=Image.new('L',(1254,1500),0);ImageDraw.Draw(m).polygon(pts,fill=255);L[(np.array(m)>0)&(A[...,3]>40)]=lab
+    return A,L
+def snap(P,box,thr=85,mats=(1,14,6)):
+    """Dans la boîte (x0,y0,x1,y1), cale les matières sur le DESSIN : chaque plage fermée par des traits foncés prend la matière majoritaire
+    qu'elle contient (parmi `mats`). Les polygons de `paint` n'ont alors plus besoin de suivre les bords au pixel près."""
+    A,L=P;L=L.copy();x0,y0,x1,y1=box;g=A[y0:y1,x0:x1,:3].mean(-1);al=A[y0:y1,x0:x1,3]>40;sub=L[y0:y1,x0:x1];ok=np.isin(sub,mats)&al
+    c,k=ndi.label(ok&(ndi.gaussian_filter(g,1.2)>thr))
+    for i in range(1,k+1):
+        m=c==i
+        if m.sum()<150: continue
+        v=np.bincount(sub[m],minlength=64);sub[m]=v.argmax()
+    lines=ok&(c==0);_,ix=ndi.distance_transform_edt((c==0)|~ok,return_indices=True);sub[lines]=sub[ix[0],ix[1]][lines];L[y0:y1,x0:x1]=sub;return A,L
+# aventurier standard, bras tendu (à gauche de l'image) : manche du manteau, revers clair, avant-bras, bracelet, main ouverte
+REACH_ADV=[(5,[(150,450),(385,450),(385,760),(330,760),(330,600),(150,600)]),
+           (1,[(214,630),(392,630),(374,700),(332,724),(215,716)]),
+           (14,[(200,602),(240,580),(300,586),(386,612),(394,632),(384,642),(350,651),(300,656),(232,652),(200,640)]),
+           (6,[(200,716),(324,712),(334,742),(304,806),(205,800)]),
+           (1,[(100,800),(205,798),(304,804),(306,1150),(100,1150)])]
