@@ -1,9 +1,9 @@
 """Queues du tieffelin : planche de GPT dessinée sur nos silhouettes, recalée par les croix rouges.
-build() -> assets/tail_k.png (toile 512x660, croix = (256,387)) + tail_k_lab.npy (1 peau, 4 métal/bijoux, 2 poils)."""
+build() -> assets/tail_k.png (toile 512x660, croix = (256,387)) + tail_k_lab.npy (1 peau, 4 métal/bijoux, 2 poils, 5 gemmes)."""
 import numpy as np
 from PIL import Image
 from scipy import ndimage as ndi
-ANCHOR=(256,387);G={1:.95,4:1.0,2:.9}
+ANCHOR=(256,387);G={1:.95,4:1.0,2:.9,5:1.0};GEM_MIN=110
 def build(src='../tq/q2_gris.png',mp='../tq/q2_map.png',n=8):
     calq=calque(mp,n)
     a=np.array(Image.open(src).convert('RGB')).astype(float);H,W=a.shape[:2];r,g,b=a[...,0],a[...,1],a[...,2];red=(r>170)&(g<90)&(b<90);c,k=ndi.label(ndi.binary_dilation(red,iterations=3))
@@ -33,9 +33,27 @@ def build(src='../tq/q2_gris.png',mp='../tq/q2_map.png',n=8):
             for j in np.unique(tc[vd&thin]):
                 if j: L[tc==j]=4
             bc,bk=ndi.label(L==1)
-            vd2=ndi.binary_dilation(vd,iterations=10)
+        # pendeloques (petits morceaux de « peau » détachés du corps de la queue) et cabochons (grandes plages lisses dans le métal) : gemmes (5)
+        if (L==4).any():
+            bc,bk=ndi.label(L==1);sz=ndi.sum(L==1,bc,range(1,bk+1))
+            ed=ndi.distance_transform_edt(mm)      # demi-épaisseur : un tronçon de queue est épais (>= 9), une pendeloque ou un maillon est fin
             for j in range(1,bk+1):
-                if (bc==j).sum()<450 and (vd2&(bc==j)).any(): L[bc==j]=4
+                if sz[j-1]<600 and sz[j-1]<sz.max() and ed[bc==j].max()<9: L[bc==j]=5 if sz[j-1]>=40 else 4
+            # ce qui reste de fin et accroché à la peau (maillons, pendeloque au bout d'une chaînette) : fin = disparaît à l'ouverture
+            sk=L==1;thin=sk&~ndi.binary_opening(sk,iterations=5);tc,tk=ndi.label(thin)
+            for j in range(1,tk+1):
+                q=tc==j;n=q.sum()
+                if n<25 or ed[q].max()>=9: continue
+                ys_,xs_=np.where(q);ext=max(np.ptp(xs_),np.ptp(ys_))+1
+                if n/ext**2>.35 and n>=60: L[q]=5;print(i,'pendeloque',n)
+                elif n/ext**2<.2 and ext>25: L[q]=4;print(i,'maillons',n)
+            sm=(L==4)&~ndi.binary_dilation(g_<125,iterations=1);gc,gk=ndi.label(sm);dbg=[]
+            for j in range(1,gk+1):
+                q=gc==j;n=q.sum()
+                if n<GEM_MIN: continue
+                ys_,xs_=np.where(q);bw,bh=np.ptp(xs_)+1,np.ptp(ys_)+1
+                if n/(bw*bh)>.6 and max(bw,bh)/min(bw,bh)<2.2: L[ndi.binary_dilation(q,iterations=2)&(L==4)]=5;dbg.append(n)
+            print(i,'pend',[int(v) for v in sz],'gem',dbg)
         rgba=np.dstack([sub,np.where(mm,255,0)]).astype('uint8');t=Image.fromarray(rgba);nw,nh=round(t.size[0]*s),round(t.size[1]*s);t=t.resize((nw,nh),Image.LANCZOS);Ls=Image.fromarray(L.astype('uint8')).resize((nw,nh),Image.NEAREST)
         o=Image.new('RGBA',(512,660));lo=Image.new('L',(512,660));off=(round(ANCHOR[0]-(cx-x0)*s),round(ANCHOR[1]-(cy-y0)*s));o.paste(t,off);lo.paste(Ls,off);o.save(f'assets/tail_{i}.png');np.save(f'assets/tail_{i}_lab.npy',np.array(lo));out.append((i,off,(nw,nh),[int((L==q).sum()) for q in (1,2,4)]))
     return s,out
@@ -63,9 +81,9 @@ def build_old(ks=(1,2,7),first=9,s=.48):
     for n,k in enumerate(ks):
         t=Image.open(f'../tq/t{k}.png').convert('RGBA').rotate(180);t=t.resize((round(t.size[0]*s),round(t.size[1]*s)),Image.LANCZOS);o=Image.new('RGBA',(512,660));o.alpha_composite(t,(228-t.size[0],385-t.size[1]))
         o.save(f'assets/tail_{first+n}.png');np.save(f'assets/tail_{first+n}_lab.npy',(np.array(o)[...,3]>40).astype('uint8'))
-def tint(k,skin,metal='#d8c070',hair='#2a2420',mirror=False):
+def tint(k,skin,metal='#d8c070',hair='#2a2420',mirror=False,gem='#8a2030'):
     a=np.array(Image.open(f'assets/tail_{k}.png').convert('RGBA')).astype(float);lab=np.load(f'assets/tail_{k}_lab.npy');lum=a[...,:3].mean(-1)/255;out=a.copy()
-    for l,col in ((1,skin),(4,metal),(2,hair)):
+    for l,col in ((1,skin),(4,metal),(2,hair),(5,gem)):
         m=lab==l
         if not m.any(): continue
         f=np.clip(lum/lum[m].mean()*G[l],0,1.4);C=[int(col[j:j+2],16) for j in (1,3,5)]
