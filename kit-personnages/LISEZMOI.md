@@ -133,3 +133,11 @@ Aucun corps à redemander à GPT : toutes les tenues, poses et marches du nain s
 - **Têtes d'avant les lots : recalées selon la règle** (tressée, capuche, chapeau, casques, cervelières, toque, naine au fichu, trois dames). Les images positionnées de `nain/tete/` n'ont pas changé : la remontée est faite au moment de teinter, par `heads.RAISE` (pixels vers le haut, par tête) dans `heads.tint` et `kit.tint`. Vérification avec la ligne tracée : `planches/tetes_anciennes_hauteur.png`. **Les planches d'aperçu des corps faites avant cette règle montrent encore l'ancienne hauteur.**
 - La vieille villageoise (lot 3) a été recentrée sur le cou (repère x corrigé).
 - **Proportion à la génération (décision de Yannick)** : 2/3 d'hommes, 1/3 de femmes. Inventaire des têtes du nain : 46 au total — 9 villageois, 24 spéciaux (17 métiers et nobles, 7 casques), 13 femmes (4 villageoises, 5 métiers, 3 nobles, 1 cervelière). Ce rapport suffit, pas besoin d'un lot de femmes de plus.
+
+## Corps des autres morphologies (décision de Yannick, 16 nov.)
+
+- **Le nain ne change pas** : ses corps ronds (aventurier, mage, fermier) lui vont bien, on les garde tels quels.
+- **Corps standard** pour toutes les morphologies qui ne sont pas trapues : la carrure du pourpoint resserré de 20 % (`standard/reference_corps_standard.png`). C'est la référence à joindre aux prompts.
+- Mesures (largeur sur la toile 512) : pourpoint, cuisinier, forgeron, barbare = 291 à 296 px ; fermier = 341 (+17 %) ; aventurier = 360 (+23 %). Les corps à ~293 px se resserrent en code et conviennent. **Les trois corps ronds (aventurier, mage, fermier) sont à REDESSINER à la carrure standard** pour les autres morphologies : resserrés, ils restent trop ronds, leur encolure est trop large et celle de l'aventurier est décentrée (tête de travers).
+- Halfelin : pas de cou rempli en couleur peau ; on garde l'encolure sombre sous le menton (`morpho.neck` : essai non retenu).
+- Têtes de halfelin, lot A (villageois 1 à 8) : traitées dans le scratchpad (`heads.HA`, `heads.build_lotH`), sourcils lus dans le calque ; pas encore déposées.
