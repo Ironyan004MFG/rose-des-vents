@@ -138,6 +138,14 @@ img.zoomable{cursor:zoom-in}img.zoomable:focus-visible{outline:3px solid #2a6fb0
 .tbbar{position:absolute;left:50%;top:1.2vh;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;max-width:calc(100vw - 24px);padding:6px 10px;background:rgba(14,22,26,.86);border:1px solid rgba(216,180,94,.5);border-radius:10px;z-index:3}
 .tbbar .tbt{color:#d8b45e;font-family:var(--display);letter-spacing:.04em;padding:0 6px}.tbbar .btn{min-height:36px}.tbhint{flex-basis:100%;text-align:center;color:#e9dfc6;font-size:13px}
 .tbv .ectv-met{top:auto;bottom:2vh}.tbv .ectv-ord{top:auto;bottom:2vh}
+.ectray{margin:8px 0 10px;padding:10px 12px;border:1px solid rgba(216,180,94,.55);border-radius:8px;background:rgba(216,180,94,.07)}.ectray h4{margin:0 0 6px;font-family:var(--display);font-size:14px}
+.ecrestoks{display:flex;flex-wrap:wrap;gap:6px;min-height:40px;padding:6px;border:1px dashed rgba(216,180,94,.6);border-radius:8px;margin-bottom:8px;align-items:center}
+.ecres{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;background:#fffaf0}.ecres.arm{outline:3px solid #d8b45e}
+.ecresb{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:3px 8px 3px 4px;cursor:grab;touch-action:none;font:inherit;font-size:14px;color:var(--ink);min-height:34px}
+.ecresx{border:0;background:none;cursor:pointer;font-size:18px;line-height:1;padding:0 9px 0 2px;color:var(--ink-soft);min-height:34px}
+.ecdot{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;color:#fff;font:700 13px serif;border:1px solid rgba(0,0,0,.4)}
+.ecghost{position:fixed;z-index:200;transform:translate(-50%,-50%);pointer-events:none;display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:999px;background:#fffaf0;border:2px solid #d8b45e;box-shadow:0 4px 14px rgba(0,0,0,.35);font-size:14px}
+.ecresadd{display:flex;flex-direction:column;gap:6px}.ecrow2{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.ecrow2>strong{min-width:9em}.ecfind label{display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex:1}.ecfind input{flex:1;min-width:12em}.ecfind .ptfindres{flex-basis:100%}
 .tbfigs{margin-top:6px}.tbfig{display:inline-flex;align-items:center;gap:4px;margin-right:8px}
 .tbdm{margin:6px 0 10px;padding:8px 12px;border:1px dashed rgba(216,180,94,.6);border-radius:8px;font-size:15px}.tbdm .ok{color:#3a7a3a;font-weight:700}
 .ectv.fon .ectv-met,.ectv.fon .ectv-ord,.ectv.fon .ectv-info{opacity:0}
@@ -4651,7 +4659,7 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),p
   if(st.grid){x.strokeStyle=tv?"rgba(255,255,255,.14)":"rgba(255,255,255,.18)";x.lineWidth=1;x.beginPath();for(let i=0;i<=c.w;i++){x.moveTo(i*s,0);x.lineTo(i*s,c.h*s);}for(let j=0;j<=c.h;j++){x.moveTo(0,j*s);x.lineTo(c.w*s,j*s);}x.stroke();}
   // Jetons
   const V=r.V;(st.tokens||[]).forEach(k=>{const X=k.x*s,Y=k.y*s,i=Math.floor(k.y)*c.w+Math.floor(k.x),seen=(V&&V.vis[i])||!(st.fog&&st.fog.on);
-    if(k.k==="lum"){ecLightSprite(x,k,X,Y,s,t,st,tv);return;}
+    if(k.k==="lum"){ecLightSprite(x,k,X,Y,s,t,st,tv);if(!tv){x.strokeStyle=r.sel===k.id?"#fff":"rgba(255,220,140,.55)";x.lineWidth=r.sel===k.id?3:1.5;x.setLineDash(r.sel===k.id?[]:[3,3]);x.beginPath();x.arc(X,Y,s*0.42,0,6.283);x.stroke();x.setLineDash([]);}return;}
     // Télé : les figurines sont posées sur l'écran, on ne dessine qu'un anneau. Joueur à distance : il faut voir les pions.
     if(tv){if(k.k==="pj"){x.strokeStyle=k.c||"#d8b45e";x.lineWidth=Math.max(2,s*0.06);x.beginPath();x.arc(X,Y,s*0.47,0,6.283);x.stroke();return;}if(!k.vis||!seen)return;}
 
@@ -4909,7 +4917,7 @@ function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc
   if(c.type==="donjon"){const G=ecGenGeo(c);h+='<details class="ecmet"><summary>Surprises du donjon (toi seul) : '+(G.traps||[]).length+' pièges, '+(G.secrets||[]).length+' passages secrets, '+(G.loot||[]).length+' trésors, '+(G.lurk||[]).length+' groupes tapis</summary><ul>'+(G.traps||[]).map(t=>'<li><strong>'+esc(t.n)+'</strong> : '+esc(t.d)+'</li>').join("")+'</ul><p class="desc">Sur ta carte : ! piège, S passage secret, $ trésor, ?N ennemis (N = nombre). Les joueurs ne les voient jamais.</p></details>';}
   {const M=EC_METEO[E.meteo||"clair"];if(M.fx.length||ui.ecMetRoll)h+='<div class="ecmet"><strong>'+M.i+' '+esc(M.l)+'</strong>'+(ui.ecMetRoll?' <span class="desc">(d20 = '+ui.ecMetRoll+')</span>':'')+(M.fx.length?'<ul>'+M.fx.map(f=>'<li>'+esc(f)+'</li>').join("")+'</ul>':'<span class="desc"> : aucun effet en combat.</span>')+(M.vis<999?'<p class="desc">Vision limitée à '+M.vis+' cases ('+(M.vis*5)+' pieds) sur l\'écran.</p>':'')+'</div>';}
   h+='<div class="eccanvas'+(ui.ecBig?' big':'')+'">'+(ui.ecBig?'<div class="ecbigbar">'+[["move","✋ Déplacer"],["reveal","☀ Révéler"],["hide","☁ Cacher"]].map(x=>'<button class="chip'+((ui.ecTool||"move")===x[0]?' on':'')+'" data-a="pt-ec-tool" data-v="'+x[0]+'">'+x[1]+'</button>').join("")+'<button class="btn gold sm" data-a="pt-ec-big">Réduire ✕</button></div>':'')+'<canvas id="ec-dm" aria-label="Carte DM : glisse les jetons"></canvas></div>'+(ui.ecBig?'':'<p class="ecbigp"><button class="mini" data-a="pt-ec-big">⛶ Agrandir la carte</button></p>');
-  h+='<div class="ecbar"><span>Ajouter :</span><button class="mini" data-a="pt-ec-add" data-v="pjs">PJ du groupe</button><button class="mini" data-a="pt-ec-add" data-v="pj">Joueur</button><select id="ec-pjsel" aria-label="Personnage joueur"><option value="">Personnage…</option>'+aventuriers.filter(a=>!a.pnj).slice().sort((a,b)=>String(a.nom).localeCompare(String(b.nom),"fr")).map(a=>'<option value="'+esc(a.id)+'">'+esc(a.nom)+(a.joueur?' ('+esc(a.joueur)+')':'')+'</option>').join("")+'</select><button class="mini" data-a="pt-ec-add" data-v="pjsel">Ajouter ce personnage</button><button class="mini" data-a="pt-ec-add" data-v="ens">Ennemis du combat</button><button class="mini" data-a="pt-ec-add" data-v="en">Ennemi</button><button class="mini" data-a="pt-ec-add" data-v="pnj">PNJ</button><select id="ec-lp" aria-label="Type de lumière">'+Object.keys(EC_LIGHTS).map(k=>'<option value="'+k+'"'+(ui.ecLp===k?' selected':'')+'>'+EC_LIGHTS[k].l+'</option>').join("")+'</select><button class="mini" data-a="pt-ec-add" data-v="lum">💡 Ajouter la lumière</button>'+
+  h+=ecTray(q,c)+'<div class="ecbar">'+
     '<span class="ecsp"></span><span>Cadre télé :</span>'+[["←",-5,0],["↑",0,-5],["↓",0,5],["→",5,0]].map(a=>'<button class="mini" data-a="pt-ec-cam" data-v="'+a[1]+','+a[2]+'" aria-label="Déplacer le cadre télé">'+a[0]+'</button>').join("")+'<button class="mini'+(ui.ecPv?' gold':'')+'" data-a="pt-ec-pv" aria-pressed="'+!!ui.ecPv+'">👁 '+(ui.ecPv?'Retour à la vue DM':'Vue joueurs')+'</button><button class="mini" data-a="pt-ec-fogreset">Tout recacher</button><button class="mini" data-a="pt-ec-vie">🦌 Renouveler la vie</button><button class="mini" data-a="pt-ec-seed">Nouvelle graine</button><button class="mini" data-a="pt-ec-del">Supprimer la carte</button></div>';
   if(sel)h+='<div class="ecsel"><label for="ec-sn">Jeton<input id="ec-sn" maxlength="30" value="'+esc(sel.n||"")+'" data-ec="sn"></label>'+(sel.src?'<button class="mini gold" data-a="pt-ec-release" title="Le jeton redevient une bête ou un passant du décor, qui rejoint son chemin">↩ Relâcher</button>':'')+(sel.k==="pj"?'<label class="ecck"><input type="checkbox" data-ec="torche"'+(sel.torche?' checked':'')+'> Torche</label><label for="ec-dv">Vision dans le noir (cases)<input id="ec-dv" type="number" min="0" max="24" value="'+(+sel.dv||0)+'" data-ec="dv"></label>':sel.k==="lum"?'<label for="ec-r">Rayon (cases)<input id="ec-r" type="number" min="1" max="20" value="'+(+sel.r||4)+'" data-ec="r"></label><label class="ecck"><input type="checkbox" data-ec="magie"'+(sel.flamme===false?' checked':'')+'> Lumière magique (résiste à la pluie et au vent)</label>':'<label class="ecck"><input type="checkbox" data-ec="vis"'+(sel.vis?' checked':'')+'> Visible quand un joueur le voit (décocher = caché, ex. furtif)</label>')+'<button class="mini" data-a="pt-ec-tokdel">Retirer</button></div>';
   h+='<div class="ecrow ectext"><label for="ec-info">Infos affichées sur l\'écran<textarea id="ec-info" rows="2" maxlength="400" data-ec="info">'+esc(E.info||"")+'</textarea></label>'+
@@ -4922,7 +4930,7 @@ function ecAfter(){if(ui.office==="ecran")return;const cv=document.getElementByI
   const cell=e=>{const b=cv.getBoundingClientRect(),cc=ecCard(),s=Math.min(b.width/cc.w,b.height/cc.h);return [(e.clientX-b.left)/s,(e.clientY-b.top)/s];};
   let drag=null;
   const paint=(p)=>{const cc=ecCard();let vu=(cc.vu||"").padEnd(cc.w*cc.h,"0").split("");for(let y=Math.floor(p[1]-1.5);y<=p[1]+1.5;y++)for(let x=Math.floor(p[0]-1.5);x<=p[0]+1.5;x++){if(x<0||y<0||x>=cc.w||y>=cc.h)continue;if(Math.hypot(x+0.5-p[0],y+0.5-p[1])<=1.6)vu[y*cc.w+x]=ui.ecTool==="hide"?"2":"1";}cc.vu=vu.join("");};
-  cv.addEventListener("pointerdown",e=>{if(ui.ecPv)return;const p=cell(e),cc=ecCard();cv.setPointerCapture(e.pointerId);const tool=ui.ecTool||"move";
+  cv.addEventListener("pointerdown",e=>{if(ui.ecPv)return;if(ui.ecArm){const p0=ecCellAt(e.clientX,e.clientY);if(p0){ecDrop(ui.ecArm,p0);return;}}const p=cell(e),cc=ecCard();cv.setPointerCapture(e.pointerId);const tool=ui.ecTool||"move";
     if(tool==="move"){const k=(cc.tokens||[]).slice().reverse().find(k=>{const q=EC_ROAMPOS.get(k)||[k.x,k.y];return Math.hypot(q[0]-p[0],q[1]-p[1])<0.6;});if(k){drag={k,dx:k.x-p[0],dy:k.y-p[1],resel:ui.ecSel!==k.id};ui.ecSel=k.id;const rr=ecRenderers["ec-dm"];if(rr)rr.sel=k.id;}
       else if(ecPromote(p))return;
       else{const tv=ecDoc&&ecDoc.tv,cam=cc.cam||{x:0,y:0};if(tv&&p[0]>=cam.x&&p[1]>=cam.y&&p[0]<=cam.x+tv.cols&&p[1]<=cam.y+tv.rows)drag={cam:true,dx:cam.x-p[0],dy:cam.y-p[1]};else if(ui.ecSel){ui.ecSel=null;render();}}}
@@ -4935,6 +4943,39 @@ function ecAfter(){if(ui.office==="ecran")return;const cv=document.getElementByI
 function ecPromote(p){const r=ecRenderers["ec-dm"],cc=ecCard();if(!r||!r.A||!r.A.pos||!cc)return false;let best=null,bd=0.8;Object.keys(r.A.pos).forEach(id=>{const q=r.A.pos[id],d=Math.hypot(q.x-p[0],q.y-p[1]);if(d<bd){bd=d;best=id;}});if(!best)return false;
   const q=r.A.pos[best],wild=["cerf","biche","sanglier","renard","lievre"].indexOf(q.k)>=0,tk={id:ptUid(),k:wild?"en":"pnj",n:q.n,x:Math.max(0.5,Math.min(cc.w-0.5,Math.floor(q.x)+0.5)),y:Math.max(0.5,Math.min(cc.h-0.5,Math.floor(q.y)+0.5)),vis:true,bete:q.k,sp:q.sp||null,a:q.a||0,src:best};
   cc.tokens=(cc.tokens||[]).concat([tk]);cc.gone=(cc.gone||[]).concat([best]);ui.ecSel=tk.id;ptLog("Écran : "+q.n+" devient un jeton"+(wild?" (chasse)":"")+".");ptSave();ecPush(true);render();return true;}
+/* ----- Réserve de jetons : on prépare les jetons sous la carte, puis on les glisse où on veut ----- */
+// Joueurs en jeu : un seul jeton par joueur et par carte. Ennemis : ceux du combat, ou du bestiaire / des PNJ (recherche).
+function ecResOf(){const E=ecP();E.reserve=E.reserve||[];return E.reserve;}
+function ecPlayersInGame(q){const n=((ui.pt&&ui.pt.liste)||[]).filter(x=>x.kind==="pj").map(x=>x.nom);return n.length?n:signupsFor(q.id).filter(s=>s.statut==="confirmee").map(s=>s.nom);}
+function ecHasPj(c,res,nm){const k=ptNorm(nm).trim();return (c.tokens||[]).concat(res).some(t=>t.k==="pj"&&ptNorm(t.n).trim()===k);}
+function ecTokDot(t){const col=t.k==="pj"?(t.c||"#d8b45e"):t.k==="en"?"#9b2c22":t.k==="lum"?"#e8a33a":"#3f6b8a";return '<span class="ecdot" style="background:'+col+'">'+(t.k==="lum"?(t.flamme===false?"✨":t.lp==="feu"?"🔥":"💡"):esc(String(t.n||"?").slice(0,1).toUpperCase()))+'</span>';}
+function ecTray(q,c){const R=ecResOf(),P=ui.pt,pl=ecPlayersInGame(q).filter(nm=>!ecHasPj(c,R,nm)),inR=cid=>R.some(t=>t.cid===cid)||(c.tokens||[]).some(t=>t.cid===cid);
+  const foes=(P.liste||[]).filter(x=>x.kind!=="pj"&&!(x.pv<=0)&&!inR(x.cid));
+  let h='<section class="ectray" aria-label="Réserve de jetons"><h4>Réserve <span class="desc">: glisse un jeton sur la carte (ou touche-le, puis touche la carte)</span></h4>';
+  h+='<div class="ecrestoks">'+(R.length?R.map(t=>'<span class="ecres'+(ui.ecArm===t.id?' arm':'')+'"><button class="ecresb" data-res="'+esc(t.id)+'" aria-pressed="'+(ui.ecArm===t.id)+'" title="Glisse-moi sur la carte">'+ecTokDot(t)+'<span>'+esc(t.n||"")+'</span></button><button class="ecresx" data-a="pt-ec-resdel" data-id="'+esc(t.id)+'" aria-label="Retirer '+esc(t.n||"ce jeton")+' de la réserve">×</button></span>').join(""):'<span class="desc">Vide. Ajoute des jetons ci-dessous.</span>')+'</div>';
+  h+='<div class="ecresadd"><div class="ecrow2"><strong>Joueurs</strong> '+(pl.length?pl.map(nm=>'<button class="mini" data-a="pt-ec-resadd" data-k="pj" data-v="'+esc(nm)+'">'+esc(nm)+'</button>').join("")+(pl.length>1?'<button class="mini gold" data-a="pt-ec-resadd" data-k="pjs">Tous</button>':''):'<span class="desc">'+(ecPlayersInGame(q).length?'Chaque joueur a déjà son jeton.':'Aucun joueur en jeu : ajoute le groupe au combat ou confirme des inscrits.')+'</span>')+'</div>';
+  h+='<div class="ecrow2"><strong>Ennemis du combat</strong> '+(foes.length?'<select id="ec-foe" aria-label="Ennemi du combat">'+foes.map(x=>'<option value="'+esc(x.cid)+'">'+esc(x.nom)+'</option>').join("")+'</select><button class="mini" data-a="pt-ec-resadd" data-k="foe">Ajouter</button>'+(foes.length>1?'<button class="mini gold" data-a="pt-ec-resadd" data-k="foes">Tous ('+foes.length+')</button>':''):'<span class="desc">Aucun (ou déjà tous en jeton).</span>')+'</div>';
+  const k=ptNorm(ui.ecFind||"").trim();
+  h+='<div class="ecrow2 ecfind"><label for="ec-find"><strong>Bestiaire ou PNJ</strong><input id="ec-find" type="search" autocomplete="off" value="'+esc(ui.ecFind||"")+'" placeholder="Ex. loup, gobelin, Brann…"></label>';
+  if(k.length>=2){const ms=monstres.filter(m=>ptNorm(m.nom).indexOf(k)>=0).slice(0,6),ps=pnjs.filter(x=>ptNorm(x.nom).indexOf(k)>=0||ptNorm(x.role).indexOf(k)>=0).slice(0,5);
+    h+=(ms.length||ps.length?'<ul class="ptfindres">'+ms.map(m=>'<li><button data-a="pt-ec-resadd" data-k="m" data-id="'+esc(m.id)+'"><span class="ccat">Bestiaire</span> <strong>'+esc(m.nom)+'</strong> <span class="desc">FP '+esc(m.fp||"?")+'</span></button></li>').join("")+ps.map(x=>'<li><button data-a="pt-ec-resadd" data-k="p" data-id="'+esc(x.id)+'"><span class="ccat">PNJ</span> <strong>'+esc(x.nom)+'</strong> <span class="desc">'+esc(x.role||"")+(x.attitude==="hostile"?' · hostile':'')+'</span></button></li>').join("")+'</ul>':'<p class="desc">Rien trouvé.</p>');}
+  h+='</div><div class="ecrow2"><strong>Lumière</strong> <select id="ec-lp" aria-label="Type de lumière">'+Object.keys(EC_LIGHTS).map(k=>'<option value="'+k+'"'+(ui.ecLp===k?' selected':'')+'>'+EC_LIGHTS[k].l+'</option>').join("")+'</select><button class="mini" data-a="pt-ec-resadd" data-k="lum">Ajouter</button></div></div></section>';
+  return h;}
+// Pose un jeton de la réserve à l'endroit choisi.
+function ecDrop(id,p){const R=ecResOf(),c=ecCard(),t=R.find(x=>x.id===id);if(!c||!t||!p)return false;
+  if(t.k==="pj"&&(c.tokens||[]).some(k=>k.k==="pj"&&ptNorm(k.n).trim()===ptNorm(t.n).trim())){ui.ptAlert=t.n+" a déjà son jeton sur cette carte.";ecP().reserve=R.filter(x=>x!==t);render();return false;}
+  const o=Object.assign({},t,{x:Math.max(0.5,Math.min(c.w-0.5,Math.floor(p[0])+0.5)),y:Math.max(0.5,Math.min(c.h-0.5,Math.floor(p[1])+0.5))});
+  c.tokens=(c.tokens||[]).concat([o]);ecP().reserve=R.filter(x=>x!==t);ui.ecArm=null;ui.ecSel=o.id;ecReveal(c);ptSave();ecPush(true);render();return true;}
+// Cellule de la carte du DM sous un point de l'écran (null si hors carte).
+function ecCellAt(cx,cy){const cv=document.getElementById("ec-dm"),c=ecCard();if(!cv||!c)return null;const b=cv.getBoundingClientRect();if(cx<b.left||cy<b.top||cx>b.right||cy>b.bottom)return null;
+  const s=Math.min(b.width/c.w,b.height/c.h),ox=(b.width-c.w*s)/2*(ui.ecBig?1:0),oy=(b.height-c.h*s)/2*(ui.ecBig?1:0),x=(cx-b.left-ox)/s,y=(cy-b.top-oy)/s;if(x<0||y<0||x>c.w||y>c.h)return null;return [x,y];}
+// Glisser-déposer depuis la réserve (souris et doigt) ; un simple toucher « arme » le jeton, à poser d'un toucher sur la carte.
+(function(){let d=null;
+  document.addEventListener("pointerdown",e=>{const b=e.target.closest&&e.target.closest("[data-res]");if(!b||!isAdmin)return;e.preventDefault();d={id:b.getAttribute("data-res"),x0:e.clientX,y0:e.clientY,g:null,lbl:b.innerHTML};});
+  document.addEventListener("pointermove",e=>{if(!d)return;if(!d.g&&Math.hypot(e.clientX-d.x0,e.clientY-d.y0)>6){d.g=document.createElement("div");d.g.className="ecghost";d.g.innerHTML=d.lbl;document.body.appendChild(d.g);}
+    if(d.g){d.g.style.left=e.clientX+"px";d.g.style.top=e.clientY+"px";}});
+  const end=e=>{if(!d)return;const D=d;d=null;if(D.g){D.g.remove();const p=ecCellAt(e.clientX,e.clientY);if(p)ecDrop(D.id,p);}else if(e.type==="pointerup"){ui.ecArm=ui.ecArm===D.id?null:D.id;render();}};
+  document.addEventListener("pointerup",end);document.addEventListener("pointercancel",end);})();
 function ecUpd(){const r=ecRenderers["ec-dm"];const st=ecState();if(r&&st){st.tvv=ecDoc&&ecDoc.tv;r.sel=ui.ecSel;ecSet(r,st);}ecPush();}
 async function ecAction(a,id,b,v,q){const E=ecP(),c=ecCard();
   if(a==="pt-ec-new"){const nom=(document.getElementById("ec-n").value||"").trim().slice(0,60)||("Carte "+((E.cartes||[]).length+1)),type=document.getElementById("ec-t").value,w=Math.max(8,Math.min(120,+document.getElementById("ec-w").value||40)),h=Math.max(6,Math.min(120,+document.getElementById("ec-h").value||22)),url=(document.getElementById("ec-u").value||"").trim().slice(0,500);
@@ -4981,6 +5022,16 @@ async function ecAction(a,id,b,v,q){const E=ecP(),c=ecCard();
   if(a==="pt-ec-fogreset"){c.vu="";ecReveal(c);ecPush(true);return true;}
   if(a==="pt-ec-seed"){c.seed=ptUid();ecPush(true);return true;}
   if(a==="pt-ec-del"){E.cartes=E.cartes.filter(k=>k.id!==c.id);E.active=E.cartes.length?E.cartes[0].id:null;ecPush(true);return true;}
+  if(a==="pt-ec-resdel"){ecP().reserve=ecResOf().filter(t=>t.id!==id);if(ui.ecArm===id)ui.ecArm=null;return true;}
+  if(a==="pt-ec-resadd"){const R=ecResOf(),kk=b.getAttribute("data-k"),add=o=>{o.id=ptUid();R.push(o);};
+    const pjCol=()=>EC_COLORS[((c.tokens||[]).concat(R).filter(t=>t.k==="pj").length)%EC_COLORS.length];
+    if(kk==="pj"){if(!ecHasPj(c,R,v))add({k:"pj",n:v,c:pjCol()});}
+    else if(kk==="pjs"){ecPlayersInGame(q).forEach(nm=>{if(!ecHasPj(c,R,nm))add({k:"pj",n:nm,c:pjCol()});});}
+    else if(kk==="foe"||kk==="foes"){const sel=(document.getElementById("ec-foe")||{}).value,L=((ui.pt&&ui.pt.liste)||[]).filter(x=>x.kind!=="pj"&&!(x.pv<=0)&&!R.some(t=>t.cid===x.cid)&&!(c.tokens||[]).some(t=>t.cid===x.cid)&&(kk==="foes"||x.cid===sel));L.forEach(x=>add({k:x.camp==="allie"?"pnj":"en",n:x.nom,cid:x.cid,vis:true}));}
+    else if(kk==="m"){const m=monstres.find(x=>x.id===id);if(m)add({k:"en",n:m.nom,ref:m.id,vis:true});ui.ecFind="";}
+    else if(kk==="p"){const x=pnjs.find(y=>y.id===id);if(x)add({k:x.attitude==="hostile"?"en":"pnj",n:x.nom,ref:x.id,vis:true});ui.ecFind="";}
+    else if(kk==="lum"){const lp=(document.getElementById("ec-lp")||{}).value||"torche",L=EC_LIGHTS[lp]||EC_LIGHTS.torche;ui.ecLp=lp;add({k:"lum",n:L.l,r:L.r,flamme:L.mag?false:true,lp});}
+    ptSave();return true;}
   if(a==="pt-ec-tokdel"){c.tokens=(c.tokens||[]).filter(k=>k.id!==ui.ecSel);ui.ecSel=null;ecPush(true);return true;}
   if(a==="pt-ec-next"){E.ordre.idx=(E.ordre.idx||0)+1;ecPush(true);return true;}
   return false;}
@@ -6095,7 +6146,7 @@ document.addEventListener("change",e=>{
     file.text().then(t=>{try{ui.importPreview=previewImport(JSON.parse(t));ui.dmTab="outils";}catch(err){save={state:"error",msg:"Import impossible : "+err.message};}render();});
   }
 });
-document.addEventListener("input",e=>{if(e.target.id==="pt-find"){ui.ptFind=e.target.value;render();return;}if(e.target.id==="pt-cq"){ui.ptCq=e.target.value;render();return;}if(e.target.id==="man-q"){ui.manQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("man-q");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}return;}
+document.addEventListener("input",e=>{if(e.target.id==="pt-find"){ui.ptFind=e.target.value;render();return;}if(e.target.id==="ec-find"){ui.ecFind=e.target.value;render();return;}if(e.target.id==="pt-cq"){ui.ptCq=e.target.value;render();return;}if(e.target.id==="man-q"){ui.manQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("man-q");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}return;}
   if(e.target.id==="pa-nb"||e.target.id==="pa-niv"){ui.party[e.target.id==="pa-nb"?"nb":"niv"]=e.target.value;if(e.target.value){const id=e.target.id;render();const el=document.getElementById(id);if(el){el.focus();}}return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-ml")!=null){syncML();return;}
   if(e.target.id==="n-search"){ui.noteQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("n-search");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}return;}if(e.target.id==="c-search"){ui.compQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("c-search");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}}});
