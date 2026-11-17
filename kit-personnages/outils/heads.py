@@ -280,6 +280,18 @@ def neck_label(tile,mlab,thr=62):
         if yy[0]>ys[0]+.55*(ys[-1]-ys[0]) and (best is None or m.sum()>best[0]): best=(m.sum(),m)
     if best is None: return L.astype('uint8')
     nk=ndi.binary_dilation(best[1],iterations=4)&(L==1)&(np.arange(h)[:,None]>np.where(best[1].any(1))[0][0]-3);L[nk]=COU;return L.astype('uint8')
+def slim_camail(tile,mt,cx,ey):
+    """Cervelière d'une grande race : sous la mâchoire, le camail est resserré à la largeur d'un COU normal (demande de Yannick : sinon la tête
+    a un gros cou trapu de nain). On efface les mailles au-delà d'une largeur qui passe, en douceur, de celle du camail à celle du cou.
+    Les cheveux et la peau ne sont pas touchés. mt : matières du calque à la taille de la tuile (60 = mailles)."""
+    import os,shutil
+    o=tile.replace('.png','_orig.png')
+    if not os.path.exists(o): shutil.copy(tile,o)
+    im=Image.open(o).convert('RGBA');a=np.array(im);h,w=a.shape[:2];skin=mt==1;rows=np.where(skin[:,max(0,cx-15):cx+15].any(1))[0];chin=int(rows[-1])
+    yw=int(ey+.72*(chin-ey));xs=np.where(skin[yw])[0];wn=(xs[-1]-xs[0])/2+10;yj=int(ey+.45*(chin-ey));xm=np.where((mt[yj]==60)|skin[yj])[0];w0=max(cx-xm[0],xm[-1]-cx)+2;X=np.arange(w)
+    for y in range(yj,h):
+        q=min(1.,(y-yj)/max(1,chin-yj));q=q*q*(3-2*q);wy=w0+(wn-w0)*q;kill=(np.abs(X-cx)>wy)&(mt[y]!=2)&(mt[y]!=1);a[y,kill,3]=0
+    Image.fromarray(a).save(tile)
 def build_lotU(lot,tab,s=0.46,mail=(),camail={}):
     """Lot d'une grande race : la valeur y du tableau (yeux pour humain/elfe/tieffelin, nez pour demi-orc) arrive sur la ligne des épaules ; le cou est étiqueté."""
     M=split_map(f'../{lot}/map.png',n=len(tab))
@@ -287,8 +299,9 @@ def build_lotU(lot,tab,s=0.46,mail=(),camail={}):
         m=M[k-1]
         if k in camail:      # cervelière : le camail (ORANGE) est de la maille (15) ; seule sa partie sous le menton est le cou
             # la limite entre camail visible et cou est ARRONDIE (demi-ellipse sous le visage) : une coupe droite laissait deux coins carrés
-            m=m.copy();m[m==60]=15;H_,W_=m.shape;wt,ht=Image.open(f'../{lot}/t{k}.png').size;X0=cx*W_/wt;Y0=by*H_/ht;r=camail[k]*H_;xs=np.where((m==15).any(0))[0];A_=1.25*max(X0-xs[0],xs[-1]-X0)
-            yy,xx=np.mgrid[0:H_,0:W_];out=(yy>Y0)&(((xx-X0)/A_)**2+((yy-Y0)/(r-Y0))**2>1);m[out&(m>0)]=COU      # tout ce qui n'est ni peau, ni cheveux, ni fer (les traits noirs des anneaux compris)
+            wt,ht=Image.open(f'../{lot}/t{k}.png').size;slim_camail(f'../{lot}/t{k}.png',np.array(Image.fromarray(m.astype('uint8')).resize((wt,ht),Image.NEAREST)),cx,by)
+            m=m.copy();m[m==60]=15;H_,W_=m.shape;X0=cx*W_/wt;Y0=by*H_/ht;r=camail[k]*H_;xs=np.where((m==15).any(0))[0];A_=1.25*max(X0-xs[0],xs[-1]-X0)
+            yy,xx=np.mgrid[0:H_,0:W_];out=(yy>Y0)&(((xx-X0)/A_)**2+((yy-Y0)/(r-Y0))**2>1);m[out&(m>0)&(m!=2)]=COU      # sous l'arrondi : tout passe derrière le col, sauf les cheveux qui retombent sur les épaules      # tout ce qui n'est ni peau, ni cheveux, ni fer (les traits noirs des anneaux compris)
         elif k in mail: m=m.copy();m[m==60]=COU      # têtes casquées : le cou est en cotte de mailles (ORANGE dans le calque)
         else: m=neck_label(f'../{lot}/t{k}.png',m)
         build_map(f'{lot}_{k}',f'../{lot}/t{k}.png',(cx,by),m,s=s,eye=by+BROW_DY)
