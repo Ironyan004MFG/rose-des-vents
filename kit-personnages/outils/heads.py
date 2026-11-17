@@ -239,6 +239,7 @@ G.update({15:.8})
 HE={1:(140,215),2:(180,212),3:(160,212),4:(158,258),5:(150,245),6:(148,240),7:(160,232),8:(175,282)}      # halfelin lot E : cervelière rasée, puis femmes : fichu, nattes, chignon, âgée, érudite, marchande, barde
 HF={1:(200,262),2:(245,265),3:(175,290),4:(195,272),5:(190,282),6:(160,272)}      # halfelin lot F (femmes) : capuche, fermière, noble au diadème, noble aux tresses, noble aux perles, cervelière
 G.update({52:.95,69:1.0})      # 52 = pierre, 69 = perles
+UA={1:(140,255),2:(155,262),3:(137,232),4:(140,245),5:(145,255),6:(165,257),7:(145,248),8:(158,255)}      # HUMAIN lot A : (x milieu du visage, y des YEUX) — yeux sur la ligne des épaules ; échelle 0,50
 def brows_from_map(m):
     c,k=ndi.label(m==2);idx=range(1,k+1);sz=ndi.sum(m==2,c,idx);cm=ndi.center_of_mass(m==2,c,idx);b=sorted([(cm[i],sz[i]) for i in range(k) if 60<sz[i]<2500],key=lambda t:-t[1])[:2]
     return (round((b[0][0][1]+b[1][0][1])/2),round((b[0][0][0]+b[1][0][0])/2)) if len(b)==2 else None
@@ -256,3 +257,21 @@ if __name__=='__main__':
     o,lab=build('hood',**HOOD)
     t=tint('hood',{1:'#c98f6a',2:'#8a4a22',3:'#8a4a22',4:'#9aa0a6',8:'#4a5a32'});bg=Image.new('RGBA',(512,512),(140,105,70,255));bg.alpha_composite(t)
     bg.crop((150,60,370,400)).resize((660,1020),Image.LANCZOS).save('../far/z_hood.png')
+
+COU=71;G[COU]=1.0
+def neck_label(tile,mlab,thr=62):
+    """Grandes races : repère le COU dans une tête (peau sous le trait de la mâchoire) et lui donne la matière COU (71), pour pouvoir le cacher
+    derrière le col du vêtement. Le cou = la plage de peau, fermée par les traits foncés, qui touche le bas de la tête."""
+    im=Image.open(tile).convert('RGBA');a=np.array(im).astype(float);w,h=im.size;L=np.array(Image.fromarray(mlab.astype('uint8')).resize((w,h),Image.NEAREST)).astype(int)
+    al=a[...,3]>40;L[~al]=0;g=ndi.gaussian_filter(a[...,:3].mean(-1),1.0);sk=(L==1)&(g>thr);c,k=ndi.label(ndi.binary_erosion(sk,iterations=2));ys=np.where((L==1).any(1))[0]
+    if not k: return L.astype('uint8')
+    bot=c[ys[-1]-14:ys[-1]+1];ids=[i for i in np.unique(bot) if i];best=None
+    for i in ids:
+        m=c==i;yy=np.where(m.any(1))[0]
+        if yy[0]>ys[0]+.55*(ys[-1]-ys[0]) and (best is None or m.sum()>best[0]): best=(m.sum(),m)
+    if best is None: return L.astype('uint8')
+    nk=ndi.binary_dilation(best[1],iterations=4)&(L==1)&(np.arange(h)[:,None]>np.where(best[1].any(1))[0][0]-3);L[nk]=COU;return L.astype('uint8')
+def build_lotU(lot,tab,s=0.46):
+    """Lot d'une grande race : la valeur y du tableau (yeux pour humain/elfe/tieffelin, nez pour demi-orc) arrive sur la ligne des épaules ; le cou est étiqueté."""
+    M=split_map(f'../{lot}/map.png',n=len(tab))
+    for k,(cx,by) in tab.items(): build_map(f'{lot}_{k}',f'../{lot}/t{k}.png',(cx,by),neck_label(f'../{lot}/t{k}.png',M[k-1]),s=s,eye=by+BROW_DY)

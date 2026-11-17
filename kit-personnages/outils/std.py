@@ -269,3 +269,13 @@ def plates(grey='../std/plt2_relaxed.png',mp='../std/plt2_relaxed_map.png'):
 GRIP_PLATES=[(4,[(250,640),(345,612),(412,618),(416,745),(330,745),(255,700)]),(68,[(345,555),(392,555),(392,628),(345,628)]),(68,[(345,744),(390,744),(390,802),(345,802)])]
 def plates_grip(P): return paint(P,[(l,[(x+52,y) for x,y in p]) for l,p in GRIP_PLATES])      # +52 : relevé sur un aperçu décalé
 def plates_reach(P): return paint(P,[(4,[(252,690),(402,690),(418,812),(412,895),(282,895),(247,760)])])
+
+def hole(P,H=560):
+    """Masque (toile 512) de l'ouverture de l'encolure d'un corps : là où le cou d'une tête a le droit de se voir."""
+    A,L=P;w=L.shape[1];m=Image.fromarray(((L==7)*255).astype('uint8'));t=m.resize((round(w*.29),round(L.shape[0]*.29)),Image.LANCZOS);o=Image.new('L',(512,H));o.paste(t,(round(256-(625+(w-1254)//2)*.29),round(229-360*.29)));return o
+def wear(c,P,name,cols,H=560):
+    """Pose une tête de grande race sur un corps : le COU (matière 71) passe DERRIÈRE le col — il n'est visible que dans l'ouverture de l'encolure.
+    Le cou est teinté comme le fond du col (peau ombrée) pour s'y fondre."""
+    import heads
+    t=heads.tint(name,{heads.COU:shade(cols[1]),**cols});lab=np.load(f'assets/head_{name}_lab.npy');a=np.array(t).astype(float);hm=np.array(hole(P,512)).astype(float)/255
+    nk=lab==heads.COU;a[...,3]=np.where(nk,a[...,3]*hm,a[...,3]);c.alpha_composite(Image.fromarray(a.astype('uint8')));return c
