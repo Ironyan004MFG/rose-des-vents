@@ -68,6 +68,8 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .note.expn .ev{font-style:italic;color:var(--ink-soft);font-size:15px;margin:0}
 .note.expn .facts .ok{color:var(--open);font-weight:700}
 .note.expn .muted{color:var(--ink-soft)}
+.exppl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.note.expn .actions .btn{text-decoration:none;display:inline-flex;align-items:center;gap:6px}
 .pmode{display:inline-block;font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;border:1px solid currentColor;border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:middle}
 .planadd .pmodes{display:flex;flex-direction:column;gap:4px;min-width:0}
 .planadd .pmodes>span{font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
@@ -1205,13 +1207,14 @@ function expeditionsView(){
   const list=expeList();
   if(!list.length)return '<p class="empty">Aucun groupe ne se forme pour l\'instant. Choisis une quête sur le babillard d\'un comptoir et inscris-toi pour lancer une expédition !</p>';
   const nm=x=>(x.aventurier?'<a class="plink" href="#perso-'+esc(x.aventurier)+'">'+esc(x.nom)+'</a>':esc(x.nom))+(x.statut==="confirmee"?' <span class="ok" title="Confirmé par le DM" aria-label="confirmé">✓</span>':'');
-  return '<p class="hint" style="margin:0 0 18px">Les groupes qui se forment. Touche le titre d\'une quête pour la voir sur son babillard et t\'y inscrire. ✓ = confirmé par le DM.</p><div class="grid">'+list.map(({q,s})=>{
+  return '<p class="hint" style="margin:0 0 18px">Les groupes qui se forment. Ouvre une quête pour lire ses détails sur son babillard et t\'y inscrire. ✓ = confirmé par le DM.</p><div class="grid">'+list.map(({q,s})=>{
     const b=office(q.bureau),best=planBest(q),rows=planRows(q),yes=best?rows.filter(r=>(best.dispo||{})[r.uid]==="oui").length:0,nd=planDates(q.id).length;
     return '<article class="note expn"><p class="ctags">'+rankSeal(q.rang)+'</p><h2><a href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">'+esc(q.titre)+'</a></h2>'+(b?'<p class="ev">Comptoir de '+esc(b.nom)+'</p>':'')+
       '<dl class="facts"><dt>Démarrée par</dt><dd><strong>'+nm(s[0])+'</strong></dd>'+
       '<dt>Format</dt><dd>'+(best&&PMODE[best.mode]?PMODE[best.mode]:'<span class="muted">À décider</span>')+'</dd>'+
       '<dt>Date suggérée</dt><dd>'+(best?'<strong>'+esc(fmtPlan(best))+'</strong> ('+yes+'/'+rows.length+' disponible'+(yes>1?'s':'')+')':nd?nd+' date'+(nd>1?'s':'')+' proposée'+(nd>1?'s':''):'<span class="muted">Aucune pour l\'instant</span>')+'</dd>'+
-      '<dt>Participants</dt><dd>'+(s.length>1?s.slice(1).map(nm).join(", "):'<span class="muted">Personne d\'autre encore</span>')+'</dd></dl></article>';}).join("")+'</div>';
+      '<dt>Participants</dt><dd>'+(s.length>1?'<ul class="exppl">'+s.slice(1).map(x=>'<li>'+nm(x)+'</li>').join("")+'</ul>':'<span class="muted">Personne d\'autre encore</span>')+'</dd></dl>'+
+      '<div class="actions"><a class="btn" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">'+(user&&s.some(x=>x.uid===user.uid)?'Voir la quête':'Voir la quête et m\'inscrire')+' <span aria-hidden="true">→</span></a></div></article>';}).join("")+'</div>';
 }
 function charge(q){
   const s=signupsFor(q.id), conf=s.filter(x=>x.statut==="confirmee").length, pend=s.filter(x=>x.statut==="attente").length;
@@ -5645,7 +5648,7 @@ document.addEventListener("click",async e=>{
   else if(a==="comp-del"){ui.confirmComp=id;}
   else if(a==="comp-del-no"){ui.confirmComp=null;}
   else if(a==="comp-del-yes"){ui.confirmComp=null;await run("Suppression",()=>deleteDoc(doc(db,"compendium",id)));location.hash="#compendium";return;}
-  else if(a==="goto-quest"){const gq=quetes.find(x=>x.id===id);ui.pendingFilter=gq&&gq.statut!=="ouverte"?gq.statut:"encours";ui.pendingQuest=id;return;}
+  else if(a==="goto-quest"){const gq=quetes.find(x=>x.id===id);ui.pendingFilter=gq?gq.statut:"encours";ui.pendingQuest=id;return;}
   else if(a==="group"){ui.confirmGroup=id;}
   else if(a==="group-cancel"){if(e.target!==b)return;ui.confirmGroup=null;}
   else if(a==="plan"){ui.plan=id;}
