@@ -134,6 +134,17 @@ img.zoomable{cursor:zoom-in}img.zoomable:focus-visible{outline:3px solid #2a6fb0
 .ectv-fiche{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh;padding:3vh 3vw;background:rgba(5,10,12,.93);pointer-events:none;opacity:0;transition:opacity .35s}.ectv-fiche.on{opacity:1}
 .ectv-fiche img{max-width:92vw;max-height:80vh;min-height:0;object-fit:contain;border-radius:10px;border:4px solid #d8b45e;box-shadow:0 0 60px #000}
 .ectv-fiche h2{margin:0;font-family:var(--display);color:#f6ecd0;font-size:clamp(28px,4.5vw,76px);letter-spacing:.04em;text-shadow:0 2px 8px #000;text-align:center}
+.tbv{cursor:default}.tbv canvas{touch-action:none;cursor:grab}.tbv canvas:active{cursor:grabbing}
+.tbbar{position:absolute;left:50%;top:1.2vh;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;max-width:calc(100vw - 24px);padding:6px 10px;background:rgba(14,22,26,.86);border:1px solid rgba(216,180,94,.5);border-radius:10px;z-index:3}
+.tbbar .tbt{color:#d8b45e;font-family:var(--display);letter-spacing:.04em;padding:0 6px}.tbbar .btn{min-height:36px}.tbhint{flex-basis:100%;text-align:center;color:#e9dfc6;font-size:13px}
+.tbv .ectv-met{top:auto;bottom:2vh}.tbv .ectv-ord{top:auto;bottom:2vh}
+.tbfigs{margin-top:6px}.tbfig{display:inline-flex;align-items:center;gap:4px;margin-right:8px}
+.tbdm{margin:6px 0 10px;padding:8px 12px;border:1px dashed rgba(216,180,94,.6);border-radius:8px;font-size:15px}.tbdm .ok{color:#3a7a3a;font-weight:700}
+.ectv.fon .ectv-met,.ectv.fon .ectv-ord,.ectv.fon .ectv-info{opacity:0}
+.ectv-fiche.mir{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:0;padding:2vh 2vw;background:rgba(5,10,12,.45)}
+.ectv-fiche.mir .fc{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1vh;min-width:0;min-height:0}
+.ectv-fiche.mir .fa{grid-area:1/1;transform:rotate(180deg)}.ectv-fiche.mir .fb{grid-area:2/2}
+.ectv-fiche.mir img{max-width:44vw;max-height:38vh}.ectv-fiche.mir h2{font-size:clamp(18px,2.6vw,44px)}
 @media (prefers-reduced-motion:reduce){.ectv-fiche{transition:none}}
 .ectvbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;margin:0 0 10px;border:1px solid rgba(216,180,94,.35);border-radius:8px;background:rgba(216,180,94,.08)}.ecshown{color:#9fd59a;font-weight:600}.eccat summary{cursor:pointer;font-weight:600;margin:6px 0}
 .ecdm .eccanvas{background:#0e161a;border-radius:8px;overflow:hidden;line-height:0}.ecdm canvas#ec-dm{width:100%;display:block;touch-action:none;cursor:crosshair;max-height:72vh;object-fit:contain}
@@ -1491,6 +1502,7 @@ function card(q){
   h+='<dt>Inscrits</dt><dd>'+signupList(q)+'</dd></dl>'+planLine(q)+'<div class="actions">';
   h+=reportBox(q);
   if(user&&q.redacteur===user.uid&&(q.statut==="encours"||q.statut==="terminee"))h+='<button class="btn gold" data-a="report-write" data-id="'+esc(q.id)+'">'+(q.rapportBrouillon&&q.rapportBrouillon.resume?'Modifier mon rapport de mission':'Écrire le rapport de mission')+'</button>';
+  if(q.statut==="encours"&&user&&!user.isAnonymous&&(ui.dm||signupsFor(q.id).some(s=>s.uid===user.uid&&s.statut!=="refusee")))h+='<a class="btn gold" href="#table-'+esc(q.id)+'">🗺 Ouvrir la carte</a>';
   const already=user&&signupsFor(q.id).some(s=>s.uid===user.uid);
   if(q.statut==="ouverte"&&!already)h+='<button class="btn" data-a="join" data-id="'+esc(q.id)+'">Je veux y aller</button>';
   if(ui.dm){
@@ -2526,6 +2538,8 @@ function statusPill(){
   return '<span class="pill good" role="status">● En direct</span>';
 }
 function render(){
+  if(ui.office&&ui.office.indexOf("table-")===0){document.body.classList.add("ecmode");tbView(ui.office.slice(6));return;}
+  if(tbSubQ)tbUnsub();
   if(ui.office==="ecran"){document.body.classList.add("ecmode");ecTvUpdate();return;}
   document.body.classList.remove("ecmode");
   const wk=!!ui.office&&(ui.office==="wiki"||ui.office.indexOf("wiki-")===0);
@@ -2711,7 +2725,7 @@ function ptStats(){const P=ui.pt;P.stats=Object.assign({combats:0,rounds:0,vainc
 function ptClone(o){return JSON.parse(JSON.stringify(o));}
 function ptSync(qid){
   const d=parties.find(p=>p.id===qid);
-  if(!ui.pt||ui.pt.id!==qid){ui.pt=d?Object.assign(ptBlank(qid),ptClone(d)):ptBlank(qid);ui.ptRev=ui.pt.rev||0;return;}
+  if(!ui.pt||ui.pt.id!==qid){ui.pt=d?Object.assign(ptBlank(qid),ptClone(d)):ptBlank(qid);ui.ptRev=ui.pt.rev||0;if(isAdmin&&qid!=="libre")setTimeout(tbPush,0);return;}
   if(d&&d.rev&&d.rev!==ui.ptRev&&Date.now()-(ui.ptEditMs||0)>4000){ui.pt=Object.assign(ptBlank(qid),ptClone(d));ui.ptRev=d.rev;}
 }
 let ptTimer=null;
@@ -3076,6 +3090,7 @@ function hdSave(coll,id,file){if(!isAdmin||!coll||!id||!file)return Promise.reso
 function hdDel(coll,id){if(!isAdmin||!coll||!id)return Promise.resolve();return deleteDoc(hdRef(coll,id)).catch(()=>{});}
 function vitOn(){return !!(vitrine&&vitrine.image);}
 async function vitSet(v){vitrine=v;try{ecBC&&ecBC.postMessage({vitrine:v});}catch(e){}vitUi();
+  {const q=ui.pt&&ui.pt.id!=="libre"&&questById(ui.pt.id);if(q)setDoc(doc(db,"table",q.id,"vitrine","live"),v&&v.image?v:{nom:"",image:"",ms:Date.now()}).catch(e=>console.error(e));}
   try{await setDoc(doc(db,"prive","vitrine"),v);}catch(e){console.error(e);save={state:"error",msg:"L'écran des joueurs n'a pas pu être mis à jour."};render();}}
 function vitShow(nom,image){if(!isAdmin||!image)return Promise.resolve();return vitSet({nom:String(nom||"").slice(0,80),image,ms:Date.now()});}
 function vitHide(){if(!isAdmin)return Promise.resolve();return vitSet({nom:"",image:"",ms:Date.now()});}
@@ -4614,11 +4629,15 @@ let ecLast=0;
 function ecLoop(ts){ecRaf=requestAnimationFrame(ecLoop);const dt=Math.min(0.1,(ts-ecLast)/1000||0.016);ecLast=ts;const t=ts/1000;
   Object.keys(ecRenderers).forEach(id=>{const r=ecRenderers[id];if(!document.body.contains(r.cv)){delete ecRenderers[id];return;}if(r.st&&r.st.carte)try{ecDraw(r,t,dt);}catch(e){console.error(e);}});
   if(!Object.keys(ecRenderers).length){cancelAnimationFrame(ecRaf);ecRaf=0;}}
-function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),tv=r.mode==="tv"||(r.mode==="dm"&&!!ui.ecPv);
+function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),pl=r.mode==="joueur",tv=r.mode==="tv"||pl||(r.mode==="dm"&&!!ui.ecPv);
   const dpr=window.devicePixelRatio||1,cw=cv.clientWidth,ch=cv.clientHeight;if(cv.width!==Math.round(cw*dpr)||cv.height!==Math.round(ch*dpr)){cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr);}
-  let s,ox=0,oy=0;if(r.mode==="tv"){s=ecPpi(st);const cam=st.cam||{x:0,y:0};if(r.cx==null||Math.abs(r.cx-cam.x)>60){r.cx=cam.x;r.cy=cam.y;}r.cx+=(cam.x-r.cx)*Math.min(1,dt*2.5);r.cy+=(cam.y-r.cy)*Math.min(1,dt*2.5);ox=-r.cx*s;oy=-r.cy*s;}else{s=Math.min(cw/c.w,ch/c.h);}
-  const key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h+"|"+(c.url||"")+"|"+Math.round(s*dpr*10)+"|"+ecSaison()+"|"+(c.bureau||"")+"|"+(+c.etage||0)+"|"+(c.niv?c.niv.min+":"+c.niv.max:"");
-  if(r.key!==key){r.key=key;r.A=EC_GEN[c.type]?{}:c.type==="image"?null:ecAnimInit(c);r.stat=null;r.img=null;if(c.type==="image"&&c.url){const im=new Image();im.crossOrigin="anonymous";im.onload=()=>{r.img=im;};im.src=c.url;}else if(EC_GEN[c.type])r.stat=ecStaticGen(c,s*dpr);else r.stat=ecStatic(c,s*dpr);}
+  let s,ox=0,oy=0;if(r.mode==="tv"){s=ecPpi(st);const cam=st.cam||{x:0,y:0};if(r.cx==null||Math.abs(r.cx-cam.x)>60){r.cx=cam.x;r.cy=cam.y;}r.cx+=(cam.x-r.cx)*Math.min(1,dt*2.5);r.cy+=(cam.y-r.cy)*Math.min(1,dt*2.5);ox=-r.cx*s;oy=-r.cy*s;}
+  else if(pl){const f=tbFollow(r,st,cw,ch);if(!r.free){const k=Math.min(1,dt*2.5);if(r.vx==null||Math.abs(r.vx-f.x)>60){r.vx=f.x;r.vy=f.y;r.vs=f.s;}r.vx+=(f.x-r.vx)*k;r.vy+=(f.y-r.vy)*k;r.vs+=(f.s-r.vs)*k;}s=r.vs;ox=cw/2-r.vx*s;oy=ch/2-r.vy*s;}
+  else{s=Math.min(cw/c.w,ch/c.h);}
+  // Le décor fixe est préparé à une échelle arrondie (le zoom libre du joueur ne le redessine pas à chaque cran), sans dépasser la taille d'un canevas.
+  const sq=pl?Math.min(Math.pow(2,Math.round(Math.log2(Math.max(1,s))*3)/3),6000/(Math.max(c.w,c.h)*dpr)):s;
+  const key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h+"|"+(c.url||"")+"|"+Math.round(sq*dpr*10)+"|"+ecSaison()+"|"+(c.bureau||"")+"|"+(+c.etage||0)+"|"+(c.niv?c.niv.min+":"+c.niv.max:"");
+  if(r.key!==key){r.key=key;r.A=EC_GEN[c.type]?{}:c.type==="image"?null:ecAnimInit(c);r.stat=null;r.img=null;if(c.type==="image"&&c.url){const im=new Image();im.crossOrigin="anonymous";im.onload=()=>{r.img=im;};im.src=c.url;}else if(EC_GEN[c.type])r.stat=ecStaticGen(c,sq*dpr);else r.stat=ecStatic(c,sq*dpr);}
   x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle="#000";x.fillRect(0,0,cw,ch);x.save();x.translate(ox,oy);x.beginPath();x.rect(0,0,c.w*s,c.h*s);x.clip();
   if(c.type==="image"){if(r.img)x.drawImage(r.img,0,0,c.w*s,c.h*s);}else if(r.stat){x.drawImage(r.stat,0,0,c.w*s,c.h*s);x.save();if(EC_GEN[c.type])EC_GEN[c.type].dyn(x,ecGenGeo(c),s,t,dt,r.A,c,st);else ecDynamic(x,c,s,t,dt,r.A,st);x.restore();}
   const M=EC_METEO[st.meteo]||EC_METEO.clair;if(r.A){r.A.wind=!!M.wind;r.A.cloudy=st.meteo==="nuageux"||!!M.rain;}
@@ -4633,6 +4652,7 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),t
   // Jetons
   const V=r.V;(st.tokens||[]).forEach(k=>{const X=k.x*s,Y=k.y*s,i=Math.floor(k.y)*c.w+Math.floor(k.x),seen=(V&&V.vis[i])||!(st.fog&&st.fog.on);
     if(k.k==="lum"){ecLightSprite(x,k,X,Y,s,t,st,tv);return;}
+    // Télé : les figurines sont posées sur l'écran, on ne dessine qu'un anneau. Joueur à distance : il faut voir les pions.
     if(tv){if(k.k==="pj"){x.strokeStyle=k.c||"#d8b45e";x.lineWidth=Math.max(2,s*0.06);x.beginPath();x.arc(X,Y,s*0.47,0,6.283);x.stroke();return;}if(!k.vis||!seen)return;}
 
     if(k.sp){const TT=Date.now()/1000,big={charrette:1.8,cavalier:1.4,colporteur:1.6,vache:0.95,cerf:0.8,biche:0.75,sanglier:0.65,pelerins:0.8,patrouille:0.8}[k.sp.kind]||0.5,dim=!tv&&!k.vis;x.globalAlpha=dim?0.55:1;
@@ -4643,7 +4663,9 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),t
       if(tv){const i2=Math.floor(k2.y)*c.w+Math.floor(k2.x);if(st.fog&&st.fog.on&&!(V&&V.vis[i2]))return;}ecNamedTok(x,k2,X2,Y2,s,TT,r.sel===k.id,!tv&&!k.vis);return;}
     x.globalAlpha=(!tv&&k.k!=="pj"&&!k.vis)?0.55:1;x.fillStyle="rgba(0,0,0,.35)";x.beginPath();x.arc(X+s*0.04,Y+s*0.06,s*0.42,0,6.283);x.fill();
     x.fillStyle=k.k==="pj"?(k.c||"#d8b45e"):k.k==="en"?"#9b2c22":"#3f6b8a";x.beginPath();x.arc(X,Y,s*0.4,0,6.283);x.fill();x.strokeStyle=r.sel===k.id?"#fff":"rgba(0,0,0,.6)";x.lineWidth=r.sel===k.id?3:1.5;if(!tv&&k.k!=="pj"&&!k.vis)x.setLineDash([4,3]);x.stroke();x.setLineDash([]);
-    x.fillStyle=k.k==="pj"?"#1b140c":"#fff";x.font="700 "+Math.round(s*0.42)+"px serif";x.textAlign="center";x.textBaseline="middle";x.fillText(String(k.n||"?").slice(0,1).toUpperCase(),X,Y+1);x.globalAlpha=1;});
+    x.fillStyle=k.k==="pj"?"#1b140c":"#fff";x.font="700 "+Math.round(s*0.42)+"px serif";x.textAlign="center";x.textBaseline="middle";x.fillText(String(k.n||"?").slice(0,1).toUpperCase(),X,Y+1);x.globalAlpha=1;
+});
+  ecFigs(x,st,s,r,pl);
   if(!tv&&EC_GEN[c.type]&&EC_GEN[c.type].dm){x.save();x.translate(ox,oy);EC_GEN[c.type].dm(x,ecGenGeo(c),s);x.restore();}
   x.restore();
   ecWeather(x,cw,ch,t,dt,M,r);
@@ -4678,9 +4700,13 @@ function ecLightSprite(x,k,X,Y,s,t,st,tv){const M=EC_METEO[st.meteo]||EC_METEO.c
 function ecPpi(st){const k=(st.calib&&+st.calib.k)||1,d=st.calib&&+st.calib.diag;if(d>5){const hyp=Math.hypot(screen.width,screen.height);return hyp/d*k;}return 48*k;}
 /* ----- Télé (#ecran) ----- */
 function ecTvShell(){return '<div class="ectv"><canvas id="ec-tv"></canvas><div class="ectv-met" id="ec-met"></div><div class="ectv-info" id="ec-info"></div><div class="ectv-ord" id="ec-ord"></div><div class="ectv-msg" id="ec-msg"></div><div class="ectv-fiche" id="ec-fiche"></div></div>';}
-function ecTvFiche(){const f=document.getElementById("ec-fiche");if(!f)return;const on=vitOn(),key=on?vitrine.ms+"|"+vitrine.nom:"";if(f.getAttribute("data-k")===key)return;f.setAttribute("data-k",key);
-  if(on){f.innerHTML='<img src="'+esc(vitrine.image)+'" alt="'+esc(vitrine.nom?"Portrait de "+vitrine.nom:"Image")+'">'+(vitrine.nom?'<h2>'+esc(vitrine.nom)+'</h2>':'');f.classList.add("on");}
-  else{f.classList.remove("on");setTimeout(()=>{if(!vitOn())f.innerHTML="";},400);}}
+// Écran posé à plat : la fiche est montrée deux fois, tête-bêche, pour les deux bords de la table (réglable dans le calibrage).
+function ecMirror(){return !(ecDoc&&ecDoc.calib&&ecDoc.calib.miroir===false);}
+function ecFicheHtml(v){return '<img src="'+esc(v.image)+'" alt="'+esc(v.nom?"Portrait de "+v.nom:"Image")+'">'+(v.nom?'<h2>'+esc(v.nom)+'</h2>':'');}
+function ecTvFiche(){const f=document.getElementById("ec-fiche");if(!f)return;const on=vitOn(),mir=ecMirror(),key=on?vitrine.ms+"|"+vitrine.nom+"|"+mir:"";if(f.getAttribute("data-k")===key)return;f.setAttribute("data-k",key);
+  if(on){f.innerHTML=mir?'<div class="fc fa">'+ecFicheHtml(vitrine)+'</div><div class="fc fb" aria-hidden="true">'+ecFicheHtml(vitrine)+'</div>':ecFicheHtml(vitrine);f.classList.toggle("mir",mir);f.classList.add("on");}
+  else{f.classList.remove("on");setTimeout(()=>{if(!vitOn())f.innerHTML="";},400);}
+  {const w=f.closest(".ectv");if(w)w.classList.toggle("fon",on);}}
 function ecTvUpdate(){if(ui.office!=="ecran")return;const app=document.getElementById("app");if(!document.getElementById("ec-tv"))app.innerHTML=ecTvShell();
   const m=document.getElementById("ec-msg"),st=ecDoc;
   if(!isAdmin){m.textContent="Écran de table : connecte-toi avec le compte du Maître de la Guilde, puis recharge.";return;}
@@ -4768,12 +4794,99 @@ function ecCam(E,c){const tv=(ecDoc&&ecDoc.tv)||{cols:40,rows:22},pj=(c.tokens||
 function ecState(){const E=ecP(),c=ecCard(),q=ui.pt;if(!c)return null;
   let ordre=null;if(E.ordre&&E.ordre.mode==="combat"&&q.combat&&q.combat.phase==="combat"){ordre={titre:"Ordre de combat · round "+(q.round||1),liste:ptOrder().filter(x=>!(x.kind!=="pj"&&x.pv<=0)&&!x.cache).map(x=>({n:x.nom,k:x.kind==="pj"?"pj":"en",cur:x.cid===q.cur}))};}
   else if(E.ordre&&E.ordre.mode==="parole"){const L=String(E.ordre.parole||"").split("\n").map(x=>x.trim()).filter(Boolean),i=(E.ordre.idx||0)%Math.max(1,L.length);ordre={titre:"Ordre de parole",liste:L.map((n,j)=>({n,k:"pj",cur:j===i}))};}
-  return {qid:q.id,carte:{id:c.id,nom:c.nom,type:c.type,seed:c.seed,w:c.w,h:c.h,url:c.url||"",gone:c.gone||[],back:c.back||{},vie:c.vie||"",bureau:c.bureau||"",etage:+c.etage||0,niv:c.niv||null},cam:ecCam(E,c),tokens:c.tokens||[],fog:{on:E.fog!==false,vu:c.vu||""},lum:E.lum||"jour",meteo:(c.abri||ecIndoor(c.type))?"clair":(E.meteo||"clair"),date:calLabel(calNow()),jour:E.jour||1,grid:!!E.grid,info:E.info||"",ordre,calib:(ecDoc&&ecDoc.calib)||{},ms:Date.now()};}
-function ecPush(now){if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);ecPushT=setTimeout(()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},now?0:250);}
+  return {qid:q.id,carte:{id:c.id,nom:c.nom,type:c.type,seed:c.seed,w:c.w,h:c.h,url:c.url||"",gone:c.gone||[],back:c.back||{},vie:c.vie||"",bureau:c.bureau||"",etage:+c.etage||0,niv:c.niv||null},cam:ecCam(E,c),tokens:c.tokens||[],fog:{on:E.fog!==false,vu:c.vu||""},lum:E.lum||"jour",meteo:(c.abri||ecIndoor(c.type))?"clair":(E.meteo||"clair"),date:calLabel(calNow()),jour:E.jour||1,grid:!!E.grid,info:E.info||"",ordre,figs:tbFigList(tbQuest(),c),calib:(ecDoc&&ecDoc.calib)||{},ms:Date.now()};}
+/* ---------- Table virtuelle : l'écran de table, ouvert à distance par les inscrits d'une quête en cours ----------
+   Comme à la table : chaque joueur à distance pose UNE figurine virtuelle (pion plein, à l'image de son personnage) et la déplace.
+   Elle ne donne aucune vision : c'est le DM qui ajuste l'anneau du personnage dessous, comme sous une figurine posée sur l'écran.
+   Le DM publie table/{quête} (seulement ce que le groupe voit) ; les figurines vivent dans table/{quête}/figs/{uid}. */
+let tbPushT=null,tbFigUnsub=null,tbFigQ=null,tbFigs={};
+const EC_FIGIMG=new Map();
+function tbQuest(){return ui.pt&&ui.pt.id!=="libre"?questById(ui.pt.id):null;}
+function tbSign(q,uid){return signupsFor(q.id).find(x=>x.uid===uid&&x.statut!=="refusee")||null;}
+// Anneau du personnage (jeton PJ du DM) qui porte le nom de l'inscription ou du personnage : sert à colorer la figurine.
+function tbRing(c,sg){if(!c||!sg)return null;const N=v=>ptNorm(v).trim(),av=sg.aventurier&&aventuriers.find(a=>a.id===sg.aventurier),names=[N(sg.nom),av?N(av.nom):""].filter(Boolean);
+  const pj=(c.tokens||[]).filter(k=>k.k==="pj");return pj.find(k=>names.indexOf(N(k.n))>=0)||pj.find(k=>names.some(n=>n.split(" ")[0]===N(k.n).split(" ")[0]))||null;}
+// Figurines posées sur la carte active (côté DM : pour la télé, sa vue et la copie publiée).
+function tbFigList(q,c){if(!q||!c)return [];return Object.keys(tbFigs).map(uid=>{const f=tbFigs[uid],sg=tbSign(q,uid);if(!f||!sg||f.carte!==c.id)return null;const av=sg.aventurier&&aventuriers.find(a=>a.id===sg.aventurier),ring=tbRing(c,sg);
+  return {u:uid,a:av?av.id:"",n:av?av.nom:sg.nom,x:+f.x,y:+f.y,c:ring?(ring.c||"#d8b45e"):"#d8b45e"};}).filter(Boolean);}
+// Copie publiée : les ennemis, alliés et objets cachés ou hors de vue n'y sont pas du tout (pas seulement masqués à l'affichage).
+function tbState(q,st){const c=st&&st.carte;if(!c)return {qid:q.id,titre:q.titre,carte:null,ms:Date.now()};
+  const fogOn=!!(st.fog&&st.fog.on),V=fogOn?ecVision(st):null;
+  const tokens=(st.tokens||[]).filter(k=>{if(k.k==="pj"||k.k==="lum")return true;if(!k.vis)return false;if(!fogOn)return true;const i=Math.floor(k.y)*c.w+Math.floor(k.x);return !!(V&&V.vis[i]);});
+  const out=Object.assign({},st,{qid:q.id,titre:q.titre,tokens,vue:(ecDoc&&ecDoc.tv)?{cols:ecDoc.tv.cols,rows:ecDoc.tv.rows}:{cols:40,rows:22},ms:Date.now()});delete out.calib;delete out.tvv;return JSON.parse(JSON.stringify(out));}
+function tbPush(){const q=tbQuest();if(!q||!isAdmin)return;tbListen(q.id);clearTimeout(tbPushT);tbPushT=setTimeout(()=>{if(tbQuest()!==q)return;let st=null;try{st=ecState();}catch(e){}
+  setDoc(doc(db,"table",q.id),tbState(q,st)).catch(e=>console.error(e));},600);}
+// Côté DM : écoute les figurines des joueurs, pour les montrer sur sa vue, la télé et la copie publiée.
+function tbListen(qid){if(tbFigQ===qid)return;if(tbFigUnsub){try{tbFigUnsub();}catch(e){}tbFigUnsub=null;}tbFigQ=qid;tbFigs={};if(!qid||!isAdmin)return;
+  tbFigUnsub=onSnapshot(collection(db,"table",qid,"figs"),snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data();});tbFigs=o;const q=tbQuest();if(q&&q.id===qid){try{ecUpd();}catch(e){}if(ui.office&&ui.office.indexOf("partie-")===0&&ui.ptTab==="ecran"&&!document.activeElement.matches("input,textarea,select"))render();}},e=>console.error(e));}
+// Figurine : pion plein à l'image du personnage, bordé de la couleur de son anneau.
+function ecFigImg(aid){if(!aid)return null;let e=EC_FIGIMG.get(aid);if(e)return e.ok?e.im:null;const av=aventuriers.find(a=>a.id===aid);if(!av||!av.image)return null;
+  e={ok:false,im:new Image()};e.im.onload=()=>{e.ok=true;};e.im.src=av.image;EC_FIGIMG.set(aid,e);return null;}
+function ecFigs(x,st,s,r,pl){(st.figs||[]).forEach(f=>{const X=f.x*s,Y=f.y*s,R=s*0.42,im=ecFigImg(f.a),mine=pl&&f.u===r.me;
+  x.fillStyle="rgba(0,0,0,.4)";x.beginPath();x.arc(X+s*0.05,Y+s*0.07,R,0,6.283);x.fill();
+  x.save();x.beginPath();x.arc(X,Y,R,0,6.283);x.clip();if(im){const k=Math.max(2*R/im.width,2*R/im.height);x.drawImage(im,X-im.width*k/2,Y-im.height*k/2,im.width*k,im.height*k);}else{x.fillStyle=f.c||"#d8b45e";x.fillRect(X-R,Y-R,2*R,2*R);x.fillStyle="#1b140c";x.font="700 "+Math.round(s*0.42)+"px serif";x.textAlign="center";x.textBaseline="middle";x.fillText(String(f.n||"?").slice(0,1).toUpperCase(),X,Y+1);}x.restore();
+  x.strokeStyle=mine?"#fff":(f.c||"#d8b45e");x.lineWidth=Math.max(2,s*(mine?0.09:0.07));x.beginPath();x.arc(X,Y,R,0,6.283);x.stroke();
+  if(mine||s>=46){const fs=Math.max(11,Math.round(s*0.24)),lb=String(f.n||"").split(" ")[0];x.font="600 "+fs+"px sans-serif";x.textAlign="center";x.textBaseline="top";x.lineWidth=3;x.strokeStyle="rgba(0,0,0,.8)";x.strokeText(lb,X,Y+R+2);x.fillStyle=mine?"#ffe9a8":"#f6ecd0";x.fillText(lb,X,Y+R+2);}});}
+// Ligne d'état dans l'onglet Écran du DM.
+function tbDmLine(q){const c=ecCard();if(!c||q.libre)return "";const F=tbFigList(q,c);
+  return '<div class="tbdm">🌐 <strong>Table virtuelle</strong> : '+(q.statut==="encours"?'les inscrits à distance ouvrent cette carte depuis la quête (« Ouvrir la carte ») et y posent leur figurine virtuelle. Elle ne donne aucune vision : ajuste l\'anneau du personnage dessous, comme pour une figurine sur la table.':'s\'ouvrira aux inscrits quand la quête sera en cours.')+
+    (F.length?'<div class="tbfigs">Figurines posées : '+F.map(f=>'<span class="tbfig">'+esc(f.n)+' <button class="mini" data-a="tb-figdel" data-id="'+esc(f.u)+'" aria-label="Retirer la figurine de '+esc(f.n)+'">Retirer</button></span>').join(" ")+'</div>':'')+'</div>';}
+/* ----- Vue du joueur (#table-{quête}) ----- */
+let tbDoc=null,tbVit=null,tbSubQ=null,tbSubs=[],tbErr="",tbMine=null;
+function tbUnsub(){tbSubs.forEach(f=>{try{f();}catch(e){}});tbSubs=[];tbSubQ=null;tbDoc=null;tbVit=null;tbErr="";tbMine=null;}
+function tbSub(qid){if(tbSubQ===qid)return;tbUnsub();tbSubQ=qid;const er=e=>{console.error(e);tbErr=e&&e.code==="permission-denied"?"Cette carte est réservée aux aventuriers inscrits à la quête.":"La carte n'a pas pu être chargée.";tbUpdate();};
+  tbSubs.push(onSnapshot(doc(db,"table",qid),s=>{tbDoc=s.exists()?s.data():null;tbErr="";tbUpdate();},er));
+  tbSubs.push(onSnapshot(doc(db,"table",qid,"vitrine","live"),s=>{tbVit=s.exists()?s.data():null;tbUpdate();},()=>{}));
+  tbSubs.push(onSnapshot(doc(db,"table",qid,"figs",user.uid),s=>{tbMine=s.exists()?s.data():null;tbUpdate();},()=>{}));}
+// Vue transmise par le DM : le cadre de la télé, ajusté à la fenêtre du joueur.
+function tbFollow(r,st,cw,ch){const v=st.vue||{cols:40,rows:22},cam=st.cam||{x:0,y:0};return {x:cam.x+v.cols/2,y:cam.y+v.rows/2,s:Math.max(6,Math.min(cw/v.cols,ch/v.rows))};}
+function tbShell(qid){const q=questById(qid);return '<div class="ectv tbv"><canvas id="ec-pl" aria-label="Carte de la partie"></canvas><div class="ectv-met" id="pl-met"></div><div class="ectv-info" id="pl-info"></div><div class="ectv-ord" id="pl-ord"></div><div class="ectv-msg" id="pl-msg"></div><div class="ectv-fiche" id="pl-fiche"></div>'+
+  '<div class="tbbar" role="toolbar" aria-label="Carte"><a class="btn sm" href="#'+esc(q?q.bureau:"")+'">← Quitter</a><strong class="tbt">'+esc(q?q.titre:"Carte")+'</strong><button class="btn sm gold" data-a="tb-follow">🎯 Vue du DM</button><button class="btn sm" data-a="tb-zoom" data-v="1.25" aria-label="Zoomer">＋</button><button class="btn sm" data-a="tb-zoom" data-v="0.8" aria-label="Dézoomer">－</button><button class="btn sm gold" data-a="tb-place" id="pl-place" hidden>Poser ma figurine</button><span class="tbhint" id="pl-hint"></span></div></div>';}
+function tbView(qid){const app=document.getElementById("app");if(!document.getElementById("ec-pl"))app.innerHTML=tbShell(qid);
+  if(!user||user.isAnonymous){tbUnsub();document.getElementById("pl-msg").textContent="Connecte-toi pour ouvrir la carte de la partie.";return;}
+  tbSub(qid);tbUpdate();}
+// Ma figurine sur la carte affichée : la position déposée, ou celle que je suis en train de glisser.
+function tbMyFig(st,r){if(r.drag)return {x:r.drag[0],y:r.drag[1]};if(tbMine&&st.carte&&tbMine.carte===st.carte.id)return {x:+tbMine.x,y:+tbMine.y};return null;}
+function tbUpdate(){if(!ui.office||ui.office.indexOf("table-")!==0)return;const m=document.getElementById("pl-msg");if(!m)return;const st=tbDoc;
+  const f=document.getElementById("pl-fiche"),v=tbVit&&tbVit.image?tbVit:null,fk=v?v.ms+"|"+v.nom:"";if(f.getAttribute("data-k")!==fk){f.setAttribute("data-k",fk);if(v){f.innerHTML=ecFicheHtml(v);f.classList.add("on");}else{f.classList.remove("on");f.innerHTML="";}const w=f.closest(".ectv");if(w)w.classList.toggle("fon",!!v);}
+  const pb=document.getElementById("pl-place"),q=questById(tbSubQ),sg=q&&user?tbSign(q,user.uid):null;
+  if(tbErr||!st||!st.carte){m.textContent=tbErr||(v?"":"En attente du Maître de la Guilde… La carte apparaîtra dès qu'il en ouvre une.");pb.hidden=true;const r=ecBind("ec-pl","joueur");if(r)r.st=null;return;}
+  m.textContent="";const r=ecBind("ec-pl","joueur");if(!r)return;r.me=user.uid;
+  const S=JSON.parse(JSON.stringify(st)),mine=tbMyFig(S,r),av=sg&&sg.aventurier&&aventuriers.find(a=>a.id===sg.aventurier);
+  S.figs=(S.figs||[]).filter(x=>x.u!==user.uid);if(mine&&sg){const old=(st.figs||[]).find(x=>x.u===user.uid);S.figs.push({u:user.uid,a:av?av.id:"",n:av?av.nom:sg.nom,x:mine.x,y:mine.y,c:old?old.c:"#d8b45e"});}
+  ecSet(r,S);tbBind(r);pb.hidden=!sg||!!mine;
+  {const M=EC_METEO[st.meteo]||EC_METEO.clair;document.getElementById("pl-met").innerHTML=(st.date?'<span class="dt">📜 '+esc(st.date)+'</span>':'')+(st.meteo&&st.meteo!=="clair"?'<strong>'+M.i+' '+esc(M.l)+'</strong>':'');}
+  document.getElementById("pl-info").innerHTML=st.info?'<p>'+esc(st.info).replace(/\n/g,"<br>")+'</p>':'';
+  const o=st.ordre;document.getElementById("pl-ord").innerHTML=o&&o.liste&&o.liste.length?'<h3>'+esc(o.titre||"Ordre")+'</h3><ol>'+o.liste.map(x=>'<li class="'+(x.cur?'cur ':'')+(x.k==="pj"?'pj':'')+'">'+esc(x.n)+'</li>').join("")+'</ol>':'';
+  document.getElementById("pl-hint").textContent=!sg?"Tu peux regarder la carte, te promener et zoomer.":mine?"Glisse ta figurine pour la déplacer ; le DM ajustera ton anneau (ta vision) dessous. Fais glisser la carte pour te promener, molette ou pincement pour zoomer.":"Pose ta figurine sur la carte, puis glisse-la où tu veux aller.";}
+// Pose ou déplace ma figurine (une seule par joueur et par carte).
+function tbWrite(x,y){const st=tbDoc,c=st&&st.carte,qid=tbSubQ;if(!c||!qid||!user)return;x=Math.max(0.5,Math.min(c.w-0.5,Math.floor(x)+0.5));y=Math.max(0.5,Math.min(c.h-0.5,Math.floor(y)+0.5));
+  const d={x,y,carte:String(c.id),ms:Date.now()};tbMine=d;tbUpdate();
+  setDoc(doc(db,"table",qid,"figs",user.uid),d).catch(err=>{console.error(err);const h=document.getElementById("pl-hint");if(h)h.textContent="Ta figurine n'a pas pu être enregistrée. Vérifie que tu es bien inscrit à cette quête.";});}
+function tbBind(r){const cv=r.cv;if(cv.dataset.bound)return;cv.dataset.bound="1";const P=new Map();let act=null;
+  const toMap=(cx,cy)=>{const b=cv.getBoundingClientRect();return [(cx-b.left-b.width/2)/r.vs+r.vx,(cy-b.top-b.height/2)/r.vs+r.vy];};
+  const lim=()=>{const c=r.st&&r.st.carte,b=cv.getBoundingClientRect();if(!c)return [6,160];return [Math.max(4,Math.min(b.width/c.w,b.height/c.h)*0.6),160];};
+  const zoomAt=(f,cx,cy)=>{if(r.vs==null)return;const L=lim(),p=toMap(cx,cy),ns=Math.max(L[0],Math.min(L[1],r.vs*f)),b=cv.getBoundingClientRect();r.free=true;r.vs=ns;r.vx=p[0]-(cx-b.left-b.width/2)/ns;r.vy=p[1]-(cy-b.top-b.height/2)/ns;};
+  r.zoomAt=zoomAt;r.center=()=>[r.vx,r.vy];
+  cv.addEventListener("pointerdown",e=>{if(r.vs==null||!r.st)return;cv.setPointerCapture(e.pointerId);P.set(e.pointerId,[e.clientX,e.clientY]);
+    if(P.size===2){const a=[...P.values()];act={pinch:true,d0:Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])||1,s0:r.vs};r.drag=null;return;}
+    const p=toMap(e.clientX,e.clientY),me=tbMyFig(r.st,r);
+    if(me&&Math.hypot(me.x-p[0],me.y-p[1])<0.7){act={fig:true,dx:me.x-p[0],dy:me.y-p[1]};r.drag=[me.x,me.y];}
+    else act={pan:true,cx:e.clientX,cy:e.clientY,vx:r.vx,vy:r.vy};});
+  cv.addEventListener("pointermove",e=>{if(!P.has(e.pointerId))return;P.set(e.pointerId,[e.clientX,e.clientY]);if(!act)return;
+    if(act.pinch&&P.size===2){const a=[...P.values()],d=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);zoomAt(act.s0*d/act.d0/r.vs,(a[0][0]+a[1][0])/2,(a[0][1]+a[1][1])/2);}
+    else if(act.fig){const p=toMap(e.clientX,e.clientY),c=r.st.carte;r.drag=[Math.max(0.5,Math.min(c.w-0.5,p[0]+act.dx)),Math.max(0.5,Math.min(c.h-0.5,p[1]+act.dy))];const f=(r.st.figs||[]).find(x=>x.u===r.me);if(f){f.x=r.drag[0];f.y=r.drag[1];}}
+    else if(act.pan){if(Math.hypot(e.clientX-act.cx,e.clientY-act.cy)>3)r.free=true;r.vx=act.vx-(e.clientX-act.cx)/r.vs;r.vy=act.vy-(e.clientY-act.cy)/r.vs;}});
+  const end=e=>{P.delete(e.pointerId);if(!act)return;
+    if(act.fig&&r.drag){const d=r.drag;r.drag=null;tbWrite(d[0],d[1]);}
+    act=null;};
+  cv.addEventListener("pointerup",end);cv.addEventListener("pointercancel",end);
+  cv.addEventListener("wheel",e=>{e.preventDefault();zoomAt(e.deltaY<0?1.15:1/1.15,e.clientX,e.clientY);},{passive:false});}
+function ecPush(now){if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);ecPushT=setTimeout(()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},now?0:250);}
 function ecReveal(c){const E=ecP();const st=ecState();if(!st)return;const V=ecVision(st);let vu=(c.vu||"").padEnd(c.w*c.h,"0").split("");let ch=false;for(let i=0;i<V.vis.length;i++)if(V.vis[i]&&vu[i]!=="1"){vu[i]="1";ch=true;}if(ch)c.vu=vu.join("");}
 function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc.calib)||{};
   let h='<div class="ecdm"><p class="ecopen"><a class="btn gold sm" href="#ecran" target="_blank" rel="noopener">Ouvrir l\'écran joueurs ↗</a> <span class="desc">Ouvre-le sur l\'écran de table, puis F11 pour le plein écran.'+(tvv?' Écran détecté : '+tvv.cols+' × '+tvv.rows+' cases.':'')+'</span></p>';
-  h+='<details class="eccal"><summary>Calibrage de l\'écran (1 case = 1 pouce)</summary><label for="ec-diag">Diagonale de l\'écran (pouces)<input id="ec-diag" type="number" min="10" max="120" step="0.5" value="'+(cal.diag||"")+'"></label><span class="ecfine">Ajustement fin : <button class="mini" data-a="pt-ec-k" data-v="-0.01">−</button> '+Math.round(((+cal.k)||1)*100)+' % <button class="mini" data-a="pt-ec-k" data-v="0.01">+</button></span><button class="mini" data-a="pt-ec-calshow">'+(cal.show?'Masquer la règle':'Afficher la règle de 5 pouces')+'</button><button class="mini gold" data-a="pt-ec-cal">Enregistrer</button></details>';
+  h+='<details class="eccal"><summary>Calibrage de l\'écran (1 case = 1 pouce)</summary><label for="ec-diag">Diagonale de l\'écran (pouces)<input id="ec-diag" type="number" min="10" max="120" step="0.5" value="'+(cal.diag||"")+'"></label><span class="ecfine">Ajustement fin : <button class="mini" data-a="pt-ec-k" data-v="-0.01">−</button> '+Math.round(((+cal.k)||1)*100)+' % <button class="mini" data-a="pt-ec-k" data-v="0.01">+</button></span><button class="mini" data-a="pt-ec-calshow">'+(cal.show?'Masquer la règle':'Afficher la règle de 5 pouces')+'</button><button class="mini gold" data-a="pt-ec-cal">Enregistrer</button><button class="mini" data-a="pt-ec-mir" aria-pressed="'+(cal.miroir!==false)+'">'+(cal.miroir!==false?'☑':'☐')+' Écran à plat : fiches en double, tête-bêche</button></details>';
   if(q.libre){const sa=ecSaison(),Q=quetes.filter(x=>scMaps(x).length).sort((a,b)=>String(a.titre).localeCompare(String(b.titre),"fr"));
     if(ui.office==="dm"){const sh=!!E.tv&&!!c;h+='<div class="ectvbar">'+(c?'<strong>'+esc(c.nom)+'</strong> ':'<span class="desc">Choisis une carte ci-dessous.</span> ')+(c?(sh?'<span class="ecshown">📺 Affichée sur l\'écran de table</span> <button class="mini" data-a="pt-ec-unshow">Ne plus mettre la télé à jour</button>':'<button class="btn gold sm" data-a="pt-ec-show">📺 Montrer aux joueurs</button>'):'')+' <button class="btn sm" data-a="pt-libre-go">▶ Créer une partie libre</button></div>';}
     h+='<details class="eccat" open><summary>Cartes des scénarios ('+Q.length+(Q.length>1?' quêtes':' quête')+')</summary>'+(Q.length?Q.map(x=>'<div class="eccards"><strong>'+esc(x.titre)+' :</strong> '+scMaps(x).map((m,i)=>{const on=m.id===E.active,ind=ecIndoor(m.type),mk=ind?"clair":ecSeasonize(m.meteo,sa);return '<button class="chip'+(on?' on':'')+'" data-a="pt-ec-scene" data-id="'+esc(x.id)+'" data-v="'+i+'" aria-pressed="'+on+'" title="'+esc(ecMapLbl(m.type))+'">'+esc(m.nom)+' <span class="ecsm">'+(EC_LUM[m.lum]||{}).l+(ind?'':' · '+EC_METEO[mk].i)+'</span></button>';}).join(" ")+'</div>').join(""):'<p class="desc">Aucune carte de scène dans les scénarios.</p>')+'</details>';}
@@ -4785,6 +4898,7 @@ function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc
   h+='<details class="eccal"><summary>Date de la campagne</summary>'+calForm()+'<p class="desc">La date avance à la fin de chaque quête : jours de la mission × '+calMult()+' (temps hors mission). Les saisons suivent le calendrier de Harptos.</p></details>';
   if(!c)return h+'</div>';
   const sel=(c.tokens||[]).find(k=>k.id===ui.ecSel);
+  h+=tbDmLine(q);
   h+='<div class="ecbar"><span class="ectool">'+[["move","✋ Déplacer"],["reveal","☀ Révéler"],["hide","☁ Cacher"]].map(x=>'<button class="chip'+((ui.ecTool||"move")===x[0]?' on':'')+'" data-a="pt-ec-tool" data-v="'+x[0]+'">'+x[1]+'</button>').join("")+'</span>'+
     '<label for="ec-lum">Lumière<select id="ec-lum" data-ec="lum">'+Object.keys(EC_LUM).map(k=>'<option value="'+k+'"'+(k===(E.lum||"jour")?' selected':'')+'>'+EC_LUM[k].l+'</option>').join("")+'</select></label>'+
     '<span class="ecdate">📅 '+esc(calLabel(calNow()))+' · '+esc(EC_SAISON[ecSaison()].l)+'</span>'+
@@ -4847,7 +4961,7 @@ async function ecAction(a,id,b,v,q){const E=ecP(),c=ecCard();
     const big=!ecIndoor(tp)||tp==="donjon"||tp==="chateau"||tp==="grotte"||tp==="mine"||tp==="egouts";const W0=Math.min(120,(tv.cols||40)*(big?2:1)),H0=Math.min(120,(tv.rows||22)*(big?2:1)),k={id:ptUid(),vie:ptUid(),nom:"Rencontre : "+EC_MAPS[tp].l,type:tp,seed:ptUid(),w:W0,h:H0,url:"",tokens:[],vu:"",cam:{x:Math.max(0,Math.round((W0-(tv.cols||40))/2)),y:Math.max(0,Math.round((H0-(tv.rows||22))/2))}};E.cartes=(E.cartes||[]).concat([k]);E.active=k.id;E.lum=lu;
     if(ecIndoor(tp)){E.meteo="clair";ui.ecMetRoll=null;}else{const r=ecMeteoRoll(ecSaison());E.meteo=r.k;ui.ecMetRoll=r.r;}ptLog("Rencontre aléatoire : "+ecMapLbl(tp)+", "+EC_LUM[lu].l.toLowerCase()+(ecIndoor(tp)?"":", "+EC_METEO[E.meteo].l.toLowerCase())+".");ui.ecSel=null;ecPush(true);return true;}
   if(a==="pt-ec-big"){ui.ecBig=!ui.ecBig;render();return false;}
-  if(a==="pt-ec-k"||a==="pt-ec-cal"||a==="pt-ec-calshow"){const cal=Object.assign({k:1},(ecDoc&&ecDoc.calib)||{});const d=+(document.getElementById("ec-diag")||{}).value;if(d>5)cal.diag=d;if(a==="pt-ec-k")cal.k=Math.max(0.5,Math.min(1.5,Math.round(((+cal.k||1)+(+v))*100)/100));if(a==="pt-ec-calshow")cal.show=!cal.show;
+  if(a==="pt-ec-k"||a==="pt-ec-cal"||a==="pt-ec-calshow"||a==="pt-ec-mir"){const cal=Object.assign({k:1},(ecDoc&&ecDoc.calib)||{});const d=+(document.getElementById("ec-diag")||{}).value;if(d>5)cal.diag=d;if(a==="pt-ec-k")cal.k=Math.max(0.5,Math.min(1.5,Math.round(((+cal.k||1)+(+v))*100)/100));if(a==="pt-ec-calshow")cal.show=!cal.show;if(a==="pt-ec-mir")cal.miroir=cal.miroir===false;
     ecDoc=Object.assign({},ecDoc||{},{calib:cal});await setDoc(doc(db,"prive","ecran"),{calib:cal},{merge:true}).catch(()=>{});try{ecBC&&ecBC.postMessage({calib:cal});}catch(e){}render();return false;}
   if(!c)return false;
   if(a==="pt-ec-add"){const cam=c.cam||{x:0,y:0},tv=(ecDoc&&ecDoc.tv)||{cols:Math.min(c.w,20),rows:Math.min(c.h,12)},cx=Math.min(c.w-1,cam.x+Math.floor(tv.cols/2)),cy=Math.min(c.h-1,cam.y+Math.floor(tv.rows/2));c.tokens=c.tokens||[];let n=0;
@@ -5735,6 +5849,9 @@ document.addEventListener("click",async e=>{
   const b=e.target.closest("[data-a]");if(!b)return;
   const a=b.getAttribute("data-a"),id=b.getAttribute("data-id");
   if(a==="zoom-close"){zoomClose();return;}
+  if(a==="tb-place"){const r=ecRenderers["ec-pl"];if(r&&r.center){const p=r.center();tbWrite(p[0],p[1]);}return;}
+  if(a==="tb-figdel"){if(!isAdmin)return;const q=tbQuest();if(q)await run("Figurine retirée",()=>deleteDoc(doc(db,"table",q.id,"figs",id)));return;}
+  if(a==="tb-follow"||a==="tb-zoom"){const r=ecRenderers["ec-pl"];if(!r)return;if(a==="tb-follow")r.free=false;else if(r.zoomAt){const bb=r.cv.getBoundingClientRect();r.zoomAt(+b.getAttribute("data-v")||1,bb.left+bb.width/2,bb.top+bb.height/2);}return;}
   if(a==="vit-hide"){await vitHide();return;}
   if(a==="vit-send"){if(!zoomSt)return;const n=document.getElementById("zoom-nom");zoomSt.vn=n?n.value.trim():zoomSt.nom;await vitShow(zoomSt.vn,zoomSt.src);return;}
   if(a==="vit-show"){const k=b.getAttribute("data-k"),x=(k==="monstres"?monstres:k==="pnj"?pnjs:k==="factions"?factions:aventuriers).find(y=>y.id===id);if(!x||!x.image)return;
