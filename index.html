@@ -145,6 +145,7 @@ img.zoomable{cursor:zoom-in}img.zoomable:focus-visible{outline:3px solid #2a6fb0
 .ecresx{border:0;background:none;cursor:pointer;font-size:18px;line-height:1;padding:0 9px 0 2px;color:var(--ink-soft);min-height:34px}
 .ecdot{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;color:#fff;font:700 13px serif;border:1px solid rgba(0,0,0,.4)}
 .ecghost{position:fixed;z-index:200;transform:translate(-50%,-50%);pointer-events:none;display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:999px;background:#fffaf0;border:2px solid #d8b45e;box-shadow:0 4px 14px rgba(0,0,0,.35);font-size:14px}
+.ecpl{border-collapse:collapse;margin:2px 0 6px}.ecpl th,.ecpl td{padding:3px 10px 3px 0;text-align:left;font-size:15px}.ecpl thead th{font-family:var(--display);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}.ecpl input{width:18px;height:18px;color-scheme:light;accent-color:#7a2e2e}
 .ecresadd{display:flex;flex-direction:column;gap:6px}.ecrow2{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.ecrow2>strong{min-width:9em}.ecfind label{display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex:1}.ecfind input{flex:1;min-width:12em}.ecfind .ptfindres{flex-basis:100%}
 .tbfigs{margin-top:6px}.tbfig{display:inline-flex;align-items:center;gap:4px;margin-right:8px}
 .tbdm{margin:6px 0 10px;padding:8px 12px;border:1px dashed rgba(216,180,94,.6);border-radius:8px;font-size:15px}.tbdm .ok{color:#3a7a3a;font-weight:700}
@@ -4810,6 +4811,11 @@ function ecState(){const E=ecP(),c=ecCard(),q=ui.pt;if(!c)return null;
 let tbPushT=null,tbFigUnsub=null,tbFigQ=null,tbFigs={};
 const EC_FIGIMG=new Map();
 function tbQuest(){return ui.pt&&ui.pt.id!=="libre"?questById(ui.pt.id):null;}
+function tbSignByName(q,nm){if(!q)return null;const N=v=>ptNorm(v).trim(),k=N(nm);return signupsFor(q.id).find(x=>x.statut!=="refusee"&&x.uid&&x.uid!=="dm"&&String(x.uid).indexOf("dm-")!==0&&(N(x.nom)===k||(x.aventurier&&N((aventuriers.find(a=>a.id===x.aventurier)||{}).nom)===k)))||null;}
+// Figurine virtuelle : posée par le DM (une par joueur, la reposer remplace l'ancienne), déplacée ensuite par le joueur seulement.
+function tbFigSet(q,nm,c,x,y){const sg=tbSignByName(q,nm);if(!sg||!c)return;setDoc(doc(db,"table",q.id,"figs",sg.uid),{x,y,carte:String(c.id),ms:Date.now()}).catch(e=>console.error(e));}
+function tbFigDel(q,nm){const sg=tbSignByName(q,nm);if(!sg)return;deleteDoc(doc(db,"table",q.id,"figs",sg.uid)).catch(e=>console.error(e));}
+function tbVirt(nm){return !!(ecP().virt||{})[ptNorm(nm).trim()];}
 function tbSign(q,uid){return signupsFor(q.id).find(x=>x.uid===uid&&x.statut!=="refusee")||null;}
 // Anneau du personnage (jeton PJ du DM) qui porte le nom de l'inscription ou du personnage : sert à colorer la figurine.
 function tbRing(c,sg){if(!c||!sg)return null;const N=v=>ptNorm(v).trim(),av=sg.aventurier&&aventuriers.find(a=>a.id===sg.aventurier),names=[N(sg.nom),av?N(av.nom):""].filter(Boolean);
@@ -4837,7 +4843,7 @@ function ecFigs(x,st,s,r,pl){(st.figs||[]).forEach(f=>{const X=f.x*s,Y=f.y*s,R=s
   if(mine||s>=46){const fs=Math.max(11,Math.round(s*0.24)),lb=String(f.n||"").split(" ")[0];x.font="600 "+fs+"px sans-serif";x.textAlign="center";x.textBaseline="top";x.lineWidth=3;x.strokeStyle="rgba(0,0,0,.8)";x.strokeText(lb,X,Y+R+2);x.fillStyle=mine?"#ffe9a8":"#f6ecd0";x.fillText(lb,X,Y+R+2);}});}
 // Ligne d'état dans l'onglet Écran du DM.
 function tbDmLine(q){const c=ecCard();if(!c||q.libre)return "";const F=tbFigList(q,c);
-  return '<div class="tbdm">🌐 <strong>Table virtuelle</strong> : '+(q.statut==="encours"?'les inscrits à distance ouvrent cette carte depuis la quête (« Ouvrir la carte ») et y posent leur figurine virtuelle. Elle ne donne aucune vision : ajuste l\'anneau du personnage dessous, comme pour une figurine sur la table.':'s\'ouvrira aux inscrits quand la quête sera en cours.')+
+  return '<div class="tbdm">🌐 <strong>Table virtuelle</strong> : '+(q.statut==="encours"?'les inscrits à distance ouvrent cette carte depuis la quête (« Ouvrir la carte ») et y posent leur figurine virtuelle. Coche « Virtuel » pour un joueur à distance : en posant son anneau, sa figurine virtuelle est posée au même endroit ; lui seul la déplace, sans effet sur la vision. Ajuste ensuite l\'anneau dessous, comme pour une figurine sur la table.':'s\'ouvrira aux inscrits quand la quête sera en cours.')+
     (F.length?'<div class="tbfigs">Figurines posées : '+F.map(f=>'<span class="tbfig">'+esc(f.n)+' <button class="mini" data-a="tb-figdel" data-id="'+esc(f.u)+'" aria-label="Retirer la figurine de '+esc(f.n)+'">Retirer</button></span>').join(" ")+'</div>':'')+'</div>';}
 /* ----- Vue du joueur (#table-{quête}) ----- */
 let tbDoc=null,tbVit=null,tbSubQ=null,tbSubs=[],tbErr="",tbMine=null;
@@ -4849,7 +4855,7 @@ function tbSub(qid){if(tbSubQ===qid)return;tbUnsub();tbSubQ=qid;const er=e=>{con
 // Vue transmise par le DM : le cadre de la télé, ajusté à la fenêtre du joueur.
 function tbFollow(r,st,cw,ch){const v=st.vue||{cols:40,rows:22},cam=st.cam||{x:0,y:0};return {x:cam.x+v.cols/2,y:cam.y+v.rows/2,s:Math.max(6,Math.min(cw/v.cols,ch/v.rows))};}
 function tbShell(qid){const q=questById(qid);return '<div class="ectv tbv"><canvas id="ec-pl" aria-label="Carte de la partie"></canvas><div class="ectv-met" id="pl-met"></div><div class="ectv-info" id="pl-info"></div><div class="ectv-ord" id="pl-ord"></div><div class="ectv-msg" id="pl-msg"></div><div class="ectv-fiche" id="pl-fiche"></div>'+
-  '<div class="tbbar" role="toolbar" aria-label="Carte"><a class="btn sm" href="#'+esc(q?q.bureau:"")+'">← Quitter</a><strong class="tbt">'+esc(q?q.titre:"Carte")+'</strong><button class="btn sm gold" data-a="tb-follow">🎯 Vue du DM</button><button class="btn sm" data-a="tb-zoom" data-v="1.25" aria-label="Zoomer">＋</button><button class="btn sm" data-a="tb-zoom" data-v="0.8" aria-label="Dézoomer">－</button><button class="btn sm gold" data-a="tb-place" id="pl-place" hidden>Poser ma figurine</button><span class="tbhint" id="pl-hint"></span></div></div>';}
+  '<div class="tbbar" role="toolbar" aria-label="Carte"><a class="btn sm" href="#'+esc(q?q.bureau:"")+'">← Quitter</a><strong class="tbt">'+esc(q?q.titre:"Carte")+'</strong><button class="btn sm gold" data-a="tb-follow">🎯 Vue du DM</button><button class="btn sm" data-a="tb-zoom" data-v="1.25" aria-label="Zoomer">＋</button><button class="btn sm" data-a="tb-zoom" data-v="0.8" aria-label="Dézoomer">－</button><span class="tbhint" id="pl-hint"></span></div></div>';}
 function tbView(qid){const app=document.getElementById("app");if(!document.getElementById("ec-pl"))app.innerHTML=tbShell(qid);
   if(!user||user.isAnonymous){tbUnsub();document.getElementById("pl-msg").textContent="Connecte-toi pour ouvrir la carte de la partie.";return;}
   tbSub(qid);tbUpdate();}
@@ -4857,18 +4863,18 @@ function tbView(qid){const app=document.getElementById("app");if(!document.getEl
 function tbMyFig(st,r){if(r.drag)return {x:r.drag[0],y:r.drag[1]};if(tbMine&&st.carte&&tbMine.carte===st.carte.id)return {x:+tbMine.x,y:+tbMine.y};return null;}
 function tbUpdate(){if(!ui.office||ui.office.indexOf("table-")!==0)return;const m=document.getElementById("pl-msg");if(!m)return;const st=tbDoc;
   const f=document.getElementById("pl-fiche"),v=tbVit&&tbVit.image?tbVit:null,fk=v?v.ms+"|"+v.nom:"";if(f.getAttribute("data-k")!==fk){f.setAttribute("data-k",fk);if(v){f.innerHTML=ecFicheHtml(v);f.classList.add("on");}else{f.classList.remove("on");f.innerHTML="";}const w=f.closest(".ectv");if(w)w.classList.toggle("fon",!!v);}
-  const pb=document.getElementById("pl-place"),q=questById(tbSubQ),sg=q&&user?tbSign(q,user.uid):null;
-  if(tbErr||!st||!st.carte){m.textContent=tbErr||(v?"":"En attente du Maître de la Guilde… La carte apparaîtra dès qu'il en ouvre une.");pb.hidden=true;const r=ecBind("ec-pl","joueur");if(r)r.st=null;return;}
+  const q=questById(tbSubQ),sg=q&&user?tbSign(q,user.uid):null;
+  if(tbErr||!st||!st.carte){m.textContent=tbErr||(v?"":"En attente du Maître de la Guilde… La carte apparaîtra dès qu'il en ouvre une.");const r=ecBind("ec-pl","joueur");if(r)r.st=null;return;}
   m.textContent="";const r=ecBind("ec-pl","joueur");if(!r)return;r.me=user.uid;
   const S=JSON.parse(JSON.stringify(st)),mine=tbMyFig(S,r),av=sg&&sg.aventurier&&aventuriers.find(a=>a.id===sg.aventurier);
   S.figs=(S.figs||[]).filter(x=>x.u!==user.uid);if(mine&&sg){const old=(st.figs||[]).find(x=>x.u===user.uid);S.figs.push({u:user.uid,a:av?av.id:"",n:av?av.nom:sg.nom,x:mine.x,y:mine.y,c:old?old.c:"#d8b45e"});}
-  ecSet(r,S);tbBind(r);pb.hidden=!sg||!!mine;
+  ecSet(r,S);tbBind(r);
   {const M=EC_METEO[st.meteo]||EC_METEO.clair;document.getElementById("pl-met").innerHTML=(st.date?'<span class="dt">📜 '+esc(st.date)+'</span>':'')+(st.meteo&&st.meteo!=="clair"?'<strong>'+M.i+' '+esc(M.l)+'</strong>':'');}
   document.getElementById("pl-info").innerHTML=st.info?'<p>'+esc(st.info).replace(/\n/g,"<br>")+'</p>':'';
   const o=st.ordre;document.getElementById("pl-ord").innerHTML=o&&o.liste&&o.liste.length?'<h3>'+esc(o.titre||"Ordre")+'</h3><ol>'+o.liste.map(x=>'<li class="'+(x.cur?'cur ':'')+(x.k==="pj"?'pj':'')+'">'+esc(x.n)+'</li>').join("")+'</ol>':'';
-  document.getElementById("pl-hint").textContent=!sg?"Tu peux regarder la carte, te promener et zoomer.":mine?"Glisse ta figurine pour la déplacer ; le DM ajustera ton anneau (ta vision) dessous. Fais glisser la carte pour te promener, molette ou pincement pour zoomer.":"Pose ta figurine sur la carte, puis glisse-la où tu veux aller.";}
+  document.getElementById("pl-hint").textContent=!sg?"Tu peux regarder la carte, te promener et zoomer.":mine?"Glisse ta figurine pour la déplacer ; le DM ajustera ton anneau (ta vision) dessous. Fais glisser la carte pour te promener, molette ou pincement pour zoomer.":"Le DM n'a pas encore posé ta figurine virtuelle sur cette carte. En attendant, tu peux te promener et zoomer.";}
 // Pose ou déplace ma figurine (une seule par joueur et par carte).
-function tbWrite(x,y){const st=tbDoc,c=st&&st.carte,qid=tbSubQ;if(!c||!qid||!user)return;x=Math.max(0.5,Math.min(c.w-0.5,Math.floor(x)+0.5));y=Math.max(0.5,Math.min(c.h-0.5,Math.floor(y)+0.5));
+function tbWrite(x,y){const st=tbDoc,c=st&&st.carte,qid=tbSubQ;if(!c||!qid||!user||!tbMine||tbMine.carte!==String(c.id))return;x=Math.max(0.5,Math.min(c.w-0.5,Math.floor(x)+0.5));y=Math.max(0.5,Math.min(c.h-0.5,Math.floor(y)+0.5));
   const d={x,y,carte:String(c.id),ms:Date.now()};tbMine=d;tbUpdate();
   setDoc(doc(db,"table",qid,"figs",user.uid),d).catch(err=>{console.error(err);const h=document.getElementById("pl-hint");if(h)h.textContent="Ta figurine n'a pas pu être enregistrée. Vérifie que tu es bien inscrit à cette quête.";});}
 function tbBind(r){const cv=r.cv;if(cv.dataset.bound)return;cv.dataset.bound="1";const P=new Map();let act=null;
@@ -4919,7 +4925,7 @@ function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc
   h+='<div class="eccanvas'+(ui.ecBig?' big':'')+'">'+(ui.ecBig?'<div class="ecbigbar">'+[["move","✋ Déplacer"],["reveal","☀ Révéler"],["hide","☁ Cacher"]].map(x=>'<button class="chip'+((ui.ecTool||"move")===x[0]?' on':'')+'" data-a="pt-ec-tool" data-v="'+x[0]+'">'+x[1]+'</button>').join("")+'<button class="btn gold sm" data-a="pt-ec-big">Réduire ✕</button></div>':'')+'<canvas id="ec-dm" aria-label="Carte DM : glisse les jetons"></canvas></div>'+(ui.ecBig?'':'<p class="ecbigp"><button class="mini" data-a="pt-ec-big">⛶ Agrandir la carte</button></p>');
   h+=ecTray(q,c)+'<div class="ecbar">'+
     '<span class="ecsp"></span><span>Cadre télé :</span>'+[["←",-5,0],["↑",0,-5],["↓",0,5],["→",5,0]].map(a=>'<button class="mini" data-a="pt-ec-cam" data-v="'+a[1]+','+a[2]+'" aria-label="Déplacer le cadre télé">'+a[0]+'</button>').join("")+'<button class="mini'+(ui.ecPv?' gold':'')+'" data-a="pt-ec-pv" aria-pressed="'+!!ui.ecPv+'">👁 '+(ui.ecPv?'Retour à la vue DM':'Vue joueurs')+'</button><button class="mini" data-a="pt-ec-fogreset">Tout recacher</button><button class="mini" data-a="pt-ec-vie">🦌 Renouveler la vie</button><button class="mini" data-a="pt-ec-seed">Nouvelle graine</button><button class="mini" data-a="pt-ec-del">Supprimer la carte</button></div>';
-  if(sel)h+='<div class="ecsel"><label for="ec-sn">Jeton<input id="ec-sn" maxlength="30" value="'+esc(sel.n||"")+'" data-ec="sn"></label>'+(sel.src?'<button class="mini gold" data-a="pt-ec-release" title="Le jeton redevient une bête ou un passant du décor, qui rejoint son chemin">↩ Relâcher</button>':'')+(sel.k==="pj"?'<label class="ecck"><input type="checkbox" data-ec="torche"'+(sel.torche?' checked':'')+'> Torche</label><label for="ec-dv">Vision dans le noir (cases)<input id="ec-dv" type="number" min="0" max="24" value="'+(+sel.dv||0)+'" data-ec="dv"></label>':sel.k==="lum"?'<label for="ec-r">Rayon (cases)<input id="ec-r" type="number" min="1" max="20" value="'+(+sel.r||4)+'" data-ec="r"></label><label class="ecck"><input type="checkbox" data-ec="magie"'+(sel.flamme===false?' checked':'')+'> Lumière magique (résiste à la pluie et au vent)</label>':'<label class="ecck"><input type="checkbox" data-ec="vis"'+(sel.vis?' checked':'')+'> Visible quand un joueur le voit (décocher = caché, ex. furtif)</label>')+'<button class="mini" data-a="pt-ec-tokdel">Retirer</button></div>';
+  if(sel)h+='<div class="ecsel"><label for="ec-sn">Jeton<input id="ec-sn" maxlength="30" value="'+esc(sel.n||"")+'" data-ec="sn"></label>'+(sel.src?'<button class="mini gold" data-a="pt-ec-release" title="Le jeton redevient une bête ou un passant du décor, qui rejoint son chemin">↩ Relâcher</button>':'')+(sel.k==="pj"?'<label class="ecck"><input type="checkbox" data-ec="torche"'+(sel.torche?' checked':'')+'> Torche</label><label for="ec-dv">Vision dans le noir (cases)<input id="ec-dv" type="number" min="0" max="24" value="'+(+sel.dv||0)+'" data-ec="dv"></label>':sel.k==="lum"?'<label for="ec-r">Rayon (cases)<input id="ec-r" type="number" min="1" max="20" value="'+(+sel.r||4)+'" data-ec="r"></label><label class="ecck"><input type="checkbox" data-ec="magie"'+(sel.flamme===false?' checked':'')+'> Lumière magique (résiste à la pluie et au vent)</label>':'<label class="ecck"><input type="checkbox" data-ec="vis"'+(sel.vis?' checked':'')+'> Visible quand un joueur le voit (décocher = caché, ex. furtif)</label>')+(sel.k!=="pj"||!sel.src?'<button class="mini" data-a="pt-ec-back" title="Le jeton quitte la carte et retourne dans la réserve, prêt à être reposé ailleurs">↩ Remettre dans la réserve</button>':'')+'<button class="mini" data-a="pt-ec-tokdel">Retirer</button></div>';
   h+='<div class="ecrow ectext"><label for="ec-info">Infos affichées sur l\'écran<textarea id="ec-info" rows="2" maxlength="400" data-ec="info">'+esc(E.info||"")+'</textarea></label>'+
     '<label for="ec-om">Ordre affiché<select id="ec-om" data-ec="omode">'+[["aucun","Aucun"],["parole","Ordre de parole"],["combat","Ordre de combat (Mode Partie)"]].map(o=>'<option value="'+o[0]+'"'+(((E.ordre||{}).mode||"aucun")===o[0]?' selected':'')+'>'+o[1]+'</option>').join("")+'</select></label>'+
     (((E.ordre||{}).mode)==="parole"?'<label for="ec-par">Ordre de parole (un nom par ligne)<textarea id="ec-par" rows="3" maxlength="400" data-ec="parole">'+esc((E.ordre||{}).parole||"")+'</textarea></label><button class="mini gold" data-a="pt-ec-next">Au suivant ▸</button>':'')+'</div>';
@@ -4953,7 +4959,10 @@ function ecTray(q,c){const R=ecResOf(),P=ui.pt,pl=ecPlayersInGame(q).filter(nm=>
   const foes=(P.liste||[]).filter(x=>x.kind!=="pj"&&!(x.pv<=0)&&!inR(x.cid));
   let h='<section class="ectray" aria-label="Réserve de jetons"><h4>Réserve <span class="desc">: glisse un jeton sur la carte (ou touche-le, puis touche la carte)</span></h4>';
   h+='<div class="ecrestoks">'+(R.length?R.map(t=>'<span class="ecres'+(ui.ecArm===t.id?' arm':'')+'"><button class="ecresb" data-res="'+esc(t.id)+'" aria-pressed="'+(ui.ecArm===t.id)+'" title="Glisse-moi sur la carte">'+ecTokDot(t)+'<span>'+esc(t.n||"")+'</span></button><button class="ecresx" data-a="pt-ec-resdel" data-id="'+esc(t.id)+'" aria-label="Retirer '+esc(t.n||"ce jeton")+' de la réserve">×</button></span>').join(""):'<span class="desc">Vide. Ajoute des jetons ci-dessous.</span>')+'</div>';
-  h+='<div class="ecresadd"><div class="ecrow2"><strong>Joueurs</strong> '+(pl.length?pl.map(nm=>'<button class="mini" data-a="pt-ec-resadd" data-k="pj" data-v="'+esc(nm)+'">'+esc(nm)+'</button>').join("")+(pl.length>1?'<button class="mini gold" data-a="pt-ec-resadd" data-k="pjs">Tous</button>':''):'<span class="desc">'+(ecPlayersInGame(q).length?'Chaque joueur a déjà son jeton.':'Aucun joueur en jeu : ajoute le groupe au combat ou confirme des inscrits.')+'</span>')+'</div>';
+  {const all=ecPlayersInGame(q),V=ecP().virt||{};
+    h+='<div class="ecresadd">'+(all.length?'<table class="ecpl"><thead><tr><th scope="col">Joueur</th><th scope="col">Virtuel</th><th scope="col"><span class="sr">Jeton</span></th></tr></thead><tbody>'+all.map(nm=>{const kk=ptNorm(nm).trim(),sg=tbSignByName(q,nm),onMap=(c.tokens||[]).some(t=>t.k==="pj"&&ptNorm(t.n).trim()===kk),inRes=R.some(t=>t.k==="pj"&&ptNorm(t.n).trim()===kk);
+      return '<tr><th scope="row">'+esc(nm)+'</th><td><label class="ecck" title="'+(sg?'Joue à distance : une figurine virtuelle, qu\'il peut déplacer, est posée avec son anneau':'Pas de compte joueur relié à cette inscription')+'"><input type="checkbox" data-a="pt-ec-virt" data-v="'+esc(nm)+'"'+(V[kk]?' checked':'')+(sg?'':' disabled')+'><span class="sr">'+esc(nm)+' joue en virtuel</span></label></td><td>'+(onMap?'<span class="desc">sur la carte</span>':inRes?'<span class="desc">dans la réserve</span>':'<button class="mini" data-a="pt-ec-resadd" data-k="pj" data-v="'+esc(nm)+'">Ajouter</button>')+'</td></tr>';}).join("")+'</tbody></table>'+(pl.length>1?'<button class="mini gold" data-a="pt-ec-resadd" data-k="pjs">Ajouter tous les joueurs</button>':''):'<p class="desc">Aucun joueur en jeu : ajoute le groupe au combat ou confirme des inscrits.</p>');}
+
   h+='<div class="ecrow2"><strong>Ennemis du combat</strong> '+(foes.length?'<select id="ec-foe" aria-label="Ennemi du combat">'+foes.map(x=>'<option value="'+esc(x.cid)+'">'+esc(x.nom)+'</option>').join("")+'</select><button class="mini" data-a="pt-ec-resadd" data-k="foe">Ajouter</button>'+(foes.length>1?'<button class="mini gold" data-a="pt-ec-resadd" data-k="foes">Tous ('+foes.length+')</button>':''):'<span class="desc">Aucun (ou déjà tous en jeton).</span>')+'</div>';
   const k=ptNorm(ui.ecFind||"").trim();
   h+='<div class="ecrow2 ecfind"><label for="ec-find"><strong>Bestiaire ou PNJ</strong><input id="ec-find" type="search" autocomplete="off" value="'+esc(ui.ecFind||"")+'" placeholder="Ex. loup, gobelin, Brann…"></label>';
@@ -4965,7 +4974,8 @@ function ecTray(q,c){const R=ecResOf(),P=ui.pt,pl=ecPlayersInGame(q).filter(nm=>
 function ecDrop(id,p){const R=ecResOf(),c=ecCard(),t=R.find(x=>x.id===id);if(!c||!t||!p)return false;
   if(t.k==="pj"&&(c.tokens||[]).some(k=>k.k==="pj"&&ptNorm(k.n).trim()===ptNorm(t.n).trim())){ui.ptAlert=t.n+" a déjà son jeton sur cette carte.";ecP().reserve=R.filter(x=>x!==t);render();return false;}
   const o=Object.assign({},t,{x:Math.max(0.5,Math.min(c.w-0.5,Math.floor(p[0])+0.5)),y:Math.max(0.5,Math.min(c.h-0.5,Math.floor(p[1])+0.5))});
-  c.tokens=(c.tokens||[]).concat([o]);ecP().reserve=R.filter(x=>x!==t);ui.ecArm=null;ui.ecSel=o.id;ecReveal(c);ptSave();ecPush(true);render();return true;}
+  c.tokens=(c.tokens||[]).concat([o]);ecP().reserve=R.filter(x=>x!==t);ui.ecArm=null;
+  if(o.k==="pj"&&tbVirt(o.n)){const qq=tbQuest();if(qq)tbFigSet(qq,o.n,c,o.x,o.y);}ui.ecSel=o.id;ecReveal(c);ptSave();ecPush(true);render();return true;}
 // Cellule de la carte du DM sous un point de l'écran (null si hors carte).
 function ecCellAt(cx,cy){const cv=document.getElementById("ec-dm"),c=ecCard();if(!cv||!c)return null;const b=cv.getBoundingClientRect();if(cx<b.left||cy<b.top||cx>b.right||cy>b.bottom)return null;
   const s=Math.min(b.width/c.w,b.height/c.h),ox=(b.width-c.w*s)/2*(ui.ecBig?1:0),oy=(b.height-c.h*s)/2*(ui.ecBig?1:0),x=(cx-b.left-ox)/s,y=(cy-b.top-oy)/s;if(x<0||y<0||x>c.w||y>c.h)return null;return [x,y];}
@@ -5022,6 +5032,10 @@ async function ecAction(a,id,b,v,q){const E=ecP(),c=ecCard();
   if(a==="pt-ec-fogreset"){c.vu="";ecReveal(c);ecPush(true);return true;}
   if(a==="pt-ec-seed"){c.seed=ptUid();ecPush(true);return true;}
   if(a==="pt-ec-del"){E.cartes=E.cartes.filter(k=>k.id!==c.id);E.active=E.cartes.length?E.cartes[0].id:null;ecPush(true);return true;}
+  if(a==="pt-ec-back"){const t0=(c.tokens||[]).find(k=>k.id===ui.ecSel);if(!t0)return false;if(t0.k==="pj"&&tbVirt(t0.n))tbFigDel(q,t0.n);
+    const o=Object.assign({},t0);delete o.x;delete o.y;c.tokens=c.tokens.filter(k=>k!==t0);ecResOf().push(o);ui.ecSel=null;ptSave();ecPush(true);return true;}
+  if(a==="pt-ec-virt"){const kk=ptNorm(v).trim(),V=ecP().virt=Object.assign({},ecP().virt||{}),on=!!b.checked;if(on)V[kk]=true;else delete V[kk];
+    const ring=(c.tokens||[]).find(t=>t.k==="pj"&&ptNorm(t.n).trim()===kk);if(ring){if(on)tbFigSet(q,v,c,ring.x,ring.y);else tbFigDel(q,v);}ptSave();return true;}
   if(a==="pt-ec-resdel"){ecP().reserve=ecResOf().filter(t=>t.id!==id);if(ui.ecArm===id)ui.ecArm=null;return true;}
   if(a==="pt-ec-resadd"){const R=ecResOf(),kk=b.getAttribute("data-k"),add=o=>{o.id=ptUid();R.push(o);};
     const pjCol=()=>EC_COLORS[((c.tokens||[]).concat(R).filter(t=>t.k==="pj").length)%EC_COLORS.length];
@@ -5032,7 +5046,7 @@ async function ecAction(a,id,b,v,q){const E=ecP(),c=ecCard();
     else if(kk==="p"){const x=pnjs.find(y=>y.id===id);if(x)add({k:x.attitude==="hostile"?"en":"pnj",n:x.nom,ref:x.id,vis:true});ui.ecFind="";}
     else if(kk==="lum"){const lp=(document.getElementById("ec-lp")||{}).value||"torche",L=EC_LIGHTS[lp]||EC_LIGHTS.torche;ui.ecLp=lp;add({k:"lum",n:L.l,r:L.r,flamme:L.mag?false:true,lp});}
     ptSave();return true;}
-  if(a==="pt-ec-tokdel"){c.tokens=(c.tokens||[]).filter(k=>k.id!==ui.ecSel);ui.ecSel=null;ecPush(true);return true;}
+  if(a==="pt-ec-tokdel"){{const t0=(c.tokens||[]).find(k=>k.id===ui.ecSel);if(t0&&t0.k==="pj"&&tbVirt(t0.n))tbFigDel(q,t0.n);}c.tokens=(c.tokens||[]).filter(k=>k.id!==ui.ecSel);ui.ecSel=null;ecPush(true);return true;}
   if(a==="pt-ec-next"){E.ordre.idx=(E.ordre.idx||0)+1;ecPush(true);return true;}
   return false;}
 function ecChange(el){const E=ecP(),c=ecCard(),k=el.getAttribute("data-ec"),sel=c&&(c.tokens||[]).find(t=>t.id===ui.ecSel);
@@ -5900,7 +5914,6 @@ document.addEventListener("click",async e=>{
   const b=e.target.closest("[data-a]");if(!b)return;
   const a=b.getAttribute("data-a"),id=b.getAttribute("data-id");
   if(a==="zoom-close"){zoomClose();return;}
-  if(a==="tb-place"){const r=ecRenderers["ec-pl"];if(r&&r.center){const p=r.center();tbWrite(p[0],p[1]);}return;}
   if(a==="tb-figdel"){if(!isAdmin)return;const q=tbQuest();if(q)await run("Figurine retirée",()=>deleteDoc(doc(db,"table",q.id,"figs",id)));return;}
   if(a==="tb-follow"||a==="tb-zoom"){const r=ecRenderers["ec-pl"];if(!r)return;if(a==="tb-follow")r.free=false;else if(r.zoomAt){const bb=r.cv.getBoundingClientRect();r.zoomAt(+b.getAttribute("data-v")||1,bb.left+bb.width/2,bb.top+bb.height/2);}return;}
   if(a==="vit-hide"){await vitHide();return;}
