@@ -705,6 +705,10 @@ a.lchip:hover,a.lchip:focus-visible{background:#2a2219;color:var(--parch)}
 .qplist li.done .pickrow{background:#eef0dc;border-color:#9aa86a}
 .qpch{font-family:var(--display);font-size:15px;margin:14px 0 2px}.qpch.lock,.qplist.lock{opacity:.6}
 .bgt,.bgs,.bgc{display:block;font-size:14.5px;margin-top:3px}.bgc{background:#fbf6e6;border-left:3px solid #9b7424;border-radius:4px;padding:4px 8px;margin-top:6px}.bgs{font-style:italic;color:var(--ink-soft)}.bgf{color:var(--open);font-size:14px}
+.bgcue{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}
+.bgcueb{font-family:var(--body);font-size:14.5px;font-weight:700;color:#5a3d08;background:#f3e3b0;border:1px solid #9b7424;border-radius:999px;padding:3px 12px;min-height:30px;cursor:pointer}
+.bgcueb:hover,.bgcueb:focus-visible{background:#ecd58e;outline:none}.bgcueb.done{font-weight:400;color:var(--ink-soft);background:transparent;border-style:dashed}
+.bgloose{margin:0 0 12px}
 .bgpanel{border:1px solid #9b7424;background:#f3e3b0;border-radius:8px;padding:10px 14px;margin:0 0 14px;color:var(--ink)}
 .bghead{display:flex;align-items:center;justify-content:space-between;gap:10px}.bghead h3{margin:0;font-family:var(--display);font-size:15px}
 .bgel{border-top:1px dashed #9b7424;margin-top:8px;padding-top:8px}.bgel h4{margin:0 0 4px;font-family:var(--display);font-size:14px}.bgel.done{opacity:.75}.bgel .ok{color:var(--open)}.bgel p{margin:4px 0}
@@ -4902,11 +4906,12 @@ const EC_SEASONIZE={hiver:{pluie:"neige",orage:"neige",chaleur:"clair"},ete:{nei
 function ecSeasonize(k,sa){const ok=EC_OK[sa]||EC_OK.printemps;if(!EC_METEO[k])return "clair";if(ok.indexOf(k)>=0)return k;const m=(EC_SEASONIZE[sa]||{})[k];return m&&ok.indexOf(m)>=0?m:"clair";}
 
 function ptSide(q){
-  const tab=ui.ptTab||"scenario",s=scenarios[q.id]||{};
+  const tab=(ui.ptTab==="secrets"&&!bgAvail(q))?"scenario":(ui.ptTab||"scenario"),s=scenarios[q.id]||{};
   const ob=objsOf(q),od=(ui.pt.objectifs||[]).filter(i=>i<ob.length).length;
-  const tabs=(ob.length?[["objectifs",'Objectifs <span class="otc'+(od>=ob.length?' ok':'')+'">'+od+'/'+ob.length+'</span>']]:[]).concat([["scenario","Scénario"],["compendium","Compendium"],["butin","Butin"],["boutiques","Boutiques"],["ecran","Écran"],["tests","Tests & DD"],["regles","Règles"],["des","Dés"],["journal","Journal"],["bilan","Bilan"]]);
+  const tabs=(ob.length?[["objectifs",'Objectifs <span class="otc'+(od>=ob.length?' ok':'')+'">'+od+'/'+ob.length+'</span>']]:[]).concat(bgAvail(q)?[["secrets",(()=>{const c=bgCount(q);return 'Secrets <span class="otc'+(c.n&&c.f>=c.n?' ok':'')+'">'+c.f+'/'+c.n+'</span>';})()]]:[]).concat([["scenario","Scénario"],["compendium","Compendium"],["butin","Butin"],["boutiques","Boutiques"],["ecran","Écran"],["tests","Tests & DD"],["regles","Règles"],["des","Dés"],["journal","Journal"],["bilan","Bilan"]]);
   let h='<div class="pttabs" role="tablist">'+tabs.map(t=>'<button role="tab" aria-selected="'+(tab===t[0])+'" class="'+(tab===t[0]?'on':'')+(t[0]==="objectifs"&&od>=ob.length?' allok':'')+'" data-a="pt-tab" data-v="'+t[0]+'">'+t[1]+'</button>').join("")+'</div><div class="ptpanel">';
   if(tab==="objectifs")h+=ptObjectifs(q);
+  else if(tab==="secrets")h+=bgPanel(q);
   else if(tab==="scenario"){
     {const SM=scMaps(q),T=scTrajet(q),tot=T.a+scDuree(q)+T.r;if(SM.length||T.a+T.r){h+='<div class="ecdays sc"><strong>Durée : '+tot+' jour'+(tot>1?'s':'')+'</strong> <span class="desc">('+(T.a?T.a+' de trajet aller, ':'')+scDuree(q)+' sur place'+(T.r?', '+T.r+' de retour':'')+')</span>'+(SM.length?'<ol class="ecdl">'+SM.map(m=>'<li>'+esc(m.nom)+' <span class="desc">· '+esc(ecMapLbl(m.type))+' · '+esc((EC_LUM[m.lum]||{}).l||"")+(ecIndoor(m.type)?'':' · '+EC_METEO[ecSeasonize(m.meteo,ecSaison())].i+' '+esc(EC_METEO[ecSeasonize(m.meteo,ecSaison())].l))+'</span></li>').join("")+'</ol>':'')+'</div>';}}
     h+=q.libre?'<p class="desc">Partie libre, hors quête : pas de scénario.</p>':s.scenario?ptScenario(q):'<p class="desc">Aucun scénario pour cette quête. <a href="#man/quetes/'+encodeURIComponent(q.id)+'">L\'écrire dans le manuel</a></p>';
@@ -5115,9 +5120,19 @@ function bgModal(q){const all=bgOf(q),pres=bgPresent(q),here=all.filter(e=>e.aid
   if(lock.length)h+='<p class="desc">Pas encore ouverts (chapitre suivant de sa quête personnelle) : '+lock.map(e=>esc(e.nom)+' '+esc(e.code)).join(", ")+'.</p>';
   if(away.length)h+='<p class="desc">Sautés (personnage absent ou introuvable) : '+away.map(e=>esc(e.nom)).filter((x,i,l)=>l.indexOf(x)===i).join(", ")+'.</p>';
   return h+'<div class="actions"><button class="btn" type="submit">Valider</button>'+(P.bg&&P.bg.vu?'<button class="btn ghost" type="button" data-a="bg-close">Annuler</button>':'')+'</div></form></div>';}
-// Onglet Scénario : les éléments retenus, avec le bouton qui coche le secret dans le dossier du personnage.
+// Éléments retenus pour cette partie (personnage présent, coché à l'ouverture, chapitre ouvert).
+function bgKept(q){const all=bgOf(q);if(!all.length)return [];const P=ui.pt,pres=bgPresent(q),on=(P.bg&&P.bg.on)||[];return all.filter(e=>on.indexOf(e.i)>=0&&e.aid&&pres[e.aid]&&!bgLocked(e));}
+function bgAvail(q){const pres=bgPresent(q);return bgOf(q).some(e=>e.aid&&pres[e.aid]&&!bgLocked(e));}
+function bgCount(q){const seen={};let n=0,f=0;bgKept(q).forEach(e=>{const sc=bgSecret(e),k=e.aid+"|"+e.code;if(!sc||seen[k])return;seen[k]=1;n++;if(sc.found)f++;});return {n,f};}
+// Scène du scénario où un élément se joue : son texte commence par le nom de la scène (« Scène 2. », « La cave. », « Jour 3. »).
+function bgSceneKey(t){return ptNorm(String(t||"").replace(/\[\[([^\]|]+)(\|[^\]]+)?\]\]/g,"$1").replace(/[#*_>]/g,"")).replace(/\s+/g," ").trim();}
+function bgSceneOf(e,heads){const k=bgSceneKey(String(e.txt).split(/[.:]/)[0]);if(!k||k.length>40)return -1;
+  let i=heads.findIndex(h=>h&&(h===k||h.indexOf(k+" ")===0||h.indexOf(k+":")===0));if(i<0&&k.length>=5)i=heads.findIndex(h=>h&&h.indexOf(k)>=0);return i;}
+function bgCue(l){return l.length?'<p class="bgcue">'+l.map(e=>{const sc=bgSecret(e);
+    return '<button class="bgcueb'+(sc&&sc.found?' done':'')+'" data-a="pt-tab" data-v="secrets">'+(sc?(sc.found?'✓ Secret découvert':'🔎 Secret trouvable ici')+' : '+esc(e.nom)+' ('+esc(e.code)+')':'🎭 Élément de background ici : '+esc(e.nom))+'</button>';}).join("")+'</p>':'';}
+// Onglet Secrets : les éléments retenus, avec le bouton qui coche le secret dans le dossier du personnage.
 function bgPanel(q){const all=bgOf(q);if(!all.length)return "";const P=ui.pt,pres=bgPresent(q),on=(P.bg&&P.bg.on)||[],kept=all.filter(e=>on.indexOf(e.i)>=0&&e.aid&&pres[e.aid]&&!bgLocked(e));
-  let h='<section class="bgpanel"><div class="bghead"><h3>Éléments de background</h3><button class="mini" data-a="bg-ask">Choisir</button></div>';
+  let h='<section class="bgpanel"><div class="bghead"><h3>Secrets et éléments de background</h3><button class="mini" data-a="bg-ask">Choisir</button></div>';
   if(!kept.length)return h+'<p class="desc">Aucun élément retenu pour cette partie.</p></section>';
   return h+kept.map(e=>{const sc=bgSecret(e);
     return '<article class="bgel'+(sc&&sc.found?' done':'')+'"><h4>'+esc(e.nom)+'</h4><div class="wikibody">'+md(manLinks(bgSplit(e.txt).quoi))+'</div>'+(bgSplit(e.txt).comment?'<p class="bgc"><strong>Comment le trouver :</strong> '+esc(bgSplit(e.txt).comment)+'</p>':'')+
@@ -5192,12 +5207,14 @@ function ptObjectifs(q){const ob=objsOf(q),P=ui.pt,od=P.objectifs||[],sd=P.objSu
       (o.sub.length?'<ul class="objsub">'+o.sub.map((x,k)=>'<li><label for="psub-'+o.i+'-'+k+'"><input type="checkbox" class="pt-osub" id="psub-'+o.i+'-'+k+'" data-i="'+o.i+'" data-k="'+k+'"'+(ss.indexOf(k)>=0?' checked':'')+'><span>'+esc(x)+'</span></label></li>').join("")+'</ul>':'')+'</section>';}).join("");}
 function ptScenario(q){
   const s=scenarios[q.id]||{},txt=String(s.scenario||""),P=ui.pt,faits=P.faits||[],encs=ptEncounters(q),used={};
-  const parts=txt.split(/\n(?=##\s)/);let h=bgPanel(q);
+  const parts=txt.split(/\n(?=##\s)/);let h='';
+  const kept=bgKept(q),heads=parts.map(p=>/^##\s/.test(p)?bgSceneKey(p.split("\n")[0]):""),where=kept.map(e=>bgSceneOf(e,heads)),cueAt=i=>bgCue(kept.filter((e,k)=>where[k]===i));
+  {const loose=kept.filter((e,k)=>where[k]<0);if(loose.length)h+='<div class="bgloose"><span class="desc">À glisser où tu veux dans cette partie :</span>'+bgCue(loose)+'</div>';}
   const encBtn=r=>'<button class="btn gold sm" data-a="pt-launch" data-id="'+esc(r.id)+'">⚔ Lancer le combat : '+esc(r.nom)+'</button>';
   parts.forEach((sec,i)=>{const isH=/^##\s/.test(sec);const here=encs.filter(r=>sec.indexOf(r.nom)>=0);here.forEach(r=>{used[r.id]=1;});
     if(!isH){if(sec.trim())h+='<div class="wikibody">'+md(manLinks(sec))+'</div>'+(here.length?'<p class="ptlaunch">'+here.map(encBtn).join("")+'</p>':'');return;}
     const done=faits.indexOf(i)>=0;
-    h+='<section class="ptsec'+(done?' done':'')+'"><label class="ptsecchk"><input type="checkbox" class="pt-sec" data-i="'+i+'"'+(done?' checked':'')+'><span class="sr">Marquer cette étape comme faite</span></label><div class="wikibody">'+md(manLinks(sec))+'</div>'+(here.length?'<p class="ptlaunch">'+here.map(encBtn).join("")+'</p>':'')+'</section>';});
+    h+='<section class="ptsec'+(done?' done':'')+'"><label class="ptsecchk"><input type="checkbox" class="pt-sec" data-i="'+i+'"'+(done?' checked':'')+'><span class="sr">Marquer cette étape comme faite</span></label><div class="wikibody">'+md(manLinks(sec.split("\n")[0]))+'</div>'+cueAt(i)+'<div class="wikibody">'+md(manLinks(sec.split("\n").slice(1).join("\n")))+'</div>'+(here.length?'<p class="ptlaunch">'+here.map(encBtn).join("")+'</p>':'')+'</section>';});
   const rest=encs.filter(r=>!used[r.id]);
   if(rest.length)h+='<h3>Combats de la quête</h3><p class="ptlaunch">'+rest.map(encBtn).join("")+'</p>';
   return h;
