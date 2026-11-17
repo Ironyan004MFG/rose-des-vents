@@ -699,6 +699,14 @@ a.lchip:hover,a.lchip:focus-visible{background:#2a2219;color:var(--parch)}
 .dossier h2{font-family:var(--display)}
 .dmgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:12px 0}
 .dmcard{background:#f7f1e1;border:1px solid #d9c9a0;border-radius:8px;padding:12px 14px}
+.qplist,.bglist{list-style:none;margin:6px 0 10px;padding:0;display:flex;flex-direction:column;gap:6px}
+.qplist .pickrow,.bglist .pickrow{display:flex;flex-direction:row;align-items:flex-start;gap:10px;text-transform:none;letter-spacing:normal;font-family:var(--body);font-size:16px;color:var(--ink);background:#f7f1e1;border:1px solid #d9c9a0;border-radius:8px;padding:8px 12px;cursor:pointer}
+.qplist .pickrow input,.bglist .pickrow input{flex:none;width:18px;height:18px;margin:3px 0 0;padding:0;color-scheme:light;accent-color:#7a2e2e}
+.qplist li.done .pickrow{background:#eef0dc;border-color:#9aa86a}
+.bgt,.bgs{display:block;font-size:14.5px;margin-top:3px}.bgs{font-style:italic;color:var(--ink-soft)}.bgf{color:var(--open);font-size:14px}
+.bgpanel{border:1px solid #9b7424;background:#f3e3b0;border-radius:8px;padding:10px 14px;margin:0 0 14px;color:var(--ink)}
+.bghead{display:flex;align-items:center;justify-content:space-between;gap:10px}.bghead h3{margin:0;font-family:var(--display);font-size:15px}
+.bgel{border-top:1px dashed #9b7424;margin-top:8px;padding-top:8px}.bgel h4{margin:0 0 4px;font-family:var(--display);font-size:14px}.bgel.done{opacity:.75}.bgel .ok{color:var(--open)}.bgel p{margin:4px 0}
 .memo{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:8px 0 14px}
 .memosec{background:#f7f1e1;border:1px solid #d9c9a0;border-radius:8px;padding:10px 14px;color:var(--ink)}
 .memosec.sys{border-color:#9b7424;background:#f3e3b0}.memosec.sys .wikibody{color:var(--ink);font-size:15px}
@@ -1927,7 +1935,7 @@ function ageMax(){const v=monde&&monde.ageMax;return typeof v==="number"&&v>0?v:
 function aggravSeuil(){const v=monde&&monde.aggravSeuil;return typeof v==="number"&&v>0?v:2;}
 function ageBase(q){return Math.max(tms(q.creeLe)||0,((monde&&monde.reset)||{})[q.id]||0);}
 function ageOf(q){const F=(monde&&monde.fini)||{},b=ageBase(q);let a=0;Object.keys(F).forEach(k=>{const e=F[k];if(k!==q.id&&e&&e.ms>b)a+=e.r===q.bureau?ageIci():ageAilleurs();});return Math.round(a*100)/100;}
-function agedIn(bid){return quetes.filter(q=>q.statut==="ouverte"&&(!bid||q.bureau===bid)&&ageOf(q)>=ageMax());}
+function agedIn(bid){const perm=qpRumeurIds();return quetes.filter(q=>q.statut==="ouverte"&&!perm[q.id]&&(!bid||q.bureau===bid)&&ageOf(q)>=ageMax());}      // la rumeur d'une quête personnelle ne périme jamais
 function aggravIn(bid){const r=(monde&&monde.regions&&monde.regions[bid])||{},A=r.aggrav||{},c=r.criseMs||0;return Object.keys(A).filter(k=>A[k]>c).length;}
 function criseRegions(){return bureaux.filter(b=>aggravIn(b.id)>=aggravSeuil());}
 // Sens d'une évolution de région : positive s'il n'y a eu aucune aggravation depuis la dernière évolution, sinon mitigée.
@@ -1996,8 +2004,8 @@ const MAN={
   modules:{coll:"modules",nom:"module",fields:[["nom","Nom du module","text",1],["ordre","Ordre chronologique (1, 2, 3…)","number"],["periode","Période (ex. été 1492 DR)","text"],["statut","Statut","select",0,MOD_STATUS],["regions","Régions touchées","regionmulti"],["heros","Les héros qui le vivent (l'autre groupe)","text"],
     ["resume","Résumé de l'intrigue (pour toi)","md"],["signes","Signes publics : ce que le peuple voit et entend (rumeurs, Crieur)","md"],["consequences","Conséquences par région (pour les évolutions)","md"],["accroches","Quêtes secondaires pour la Guilde (aider les héros)","md"],["etapes","Étapes (« ## Titre » par étape, puis « ## Fin positive », « ## Fin normale », « ## Fin négative »)","md"],["notes","Notes","md"]]},
   rencontres:{coll:"rencontres",nom:"rencontre",fields:[["nom","Nom","text",1],["region","Région","region"],["quete","Quête liée","questref"],["monstres","Monstres","monsterlist"],["terrain","Terrain et ambiance","textarea"],["notes","Tactique et déroulement","md"],["butin","Butin prévu (une ligne par objet, ex. « Épée courte (10 po) »)","textarea"]]},
-  dossiers:{coll:"dossiers",nom:"dossier",fields:[["outerworlder","Outerworlder","select",0,[["","À déterminer"],["oui","Oui"],["non","Non (natif)"]]],["donNom","Don accordé par le Système","text"],["donDesc","Effet du Don","md"],["niveau","Niveau","number"],["sousClasse","Sous-classe","text"],["ca","CA","number"],["pv","PV max","number"],["percPassive","Perception passive","number"],["regles","Règles et capacités particulières (dons, style de combat, manifestations, objets…)","md"],["accroches","Accroches et liens","md"],["notes","Notes du DM","md"]]},
-  scenarios:{coll:"scenarios",nom:"scénario",fields:[["module","Module officiel lié (quête secondaire)","moduleref"],["scenario","Scénario","md"],["trajet","Trajet depuis le bureau (jours)","trajet"],["duree","Durée sur place (jours)","trajet"],["cartes","Cartes des scènes (écran de table)","scmaps"],["objectifs","Objectifs (secrets)","objs"],["consequences","Autres conséquences pour le monde","consq"],["rencontres","Rencontres liées","rencmulti"],["pnj","PNJ liés","pnjmulti"],["monstres","Monstres liés","monstermulti"],["butinQuete","Objets de quête","questloot"],["notes","Notes","md"]]}
+  dossiers:{coll:"dossiers",nom:"dossier",fields:[["outerworlder","Outerworlder","select",0,[["","À déterminer"],["oui","Oui"],["non","Non (natif)"]]],["donNom","Don accordé par le Système","text"],["donDesc","Effet du Don","md"],["niveau","Niveau","number"],["sousClasse","Sous-classe","text"],["ca","CA","number"],["pv","PV max","number"],["percPassive","Perception passive","number"],["regles","Règles et capacités particulières (dons, style de combat, manifestations, objets…)","md"],["qpTitre","Quête personnelle : titre","text"],["qpFil","Quête personnelle : fil conducteur (secret)","md"],["qpSecrets","Quête personnelle : secrets à découvrir","secrets"],["qpRumeur","Quête personnelle : rumeur finale (ne périme jamais)","questref"],["accroches","Accroches et liens","md"],["notes","Notes du DM","md"]]},
+  scenarios:{coll:"scenarios",nom:"scénario",fields:[["module","Module officiel lié (quête secondaire)","moduleref"],["scenario","Scénario","md"],["trajet","Trajet depuis le bureau (jours)","trajet"],["duree","Durée sur place (jours)","trajet"],["cartes","Cartes des scènes (écran de table)","scmaps"],["objectifs","Objectifs (secrets)","objs"],["backgrounds","Éléments de background (facultatifs)","bgs"],["consequences","Autres conséquences pour le monde","consq"],["rencontres","Rencontres liées","rencmulti"],["pnj","PNJ liés","pnjmulti"],["monstres","Monstres liés","monstermulti"],["butinQuete","Objets de quête","questloot"],["notes","Notes","md"]]}
 };
 function manList(t){return t==="modules"?modules:t==="factions"?factions:t==="pnj"?pnjs:t==="monstres"?monstres:t==="rencontres"?rencontres:[];}
 function byName(l){return l.slice().sort((a,b)=>String(a.nom||"").localeCompare(String(b.nom||""),"fr"));}
@@ -2024,7 +2032,7 @@ function mlEditor(){const rows=ui.manML||[];
 function manForm(type,d,title){const S=MAN[type];d=d||{};
   let h='<form class="form dmform" id="manform" data-type="'+type+'"><h2>'+esc(title)+'</h2>';
   S.fields.forEach(f=>{const [k,lab,ty,req,opts]=f,v=d[k],id="mf-"+k;
-    const wide=["textarea","md","consq","objs","scmaps","image","monsterlist","questmulti","rencmulti","pnjmulti","monstermulti"].indexOf(ty)>=0||k==="nom"||k==="titre";
+    const wide=["textarea","md","consq","objs","bgs","secrets","scmaps","image","monsterlist","questmulti","rencmulti","pnjmulti","monstermulti"].indexOf(ty)>=0||k==="nom"||k==="titre";
     if(ty==="image"){const img=ui.manImg!==undefined?ui.manImg:(v||"");h+='<div class="wide imgrow">'+(img?'<img class="portrait sm" src="'+esc(img)+'" alt="">':'<span class="portrait sm ph" aria-hidden="true">?</span>')+'<label for="mf-img">'+lab+' (facultatif)<input id="mf-img" type="file" accept="image/*"></label>'+(img?'<button class="btn ghost" type="button" data-a="mimg-clear">Retirer</button>':'')+'</div>';return;}
     h+=ty==="monsterlist"||ty.indexOf("multi")>0?'<fieldset class="wide pick"><legend>'+lab+'</legend>':'<label class="'+(ty==="check"?'pickrow ':'')+(wide?'wide':'')+(ABIL.some(x=>x[0]===k)?' abil':'')+'" for="'+id+'">'+lab+(ty==="md"?' <span class="tip">## Titre, **gras**, - liste, [[Nom]] = lien vers une fiche</span>':'');
     if(ty==="text")h+='<input id="'+id+'" maxlength="'+(k==="nom"?100:300)+'"'+(req?' required':'')+' value="'+esc(v||"")+'">';
@@ -2037,6 +2045,8 @@ function manForm(type,d,title){const S=MAN[type];d=d||{};
     else if(ty==="trajet")h+='<span class="tip">Jours de voyage entre le bureau de la Guilde et la mission : « 1 » = 1 jour aller et 1 jour retour, « 0/2 » = 0 aller, 2 retour. Vide = sur place. Ces jours comptent dans le calendrier (× le temps hors mission).</span><input id="'+id+'" maxlength="10" value="'+esc(v||"")+'" placeholder="1">';
     else if(ty==="scmaps")h+='<span class="tip">Une ligne par scène ou combat prévu : Nom | type | heure | météo | taille | URL. Types : '+Object.keys(EC_MAPS).filter(k=>k!=="image").join(", ")+'. Heure : jour, crepuscule, nuit, tenebres. Météo : '+Object.keys(EC_METEO).join(", ")+' (la saison l\'ajuste au besoin ; ignorée à l\'intérieur). Taille facultative (ex. 40x22). URL facultative : une image peinte remplace la carte dessinée. 7e champ facultatif, le nom du lieu (ex. tour-de-morueth) : deux scènes, même dans des quêtes différentes, qui portent le même nom de lieu ont exactement la même carte. Sans nom de lieu, chaque scénario a sa propre carte, et chaque rencontre aléatoire est toujours neuve.</span><textarea id="'+id+'" rows="4" maxlength="5000" placeholder="Le quai du Sel Noir | port | crepuscule | brume&#10;L\'entrepôt n° 9 | entrepot | nuit | clair">'+esc(v||"")+'</textarea>';
     else if(ty==="objs")h+='<span class="tip">Une ligne par objectif : Objectif | conséquence si l\'objectif n\'est pas rempli. Tous remplis = Réussite, certains = Réussite partielle, aucun = Échec. Les joueurs ne les voient jamais.</span><textarea id="'+id+'" rows="4" maxlength="5000" placeholder="Tous les ennemis éliminés | Les rats reviennent trois jours plus tard.&#10;Tunnel trouvé | Maître Tobrin rappellera la Guilde dans un mois.">'+esc(v||"")+'</textarea>';
+    else if(ty==="secrets")h+='<span class="tip">Une ligne par secret : un petit élément à découvrir (un parchemin, un témoin, une vieille connaissance, un objet…), pas une quête entière. Les codes S1, S2… sont ajoutés à l\'enregistrement ; ne les change plus ensuite.</span><textarea id="'+id+'" rows="6" maxlength="6000">'+esc(v||"")+'</textarea>';
+    else if(ty==="bgs")h+='<span class="tip">Une ligne par élément : Personnage | S1 | ce qui se passe dans ce scénario. Le code du secret (S1, S2… de sa quête personnelle) est facultatif : « Personnage | simple touche d\'ambiance ». Proposés à l\'ouverture du Mode Partie seulement si le personnage est présent.</span><textarea id="'+id+'" rows="5" maxlength="12000">'+esc(v||"")+'</textarea>';
     else if(ty==="consq")h+='<span class="tip">Une ligne par conséquence. Commence par « Réussite : », « Partielle : », « Échec : » (ou plusieurs : « Partielle, Échec : »). Sans préfixe, elle vaut pour tous les résultats. À la fin de la quête, tu coches celles qui arrivent.</span><textarea id="'+id+'" rows="6" maxlength="10000" placeholder="Échec : Des goules rôdent dans la Haute-Ville.&#10;Partielle, Échec : Garrow s\'enfuit et jure de se venger.&#10;Réussite : Frère Aldo devient un allié.">'+esc(v||"")+'</textarea>';
     else if(ty==="select")h+='<select id="'+id+'">'+opts.map(o=>'<option value="'+esc(o[0])+'"'+(String(v==null?(k==="fp"?"1":k==="taille"?"M":""):v)===o[0]?' selected':'')+'>'+esc(o[1])+'</option>').join("")+'</select>';
     else if(ty==="region")h+='<select id="'+id+'">'+regionOpts(v)+'</select>';
@@ -2059,6 +2069,7 @@ function readManForm(type){const out={};
     if(ty==="number"){const s=el?el.value.trim():"";out[k]=s===""?null:Math.max(0,Math.min(999,Math.round(+s)));return;}
     if(ty==="monsterlist"){out[k]=(ui.manML||[]).map((r,i)=>{const n=document.getElementById("ml-n-"+i);return {id:r.id,nb:Math.max(1,Math.min(99,Math.round(+(n?n.value:r.nb)||1)))};});return;}
     if(ty.indexOf("multi")>0){out[k]=Array.from(document.querySelectorAll('#manform input[data-mm="'+k+'"]')).filter(c=>c.checked).map(c=>c.value);return;}
+    if(ty==="secrets"){out[k]=qpNumber(el?el.value:"").slice(0,6000);return;}
     out[k]=el?String(el.value).slice(0,40000):"";});
   return out;}
 // Liens internes du Manuel : [[Nom]] devient un lien vers la fiche (PNJ, monstre, rencontre, personnage ou quête) qui porte ce nom.
@@ -2135,7 +2146,7 @@ function secPerso(){
     let h=backLink("Personnages")+'<article class="dossier"><div class="sheet-top">'+(a.image?zimg("portrait",a.image,a.nom,"aventuriers",a.id):'<span class="portrait ph" aria-hidden="true">'+esc(String(a.nom).charAt(0))+'</span>')+'<div class="sheet-id"><h2>'+esc(a.nom)+'</h2><p class="sheet-sub">'+esc([a.espece,a.classe].filter(Boolean).join(" · ")||"Aventurier")+(d.niveau?' · niveau '+esc(d.niveau):'')+'</p>'+(a.joueur?'<p class="sheet-pl">Joué par '+esc(a.joueur)+'</p>':'')+'<p><a href="#perso-'+esc(a.id)+'">Voir la fiche publique</a></p></div></div>';
     h+='<div class="dmgrid"><section class="dmcard"><h3>Le Système</h3><p><strong>Outerworlder :</strong> '+({oui:"Oui",non:"Non (natif)"}[d.outerworlder]||"À déterminer")+'</p>'+(d.donNom?'<p class="don-dm"><strong>Don : '+esc(d.donNom)+'</strong></p>'+(d.donDesc?'<div class="wikibody">'+md(d.donDesc)+'</div>':''):d.outerworlder==="non"?'':'<p class="warn">Aucun Don attribué.</p>')+(a.don&&!d.donNom?'<p class="desc">Ancien Don (fiche publique) : '+esc(a.don)+'</p>':'')+'</section>';
     h+='<section class="dmcard"><h3>En jeu</h3><p class="sbl"><strong>CA</strong> '+esc(d.ca==null?"—":d.ca)+' · <strong>PV max</strong> '+esc(d.pv==null?"—":d.pv)+' · <strong>Perception passive</strong> '+esc(d.percPassive==null?"—":d.percPassive)+'</p></section></div>';
-    h+=memoBlock(a)+mdBlock("Accroches et liens",d.accroches)+mdBlock("Notes du DM",d.notes);
+    h+=memoBlock(a)+qpBlock(a)+mdBlock("Accroches et liens",d.accroches)+mdBlock("Notes du DM",d.notes);
     h+='<h3>Renommée</h3>'+(regs.length?'<ul class="sheetrep">'+regs.map(b=>'<li><span>'+esc(b.nom)+'</span><span>'+chip(renown(a,b.id))+renAxes(renown(a,b.id))+' <span class="muted">'+renown(a,b.id)+' · R '+ptsLabel(pm[b.id]||0)+' · N '+ptsLabel(ptsN(a,b.id))+'</span></span></li>').join("")+'</ul>':'<p class="desc">Inconnu partout.</p>');
     h+=relBlock("perso",a.id);
     h+='<h3>Quêtes en cours</h3>'+ql(curQ)+'<h3>Inscriptions en attente</h3>'+ql(waitQ)+'<h3>Quêtes accomplies</h3>'+ql(doneQ);
@@ -2309,6 +2320,9 @@ function todoItems(){
   monstres.filter(m=>m.aCompleter).forEach(m=>{const q=questById(m.creeDansQuete);it.push({k:"fiche",t:'<strong>'+esc(m.nom)+'</strong> : créature ajoutée en combat'+(q?' pendant « '+esc(q.titre)+' »':'')+'. Complète sa fiche (type, FP, actions, table de butin).',act:'<button class="mini" data-a="man-open" data-sec="monstres" data-id="'+esc(m.id)+'">Compléter</button>'});});
   pnjs.filter(x=>x.aCompleter).forEach(x=>{const q=questById(x.creeDansQuete);it.push({k:"fiche",t:'<strong>'+esc(x.nom)+'</strong> : PNJ ajouté en combat'+(q?' pendant « '+esc(q.titre)+' »':'')+'. Complète sa fiche (rôle, apparence, stats, table de butin).',act:'<button class="mini" data-a="man-open" data-sec="pnj" data-id="'+esc(x.id)+'">Compléter</button>'});});
   compPending().forEach(e=>{const p=e.proposition,n=Object.keys(p.approbations||{}).length;it.push({k:"comp",t:'<strong>'+esc(p.titre)+'</strong> : '+(e.publiee===false?'nouvelle entrée':'modification')+' de '+esc((p.par&&p.par.nom)||"?")+' ('+n+'/2)',act:'<a class="mini" href="#compendium-'+esc(e.id)+'">Examiner</a>'});});
+  aventuriers.filter(a=>!a.pnj&&a.proprietaire).forEach(a=>{const Q=qpOf(a.id),dos='<button class="mini" data-a="man-open" data-sec="perso" data-id="'+esc(a.id)+'">Dossier</button>';
+    if(String(a.background||"").trim()&&!Q.S.length)it.push({k:"don",t:'<strong>'+esc(a.nom)+'</strong> : background à intégrer (quête personnelle et éléments dans les scénarios pertinents)',act:dos});
+    else if(Q.all&&!Q.d.qpRumeur)it.push({k:"don",t:'<strong>'+esc(a.nom)+'</strong> a découvert tous les secrets de sa quête personnelle : <strong>rumeur à écrire</strong>',act:dos});});
   aventuriers.filter(a=>{const d=dossiers[a.id]||{};return !a.pnj&&a.proprietaire&&d.outerworlder!=="non"&&!d.donNom;}).forEach(a=>{const d=dossiers[a.id]||{};it.push({k:"don",t:'<strong>'+esc(a.nom)+'</strong> : '+(d.outerworlder==="oui"?'Outerworlder sans Don':'Outerworlder ? Don à attribuer ou personnage natif à indiquer'),act:'<button class="mini" data-a="man-open" data-sec="perso" data-id="'+esc(a.id)+'">Dossier</button>'});});
   return it;
 }
@@ -5063,6 +5077,49 @@ function objParse(t){const out=[];String(t||"").split(/\n+/).forEach(raw=>{const
     const k=l.indexOf("|"),y=l.replace(/^[-*•]\s+/,"");const kk=y.indexOf("|");out.push({i:out.length,txt:(kk>=0?y.slice(0,kk):y).trim(),csq:(kk>=0?y.slice(kk+1):"").trim(),sub:[]});});
   return out;}
 function objsOf(q){return objParse((scenarios[q.id]||{}).objectifs);}
+/* ---------- Quêtes personnelles et éléments de background (DM seulement) ---------- */
+// Dossier : qpTitre, qpFil, qpSecrets (une ligne par secret : « S1 | texte »), qpTrouves {S1:{q:quête,ms}}, qpRumeur (id de la rumeur finale, qui ne périme jamais).
+// Scénario : backgrounds (une ligne par élément : « Personnage | S1 | ce qui se passe » ; le code du secret est facultatif).
+function qpParse(t){const out=[];String(t||"").split(/\n+/).forEach(raw=>{const l=raw.trim().replace(/^[-*•]\s+/,"");if(!l)return;const m=l.match(/^(S\d{1,2})\s*\|\s*(.*)$/i);out.push({code:m?m[1].toUpperCase():"",txt:(m?m[2]:l).trim()});});return out;}
+function qpNumber(t){const L=qpParse(t);let n=L.reduce((mx,x)=>Math.max(mx,x.code?+x.code.slice(1):0),0);return L.map(x=>(x.code||("S"+(++n)))+" | "+x.txt).join("\n");}
+function qpOf(aid){const d=dossiers[aid]||{},S=qpParse(d.qpSecrets).filter(x=>x.code),T=d.qpTrouves||{};return {d,S,T,done:S.filter(x=>T[x.code]).length,all:S.length>0&&S.every(x=>T[x.code])};}
+function qpRumeurIds(){const o={};Object.keys(dossiers).forEach(k=>{const r=(dossiers[k]||{}).qpRumeur;if(r)o[r]=k;});return o;}
+function bgChar(who){const k=ptNorm(who).trim();if(!k)return null;const f=k.split(/\s+/)[0];
+  return aventuriers.find(a=>ptNorm(a.nom).trim()===k)||aventuriers.find(a=>ptNorm(a.nom).indexOf(k)===0)||aventuriers.find(a=>ptNorm(a.nom).trim().split(/\s+/)[0]===f)||null;}
+function bgParse(t){const out=[];String(t||"").split(/\n+/).forEach(raw=>{const l=raw.trim().replace(/^[-*•]\s+/,"");if(!l)return;const p=l.split("|").map(x=>x.trim());if(p.length<2||!p[0])return;
+    let code="",txt;if(p.length>=3&&/^S\d{1,2}$/i.test(p[1])){code=p[1].toUpperCase();txt=p.slice(2).join(" | ");}else if(p.length>=3&&p[1]===""){txt=p.slice(2).join(" | ");}else txt=p.slice(1).join(" | ");
+    const a=bgChar(p[0]);out.push({i:out.length,who:p[0],aid:a?a.id:null,nom:a?a.nom:p[0],code,txt});});return out;}
+function bgOf(q){return q&&!q.libre?bgParse((scenarios[q.id]||{}).backgrounds):[];}
+function bgPresent(q){const ids={};ptSignups(q).forEach(x=>{if(x.aventurier)ids[x.aventurier]=1;});((ui.pt&&ui.pt.liste)||[]).forEach(c=>{if(c.kind==="pj"&&c.ref)ids[c.ref]=1;});return ids;}
+function bgSecret(e){if(!e.aid||!e.code)return null;const Q=qpOf(e.aid),x=Q.S.find(y=>y.code===e.code);return x?{txt:x.txt,found:Q.T[e.code]||null}:null;}
+// Fenêtre d'ouverture du Mode Partie : les éléments des personnages présents, à cocher. Ceux des absents sont sautés.
+function bgModal(q){const all=bgOf(q),pres=bgPresent(q),here=all.filter(e=>e.aid&&pres[e.aid]),away=all.filter(e=>!(e.aid&&pres[e.aid])),P=ui.pt,on=(P.bg&&P.bg.on)||null;
+  let h='<div class="modal-bg"><form class="modal wide" id="bgform" role="dialog" aria-modal="true" aria-labelledby="bg-t"><h2 id="bg-t">Éléments de background</h2><p class="desc">Facultatifs. Coche ceux que tu veux jouer pendant cette partie : ils apparaîtront en haut de l\'onglet Scénario. Un ou deux par session suffisent.</p>';
+  h+=here.length?'<ul class="bglist">'+here.map(e=>{const sc=bgSecret(e),chk=on?on.indexOf(e.i)>=0:!(sc&&sc.found);
+    return '<li><label class="pickrow" for="bg-'+e.i+'"><input type="checkbox" id="bg-'+e.i+'" data-bg="'+e.i+'"'+(chk?' checked':'')+'><span><strong>Élément de background : '+esc(e.nom)+'</strong>'+(sc&&sc.found?' <em class="bgf">(secret '+esc(e.code)+' déjà découvert)</em>':'')+'<span class="bgt">'+esc(e.txt)+'</span>'+(sc?'<span class="bgs">Secret '+esc(e.code)+' : '+esc(sc.txt)+'</span>':'')+'</span></label></li>';}).join("")+'</ul>':'<p class="desc">Aucun des personnages présents n\'a d\'élément dans ce scénario.</p>';
+  if(away.length)h+='<p class="desc">Sautés (personnage absent ou introuvable) : '+away.map(e=>esc(e.nom)).filter((x,i,l)=>l.indexOf(x)===i).join(", ")+'.</p>';
+  return h+'<div class="actions"><button class="btn" type="submit">Valider</button>'+(P.bg&&P.bg.vu?'<button class="btn ghost" type="button" data-a="bg-close">Annuler</button>':'')+'</div></form></div>';}
+// Onglet Scénario : les éléments retenus, avec le bouton qui coche le secret dans le dossier du personnage.
+function bgPanel(q){const all=bgOf(q);if(!all.length)return "";const P=ui.pt,pres=bgPresent(q),on=(P.bg&&P.bg.on)||[],kept=all.filter(e=>on.indexOf(e.i)>=0&&e.aid&&pres[e.aid]);
+  let h='<section class="bgpanel"><div class="bghead"><h3>Éléments de background</h3><button class="mini" data-a="bg-ask">Choisir</button></div>';
+  if(!kept.length)return h+'<p class="desc">Aucun élément retenu pour cette partie.</p></section>';
+  return h+kept.map(e=>{const sc=bgSecret(e);
+    return '<article class="bgel'+(sc&&sc.found?' done':'')+'"><h4>'+esc(e.nom)+'</h4><div class="wikibody">'+md(manLinks(e.txt))+'</div>'+
+      (sc?'<p class="bgs">Secret '+esc(e.code)+' : '+esc(sc.txt)+'</p><p>'+(sc.found?'<strong class="ok">✓ Secret découvert</strong> <button class="mini" data-a="qp-toggle" data-id="'+esc(e.aid)+'" data-v="'+esc(e.code)+'">Annuler</button>':'<button class="btn gold sm" data-a="qp-toggle" data-id="'+esc(e.aid)+'" data-v="'+esc(e.code)+'" data-q="'+esc(q.id)+'">Secret découvert</button>')+'</p>':'')+'</article>';}).join("")+'</section>';}
+// Dossier DM : la quête personnelle, ses secrets à cocher et les scénarios où chacun est placé.
+function qpBlock(a){const Q=qpOf(a.id),d=Q.d,place={};
+  quetes.forEach(q=>bgOf(q).forEach(e=>{if(e.aid===a.id){const k=e.code||"_";(place[k]=place[k]||[]).push(q);}}));
+  const qs=l=>(l||[]).filter((x,i,arr)=>arr.indexOf(x)===i).map(q=>'<button class="linkbtn" data-a="man-quest" data-id="'+esc(q.id)+'">'+esc(q.titre)+'</button>').join(", ");
+  let h='<h3>Quête personnelle'+(d.qpTitre?' : '+esc(d.qpTitre):'')+'</h3>';
+  if(!Q.S.length)return h+'<p class="'+(String(a.background||"").trim()?'warn':'desc')+'">'+(String(a.background||"").trim()?'Background rempli, mais aucune quête personnelle : ajoute ses secrets (« Modifier le dossier »), puis place des éléments dans les scénarios pertinents.':'Aucune pour l\'instant (le joueur n\'a pas encore écrit son background).')+'</p>';
+  if(d.qpFil)h+='<div class="wikibody">'+md(manLinks(d.qpFil))+'</div>';
+  h+='<p class="sbl"><strong>Secrets découverts :</strong> '+Q.done+' / '+Q.S.length+'</p><ul class="qplist">'+Q.S.map(x=>{const f=Q.T[x.code],fq=f&&f.q?questById(f.q):null;
+    return '<li class="'+(f?'done':'')+'"><label class="pickrow" for="qp-'+esc(x.code)+'"><input type="checkbox" id="qp-'+esc(x.code)+'" data-a="qp-toggle" data-id="'+esc(a.id)+'" data-v="'+esc(x.code)+'"'+(f?' checked':'')+'><span><strong>'+esc(x.code)+'</strong> '+esc(x.txt)+(f?' <em class="bgf">(découvert'+(fq?' pendant « '+esc(fq.titre)+' »':'')+')</em>':'')+
+      '<span class="bgt">'+(place[x.code]?'Placé dans : '+qs(place[x.code]):'<span class="warn">Placé dans aucun scénario pour l\'instant.</span>')+'</span></span></label></li>';}).join("")+'</ul>';
+  if(place._)h+='<p class="desc">Touches d\'ambiance (sans secret) dans : '+qs(place._)+'</p>';
+  const rq=d.qpRumeur?questById(d.qpRumeur):null;
+  h+=Q.all?(rq?'<p class="sbl"><strong>Rumeur finale :</strong> '+esc(rq.titre)+' <span class="muted">(ne périme jamais)</span></p>':'<p class="warn">Tous les secrets sont découverts : écris sa rumeur sur un babillard, puis choisis-la dans « Modifier le dossier » (Rumeur finale).</p>'):'';
+  return h;}
 function objResult(n,tot){return !tot?null:n>=tot?"reussite":n>0?"partielle":"echec";}
 function ptObjDone(q){const d=(ui.pt&&ui.pt.id===q.id)?ui.pt:parties.find(p=>p.id===q.id);return (d&&d.objectifs)||[];}
 function csqTags(c){return c.q?c.q.map(k=>'<span class="csqt t-'+k+'">'+CSQ_L[k]+'</span>').join(""):'<span class="csqt">Tous</span>';}
@@ -5117,7 +5174,7 @@ function ptObjectifs(q){const ob=objsOf(q),P=ui.pt,od=P.objectifs||[],sd=P.objSu
       (o.sub.length?'<ul class="objsub">'+o.sub.map((x,k)=>'<li><label for="psub-'+o.i+'-'+k+'"><input type="checkbox" class="pt-osub" id="psub-'+o.i+'-'+k+'" data-i="'+o.i+'" data-k="'+k+'"'+(ss.indexOf(k)>=0?' checked':'')+'><span>'+esc(x)+'</span></label></li>').join("")+'</ul>':'')+'</section>';}).join("");}
 function ptScenario(q){
   const s=scenarios[q.id]||{},txt=String(s.scenario||""),P=ui.pt,faits=P.faits||[],encs=ptEncounters(q),used={};
-  const parts=txt.split(/\n(?=##\s)/);let h='';
+  const parts=txt.split(/\n(?=##\s)/);let h=bgPanel(q);
   const encBtn=r=>'<button class="btn gold sm" data-a="pt-launch" data-id="'+esc(r.id)+'">⚔ Lancer le combat : '+esc(r.nom)+'</button>';
   parts.forEach((sec,i)=>{const isH=/^##\s/.test(sec);const here=encs.filter(r=>sec.indexOf(r.nom)>=0);here.forEach(r=>{used[r.id]=1;});
     if(!isH){if(sec.trim())h+='<div class="wikibody">'+md(manLinks(sec))+'</div>'+(here.length?'<p class="ptlaunch">'+here.map(encBtn).join("")+'</p>':'');return;}
@@ -5379,6 +5436,7 @@ function partyView(){
   else h+='<div class="ptfoot"><a class="btn ghost" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir la quête sur le babillard</a>'+(q.statut==="encours"?'<button class="btn gold" data-a="complete" data-id="'+esc(q.id)+'">Terminer la quête</button>':'')+'</div>';
   if(ui.ptClose&&P.combat)h+=ptCloseModal();
   if(ui.ptSb){const m=monstres.find(x=>x.id===ui.ptSb);if(m)h+='<div class="modal-bg" data-a="pt-sbclose"><div class="modal wide" role="dialog" aria-modal="true" aria-label="Bloc de stats">'+statblock(m)+'<button class="btn" data-a="pt-sbclose">Fermer</button></div></div>';}
+  {const pres=bgPresent(q);if(!q.libre&&(ui.ptBg||(!(P.bg&&P.bg.vu)&&bgOf(q).some(e=>e.aid&&pres[e.aid]))))h+=bgModal(q);}
   return h+'</section>';
 }
 async function partyAction(a,id,b,e){
@@ -5722,6 +5780,11 @@ document.addEventListener("click",async e=>{
   else if(a==="art-copy"){const it=artItems().find(i=>i.id===id);if(!it)return;await copyText(artPrompt(ui.artKind,it.x));ui.artCopied=id;}
   else if(a==="art-clear"){hdDel(artColl(),id);await run("Image retirée",()=>setDoc(doc(db,artColl(),id),{image:"",majLe:serverTimestamp()},{merge:true}));return;}
   else if(a==="man-sec"){ui.manSec=b.getAttribute("data-v");ui.manId=null;ui.manEdit=null;ui.manQ="";ui.confirmMan=null;ui.noteEdit=null;}
+  else if(a==="bg-ask"){ui.ptBg=true;}
+  else if(a==="bg-close"){ui.ptBg=false;}
+  else if(a==="qp-toggle"){if(!isAdmin)return;const code=b.getAttribute("data-v"),was=!!qpOf(id).T[code],up={};up[code]=was?deleteField():{q:b.getAttribute("data-q")||"",ms:Date.now()};
+    if(!was&&ui.pt&&ui.office&&ui.office.indexOf("partie-")===0){const av=aventuriers.find(x=>x.id===id);ptLog("🔎 "+(av?av.nom:"Un personnage")+" découvre un secret de sa quête personnelle ("+code+").");ptSave();}
+    await run("Quête personnelle",()=>setDoc(doc(db,"dossiers",id),{qpTrouves:up,majLe:serverTimestamp()},{merge:true}));return;}
   else if(a==="man-open"){ui.dmTab="manuel";ui.manSec=b.getAttribute("data-sec");ui.manId=id;ui.manEdit=null;ui.confirmMan=null;if(location.hash!=="#dm"){ui.pendingMan=true;location.hash="#dm";}window.scrollTo(0,0);}
   else if(a==="man-quest"){ui.dmTab="manuel";ui.manSec="quetes";ui.manId=id;ui.manEdit=null;window.scrollTo(0,0);}
   else if(a==="man-back"){if(ui.manEdit&&ui.manId){ui.manEdit=null;}else{ui.manId=null;ui.manEdit=null;}ui.confirmMan=null;}
@@ -6049,6 +6112,8 @@ document.addEventListener("submit",async e=>{
       await bt.commit();
     });return;
   }
+  if(e.target.id==="bgform"){if(!ui.pt)return;const on=Array.from(e.target.querySelectorAll("input[data-bg]")).filter(c=>c.checked).map(c=>+c.getAttribute("data-bg"));
+    ui.pt.bg={vu:true,on:on};ui.ptBg=false;ptLog(on.length?"Éléments de background retenus : "+on.length+".":"Aucun élément de background retenu.");ptSave();render();return;}
   if(e.target.id==="planform"){
     const q=questById(ui.plan);if(!q)return;const date=v("pl-date"),heure=v("pl-heure").slice(0,30);
     if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date<todayIso())return;
