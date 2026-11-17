@@ -282,7 +282,9 @@ def build_lotU(lot,tab,s=0.46,mail=(),camail={}):
     for k,(cx,by) in tab.items():
         m=M[k-1]
         if k in camail:      # cervelière : le camail (ORANGE) est de la maille (15) ; seule sa partie sous le menton est le cou
-            m=m.copy();m[m==60]=15;r=int(camail[k]*m.shape[0]);s_=m[r:];s_[s_==15]=COU
+            # la limite entre camail visible et cou est ARRONDIE (demi-ellipse sous le visage) : une coupe droite laissait deux coins carrés
+            m=m.copy();m[m==60]=15;H_,W_=m.shape;wt,ht=Image.open(f'../{lot}/t{k}.png').size;X0=cx*W_/wt;Y0=by*H_/ht;r=camail[k]*H_;xs=np.where((m==15).any(0))[0];A_=1.25*max(X0-xs[0],xs[-1]-X0)
+            yy,xx=np.mgrid[0:H_,0:W_];out=(yy>Y0)&(((xx-X0)/A_)**2+((yy-Y0)/(r-Y0))**2>1);m[out&(m>0)]=COU      # tout ce qui n'est ni peau, ni cheveux, ni fer (les traits noirs des anneaux compris)
         elif k in mail: m=m.copy();m[m==60]=COU      # têtes casquées : le cou est en cotte de mailles (ORANGE dans le calque)
         else: m=neck_label(f'../{lot}/t{k}.png',m)
         build_map(f'{lot}_{k}',f'../{lot}/t{k}.png',(cx,by),m,s=s,eye=by+BROW_DY)
