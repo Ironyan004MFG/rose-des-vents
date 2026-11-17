@@ -2588,7 +2588,7 @@ function render(){
         h+='<div class="row2"><label for="c-date">Date de la session<input id="c-date" maxlength="80" value="'+esc(C.rapport.date)+'"></label>'+
           (objsOf(cq).length?'<div class="objres"><span class="ptlbl">Résultat</span><strong class="stamp res-'+esc(C.rapport.resultat)+'">'+esc(RESULTS[C.rapport.resultat]||"")+'</strong><span class="desc">'+(C.obj||[]).length+' / '+objsOf(cq).length+' objectifs</span></div>':
             '<label for="c-res">Résultat<select id="c-res">'+Object.keys(RESULTS).map(k=>'<option value="'+k+'"'+(k===C.rapport.resultat?' selected':'')+'>'+RESULTS[k]+'</option>').join("")+'</select></label>')+'</div>'+
-          ptReportBlock(cq,true,true)+objPick(cq,C)+csqPick(cq,C)+
+          ptReportBlock(cq,true,true)+objPick(cq,C)+secPick(cq,C)+csqPick(cq,C)+
           '<fieldset class="pick"><legend>Rapport de mission (Chroniques)</legend>'+
           (dr?'<p class="desc">Rapport reçu de <strong>'+esc(cq.rapportBrouillon.auteur||"un joueur")+'</strong>. Il sera publié dans les Chroniques.</p><div class="wikibody repprev">'+esc(dr).replace(/\n/g,"<br>")+'</div>':
             (writers.length?'<label for="c-writer">Auteur du rapport<select id="c-writer"><option value="">Personne pour l\'instant</option>'+writers.map(x=>'<option value="'+esc(x.uid)+'"'+(wsel===x.uid?' selected':'')+'>'+esc(x.nom)+'</option>').join("")+'</select></label><p class="desc">L\'auteur verra un bouton « Écrire le rapport de mission » sur la quête. Son rapport t\'attendra dans À traiter, pour publication.</p>':'<p class="desc">Aucun joueur inscrit avec un compte : pas d\'auteur à désigner.</p>'))+'</fieldset>'+
@@ -2610,6 +2610,7 @@ function render(){
         const g0=questGain(cq,C.rapport.resultat),wn=C.writer&&(C.parts.find(x=>x.uid===C.writer)||{}).nom,dr=cq.rapportBrouillon&&cq.rapportBrouillon.resume;
         h+='<div class="recap"><h3>Résumé</h3><dl><dt>Résultat</dt><dd>'+esc(RESULTS[C.rapport.resultat]||"")+(C.rapport.date?' · '+esc(C.rapport.date):'')+'</dd>'+
           (objsOf(cq).length?'<dt>Objectifs</dt><dd><ul>'+objsOf(cq).map(o=>'<li>'+((C.obj||[]).indexOf(o.i)>=0?'✅ ':'❌ ')+esc(o.txt)+'</li>').join("")+'</ul></dd>':'')+
+          (()=>{const L=secState(cq,C);return L.length?'<dt>Secrets</dt><dd><ul>'+L.map(r=>'<li>'+(r.ok?'✅ ':'❌ ')+'<strong>'+esc(r.nom)+' · '+esc(r.code)+'</strong> '+esc(r.secret)+(r.ailleurs?' <span class="desc">(déjà découvert pendant « '+esc(r.ailleurs.titre)+' »)</span>':'')+'</li>').join("")+'</ul></dd>':'';})()+
           '<dt>Conséquences pour le monde</dt><dd>'+((C.csq||[]).length||C.csqx||objsOf(cq).some(o=>(C.obj||[]).indexOf(o.i)<0&&o.csq)||(C.rapport.resultat==="reussite"&&csqWin(cq).length)?'<ul>'+objsOf(cq).filter(o=>(C.obj||[]).indexOf(o.i)<0&&o.csq).map(o=>'<li>'+esc(o.csq)+'</li>').join("")+(C.rapport.resultat==="reussite"?csqWin(cq).map(c=>'<li>'+esc(c.txt)+'</li>').join(""):'')+(C.csq||[]).map(t=>'<li>'+esc(t)+'</li>').join("")+(C.csqx?'<li><em>'+esc(C.csqx)+'</em></li>':'')+'</ul>':'<span class="desc">Aucune</span>')+'</dd>'+
           '<dt>Rapport de mission</dt><dd>'+(dr?'Reçu de '+esc(cq.rapportBrouillon.auteur||"un joueur")+', publié dans les Chroniques':wn?'Demandé à '+esc(wn):'<span class="desc">Aucun auteur désigné</span>')+'</dd>'+
           (C.notesDM&&C.notesDM!==ptNotesDM(cq)?'<dt>Notes DM</dt><dd>Ajoutées au rapport privé</dd>':'')+'</dl></div>';
@@ -2693,6 +2694,7 @@ function ptReport(q,noNotes){const d=(ui.pt&&ui.pt.id===q.id)?ui.pt:parties.find
   if(v.length)t+="- **Vaincus :** "+v.map(x=>x[0]+(x[1].n>1?" ×"+x[1].n:"")).join(", ")+" · "+xp+" XP"+(pcs.length?" ("+Math.floor(xp/pcs.length)+" par aventurier)":"")+"\n";
   if((st.ko||[]).length)t+="- **Tombés à 0 PV :** "+st.ko.join(", ")+"\n";
   (d.combats||[]).forEach(x=>{const vv=Object.keys(x.vaincus||{});t+=(t?"\n":"")+"### Rencontre : "+x.nom+" ("+x.rounds+" round"+(x.rounds>1?"s":"")+(x.xp?", "+x.xp+" XP":"")+")\n"+(vv.length?"- Vaincus : "+vv.map(k=>k+(x.vaincus[k].n>1?" ×"+x.vaincus[k].n:"")).join(", ")+"\n":"")+((x.ko||[]).length?"- Tombés à 0 PV : "+x.ko.join(", ")+"\n":"")+(x.crits&&Object.keys(x.crits).length?"- Coups critiques : "+Object.keys(x.crits).map(k=>k+(x.crits[k]>1?" ×"+x.crits[k]:"")).join(", ")+"\n":"")+((x.butin||[]).length?"- Butin : "+x.butin.join(", ")+"\n":"")+(x.fails&&Object.keys(x.fails).length?"- Échecs critiques : "+Object.keys(x.fails).map(k=>k+(x.fails[k]>1?" ×"+x.fails[k]:"")).join(", ")+"\n":"")+(x.notes?"\n"+x.notes+"\n":"");});
+  {const aids=pcs.map(c=>c.ref).filter(Boolean),L=q.libre?[]:secRows(q,aids);if(L.length)t+=(t?"\n":"")+"### Secrets des personnages\n"+L.map(r=>"- "+(r.found?"✅":"❌")+" **"+r.nom+" · "+r.code+"** "+r.secret+(r.ailleurs?" (déjà découvert pendant « "+r.ailleurs.titre+" »)":r.kept?"":" (pas retenu pour la partie)")).join("\n")+"\n";}
   if(d.notesDM&&!noNotes)t+=(t?"\n":"")+"### Notes du DM\n"+d.notesDM+"\n";
   const j=d.journal||[];if(j.length)t+=(t?"\n":"")+"### Journal de la partie\n"+j.map(x=>"- "+x.h+" · "+x.t).join("\n")+"\n";
   return t;}
@@ -5158,8 +5160,9 @@ function ptObjDone(q){const d=(ui.pt&&ui.pt.id===q.id)?ui.pt:parties.find(p=>p.i
 function csqTags(c){return c.q?c.q.map(k=>'<span class="csqt t-'+k+'">'+CSQ_L[k]+'</span>').join(""):'<span class="csqt">Tous</span>';}
 function csqList(q){const l=csqParse((scenarios[q.id]||{}).consequences);return l.length?'<ul class="csql">'+l.map(c=>'<li>'+csqTags(c)+' '+esc(c.txt)+'</li>').join("")+'</ul>':'';}
 // Conséquences retenues au bilan (privé : dans le scénario)
-function csqKept(q){const m=(scenarios[q.id]||{}).monde;if(!m||!((m.liste||[]).length||m.autre))return "";
-  return '<div class="csqkept"><h4>Conséquences retenues ('+esc((RESULTS[m.resultat]||"").toLowerCase())+')</h4><ul>'+(m.liste||[]).map(t=>'<li>'+esc(t)+'</li>').join("")+(m.autre?'<li><em>'+esc(m.autre)+'</em></li>':'')+'</ul></div>';}
+function csqKept(q){const m=(scenarios[q.id]||{}).monde;if(!m)return "";const sl=m.secrets||[];if(!((m.liste||[]).length||m.autre||sl.length))return "";
+  return '<div class="csqkept">'+((m.liste||[]).length||m.autre?'<h4>Conséquences retenues ('+esc((RESULTS[m.resultat]||"").toLowerCase())+')</h4><ul>'+(m.liste||[]).map(t=>'<li>'+esc(t)+'</li>').join("")+(m.autre?'<li><em>'+esc(m.autre)+'</em></li>':'')+'</ul>':'')+
+    (sl.length?'<h4>Secrets des personnages</h4><ul>'+sl.map(r=>'<li>'+(r.trouve?'✅ ':'❌ ')+'<strong>'+esc(r.perso)+' · '+esc(r.code)+'</strong> '+esc(r.secret)+(r.avant?' <span class="desc">(déjà découvert avant)</span>':!r.joue?' <span class="desc">(pas retenu pour la partie)</span>':'')+'</li>').join("")+'</ul>':'')+'</div>';}
 // Conséquences retenues à suivre : une ligne par conséquence, avec son état (à suivre, rumeur/quête créée, réglée).
 function csqItems(q){const m=(scenarios[q.id]||{}).monde;if(!m)return [];const su=m.suites||{};
   return (m.liste||[]).concat(m.autre?[m.autre]:[]).map((t,k)=>({q:q,k:k,txt:t,suite:su[k]||null}));}
@@ -5678,6 +5681,19 @@ async function migrate(){
 }
 
 function v0(id){const el=document.getElementById(id);return el?el.value.trim():"";}
+// Secrets des personnages joués dans une quête (pour le rapport de fin de quête, le bilan et le rapport privé du DM).
+// aids : personnages présents. Un secret par personnage et par code ; « here » = découvert pendant cette quête.
+function secRows(q,aids){const d=(ui.pt&&ui.pt.id===q.id)?ui.pt:parties.find(p=>p.id===q.id),on=(d&&d.bg&&d.bg.on)||null,seen={},out=[];
+  bgOf(q).forEach(e=>{if(!e.code||!e.aid||aids.indexOf(e.aid)<0)return;const k=e.aid+"|"+e.code;const sc=bgSecret(e);if(!sc||sc.locked)return;
+    if(seen[k]){if(on&&on.indexOf(e.i)>=0)seen[k].kept=true;return;}
+    const f=sc.found,r={k,aid:e.aid,nom:e.nom,code:e.code,secret:sc.txt,element:bgSplit(e.txt).quoi,found:!!f,here:!!(f&&f.q===q.id),ailleurs:f&&f.q&&f.q!==q.id?questById(f.q):null,kept:!on||on.indexOf(e.i)>=0};
+    seen[k]=r;out.push(r);});return out;}
+function secPick(q,C){const rows=secRows(q,C.parts.map(x=>x.aventurier).filter(Boolean));if(!rows.length)return "";const st=C.sec||{};
+  return '<fieldset class="pick csqpick objpick"><legend>Secrets des personnages</legend><p class="desc">Coche ceux que le groupe a découverts. C\'est reporté dans le dossier de chaque personnage, dans ton rapport privé et dans le bilan (jamais montré aux joueurs).</p>'+
+    rows.map(r=>{const on=r.ailleurs?true:(st[r.k]!==undefined?st[r.k]:r.found);
+      return '<label class="pickrow" for="csec-'+esc(r.k)+'"><input type="checkbox" class="c-sec" id="csec-'+esc(r.k)+'" data-k="'+esc(r.k)+'"'+(on?' checked':'')+(r.ailleurs?' disabled':'')+'><span><strong>'+esc(r.nom)+' · '+esc(r.code)+'</strong> '+esc(r.secret)+
+        '<span class="objcsq">'+(r.ailleurs?'Déjà découvert pendant « '+esc(r.ailleurs.titre)+' »':r.kept?'Joué dans cette partie':'Pas retenu pour cette partie')+'</span></span></label>';}).join("")+'</fieldset>';}
+function secState(q,C){const st=C.sec||{};return secRows(q,C.parts.map(x=>x.aventurier).filter(Boolean)).map(r=>Object.assign(r,{ok:r.ailleurs?true:(st[r.k]!==undefined?st[r.k]:r.found)}));}
 function csqWin(q){return objsOf(q).length?csqParse((scenarios[q.id]||{}).consequences).filter(c=>c.q&&c.q.length===1&&c.q[0]==="reussite"):[];}
 function objPick(q,C){const ob=objsOf(q);if(!ob.length)return "";const sel=C.obj||[];
   return     (csqWin(q).length?'<div class="winbox'+(C.rapport.resultat==="reussite"?' on':'')+'"><div class="winhead"><span class="wint">🎯</span><strong>Objectif : réussite complète</strong><span class="winst">'+(C.rapport.resultat==="reussite"?'✅ Atteint':(C.obj||[]).length+' / '+objsOf(q).length+' objectifs')+'</span></div>'+csqWin(q).map(c=>'<p class="winrow">'+esc(c.txt)+'</p>').join("")+'</div>':'')+'<fieldset class="pick csqpick objpick"><legend>Objectifs</legend><p class="desc">Ils déterminent le résultat : tous remplis = Réussite, certains = Réussite partielle, aucun = Échec. Un objectif raté ajoute sa conséquence.</p>'+
@@ -5704,6 +5720,7 @@ function readStep(){
     C.rapport={date:v0("c-date").slice(0,80),resultat:ob.length?objResult((C.obj||[]).length,ob.length):(v0("c-res")||"reussite"),resume:C.rapport.resume||""};
     const nd=document.getElementById("c-dmnotes");if(nd)C.notesDM=String(nd.value).slice(0,10000);const wr=document.getElementById("c-writer");if(wr)C.writer=wr.value;
     const all=csqParse((scenarios[C.id]||{}).consequences);C.csq=Array.from(document.querySelectorAll('#completeform input[data-csq]')).filter(c=>c.checked).map(c=>(all[+c.getAttribute("data-csq")]||{}).txt).filter(Boolean);
+    {const S=C.sec=C.sec||{};document.querySelectorAll('#completeform input.c-sec').forEach(c=>{if(!c.disabled)S[c.getAttribute("data-k")]=c.checked;});}
     const ax=document.getElementById("csq-autre");if(ax)C.csqx=String(ax.value).trim().slice(0,1000);if(r0&&r0!==C.rapport.resultat)C.parts.forEach(x=>{x.gain=null;x.gainN=null;});}
   if(C.step===2){C.parts.forEach((x,i)=>{x.aventurier=v0("m-adv"+i)||null;Object.keys(DEFAULT_MEFAITS).concat(BIENFAITS).forEach(k=>{x[k]=Math.max(0,Math.round(+v0("m-"+k+i)||0));});});}
   if(C.step===3){{const jr=document.getElementById("b-jrs");if(jr)C.jours=Math.max(0,Math.min(60,Math.round(+jr.value||0)));}const xb=document.getElementById("b-xpb");if(xb)C.xpBonus=Math.max(0,Math.round(+xb.value||0));C.parts.forEach((x,i)=>{const e=document.getElementById("b-xpp"+i);if(e)x.xpPerso=Math.max(0,Math.round(+e.value||0));});C.parts.forEach((x,i)=>{const el=document.getElementById("b-gain"+i),en=document.getElementById("b-gainn"+i);if(el&&!el.disabled)x.gain=Math.round(+el.value||0);if(en&&!en.disabled)x.gainN=Math.round(+en.value||0);});}
@@ -6080,7 +6097,11 @@ document.addEventListener("submit",async e=>{
       if(C.writer)bt.set(doc(db,"quetes",q.id),{redacteur:C.writer},{merge:true});
       const obm=objsOf(q).filter(o=>(C.obj||[]).indexOf(o.i)<0&&o.csq).map(o=>o.csq).concat(C.rapport.resultat==="reussite"?csqWin(q).map(c=>c.txt):[]);
       bt.set(doc(db,"prive","monde"),{fini:{[q.id]:{r:q.bureau,ms:Date.now()}}},{merge:true});
-      bt.set(doc(db,"scenarios",q.id),{monde:{resultat:C.rapport.resultat,objectifs:objsOf(q).map(o=>({txt:o.txt,ok:(C.obj||[]).indexOf(o.i)>=0})),liste:obm.concat(C.csq||[]),autre:C.csqx||"",le:serverTimestamp()}},{merge:true});
+      const SL=secState(q,C),byA={};
+      SL.forEach(r=>{if(r.ailleurs)return;if(r.ok&&!r.found)(byA[r.aid]=byA[r.aid]||{})[r.code]={q:q.id,ms:Date.now()};else if(!r.ok&&r.here)(byA[r.aid]=byA[r.aid]||{})[r.code]=deleteField();});
+      Object.keys(byA).forEach(aid=>bt.set(doc(db,"dossiers",aid),{qpTrouves:byA[aid],majLe:serverTimestamp()},{merge:true}));
+      bt.set(doc(db,"scenarios",q.id),{monde:{resultat:C.rapport.resultat,objectifs:objsOf(q).map(o=>({txt:o.txt,ok:(C.obj||[]).indexOf(o.i)>=0})),liste:obm.concat(C.csq||[]),autre:C.csqx||"",
+        secrets:SL.map(r=>({perso:r.nom,aventurier:r.aid,code:r.code,secret:r.secret,element:r.element,trouve:!!r.ok,joue:!!r.kept,avant:r.ailleurs?r.ailleurs.id:""})),le:serverTimestamp()}},{merge:true});
       const seen={};
       C.parts.forEach(x=>{const a=x.aventurier&&aventuriers.find(y=>y.id===x.aventurier);if(!a)return;
         const t=partTotals(q,C.rapport.resultat,x),net=t.r,netN=t.n,bl=bienLabels();
