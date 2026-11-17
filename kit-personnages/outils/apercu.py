@@ -18,7 +18,8 @@ def body(n,sk=SK,tronc=42,fem=False,**kw):
     if n in STD:
         if n in ('garde','plates'): std.guard() if n=='garde' else std.plates()
         if n=='barbare_f': std.G.update({5:.8})
-        c=std.char(p,{1:sk,**STD[n],**kw.get('cols',{})},H=600);h=std.hole(p,512).convert('RGBA');l=.9 if fem else 1
+        c=std.char(p,{1:sk,**STD[n],**kw.get('cols',{})},H=600);l=.9 if fem else 1
+        h=std.hole(std.prep('../std/grd_relaxed.png','../std/grd_relaxed_map.png') if n in ('garde','plates') else p,512).convert('RGBA')      # garde, plates : l'encolure est remplie de mailles, on reprend son contour dans le calque du garde
     else:
         f={'pourpoint':lambda:prp.char(p,head=None,sk=sk,**kw),'cuisinier':lambda:cui.char(p,head=False,sk=sk,**kw),'forgeron':lambda:frg.char(p,head=False,sk=sk,**kw),'barbare':lambda:brb.char(p,head=False,sk=sk,**kw),
            'serveuse':lambda:srv.char(p,head=None,sk=sk,**kw),'robe':lambda:rob.char(p,head=None,sk=sk,**kw)}[n]
