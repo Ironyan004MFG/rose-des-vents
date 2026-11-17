@@ -61,6 +61,19 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .office .tag{display:block;font-family:var(--body);font-style:italic;font-size:14px;color:var(--on-board-muted);letter-spacing:0}
 .count{font-family:var(--display);font-weight:700;font-variant-numeric:tabular-nums;background:var(--parch);color:var(--ink);border-radius:4px;padding:4px 10px;font-size:14px;white-space:nowrap}
 .count.zero{background:transparent;color:var(--on-board-muted);border:1px solid var(--line)}
+.count .ins{font-weight:400;font-family:var(--body);font-size:14px}
+.office.expe{border-color:var(--gold);background:linear-gradient(180deg,rgba(216,180,94,.14),rgba(216,180,94,.04)),var(--board-2);margin-bottom:8px}
+.office.expe .who{display:block;font-family:var(--body);font-size:14px;color:var(--on-board);letter-spacing:0;margin-top:2px}
+.note.expn{padding:24px 20px 18px;gap:10px}.note.expn h2{font-size:19px}.note.expn h2 a{color:inherit;text-decoration:none}.note.expn h2 a:hover,.note.expn h2 a:focus-visible{text-decoration:underline}
+.note.expn .ev{font-style:italic;color:var(--ink-soft);font-size:15px;margin:0}
+.note.expn .facts .ok{color:var(--open);font-weight:700}
+.note.expn .muted{color:var(--ink-soft)}
+.pmode{display:inline-block;font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;border:1px solid currentColor;border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:middle}
+.planadd .pmodes{display:flex;flex-direction:column;gap:4px;min-width:0}
+.planadd .pmodes>span{font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+.planadd .pmodes .opts{display:flex;gap:14px;align-items:center;min-height:42px}
+.planadd .pmodes label{flex-direction:row;align-items:center;gap:6px;text-transform:none;letter-spacing:normal;font-family:var(--body);font-size:16px;color:var(--ink)}
+.planadd .pmodes input{flex:none;width:18px;height:18px;padding:0;margin:0;color-scheme:light;accent-color:#7a2e2e}
 .hint{color:var(--on-board-muted);font-size:15px;font-style:italic;margin:4px 0 0}
 @media (max-width:860px){.mapwrap{grid-template-columns:1fr;grid-template-areas:"map" "nav" "gaz";grid-template-rows:auto}}
 
@@ -1172,6 +1185,34 @@ function reportBox(q){
 }
 function signupsFor(id){return inscriptions.filter(s=>s.quete===id).sort((a,b)=>(a.creeMs||0)-(b.creeMs||0));}
 function openCount(id){return quetes.filter(q=>q.bureau===id&&q.statut==="ouverte").length;}
+// Inscrits (non refusés) aux quêtes OUVERTES : ce que les joueurs voient déjà sur les babillards.
+function expeSignups(q){return signupsFor(q.id).filter(x=>x.statut!=="refusee");}
+function signedCount(id){return quetes.filter(q=>q.bureau===id&&q.statut==="ouverte").reduce((n,q)=>n+expeSignups(q).length,0);}
+const PMODE={virtuel:"Virtuel",presentiel:"Présentiel"};
+function pmodeTag(p){return p&&PMODE[p.mode]?'<span class="pmode">'+PMODE[p.mode]+'</span>':'';}
+// Expéditions en préparation : quêtes ouvertes ayant au moins un inscrit, la plus suivie en premier.
+function expeList(){return quetes.filter(q=>q.statut==="ouverte").map(q=>({q,s:expeSignups(q)})).filter(x=>x.s.length).sort((a,b)=>b.s.length-a.s.length||b.s[b.s.length-1].creeMs-a.s[a.s.length-1].creeMs);}
+// Accueil : un seul bloc résumé, qui mène à la page des expéditions.
+function expeSummary(){
+  if(!loaded.q||!loaded.i)return "";
+  const list=expeList(),n=list.length,tot=list.reduce((a,x)=>a+x.s.length,0);
+  return '<a class="office regl expe" href="#expeditions"><span class="nm">Expéditions en préparation<span class="tag">'+(n?n+' groupe'+(n>1?'s':'')+' en formation · '+tot+' inscrit'+(tot>1?'s':''):'Aucun groupe ne se forme pour l\'instant')+'</span>'+
+    (n?'<span class="who">'+list.slice(0,3).map(x=>esc(x.q.titre)+' ('+x.s.length+')').join(" · ")+(n>3?' · +'+(n-3):'')+'</span>':'')+'</span><span aria-hidden="true">→</span></a>';
+}
+// Page « Expéditions » : un petit parchemin cloué par quête. Rien de secret : ce sont les noms déjà visibles sur les babillards.
+function expeditionsView(){
+  if(!loaded.q||!loaded.i)return '<p class="hint">Chargement…</p>';
+  const list=expeList();
+  if(!list.length)return '<p class="empty">Aucun groupe ne se forme pour l\'instant. Choisis une quête sur le babillard d\'un comptoir et inscris-toi pour lancer une expédition !</p>';
+  const nm=x=>(x.aventurier?'<a class="plink" href="#perso-'+esc(x.aventurier)+'">'+esc(x.nom)+'</a>':esc(x.nom))+(x.statut==="confirmee"?' <span class="ok" title="Confirmé par le DM" aria-label="confirmé">✓</span>':'');
+  return '<p class="hint" style="margin:0 0 18px">Les groupes qui se forment. Touche le titre d\'une quête pour la voir sur son babillard et t\'y inscrire. ✓ = confirmé par le DM.</p><div class="grid">'+list.map(({q,s})=>{
+    const b=office(q.bureau),best=planBest(q),rows=planRows(q),yes=best?rows.filter(r=>(best.dispo||{})[r.uid]==="oui").length:0,nd=planDates(q.id).length;
+    return '<article class="note expn"><p class="ctags">'+rankSeal(q.rang)+'</p><h2><a href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">'+esc(q.titre)+'</a></h2>'+(b?'<p class="ev">Comptoir de '+esc(b.nom)+'</p>':'')+
+      '<dl class="facts"><dt>Démarrée par</dt><dd><strong>'+nm(s[0])+'</strong></dd>'+
+      '<dt>Format</dt><dd>'+(best&&PMODE[best.mode]?PMODE[best.mode]:'<span class="muted">À décider</span>')+'</dd>'+
+      '<dt>Date suggérée</dt><dd>'+(best?'<strong>'+esc(fmtPlan(best))+'</strong> ('+yes+'/'+rows.length+' disponible'+(yes>1?'s':'')+')':nd?nd+' date'+(nd>1?'s':'')+' proposée'+(nd>1?'s':''):'<span class="muted">Aucune pour l\'instant</span>')+'</dd>'+
+      '<dt>Participants</dt><dd>'+(s.length>1?s.slice(1).map(nm).join(", "):'<span class="muted">Personne d\'autre encore</span>')+'</dd></dl></article>';}).join("")+'</div>';
+}
 function charge(q){
   const s=signupsFor(q.id), conf=s.filter(x=>x.statut==="confirmee").length, pend=s.filter(x=>x.statut==="attente").length;
   const max=q.joueursMax;
@@ -1324,14 +1365,15 @@ function mapBase(){
   MAP_BASE=h;return h;
 }
 function marker(b){
-  const n=openCount(b.id), big=b.siege, R=big?28:22;
+  const n=openCount(b.id), big=b.siege, R=big?28:22, si=signedCount(b.id);
   const hot=quetes.some(q=>q.bureau===b.id&&q.statut!=="archivee"&&charge(q).level==="super");
-  let h='<a class="mk'+(n?'':' zero')+'" href="#'+esc(b.id)+'" aria-label="Comptoir de '+esc(b.nom)+', '+n+' quête'+(n>1?'s':'')+' ouverte'+(n>1?'s':'')+(hot?', une quête Supercharged':'')+'">';
+  let h='<a class="mk'+(n?'':' zero')+'" href="#'+esc(b.id)+'" aria-label="Comptoir de '+esc(b.nom)+', '+n+' quête'+(n>1?'s':'')+' ouverte'+(n>1?'s':'')+(si?', '+si+' inscrit'+(si>1?'s':''):'')+(hot?', une quête Supercharged':'')+'">';
   h+='<g transform="translate('+b.x+','+b.y+')"><g class="mk-in">';
   h+='<circle class="ring" r="'+(R+8)+'" fill="#1b1408" stroke="'+(hot?'#e0572a':'#d8b45e')+'" stroke-width="'+(hot?5:3)+'"></circle>'+rose(R*1.55,'#1b1408');
   h+='<g transform="translate('+(R+4)+','+(-R-22)+')"><path d="M0,4 Q0,0 6,0 L44,0 Q50,0 50,4 L50,26 Q50,30 44,30 L6,30 Q0,30 0,26 Z" fill="#f4ecd6" stroke="#5a4d3c" stroke-width="2"></path>'+
      '<circle cx="3" cy="15" r="4" fill="#d9c9a0" stroke="#5a4d3c" stroke-width="1.5"></circle><circle cx="47" cy="15" r="4" fill="#d9c9a0" stroke="#5a4d3c" stroke-width="1.5"></circle>'+
-     '<text x="25" y="22" text-anchor="middle" font-family="Cinzel, Georgia, serif" font-weight="700" font-size="18" fill="#2a2219">'+n+'</text></g>';
+     '<text x="25" y="22" text-anchor="middle" font-family="Cinzel, Georgia, serif" font-weight="700" font-size="18" fill="#2a2219">'+n+'</text>'+
+     (si?'<g transform="translate(50,30)"><circle r="13" fill="#7a2e2e" stroke="#f4ecd6" stroke-width="2"></circle><text y="5" text-anchor="middle" font-family="Cinzel, Georgia, serif" font-weight="700" font-size="14" fill="#f4ecd6">'+si+'</text></g>':'')+'</g>';
   if(hot)h+='<g transform="translate('+(-R-22)+','+(-R-18)+')"><path d="M10,0 C14,8 22,10 20,20 C19,27 13,30 10,30 C5,30 0,26 0,19 C0,13 5,11 6,5 C9,9 9,12 11,13 C12,8 11,4 10,0 Z" fill="#e0572a" stroke="#5e1715" stroke-width="1.6"></path><path d="M10,14 C12,18 15,19 14,24 C13,27 7,27 7,23 C7,20 9,19 10,14 Z" fill="#f3c24e"></path></g>';
   h+='<text y="'+(R+30)+'" text-anchor="middle" font-family="Cinzel, Georgia, serif" font-weight="700" font-size="'+(big?21:18)+'" fill="#2a2219" stroke="#eadfbf" stroke-width="5" paint-order="stroke">'+esc(b.nom)+'</text>';
   if(big)h+='<text y="'+(R+50)+'" text-anchor="middle" font-family="EB Garamond, Georgia, serif" font-style="italic" font-size="16" fill="#5a4d3c" stroke="#eadfbf" stroke-width="4" paint-order="stroke">Siège de la Guilde</text>';
@@ -1340,9 +1382,9 @@ function marker(b){
 function mapView(){
   const total=quetes.filter(q=>q.statut==="ouverte").length;
   let h='<div class="mapwrap"><div class="map saison-'+ecSaison()+'">'+calParch()+'<svg viewBox="0 0 1000 1100" role="group" aria-label="Carte de la Sword Coast et comptoirs de la Guilde">'+mapBase()+bureaux.map(marker).join("")+'</svg></div>';
-  h+='<nav class="offices" aria-label="Comptoirs"><h2>Comptoirs de la Guilde</h2>';
-  bureaux.forEach(b=>{const n=openCount(b.id);
-    h+='<a class="office" href="#'+esc(b.id)+'"><span class="nm">'+esc(b.nom)+(b.siege?'<span class="tag">Siège de la Guilde</span>':'')+'</span><span class="count'+(n?'':' zero')+'">'+n+' quête'+(n>1?'s':'')+'</span></a>';});
+  h+='<nav class="offices" aria-label="Comptoirs">'+expeSummary()+'<h2>Comptoirs de la Guilde</h2>';
+  bureaux.forEach(b=>{const n=openCount(b.id),si=signedCount(b.id);
+    h+='<a class="office" href="#'+esc(b.id)+'"><span class="nm">'+esc(b.nom)+(b.siege?'<span class="tag">Siège de la Guilde</span>':'')+'</span><span class="count'+(n?'':' zero')+'">'+n+' quête'+(n>1?'s':'')+(si?'<span class="ins"> · '+si+' inscrit'+(si>1?'s':'')+'</span>':'')+'</span></a>';});
   h+='<a class="office regl" href="#compendium"><span class="nm">Compendium<span class="tag">PNJ, créatures, lieux, indices…</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#aventuriers"><span class="nm">Les aventuriers de la Guilde<span class="tag">La galerie des personnages</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#boutique"><span class="nm">Boutique de la Guilde<span class="tag">Intendance, services, dépôt, Trésor de la Rose</span></span><span aria-hidden="true">→</span></a>';
@@ -1388,7 +1430,7 @@ function planLine(q){
   const best=planBest(q),rows=planRows(q);
   const yes=best?rows.filter(r=>(best.dispo||{})[r.uid]==="oui").length:0;
   return '<p class="planline"><button class="mini plan" data-a="plan" data-id="'+esc(q.id)+'">📅 Planification</button>'+
-    (best?'<span>Meilleure date : <strong>'+esc(fmtPlan(best))+'</strong> ('+yes+'/'+rows.length+')</span>':ds.length?'<span>'+ds.length+' date'+(ds.length>1?'s':'')+' proposée'+(ds.length>1?'s':'')+'</span>':'<span class="muted">Facultatif : proposez des dates</span>')+'</p>';
+    (best?'<span>Meilleure date : <strong>'+esc(fmtPlan(best))+'</strong>'+pmodeTag(best)+' ('+yes+'/'+rows.length+')</span>':ds.length?'<span>'+ds.length+' date'+(ds.length>1?'s':'')+' proposée'+(ds.length>1?'s':'')+'</span>':'<span class="muted">Facultatif : proposez des dates</span>')+'</p>';
 }
 function planModal(q){
   const ds=planDates(q.id),rows=planRows(q),best=planBest(q),me=user&&user.uid,open=canPlan(q);
@@ -1400,12 +1442,12 @@ function planModal(q){
   if(!ds.length)h+='<p class="empty">Aucune date proposée pour l\'instant.</p>';
   else{
     h+='<div class="tablewrap"><table class="plantable"><thead><tr><th scope="col">Aventurier</th>'+ds.map(p=>{const del=open&&(ui.dm||(p.par&&p.par.uid===me));
-      return '<th scope="col" class="'+(best&&best.id===p.id?'best':'')+(p.dm==="non"?' dmno':'')+'">'+esc(fmtPlan(p))+(best&&best.id===p.id?'<span class="tag">Meilleure</span>':'')+(p.dm==="non"?'<span class="tag">DM pas libre</span>':'')+(del?'<button class="rm" data-a="plan-del" data-id="'+esc(p.id)+'" aria-label="Retirer la date '+esc(fmtPlan(p))+'" title="Retirer cette date">✕</button>':'')+'</th>';}).join("")+'</tr></thead><tbody>';
+      return '<th scope="col" class="'+(best&&best.id===p.id?'best':'')+(p.dm==="non"?' dmno':'')+'">'+esc(fmtPlan(p))+(PMODE[p.mode]?'<span class="tag">'+PMODE[p.mode]+'</span>':'')+(best&&best.id===p.id?'<span class="tag">Meilleure</span>':'')+(p.dm==="non"?'<span class="tag">DM pas libre</span>':'')+(del?'<button class="rm" data-a="plan-del" data-id="'+esc(p.id)+'" aria-label="Retirer la date '+esc(fmtPlan(p))+'" title="Retirer cette date">✕</button>':'')+'</th>';}).join("")+'</tr></thead><tbody>';
     h+='<tr class="dmrow"><th scope="row">Le DM</th>'+ds.map(p=>cell(p,null,true)).join("")+'</tr>';
     h+=rows.slice().sort((x,y)=>(y.uid===me)-(x.uid===me)).map(r=>'<tr'+(r.uid===me?' class="merow"':'')+'><th scope="row">'+esc(r.nom)+(r.uid===me?' <em>(toi)</em>':'')+'</th>'+ds.map(p=>cell(p,r.uid,false)).join("")+'</tr>').join("");
     h+='<tr class="tot"><th scope="row">Total</th>'+ds.map(p=>{const y=rows.filter(r=>(p.dispo||{})[r.uid]==="oui").length,m=rows.filter(r=>(p.dispo||{})[r.uid]==="peut").length;return '<td>'+y+' ✓'+(m?' · '+m+' ?':'')+'</td>';}).join("")+'</tr></tbody></table></div>';
   }
-  if(open&&ds.length<6)h+='<form class="inline planadd" id="planform"><label for="pl-date">Proposer une date<input id="pl-date" type="date" required min="'+todayIso()+'"></label><label for="pl-heure">Heure (facultatif)<input id="pl-heure" maxlength="30" placeholder="ex. 19 h"></label><button class="btn" type="submit">Proposer</button></form>';
+  if(open&&ds.length<6)h+='<form class="inline planadd" id="planform"><label for="pl-date">Proposer une date<input id="pl-date" type="date" required min="'+todayIso()+'"></label><label for="pl-heure">Heure (facultatif)<input id="pl-heure" maxlength="30" placeholder="ex. 19 h"></label><div class="pmodes" role="radiogroup" aria-labelledby="pl-m-t"><span id="pl-m-t">Format</span><div class="opts"><label for="pl-m-p"><input type="radio" name="pl-mode" id="pl-m-p" value="presentiel" required>Présentiel</label><label for="pl-m-v"><input type="radio" name="pl-mode" id="pl-m-v" value="virtuel">Virtuel</label></div></div><button class="btn" type="submit">Proposer</button></form>';
   else if(!open)h+='<p class="hint">'+(user&&!user.isAnonymous?'Inscris-toi à la quête pour proposer des dates et répondre.':'Connecte-toi et inscris-toi à la quête pour participer.')+'</p>';
   return h+'<div class="actions"><button class="btn ghost" type="button" data-a="plan-close">Fermer</button></div></div></div>';
 }
@@ -2405,9 +2447,9 @@ function render(){
   if(ui.office==="ecran"){document.body.classList.add("ecmode");ecTvUpdate();return;}
   document.body.classList.remove("ecmode");
   const wk=!!ui.office&&(ui.office==="wiki"||ui.office.indexOf("wiki-")===0);
-  if(ui.office&&ui.office!=="renommee"&&ui.office!=="chroniques"&&ui.office!=="personnages"&&ui.office!=="aventuriers"&&ui.office!=="dm"&&ui.office!=="compendium"&&ui.office!=="boutique"&&ui.office!=="ecran"&&ui.office.indexOf("compendium-")!==0&&ui.office.indexOf("perso-")!==0&&ui.office.indexOf("partie-")!==0&&!wk&&loaded.b&&!office(ui.office))ui.office=null;
+  if(ui.office&&ui.office!=="renommee"&&ui.office!=="chroniques"&&ui.office!=="expeditions"&&ui.office!=="personnages"&&ui.office!=="aventuriers"&&ui.office!=="dm"&&ui.office!=="compendium"&&ui.office!=="boutique"&&ui.office!=="ecran"&&ui.office.indexOf("compendium-")!==0&&ui.office.indexOf("perso-")!==0&&ui.office.indexOf("partie-")!==0&&!wk&&loaded.b&&!office(ui.office))ui.office=null;
   const reg=ui.office==="renommee";
-  const chr=ui.office==="chroniques";
+  const chr=ui.office==="chroniques",exp=ui.office==="expeditions";
   const perso=!!ui.office&&ui.office.indexOf("perso-")===0;
   const mes=ui.office==="personnages";
   const gal=ui.office==="aventuriers";
@@ -2418,14 +2460,14 @@ function render(){
   const b=ui.office&&!reg?office(ui.office):null;
   let h='<div class="wrap">';
   h+='<header><svg width="72" height="72" viewBox="-110 -110 220 220" aria-hidden="true"><circle r="80" fill="none" stroke="#d8b45e" stroke-width="3" opacity=".6"></circle>'+rose(104,'#0e1b20')+'</svg>';
-  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(pty?'Mode Partie':dms?'Espace DM':gsh?'Boutique de la Guilde':comp||compE?'Compendium de la Guilde':gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(dms?'Le bureau secret du Maître de la Guilde':gsh?'Intendance, services, dépôt et Trésor de la Rose':comp||compE?'Le savoir partagé des aventuriers':gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions en cours et accomplies par les aventuriers':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+dmPill()+statusPill()+'</header>';
+  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(pty?'Mode Partie':dms?'Espace DM':gsh?'Boutique de la Guilde':comp||compE?'Compendium de la Guilde':gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':exp?'Expéditions en préparation':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(dms?'Le bureau secret du Maître de la Guilde':gsh?'Intendance, services, dépôt et Trésor de la Rose':comp||compE?'Le savoir partagé des aventuriers':gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions en cours et accomplies par les aventuriers':exp?'Les groupes qui se forment sur la Sword Coast':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+dmPill()+statusPill()+'</header>';
   if(pty){const pq=ptQuest();h+=pq&&pq.libre?'<a class="back" href="#dm"><span aria-hidden="true">←</span> Cartes de l\'Espace DM</a>':'<a class="back" href="#'+(pq?esc(pq.bureau):'carte')+'"><span aria-hidden="true">←</span> Retour au babillard</a>';}
   else if(compE)h+='<a class="back" href="#compendium"><span aria-hidden="true">←</span> Compendium</a>';
   else if(perso)h+='<a class="back" href="#renommee"><span aria-hidden="true">←</span> Registre de renommée</a>';
-  else if(b||reg||wk||chr||mes||gal||comp||dms||gsh)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
+  else if(b||reg||wk||chr||exp||mes||gal||comp||dms||gsh)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
   if(ui.authMsg)h+='<div class="dmbar"><span class="msg">'+esc(ui.authMsg)+'</span><button class="btn board" data-a="auth-ok">OK</button>'+(user&&!user.isAnonymous&&!isAdmin?'<button class="btn board" data-a="logout">Déconnexion</button>':'')+'</div>';
   if(ui.dm&&!pty)h+=dmPanel(b);
-  h+=pty?partyView():dms?dmSpaceView():gsh?gsView():comp?compendiumView():compE?compEntryView(ui.office.slice(11)):gal?galleryView():mes?myCharsView():perso?sheetView(ui.office.slice(6)):chr?chroniclesView():wk?wikiView():reg?renownView():b?boardView()+boardNews(b.id)+reputationSection(b.id,b.nom):mapView();
+  h+=pty?partyView():dms?dmSpaceView():gsh?gsView():comp?compendiumView():compE?compEntryView(ui.office.slice(11)):gal?galleryView():mes?myCharsView():perso?sheetView(ui.office.slice(6)):chr?chroniclesView():exp?expeditionsView():wk?wikiView():reg?renownView():b?boardView()+boardNews(b.id)+reputationSection(b.id,b.nom):mapView();
   const signed=user&&!user.isAnonymous;
   h+='<footer><span>Pour partir en mission : choisis une quête, appuie sur « Je veux y aller » et choisis ton personnage. Le DM confirme les inscriptions.</span>'+
     '<span class="who">'+(signed?'Connecté : '+esc(user.displayName||user.email||"aventurier")+' · <a href="#personnages">Mes personnages</a> · <button class="linkbtn" data-a="logout">Déconnexion</button>':'<button class="linkbtn" data-a="login">Se connecter</button>')+
@@ -5945,9 +5987,10 @@ document.addEventListener("submit",async e=>{
   if(e.target.id==="planform"){
     const q=questById(ui.plan);if(!q)return;const date=v("pl-date"),heure=v("pl-heure").slice(0,30);
     if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date<todayIso())return;
-    if(planDates(q.id).some(p=>p.date===date&&(p.heure||"")===heure)){save={state:"error",msg:"Cette date est déjà proposée."};render();return;}
+    const mEl=document.querySelector('input[name="pl-mode"]:checked'),mode=mEl&&PMODE[mEl.value]?mEl.value:"";if(!mode)return;
+    if(planDates(q.id).some(p=>p.date===date&&(p.heure||"")===heure&&(p.mode||"")===mode)){save={state:"error",msg:"Cette date est déjà proposée."};render();return;}
     const by={uid:user.uid,nom:String(ui.dm?"Le DM":((signupsFor(q.id).find(x=>x.uid===user.uid)||{}).nom||user.displayName||"Aventurier")).slice(0,60)};
-    const ref=doc(collection(db,"planif"));const d={quete:q.id,date,heure,par:by,dispo:{},creeLe:serverTimestamp()};
+    const ref=doc(collection(db,"planif"));const d={quete:q.id,date,heure,mode,par:by,dispo:{},creeLe:serverTimestamp()};
     if(ui.dm)d.dm="oui";else d.dispo[user.uid]="oui";
     const f1=document.getElementById("pl-date");if(f1)f1.value="";const f2=document.getElementById("pl-heure");if(f2)f2.value="";
     await run("Date proposée",()=>setDoc(ref,d));return;

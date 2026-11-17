@@ -211,10 +211,11 @@ service cloud.firestore {
 
     // ---------- Planification (facultative) : dates proposées et disponibilités ----------
     function validPlan(d) {
-      return d.keys().hasOnly(['quete', 'date', 'heure', 'par', 'dispo', 'dm', 'creeLe'])
+      return d.keys().hasOnly(['quete', 'date', 'heure', 'mode', 'par', 'dispo', 'dm', 'creeLe'])
         && str(d.quete, 1, 60) && d.date is string && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && optStr(d, 'heure', 30) && d.dispo is map && d.par is map
-        && (!('dm' in d) || d.dm in ['oui', 'peut', 'non']);
+        && (!('dm' in d) || d.dm in ['oui', 'peut', 'non'])
+        && (!('mode' in d) || d.mode in ['virtuel', 'presentiel']);
     }
     // Inscrit (non refusé) à une quête encore ouverte
     function planner(q) {
