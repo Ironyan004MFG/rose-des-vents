@@ -1,8 +1,11 @@
 """Quelles têtes vont sur quels corps (règle de Yannick : générer les bonnes têtes sur les bons corps, jamais une tête casquée sur une robe).
 Identifiants de têtes = ceux d'INVENTAIRE.md, communs à toutes les races. Corps = tenues du kit."""
 CIVIL=('fermier','pourpoint','aventurier')
+GENERIQUE=('aventurier','mage','fermier','plates','barbare','forgeron','cuisinier','pourpoint')
+GENERIQUE_F=('serveuse','robe')
 TETES={
- **{f'm_v_{i:02d}':CIVIL+('barbare',) for i in range(1,10)},
+ # têtes GÉNÉRIQUES : sur n'importe quel corps (un métier « sans » son chapeau), sauf le garde, qui est TOUJOURS casqué
+ **{f'm_v_{i:02d}':GENERIQUE for i in range(1,10)},
  'm_s_capuche':('aventurier','mage'),'m_s_grand_chapeau':CIVIL,'m_s_toque':('cuisinier',),'m_s_moine':('pourpoint','mage'),
  # nobles : seulement sur le corps de noble (pourpoint, robe) ; jamais sur un forgeron, un fermier ou un aventurier
  'm_s_noble_toque':('pourpoint',),'m_s_noble_cercle':('pourpoint',),'m_s_noble_chapeau':('pourpoint',),
@@ -13,7 +16,7 @@ TETES={
  'm_c_garde':('garde','plates','aventurier'),'m_c_barbute':('garde','plates','aventurier'),'m_c_barbute_barbe':('garde','plates','aventurier'),
  'm_c_heaume':('plates','garde'),'m_c_heaume_barbe':('plates','garde'),'m_c_cerveliere':('garde','plates'),'m_c_cerveliere_barbe':('garde','plates'),
  # femmes : jamais sur un corps d'homme
- 'f_v_fichu':('serveuse',),'f_v_nattes':('serveuse',),'f_v_chignon':('serveuse',),'f_v_agee':('serveuse',),
+ 'f_v_fichu':GENERIQUE_F,'f_v_nattes':GENERIQUE_F,'f_v_chignon':GENERIQUE_F,'f_v_agee':GENERIQUE_F,
  'f_s_erudite':('robe',),'f_s_marchande':('robe','serveuse'),'f_s_barde':('robe',),'f_s_capuche':('serveuse',),'f_s_fermiere':('serveuse',),
  'f_n_diademe':('robe',),'f_n_tresses':('robe',),'f_n_perles':('robe',),'f_c_cerveliere':('garde','plates'),
 }
