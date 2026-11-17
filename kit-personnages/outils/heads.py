@@ -245,6 +245,7 @@ UC={1:(148,245),2:(166,245),3:(130,240),4:(180,275),5:(160,255),6:(155,235),7:(2
 UD={1:(155,240),2:(165,245),3:(125,255),4:(185,258),5:(160,280),6:(130,255),7:(130,265),8:(140,265)}      # humain lot D : mineur, mendiant, casque à nasal, chapel de fer (barbe), morion (barbe), armet fermé, casque orné (barbe), salade (rasé)
 UE={1:(145,240),2:(200,255),3:(155,262),4:(152,280),5:(175,278),6:(150,285),7:(171,265),8:(200,305)}      # humain lot E : cervelière rasée, puis femmes : fichu, nattes, chignon, âgée, érudite, marchande, barde
 UF={1:(201,297),2:(272,290),3:(154,305),4:(203,260),5:(166,290),6:(145,288)}      # humain lot F (femmes) : capuche, fermière, noble au diadème, noble aux tresses, noble aux perles, cervelière ; x = milieu de la peau sous les yeux, mesuré dans le calque
+EA_Y={1:228,2:285,3:228,4:240,5:218,6:225,7:225,8:255}      # ELFE lot A : y des yeux ; x mesuré par centers() ; échelle 0,44
 def brows_from_map(m):
     c,k=ndi.label(m==2);idx=range(1,k+1);sz=ndi.sum(m==2,c,idx);cm=ndi.center_of_mass(m==2,c,idx);b=sorted([(cm[i],sz[i]) for i in range(k) if 60<sz[i]<2500],key=lambda t:-t[1])[:2]
     return (round((b[0][0][1]+b[1][0][1])/2),round((b[0][0][0]+b[1][0][0])/2)) if len(b)==2 else None
@@ -288,3 +289,20 @@ def build_lotU(lot,tab,s=0.46,mail=(),camail={}):
         elif k in mail: m=m.copy();m[m==60]=COU      # têtes casquées : le cou est en cotte de mailles (ORANGE dans le calque)
         else: m=neck_label(f'../{lot}/t{k}.png',m)
         build_map(f'{lot}_{k}',f'../{lot}/t{k}.png',(cx,by),m,s=s,eye=by+BROW_DY)
+
+def grid(lot,n=8,cols=4,cell=(440,560)):
+    """Découpe la planche d'un lot et fabrique l'aperçu quadrillé (pour lire le y des yeux)."""
+    from PIL import ImageDraw
+    split_sheet(f'../{lot}/gris.png',f'../{lot}/t%d.png',n=n);rows=-(-n//cols);O=Image.new('RGB',(cols*cell[0],rows*cell[1]),(40,90,40))
+    for k in range(1,n+1):
+        t=Image.open(f'../{lot}/t{k}.png');c=Image.new('RGBA',cell,(40,90,40,255));c.alpha_composite(t);d=ImageDraw.Draw(c)
+        for v in range(0,max(cell),50):
+            d.line([(v,0),(v,cell[1])],fill=(255,0,0,255) if v%100==0 else (255,160,160,255));d.line([(0,v),(cell[0],v)],fill=(0,0,255,255) if v%100==0 else (160,160,255,255))
+        O.paste(c.convert('RGB'),(((k-1)%cols)*cell[0],((k-1)//cols)*cell[1]))
+    O.save(f'../{lot}/grid.png')
+def centers(lot,eyes,d0=45,d1=110):
+    """{k: y des yeux} -> {k: (x, y)} : x = milieu de la peau mesuré dans le calque, entre d0 et d1 px sous les yeux (joues et mâchoire, sous les oreilles)."""
+    M=split_map(f'../{lot}/map.png',n=len(eyes));T={}
+    for k,ey in eyes.items():
+        w,h=Image.open(f'../{lot}/t{k}.png').size;m=np.array(Image.fromarray(M[k-1].astype('uint8')).resize((w,h),Image.NEAREST));xs=np.where((m[ey+d0:ey+d1]==1).any(0))[0];T[k]=(int((xs[0]+xs[-1])//2),ey)
+    return T
