@@ -243,6 +243,7 @@ UA={1:(140,255),2:(155,262),3:(137,232),4:(140,245),5:(145,255),6:(165,257),7:(1
 UB={1:(130,285),2:(170,265),3:(205,268),4:(170,305),5:(145,235),6:(185,300),7:(165,240),8:(185,245)}      # humain lot B : chignon, capuche, grand chapeau, toque, moine, noble toque, noble cercle, noble chapeau
 UC={1:(148,245),2:(160,245),3:(130,240),4:(180,275),5:(160,255),6:(155,235),7:(205,235),8:(160,235)}      # humain lot C : marin, érudit, forgeron, barde, rôdeur, roublard, fermier, druide
 UD={1:(155,240),2:(165,245),3:(125,255),4:(185,258),5:(160,280),6:(130,255),7:(130,265),8:(140,265)}      # humain lot D : mineur, mendiant, casque à nasal, chapel de fer (barbe), morion (barbe), armet fermé, casque orné (barbe), salade (rasé)
+UE={1:(145,240),2:(200,255),3:(155,262),4:(152,280),5:(175,278),6:(150,285),7:(160,265),8:(200,305)}      # humain lot E : cervelière rasée, puis femmes : fichu, nattes, chignon, âgée, érudite, marchande, barde
 def brows_from_map(m):
     c,k=ndi.label(m==2);idx=range(1,k+1);sz=ndi.sum(m==2,c,idx);cm=ndi.center_of_mass(m==2,c,idx);b=sorted([(cm[i],sz[i]) for i in range(k) if 60<sz[i]<2500],key=lambda t:-t[1])[:2]
     return (round((b[0][0][1]+b[1][0][1])/2),round((b[0][0][0]+b[1][0][0])/2)) if len(b)==2 else None
@@ -274,11 +275,13 @@ def neck_label(tile,mlab,thr=62):
         if yy[0]>ys[0]+.55*(ys[-1]-ys[0]) and (best is None or m.sum()>best[0]): best=(m.sum(),m)
     if best is None: return L.astype('uint8')
     nk=ndi.binary_dilation(best[1],iterations=4)&(L==1)&(np.arange(h)[:,None]>np.where(best[1].any(1))[0][0]-3);L[nk]=COU;return L.astype('uint8')
-def build_lotU(lot,tab,s=0.46,mail=()):
+def build_lotU(lot,tab,s=0.46,mail=(),camail={}):
     """Lot d'une grande race : la valeur y du tableau (yeux pour humain/elfe/tieffelin, nez pour demi-orc) arrive sur la ligne des épaules ; le cou est étiqueté."""
     M=split_map(f'../{lot}/map.png',n=len(tab))
     for k,(cx,by) in tab.items():
         m=M[k-1]
-        if k in mail: m=m.copy();m[m==60]=COU      # têtes casquées : le cou est en cotte de mailles (ORANGE dans le calque)
+        if k in camail:      # cervelière : le camail (ORANGE) est de la maille (15) ; seule sa partie sous le menton est le cou
+            m=m.copy();m[m==60]=15;r=int(camail[k]*m.shape[0]);s_=m[r:];s_[s_==15]=COU
+        elif k in mail: m=m.copy();m[m==60]=COU      # têtes casquées : le cou est en cotte de mailles (ORANGE dans le calque)
         else: m=neck_label(f'../{lot}/t{k}.png',m)
         build_map(f'{lot}_{k}',f'../{lot}/t{k}.png',(cx,by),m,s=s,eye=by+BROW_DY)
