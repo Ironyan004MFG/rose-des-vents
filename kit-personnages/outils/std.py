@@ -264,3 +264,8 @@ def plates(grey='../std/plt2_relaxed.png',mp='../std/plt2_relaxed_map.png'):
     Lm=prep(grey,mp)[1];gs=ndi.gaussian_filter(g,1.5);tr=ndi.binary_opening((gs<118)&al&(L==4),iterations=4)&ndi.binary_dilation(Lm==14,iterations=22);tr=ndi.binary_dilation(tr,iterations=3)&(gs<140)&(L==4)
     L[tr]=14
     G.update({15:.8,4:.95,6:.75,14:1.15});return A,L
+
+# PLATES STANDARD (toile élargie pad=60). Le flot retrouve le bras ; restent les deux bouts du manche (68) pour la prise d'arme.
+GRIP_PLATES=[(4,[(250,640),(345,612),(412,618),(416,745),(330,745),(255,700)]),(68,[(345,555),(392,555),(392,628),(345,628)]),(68,[(345,744),(390,744),(390,802),(345,802)])]
+def plates_grip(P): return paint(P,GRIP_PLATES)
+def plates_reach(P): return paint(P,[(4,[(200,690),(350,690),(366,812),(360,895),(230,895),(195,760)])])
