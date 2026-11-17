@@ -248,6 +248,7 @@ UF={1:(201,297),2:(272,290),3:(154,305),4:(203,260),5:(166,290),6:(145,288)}    
 EA_Y={1:228,2:285,3:228,4:240,5:218,6:225,7:225,8:255}      # ELFE lot A : y des yeux ; x mesuré par centers() ; échelle 0,44
 EB_Y={1:275,2:275,3:238,4:290,5:205,6:280,7:215,8:262}      # elfe lot B : chignon, capuche, grand chapeau, toque, moine, noble toque, noble cercle, noble chapeau
 EC_Y={1:215,2:235,3:225,4:245,5:235,6:230,7:215,8:250}      # elfe lot C : marin, érudit, forgeron, barde, rôdeur, roublard, fermier, druide
+ED_Y={1:228,2:265,3:268,4:295,5:310,6:255,7:240,8:235}      # elfe lot D : mineur, mendiant, casque à nasal-feuille, heaume ailé (cheveux), heaume ailé, casque ouvert (cheveux), casque ouvert, cervelière (cheveux)
 def brows_from_map(m):
     c,k=ndi.label(m==2);idx=range(1,k+1);sz=ndi.sum(m==2,c,idx);cm=ndi.center_of_mass(m==2,c,idx);b=sorted([(cm[i],sz[i]) for i in range(k) if 60<sz[i]<2500],key=lambda t:-t[1])[:2]
     return (round((b[0][0][1]+b[1][0][1])/2),round((b[0][0][0]+b[1][0][0])/2)) if len(b)==2 else None
@@ -308,5 +309,6 @@ def centers(lot,eyes,d0=45,d1=110):
     for k,ey in eyes.items():
         w,h=Image.open(f'../{lot}/t{k}.png').size;m=np.array(Image.fromarray(M[k-1].astype('uint8')).resize((w,h),Image.NEAREST));xs=np.where((m[ey+d0:ey+d1]==1).any(0))[0]
         if not len(xs): xs=np.where((m[ey-25:ey+20]==1).any(0))[0]      # visage masqué (roublard) : on mesure à hauteur des yeux
+        if not len(xs): xs=np.where((m[ey+40:ey+90]==4).any(0))[0]      # heaume fermé : milieu du métal sous la visière
         T[k]=(int((xs[0]+xs[-1])//2),ey)
     return T
