@@ -1,6 +1,13 @@
 # Inventaire de référence des têtes
 
-Cette liste est le **gabarit commun à toutes les races**. Chaque race a exactement les mêmes 46 têtes, avec les mêmes identifiants et les mêmes rôles. Le nain est complet ; le halfelin doit reproduire cette liste à l'identique, puis les autres races.
+Cette liste est le **gabarit commun à toutes les races**. Chaque race a exactement les mêmes 46 cases, avec les mêmes identifiants et les mêmes rôles, donc le même nombre de têtes par catégorie.
+
+**Ce qui est commun : la case (numéro, identifiant, rôle, coiffe du métier). Ce qui change : la coiffure, la pilosité et les traits, adaptés à la race** pour qu'on la reconnaisse en un clin d'œil. Les descriptions ci-dessous sont celles du NAIN ; pour une autre race, la case « villageois n° 4 » est une autre coiffure, mais c'est toujours le villageois n° 4. Les coiffes de métier (toque, béret, capuche, casque, chapeau de paille…) restent les mêmes d'une race à l'autre.
+
+Traits par race :
+- **nain** : barbes fournies, tresses, anneaux, oreilles rondes, visage large ;
+- **halfelin** : imberbe ou favoris, cheveux bouclés, visage rond et jeune, joues pleines, petites oreilles légèrement pointues ;
+- autres races : à définir au moment de leurs lots.
 
 - **Identifiant** : nom stable, sans la race. Le fichier d'une race s'appelle `<race>/tete/<identifiant>.png`.
 - **Génération** : 2/3 d'hommes, 1/3 de femmes.
@@ -8,17 +15,17 @@ Cette liste est le **gabarit commun à toutes les races**. Chaque race a exactem
 
 ## Hommes — villageois (9)
 
-| N° | Identifiant | Description |
+| N° | Identifiant | Coiffure du nain |
 |---|---|---|
-| 1 | `m_v_tresses` | cheveux tressés, barbe tressée à anneau (tête d'origine) |
-| 2 | `m_v_chauve_barbe` | chauve, grosse barbe carrée |
-| 3 | `m_v_brosse_barbe_courte` | cheveux en brosse, barbe courte |
-| 4 | `m_v_queue_moustache` | queue de cheval, grande moustache, menton rasé |
-| 5 | `m_v_longs_tresses` | cheveux longs, barbe à deux tresses |
-| 6 | `m_v_boucles_rase` | cheveux bouclés, visage rasé |
-| 7 | `m_v_crete_barbe` | crête, côtés rasés, barbe en pointe |
-| 8 | `m_v_degarni_favoris` | dégarni, favoris, menton rasé |
-| 9 | `m_v_chignon_barbe` | chignon haut, barbe à trois anneaux |
+| 1 | `m_v_01` | cheveux tressés, barbe tressée à anneau (tête d'origine) |
+| 2 | `m_v_02` | chauve, grosse barbe carrée |
+| 3 | `m_v_03` | cheveux en brosse, barbe courte |
+| 4 | `m_v_04` | queue de cheval, grande moustache, menton rasé |
+| 5 | `m_v_05` | cheveux longs, barbe à deux tresses |
+| 6 | `m_v_06` | cheveux bouclés, visage rasé |
+| 7 | `m_v_07` | crête, côtés rasés, barbe en pointe |
+| 8 | `m_v_08` | dégarni, favoris, menton rasé |
+| 9 | `m_v_09` | chignon haut, barbe à trois anneaux |
 
 ## Hommes — métiers et nobles (17)
 
