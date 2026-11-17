@@ -267,5 +267,5 @@ def plates(grey='../std/plt2_relaxed.png',mp='../std/plt2_relaxed_map.png'):
 
 # PLATES STANDARD (toile élargie pad=60). Le flot retrouve le bras ; restent les deux bouts du manche (68) pour la prise d'arme.
 GRIP_PLATES=[(4,[(250,640),(345,612),(412,618),(416,745),(330,745),(255,700)]),(68,[(345,555),(392,555),(392,628),(345,628)]),(68,[(345,744),(390,744),(390,802),(345,802)])]
-def plates_grip(P): return paint(P,GRIP_PLATES)
-def plates_reach(P): return paint(P,[(4,[(200,690),(350,690),(366,812),(360,895),(230,895),(195,760)])])
+def plates_grip(P): return paint(P,[(l,[(x+52,y) for x,y in p]) for l,p in GRIP_PLATES])      # +52 : relevé sur un aperçu décalé
+def plates_reach(P): return paint(P,[(4,[(252,690),(402,690),(418,812),(412,895),(282,895),(247,760)])])
