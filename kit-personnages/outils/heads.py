@@ -234,6 +234,8 @@ EYE4={1:255,2:245,3:250,4:222,5:212,6:220}
 HA={1:(162,246),2:(147,225),3:(154,230),4:(146,232),5:(176,258),6:(151,225),7:(163,211),8:(162,247)}
 HB={1:(155,255),2:(168,238),3:(190,230),4:(170,300),5:(155,188),6:(175,272),7:(170,215),8:(175,238)}      # halfelin lot B : chignon, capuche, grand chapeau, toque, moine, noble toque, noble cercle, noble chapeau
 HC={1:(155,232),2:(160,215),3:(150,222),4:(180,252),5:(170,245),6:(155,220),7:(195,208),8:(175,215)}      # halfelin lot C : marin, érudit, forgeron, barde, rôdeur, roublard, fermier, druide
+HD={1:(155,225),2:(170,232),3:(165,228),4:(160,205),5:(140,210),6:(160,225),7:(155,228),8:(150,222)}      # halfelin lot D : mineur, mendiant, garde, heaume à favoris, heaume fermé (repère = au-dessus de la fente), barbute à favoris, barbute, cervelière à favoris
+G.update({15:.8})
 def brows_from_map(m):
     c,k=ndi.label(m==2);idx=range(1,k+1);sz=ndi.sum(m==2,c,idx);cm=ndi.center_of_mass(m==2,c,idx);b=sorted([(cm[i],sz[i]) for i in range(k) if 60<sz[i]<2500],key=lambda t:-t[1])[:2]
     return (round((b[0][0][1]+b[1][0][1])/2),round((b[0][0][0]+b[1][0][0])/2)) if len(b)==2 else None
