@@ -79,6 +79,9 @@ def write(tok, path, data, mask=None):
     if path.startswith("quetes/") or path.startswith("inscriptions/"):
         fields["majLe"] = now_ts()
         if mask is None and "creeLe" not in fields: fields["creeLe"] = now_ts()
+    elif mask is not None:
+        # Le masque contient toujours majLe : sans valeur, Firestore EFFACERAIT le champ. On le date donc pour toute mise à jour partielle.
+        fields["majLe"] = now_ts()
     q = "".join(f"&updateMask.fieldPaths={k}" for k in (list(mask) + ["majLe"] if mask is not None else [])) if mask is not None else ""
     return http("PATCH", f"{BASE}/{path}?{q.lstrip('&')}", {"fields": fields}, tok)
 
