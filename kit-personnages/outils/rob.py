@@ -10,9 +10,10 @@ SEEDS={7:[(628,300),(628,400),(560,350),(700,350),(628,220)],
  37:[(210,600),(1030,600),(160,620),(1090,615),(250,612),(990,612),(200,575),(1040,575)],
  4:[(628,675),(605,690),(650,690),(628,655)]}
 def prep(src,tag,seeds=SEEDS,ref=None): return prp.prep(src,tag,seeds,ref,btn=(450,625),gal_thr=128)
+# L'intérieur de l'encolure (7) est couleur PEAU (cou, décolleté) : avec la tête à la bonne hauteur, on ne doit jamais voir un trou noir sous le menton.
 def char(P,cloth='#5a2a4a',trim='#c9a23a',front='#d8c8a8',lace='#f2eee4',metal='#d8c070',sk='#c98f6a',hr='#8a4a22',H=560,head='naine'):
-    a,lab=P;full.G.update({1:.8,5:.72,9:.85,51:.85,37:.9,4:.95,7:.6});c=Image.new('RGBA',(512,H))
-    im=full.tint(a,lab,{1:sk,5:cloth,9:trim,51:front,37:lace,4:metal,7:'#2a2622'});w,h=im.size;t=im.resize((round(w*.29),round(h*.29)),Image.LANCZOS);o=Image.new('RGBA',(512,H));o.paste(t,(round(256-625*.29),round(229-360*.29)));c.alpha_composite(o)
+    a,lab=P;full.G.update({1:.8,5:.72,9:.85,51:.85,37:.9,4:.95,7:.72});c=Image.new('RGBA',(512,H))
+    im=full.tint(a,lab,{1:sk,5:cloth,9:trim,51:front,37:lace,4:metal,7:sk});w,h=im.size;t=im.resize((round(w*.29),round(h*.29)),Image.LANCZOS);o=Image.new('RGBA',(512,H));o.paste(t,(round(256-625*.29),round(229-360*.29)));c.alpha_composite(o)
     if head: hd=Image.new('RGBA',(512,H));hd.alpha_composite(heads.tint(head,{1:sk,2:hr,3:hr,4:'#c4c8ce',15:'#6a6e76',8:'#f2eee4'}));c.alpha_composite(hd)
     return c
 # --- Marche (un pas dessiné, l'autre en miroir : la robe est symétrique) et bras tendu. Pas de jambes : seule la pose des bras change.

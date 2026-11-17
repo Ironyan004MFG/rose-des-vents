@@ -15,9 +15,10 @@ SEEDS={7:[(628,420),(628,300),(540,400),(720,400),(628,520)],
  50:[(250,800),(1000,800),(230,900),(1020,900),(300,1050),(950,1050),(500,1130),(760,1130),(628,1150),(960,950)],
  1:[(110,700),(1150,700),(80,740),(1180,740),(140,830),(1110,830),(170,860),(1080,860),(150,660),(1110,660)]}
 def prep(src,tag,seeds=SEEDS,ref=None): return cui.prep(src,tag,seeds,ref)
+# L'intérieur de l'encolure (7) est couleur PEAU (cou, décolleté) : avec la tête à la bonne hauteur, on ne doit jamais voir un trou noir sous le menton.
 def char(P,shirt='#f0ece2',bodice='#7a2e2e',skirt='#3e4a5e',apron='#f4f1ea',ribbon='#c8a24a',towel='#f2eee4',sk='#c98f6a',hr='#8a4a22',shoes='#3a2a1c',ph=0,H=560,head='coif_f',hdy=0):
-    a,lab=P;full.G.update({1:.8,14:.85,49:.75,50:.72,35:.85,36:.8,37:.9,7:.6});c=Image.new('RGBA',(512,H));c.alpha_composite(brb._legs(skirt,shoes,ph),(0,brb.DY))
-    im=full.tint(a,lab,{1:sk,14:shirt,49:bodice,50:skirt,35:apron,36:ribbon,37:towel,7:'#2a2622'});w,h=im.size;t=im.resize((round(w*.29),round(h*.29)),Image.LANCZOS);o=Image.new('RGBA',(512,H));o.paste(t,(round(256-625*.29),round(229-360*.29)));c.alpha_composite(o)
+    a,lab=P;full.G.update({1:.8,14:.85,49:.75,50:.72,35:.85,36:.8,37:.9,7:.72});c=Image.new('RGBA',(512,H));c.alpha_composite(brb._legs(skirt,shoes,ph),(0,brb.DY))
+    im=full.tint(a,lab,{1:sk,14:shirt,49:bodice,50:skirt,35:apron,36:ribbon,37:towel,7:sk});w,h=im.size;t=im.resize((round(w*.29),round(h*.29)),Image.LANCZOS);o=Image.new('RGBA',(512,H));o.paste(t,(round(256-625*.29),round(229-360*.29)));c.alpha_composite(o)
     if head:
         hd=Image.new('RGBA',(512,H));hd.alpha_composite(kit.tint('head_dwarf_braided_90',{1:sk,2:hr,3:hr,6:'#3a2a1c'}) if head=='nain' else heads.tint(head,{1:sk,2:hr,3:hr,4:'#c4c8ce',15:'#6a6e76',8:'#f2eee4'}));c.alpha_composite(hd,(0,hdy)) if hdy>=0 else c.alpha_composite(hd.crop((0,-hdy,512,H)),(0,0))
     return c

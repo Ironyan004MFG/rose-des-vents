@@ -123,3 +123,11 @@ Aucun corps à redemander à GPT : toutes les tenues, poses et marches du nain s
 - **Le moine** se met sur le pourpoint recoloré en bure (ceinture claire) : validé tel quel.
 - **Têtes de femme, lot 3 (validé)** (`nain/tete/lot3/`) : nattes, chignon, femme âgée au bonnet de laine, érudite (calotte, lunettes), marchande au turban, barde au béret, capuchonnée, fermière au chapeau de paille. `heads.build_lot3`, échelle 0,52 ; têtes sans barbe : repère au MENTON, posé comme la naine. Dans ce calque, CYAN = paille. Aperçus `planches/tetes_lot3.png`, `planches/tetes_lot3_corps.png`.
 - **Corps féminins manquants** : seules la serveuse et la robe existent. La rôdeuse (capuchonnée), la fermière et la barde au luth n'ont pas encore leur corps ou leur pose.
+- **Têtes d'homme, lot 4 (validé)** (`nain/tete/lot4/`, planche de 6) : rôdeur à capuche, roublard à capuche et foulard, fermier au chapeau de paille, druide à couronne de feuilles, mineur à calotte de cuir, mendiant au bonnet rapiécé. `heads.build_lot4`, échelle 0,70. Couleur de calque ajoutée : ORANGE = paille (60) ; MAGENTA = feuilles ici.
+- **RÈGLE DE HAUTEUR DES TÊTES (validée, remplace tout réglage à l'œil).** On prend la ligne du haut des épaules (y = 200 sur la toile 512, la même sur tous les corps). Ce qui arrive sur cette ligne dépend de la morphologie :
+  - **nain, halfelin : les SOURCILS** ;
+  - **humain, elfe, tieffelin : les YEUX** ;
+  - **demi-orc : le NEZ**.
+  Plus bas, le personnage a « la tête entre les épaules ». Ne JAMAIS caler une tête sur le nez de la tête tressée d'origine (sa barbe descend sur le torse). Dans le code : `heads.EYE_Y`, `heads.BROW_DY`, `heads.LIGNE`, et `EYE1..EYE4` (y des yeux de chaque tête découpée). Les quatre lots sont recalés ainsi ; `outils/lots_corps.py` refait les planches (`ligne` en argument trace la ligne pour vérifier).
+- **Encolure des corps féminins** (serveuse, robe) : l'intérieur de l'encolure est couleur PEAU (cou, décolleté). Avec la tête à la bonne hauteur, on verrait sinon un trou noir sous le menton.
+- **Reste à recaler selon la règle** : les têtes d'avant les lots (tressée, toque, capuche, chapeau, naine au fichu, trois dames, casques, cervelières).
