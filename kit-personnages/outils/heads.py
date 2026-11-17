@@ -236,6 +236,7 @@ HB={1:(155,255),2:(168,238),3:(190,230),4:(170,300),5:(155,188),6:(175,272),7:(1
 HC={1:(155,232),2:(160,215),3:(150,222),4:(180,252),5:(170,245),6:(155,220),7:(195,208),8:(175,215)}      # halfelin lot C : marin, érudit, forgeron, barde, rôdeur, roublard, fermier, druide
 HD={1:(155,225),2:(170,232),3:(165,228),4:(160,205),5:(140,210),6:(160,225),7:(155,228),8:(150,222)}      # halfelin lot D : mineur, mendiant, garde, heaume à favoris, heaume fermé (repère = au-dessus de la fente), barbute à favoris, barbute, cervelière à favoris
 G.update({15:.8})
+HE={1:(140,215),2:(180,212),3:(160,212),4:(158,258),5:(150,245),6:(148,240),7:(160,232),8:(175,282)}      # halfelin lot E : cervelière rasée, puis femmes : fichu, nattes, chignon, âgée, érudite, marchande, barde
 def brows_from_map(m):
     c,k=ndi.label(m==2);idx=range(1,k+1);sz=ndi.sum(m==2,c,idx);cm=ndi.center_of_mass(m==2,c,idx);b=sorted([(cm[i],sz[i]) for i in range(k) if 60<sz[i]<2500],key=lambda t:-t[1])[:2]
     return (round((b[0][0][1]+b[1][0][1])/2),round((b[0][0][0]+b[1][0][0])/2)) if len(b)==2 else None
