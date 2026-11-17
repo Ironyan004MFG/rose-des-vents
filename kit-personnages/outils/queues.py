@@ -11,7 +11,13 @@ def build(src='../tq/q2_gris.png',mp='../tq/q2_map.png',n=8):
     dx=np.median(np.diff([p[1] for p in cen[:4]]));s=(570/1.5)/dx;lum=a.mean(-1)      # 570 px par case sur notre planche, dessinée à 1,5x la toile
     # la croix : remplacée par le gris voisin
     rd=ndi.binary_dilation(red,iterations=2);_,ix=ndi.distance_transform_edt(rd,return_indices=True);a2=a.copy();a2[rd]=a[ix[0][rd],ix[1][rd]];lum2=a2.mean(-1)
-    dark=ndi.binary_fill_holes(ndi.binary_closing(lum2<218,iterations=2));cc,kk=ndi.label(dark);out=[]
+    d0=ndi.binary_closing(lum2<218,iterations=2);dark=ndi.binary_fill_holes(d0)
+    # les vides enfermés (entre une chaînette et la queue) restent transparents : ce sont des trous de blanc pur, pas des reflets
+    hc,hk=ndi.label(dark&~d0);void=np.zeros_like(dark)
+    for j in range(1,hk+1):
+        hm=hc==j
+        if (hm.sum()>40 and (lum2[hm]>250).mean()>.5) or (hm.sum()>150 and lum2[hm].mean()>226): dark[hm]=False;void|=hm
+    cc,kk=ndi.label(dark);out=[]
     for i,(cy,cx) in enumerate(cen,1):
         ids=np.unique(cc[int(cy)-12:int(cy)+13,int(cx)-12:int(cx)+13]);ids=ids[ids>0];m=np.isin(cc,ids)
         # chaînettes et pendeloques détachées : composantes proches
@@ -20,6 +26,16 @@ def build(src='../tq/q2_gris.png',mp='../tq/q2_map.png',n=8):
             if j and j not in ids and (cc==j).sum()<2500: m|=cc==j
         ys,xs=np.where(m);y0,y1,x0,x1=ys.min()-3,ys.max()+4,xs.min()-3,xs.max()+4;sub=a2[y0:y1,x0:x1];mm=m[y0:y1,x0:x1];g_=sub.mean(-1)
         L=labels_from_calque(calq,i-1,mm)
+        # la chaînette qui borde un vide et la pendeloque qui y pend sont des bijoux : parties fines touchant le vide, puis morceaux coupés du corps
+        vd=ndi.binary_dilation(void[y0:y1,x0:x1],iterations=4)
+        if vd.any():
+            sk=L==1;thin=sk&~ndi.binary_opening(sk,iterations=5);tc,tk=ndi.label(thin)
+            for j in np.unique(tc[vd&thin]):
+                if j: L[tc==j]=4
+            bc,bk=ndi.label(L==1)
+            vd2=ndi.binary_dilation(vd,iterations=10)
+            for j in range(1,bk+1):
+                if (bc==j).sum()<450 and (vd2&(bc==j)).any(): L[bc==j]=4
         rgba=np.dstack([sub,np.where(mm,255,0)]).astype('uint8');t=Image.fromarray(rgba);nw,nh=round(t.size[0]*s),round(t.size[1]*s);t=t.resize((nw,nh),Image.LANCZOS);Ls=Image.fromarray(L.astype('uint8')).resize((nw,nh),Image.NEAREST)
         o=Image.new('RGBA',(512,660));lo=Image.new('L',(512,660));off=(round(ANCHOR[0]-(cx-x0)*s),round(ANCHOR[1]-(cy-y0)*s));o.paste(t,off);lo.paste(Ls,off);o.save(f'assets/tail_{i}.png');np.save(f'assets/tail_{i}_lab.npy',np.array(lo));out.append((i,off,(nw,nh),[int((L==q).sum()) for q in (1,2,4)]))
     return s,out

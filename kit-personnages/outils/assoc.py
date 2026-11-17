@@ -30,3 +30,7 @@ def tetes_pour(corps): return [t for t,c in TETES.items() if corps in c]
 if __name__=='__main__':
     assert len(TETES)==46,len(TETES)
     for c in CORPS: print(f'{c:11s}{len(tetes_pour(c)):3d}  '+', '.join(tetes_pour(c)))
+
+# Queues du tieffelin : les ornées (bijoux) vont aux tenues aisées, les simples à tout le monde.
+QUEUES_SIMPLES=(1,3,5,7,9,10,11);QUEUES_ORNEES=(2,4,6,8);CORPS_AISES=('pourpoint','robe','mage')
+def queues_pour(corps): return QUEUES_SIMPLES+(QUEUES_ORNEES if corps in CORPS_AISES else ())
