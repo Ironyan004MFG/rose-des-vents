@@ -17,7 +17,7 @@ TETES={
  'm_c_heaume':('plates','garde'),'m_c_heaume_barbe':('plates','garde'),'m_c_cerveliere':('garde','plates'),'m_c_cerveliere_barbe':('garde','plates'),
  # femmes : jamais sur un corps d'homme
  'f_v_fichu':GENERIQUE_F,'f_v_nattes':GENERIQUE_F,'f_v_chignon':GENERIQUE_F,'f_v_agee':GENERIQUE_F,
- 'f_s_erudite':('robe',),'f_s_marchande':('robe','serveuse'),'f_s_barde':('robe',),'f_s_capuche':('serveuse',),'f_s_fermiere':('serveuse',),
+ 'f_s_erudite':('robe',),'f_s_marchande':('robe','serveuse'),'f_s_barde':('robe',),'f_s_capuche':('serveuse',),'f_s_fermiere':(),
  'f_n_diademe':('robe',),'f_n_tresses':('robe',),'f_n_perles':('robe',),'f_c_cerveliere':('garde','plates'),
 }
 CORPS=('aventurier','mage','fermier','garde','plates','barbare','forgeron','cuisinier','serveuse','pourpoint','robe')
