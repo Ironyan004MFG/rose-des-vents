@@ -53,3 +53,18 @@ def mail_neck(a,lab,hole=7,mail=15,dark=.72):
     if not len(ys): return a,lab
     y0,y1,x0,x1=ys.min(),ys.max()+1,xs.min(),xs.max()+1;T=np.tile(t,((y1-y0)//t.shape[0]+1,(x1-x0)//t.shape[1]+1,1))[:y1-y0,:x1-x0]
     sub=a[y0:y1,x0:x1];hm=h[y0:y1,x0:x1];sub[hm,:3]=T[hm]*dark;lab[h]=mail;return a,lab
+
+import contextlib
+@contextlib.contextmanager
+def skin_neck(k=.74,hole=7):
+    """Corps du nain portés par une autre morphologie (tête sans barbe) : pendant ce bloc, l'intérieur de l'encolure (7) est teinté en PEAU
+    un peu plus foncée (ombre du menton) au lieu du trou sombre prévu pour la barbe. Usage : with morpho.skin_neck(): c=cui.char(...)"""
+    import full
+    old=full.tint
+    def tint(a,lab,cols):
+        if 1 in cols and hole in cols:
+            C=[int(cols[1][j:j+2],16) for j in (1,3,5)];cols={**cols,hole:'#%02x%02x%02x'%tuple(int(v*k) for v in C)};full.G[hole]=1.0
+        return old(a,lab,cols)
+    full.tint=tint
+    try: yield
+    finally: full.tint=old
