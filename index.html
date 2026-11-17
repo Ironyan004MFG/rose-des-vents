@@ -1477,7 +1477,9 @@ function card(q){
     else h+=(q.statut==="ouverte"&&signupsFor(q.id).some(x=>x.statut!=="refusee")?'<button class="btn" data-a="group" data-id="'+esc(q.id)+'">Confirmer le groupe</button>':'')+(q.statut==="encours"?'<button class="btn" data-a="complete" data-id="'+esc(q.id)+'">Terminer la quête</button>':'')+(q.statut==="terminee"?'<button class="btn" data-a="archive" data-id="'+esc(q.id)+'">Archiver</button>':'')+(q.statut==="archivee"?'<button class="btn" data-a="unarchive" data-id="'+esc(q.id)+'">Désarchiver</button>':'')+(q.statut==="ouverte"||q.statut==="encours"?'<a class="btn gold" href="#partie-'+esc(q.id)+'">▶ Mode Partie</a>':'')+'<button class="btn ghost" data-a="edit" data-id="'+esc(q.id)+'">Modifier</button><button class="btn ghost" data-a="add-name" data-id="'+esc(q.id)+'">Ajouter un participant</button><button class="btn ghost" data-a="del" data-id="'+esc(q.id)+'">Supprimer</button>';
   }
   h+='</div>';
-  if(ui.dm&&ui.addName===q.id)h+='<form class="inline" id="nameform" data-id="'+esc(q.id)+'"><label for="f-addname">Nom du participant (confirmé)<input id="f-addname" maxlength="40" required></label><button class="btn" type="submit">Ajouter</button><button class="btn ghost" type="button" data-a="add-cancel">Annuler</button></form>';
+  if(ui.dm&&ui.addName===q.id)h+='<form class="inline" id="nameform" data-id="'+esc(q.id)+'">'+(()=>{const taken=signupsFor(q.id).map(x=>x.aventurier).filter(Boolean),uids=signupsFor(q.id).map(x=>x.uid),ch=aventuriers.filter(x=>taken.indexOf(x.id)<0&&!(x.proprietaire&&uids.indexOf(x.proprietaire)>=0)).sort((x,y)=>String(x.nom).localeCompare(String(y.nom),"fr"));
+      return ch.length?'<label for="f-addchar">Inscrire le personnage d\'un joueur<select id="f-addchar"><option value="">Choisir un personnage…</option>'+ch.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.nom)+(x.joueur?' ('+esc(x.joueur)+')':'')+'</option>').join("")+'</select></label>':'';})()+
+      '<label for="f-addname">ou un nom libre (confirmé d\'office)<input id="f-addname" maxlength="40"></label><button class="btn" type="submit">Ajouter</button><button class="btn ghost" type="button" data-a="add-cancel">Annuler</button></form>';
   if(ui.signupMsg&&ui.signupMsg.id===q.id)h+='<p class="toast'+(ui.signupMsg.err?' err':'')+'" role="status">'+esc(ui.signupMsg.text)+'</p>';
   return h+'</article>';
 }
@@ -6050,7 +6052,17 @@ document.addEventListener("submit",async e=>{
       const bt2=writeBatch(db);let k=0;aventuriers.forEach(a=>bureaux.forEach(b=>{if(typeof (pointsMap[a.id]||{})[b.id]!=="number"&&typeof (notoMap[a.id]||{})[b.id]!=="number")return;const nc=codeOf(ptsN(a,b.id),pts(a,b.id));if(nc!==renown(a,b.id)){k++;bt2.update(doc(db,"aventuriers",a.id),new FieldPath("niveaux",b.id),nc);}}));if(k)await bt2.commit();});return;
   }
   if(e.target.id==="nameform"){
-    const qid=e.target.getAttribute("data-id"),name=v("f-addname").slice(0,40);if(!name)return;
+    const qid=e.target.getAttribute("data-id"),name=v("f-addname").slice(0,40),cel=document.getElementById("f-addchar"),ch=cel&&cel.value?aventuriers.find(x=>x.id===cel.value):null;
+    if(ch){
+      // Le DM inscrit le personnage d'un joueur à sa demande : même fiche d'inscription que si le joueur l'avait fait lui-même (en attente),
+      // pour qu'il puisse ensuite répondre à la planification ou se retirer.
+      const own=ch.proprietaire&&ch.proprietaire!=="dm"?ch.proprietaire:"";
+      if(own&&signupsFor(qid).some(x=>x.uid===own)){save={state:"error",msg:"Ce joueur est déjà inscrit à cette quête avec un autre personnage."};render();return;}
+      ui.addName=null;
+      await run("Inscription",()=>setDoc(doc(db,"inscriptions",qid+"__"+(own||"dm-"+Date.now().toString(36))),{quete:qid,uid:own||"dm",aventurier:ch.id,nom:String(ch.nom).slice(0,40),statut:"attente",creeLe:serverTimestamp()}));
+      return;
+    }
+    if(!name)return;
     ui.addName=null;
     await run("Ajout",()=>setDoc(doc(db,"inscriptions",qid+"__dm-"+Date.now().toString(36)),{quete:qid,uid:"dm",nom:name,statut:"confirmee",creeLe:serverTimestamp()}));
     return;
