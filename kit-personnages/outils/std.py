@@ -252,7 +252,7 @@ def guard_lantern(P):
     P=paint((A,L),[(4,[(250,548),(462,548),(455,700),(470,800),(470,1260),(250,1260)])]);A,L=P
     box=np.zeros(L.shape,bool);box[1015:1165,300:440]=True;gl=box&(ndi.gaussian_filter(g,1.5)>205);gl=ndi.binary_opening(gl,iterations=2);L[gl]=70;L[A[...,3]<=40]=0;return A,L
 
-def plates(grey='../std/plt_relaxed.png'):
+def plates(grey='../std/plt2_relaxed.png',mp='../std/plt2_relaxed_map.png'):
     """Plates standard. Le calque de GPT a redessiné un autre corps (inutilisable) : tout est métal (4) ; les mailles (15) sont reprises du
     garde là où le dessin est resté grenu (manches, encolure) ; la ceinture (6) est la grande bande sombre du torse."""
     A,_=prep(grey,'../std/grd_relaxed_map.png');A0,L0=guard();al=A[...,3]>40;g=A[...,:3].mean(-1);L=np.where(al,4,0)
@@ -260,4 +260,7 @@ def plates(grey='../std/plt_relaxed.png'):
     # la ceinture : bande courbe relevée sur un gros plan (coordonnées du gros plan -> toile), limitée à ce qui est sombre (la boucle reste en métal)
     Z=[(215,418),(330,452),(450,478),(570,478),(690,452),(800,420),(800,482),(690,524),(570,552),(450,552),(330,524),(215,480)]
     pts=[((130+x/4-256)/.29+625,(230+y/4-229)/.29+360) for x,y in Z];Lb=paint((A,np.where(al,4,0)),[(6,pts)])[1];L[(Lb==6)&(ndi.gaussian_filter(g,1.5)<150)]=6
-    G.update({15:.8,4:.95,6:.75});return A,L
+    # liserés (14) : bandes mates et foncées, plus larges qu'un trait ; le calque de GPT (décalé de quelques px) ne sert qu'à dire où il y en a
+    Lm=prep(grey,mp)[1];gs=ndi.gaussian_filter(g,1.5);tr=ndi.binary_opening((gs<118)&al&(L==4),iterations=4)&ndi.binary_dilation(Lm==14,iterations=22);tr=ndi.binary_dilation(tr,iterations=3)&(gs<140)&(L==4)
+    L[tr]=14
+    G.update({15:.8,4:.95,6:.75,14:1.15});return A,L
