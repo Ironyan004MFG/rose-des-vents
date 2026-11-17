@@ -42,3 +42,14 @@ def neck(c,sk,cx=256,y0=176,y1=300,w=96,dark=100):
     if k: hole=lab==(np.argmax(ndi.sum(hole,lab,range(1,k+1)))+1);hole=ndi.binary_dilation(ndi.binary_fill_holes(hole),iterations=2)&m
     al=np.array(Image.fromarray((hole*255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.2)));yy=np.mgrid[:c.size[1],:c.size[0]][0];sh=np.clip(.86-(yy-y0)/(y1-y0)*.16,.6,1)
     lay=np.dstack([r*sh*.98,g*sh*.94,b*sh*.92,al]).astype('uint8');c.alpha_composite(Image.fromarray(lay));return c
+
+def mail_neck(a,lab,hole=7,mail=15,dark=.72):
+    """Garde et plates sous une tête sans barbe (autres morphologies que le nain) : le trou de l'encolure est rempli de COTTE DE MAILLES
+    (demande de Yannick). On prélève un carré de mailles sur le corps, on le répète en miroir dans le trou, un peu assombri (ombre du menton)."""
+    import numpy as np
+    from scipy import ndimage as ndi
+    a=a.copy();lab=lab.copy();m=lab==mail;c,k=ndi.label(m);big=c==(np.argmax(ndi.sum(m,c,range(1,k+1)))+1);d=ndi.distance_transform_edt(big);y,x=np.unravel_index(np.argmax(d),d.shape);r=int(d[y,x]*.68)
+    t=a[y-r:y+r,x-r:x+r,:3];t=np.concatenate([t,t[:,::-1]],1);t=np.concatenate([t,t[::-1]],0);h=lab==hole;ys,xs=np.where(h)
+    if not len(ys): return a,lab
+    y0,y1,x0,x1=ys.min(),ys.max()+1,xs.min(),xs.max()+1;T=np.tile(t,((y1-y0)//t.shape[0]+1,(x1-x0)//t.shape[1]+1,1))[:y1-y0,:x1-x0]
+    sub=a[y0:y1,x0:x1];hm=h[y0:y1,x0:x1];sub[hm,:3]=T[hm]*dark;lab[h]=mail;return a,lab
