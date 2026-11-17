@@ -2971,7 +2971,7 @@ async function shopAction(a,id,b,v,q){const P=ui.pt;P.boutiques=P.boutiques||[];
   return false;}
 
 /* ---------- Boutique de la Guilde (hors quête) : un menu d'objets et de prix ; le DM fait les ventes lui-même ---------- */
-const GS_SECS=[["intendance","Intendance","Fournitures de mission. La Guilde réapprovisionne sans cesse."],["services","Services","Location et assurance pour les membres."],
+const GS_SECS=[["intendance","Intendance","Fournitures de mission. La Guilde réapprovisionne sans cesse."],["services","Services","Location et protection pour les membres."],
   ["depot","Dépôt","Trésors revendus par les aventuriers. Chaque objet est unique : vendu, il disparaît."],["tresor","Trésor de la Rose","Récompenses hors-normes des Mithril : 1 étoile chacune. Uniques."]];
 const GS_DISC={bois:0,cuivre:5,fer:10,argent:15,or:20,mithral:25,rose:25};
 const GS_RANKMIN={inhabituel:"fer",rare:"argent",epique:"or",legendaire:"mithral"};
@@ -2984,7 +2984,7 @@ const GS_SEED=[
   ["intendance","Paquetage de chasseur de primes",5,"Menottes, filet, corde de chanvre, chausse-trapes."],["intendance","Paquetage de soigneur",140,"Kit de soins, 2 potions de soins, antitoxine."],
   ["services","Location : cheval de selle",5,"Pour une mission. À rendre au retour, sinon la Guilde facture 75 po."],["services","Location : mule",1,"Pour une mission. À rendre au retour, sinon 8 po."],
   ["services","Location : chariot et mule",5,"Pour une mission. À rendre au retour, sinon 45 po."],["services","Location : cheval de guerre",40,"Pour une mission, réservé aux rangs Fer et plus. À rendre au retour, sinon 400 po."],
-  ["services","Assurance « Retour du corps »",10,"Par mission. Si tu tombes, la Guilde rapatrie ton corps au temple le plus proche, ce qui rend un Retour à la vie possible."],
+  ["services","Amulette de rappel de la Guilde",10,"Par mission. Une amulette frappée de la rose de la Guilde. Si tu rates ton troisième jet contre la mort, elle se déclenche au lieu de te laisser mourir : elle te stabilise (sort Épargner les mourants) et signale ta position à la Guilde, qui vient te chercher. Ton personnage se réveille sain et sauf au comptoir, mais il ne participe plus au reste de la session."],
   ["tresor","Château avec fief et titre de noblesse",1,"Un domaine, son intendant… et ses voisins."],["tresor","Tour ou manoir en ville",1,"Une base dans la ville de ton choix."],
   ["tresor","Navire volant et son équipage",1,"Un airship pour explorer la Sword Coast… et au-delà."],["tresor","Navire et son équipage",1,"Un bateau marchand armé, avec son capitaine."],
   ["tresor","Objet légendaire",1,"Choisi avec le Maître de la Guilde."],["tresor","Deux objets très rares",1,"Choisis avec le Maître de la Guilde."],
