@@ -240,6 +240,7 @@ HE={1:(140,215),2:(180,212),3:(160,212),4:(158,258),5:(150,245),6:(148,240),7:(1
 HF={1:(200,262),2:(245,265),3:(175,290),4:(195,272),5:(190,282),6:(160,272)}      # halfelin lot F (femmes) : capuche, fermière, noble au diadème, noble aux tresses, noble aux perles, cervelière
 G.update({52:.95,69:1.0})      # 52 = pierre, 69 = perles
 UA={1:(140,255),2:(155,262),3:(137,232),4:(140,245),5:(145,255),6:(165,257),7:(145,248),8:(158,255)}      # HUMAIN lot A : (x milieu du visage, y des YEUX) — yeux sur la ligne des épaules ; échelle 0,50
+UB={1:(130,285),2:(170,265),3:(205,268),4:(170,305),5:(145,235),6:(185,300),7:(165,240),8:(185,245)}      # humain lot B : chignon, capuche, grand chapeau, toque, moine, noble toque, noble cercle, noble chapeau
 def brows_from_map(m):
     c,k=ndi.label(m==2);idx=range(1,k+1);sz=ndi.sum(m==2,c,idx);cm=ndi.center_of_mass(m==2,c,idx);b=sorted([(cm[i],sz[i]) for i in range(k) if 60<sz[i]<2500],key=lambda t:-t[1])[:2]
     return (round((b[0][0][1]+b[1][0][1])/2),round((b[0][0][0]+b[1][0][0])/2)) if len(b)==2 else None
