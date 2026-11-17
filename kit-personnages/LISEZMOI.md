@@ -172,3 +172,5 @@ Aucun corps à redemander à GPT : toutes les tenues, poses et marches du nain s
   - Le bandeau de forgeron va aussi sur le barbare, pour varier.
   - La serveuse ne porte PAS le chapeau de paille de la fermière. `f_s_fermiere` n'a donc aucun corps pour l'instant : il lui faut un corps de fermière (à dessiner), sinon elle n'est pas générée.
   - Validé par Yannick : heaumes et cervelières sur garde et plates seulement ; villageois autorisés sur le pourpoint ; **la rôdeuse à capuche porte l'aventurier** (tenue jugée unisexe, seule exception à la séparation hommes/femmes).
+  - **Corps unisexes (Yannick)** : l'aventurier et le fermier servent aux hommes et aux femmes ; portés par une femme, ils sont resserrés de 10 % en largeur (`assoc.UNISEXE`, `assoc.SERRE_F`). La fermière au chapeau de paille et les villageoises génériques portent donc aussi le fermier.
+  - **Garde et plates des autres morphologies** : les corps du nain resserrés à 80 % en code passent (essai `planches/halfelin_garde_plates_resserres.png`) ; reste à mettre le cou en peau ombrée sous les têtes sans barbe (trou noir sous le menton).
