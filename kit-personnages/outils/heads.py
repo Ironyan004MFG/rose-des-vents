@@ -15,6 +15,12 @@ def build(name,src,s,nose,seeds,er=0):
     w,h=im.size;sm=im.resize((round(w*s),round(h*s)),Image.LANCZOS);o=Image.new('RGBA',(512,512));off=(round(NOSE[0]-nose[0]*s),round(NOSE[1]-nose[1]*s));o.paste(sm,off)
     L=Image.fromarray(lab.astype('uint8')).resize(sm.size,Image.NEAREST);lo=Image.new('L',(512,512));lo.paste(L,off)
     o.save(f'assets/head_{name}.png');np.save(f'assets/head_{name}_lab.npy',np.array(lo));return o,np.array(lo)
+# Têtes d'avant les lots : remontées pour suivre la règle de hauteur (sourcils sur la ligne des épaules, y = EYE_Y). Valeur = décalage vers le haut, en pixels.
+RAISE={'fix':38,'hood':38,'widehat':45,'helm':40,'greathelm':24,'greathelm_nobeard':25,'greathelm_camail':24,'barbute':36,'barbute_shaved':35,'barbute_nobeard':36,
+       'coif':43,'coif_shaved':45,'coif_f':35,'toque':48,'naine':25,'dame':22,'dame2':22,'dame3':25}
+def raise_(im,dy):
+    if not dy: return im
+    o=Image.new('RGBA',im.size);o.alpha_composite(im.crop((0,dy,im.size[0],im.size[1])),(0,0));return o
 def tint(name,cols):
     a=np.array(Image.open(f'assets/head_{name}.png').convert('RGBA')).astype(float);lab=np.load(f'assets/head_{name}_lab.npy')
     lum=(a[...,0]*.3+a[...,1]*.59+a[...,2]*.11)/255;out=a.copy()
@@ -24,7 +30,8 @@ def tint(name,cols):
         w=np.array(Image.fromarray((m*255).astype('uint8')).filter(ImageFilter.GaussianBlur(0.8))).astype(float)/255
         f=np.clip(lum/lum[m].mean()*G[l],0,1.35);C=np.array([int(col[j:j+2],16) for j in (1,3,5)],float)
         for j in range(3): out[...,j]=out[...,j]*(1-w)+np.clip(C[j]*f,0,255)*w
-    return Image.fromarray(out.astype('uint8'))
+    o=Image.fromarray(out.astype('uint8'))
+    return raise_(o,RAISE.get(name,0))
 HOOD=dict(src='../far/hood.png',s=0.38,nose=(628,700),seeds={
  8:[(650,220),(628,300),(550,400),(700,400),(628,480),(470,500),(790,500),(450,600),(805,600),(628,540),(520,540),(740,540),(455,660),(803,660),(470,720),(790,720)],
  1:[(628,670),(628,640),(628,612),(565,640),(695,640),(600,690),(658,690),(540,645),(718,645),(575,655),(685,655),(590,583),(668,583),(628,588),(530,580),(728,580)]+[(x,573) for x in range(545,720,15)],
@@ -202,7 +209,7 @@ def build_lot2(mp='../lot2/map.png'):
     for k,n in LOT2.items(): build_map(f'l2_{k}',f'../lot2/t{k}.png',n,M[k-1],s=0.66,eye=EYE2[k])
 # lot 3 (femmes) : nattes, chignon, âgée au bonnet de laine, érudite, marchande au turban, barde, capuchonnée, fermière au chapeau de paille.
 # Têtes sans barbe : le repère est le MENTON (x du nez, y du bas du visage), posé sur NOSE comme la naine. Dans ce calque, CYAN (6) = paille.
-LOT3={1:(155,322),2:(157,402),3:(160,388),4:(155,366),5:(170,337),6:(188,381),7:(170,354),8:(216,327)}
+LOT3={1:(155,322),2:(157,402),3:(170,388),4:(155,366),5:(170,337),6:(188,381),7:(170,354),8:(216,327)}
 UP3={1:-10,2:-10,3:-14,4:-18,5:-22,6:-22,7:-16,8:-8}      # remontées : avec une coiffe volumineuse, le menton au bord de l'encolure fait encore trop bas
 def build_lot3(mp='../lot3/map.png'):
     M=split_map(mp)

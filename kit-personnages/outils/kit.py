@@ -34,7 +34,10 @@ def tint(n,cols):
             w=w*(1-zs)+w3*zs
         f=np.clip(lum/lum[m].mean()*G[l],0,1.35);C=np.array([int(col[j:j+2],16) for j in (1,3,5)],float)
         for j in range(3): out[...,j]=out[...,j]*(1-w)+np.clip(C[j]*f,0,255)*w
-    return Image.fromarray(out.astype('uint8'))
+    o_=Image.fromarray(out.astype('uint8'))
+    if n.startswith('head'):
+        import heads;o_=heads.raise_(o_,heads.RAISE['fix'])      # règle de hauteur : sourcils sur la ligne des épaules
+    return o_
 ORDER=['boots_dwarf_90','arm_right_dwarf_relaxed_90','arm_left_dwarf_relaxed_90','body_dwarf_relaxed_90','head_dwarf_braided_90']
 def char(cloth,skin,hair,leather='#3a2a1c',beard=None):
     c=Image.new('RGBA',(512,512));cols={5:cloth,1:skin,2:hair,3:beard or hair,6:leather}
