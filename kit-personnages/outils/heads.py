@@ -247,6 +247,7 @@ UE={1:(145,240),2:(200,255),3:(155,262),4:(152,280),5:(175,278),6:(150,285),7:(1
 UF={1:(201,297),2:(272,290),3:(154,305),4:(203,260),5:(166,290),6:(145,288)}      # humain lot F (femmes) : capuche, fermière, noble au diadème, noble aux tresses, noble aux perles, cervelière ; x = milieu de la peau sous les yeux, mesuré dans le calque
 EA_Y={1:228,2:285,3:228,4:240,5:218,6:225,7:225,8:255}      # ELFE lot A : y des yeux ; x mesuré par centers() ; échelle 0,44
 EB_Y={1:275,2:275,3:238,4:290,5:205,6:280,7:215,8:262}      # elfe lot B : chignon, capuche, grand chapeau, toque, moine, noble toque, noble cercle, noble chapeau
+EC_Y={1:215,2:235,3:225,4:245,5:235,6:230,7:215,8:250}      # elfe lot C : marin, érudit, forgeron, barde, rôdeur, roublard, fermier, druide
 def brows_from_map(m):
     c,k=ndi.label(m==2);idx=range(1,k+1);sz=ndi.sum(m==2,c,idx);cm=ndi.center_of_mass(m==2,c,idx);b=sorted([(cm[i],sz[i]) for i in range(k) if 60<sz[i]<2500],key=lambda t:-t[1])[:2]
     return (round((b[0][0][1]+b[1][0][1])/2),round((b[0][0][0]+b[1][0][0])/2)) if len(b)==2 else None
@@ -305,5 +306,7 @@ def centers(lot,eyes,d0=45,d1=110):
     """{k: y des yeux} -> {k: (x, y)} : x = milieu de la peau mesuré dans le calque, entre d0 et d1 px sous les yeux (joues et mâchoire, sous les oreilles)."""
     M=split_map(f'../{lot}/map.png',n=len(eyes));T={}
     for k,ey in eyes.items():
-        w,h=Image.open(f'../{lot}/t{k}.png').size;m=np.array(Image.fromarray(M[k-1].astype('uint8')).resize((w,h),Image.NEAREST));xs=np.where((m[ey+d0:ey+d1]==1).any(0))[0];T[k]=(int((xs[0]+xs[-1])//2),ey)
+        w,h=Image.open(f'../{lot}/t{k}.png').size;m=np.array(Image.fromarray(M[k-1].astype('uint8')).resize((w,h),Image.NEAREST));xs=np.where((m[ey+d0:ey+d1]==1).any(0))[0]
+        if not len(xs): xs=np.where((m[ey-25:ey+20]==1).any(0))[0]      # visage masqué (roublard) : on mesure à hauteur des yeux
+        T[k]=(int((xs[0]+xs[-1])//2),ey)
     return T
