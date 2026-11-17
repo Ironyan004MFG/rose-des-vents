@@ -2,11 +2,11 @@
 Identifiants de têtes = ceux d'INVENTAIRE.md, communs à toutes les races. Corps = tenues du kit."""
 CIVIL=('fermier','pourpoint','aventurier')
 GENERIQUE=('aventurier','mage','fermier','plates','barbare','forgeron','cuisinier','pourpoint')
-GENERIQUE_F=('serveuse','robe','fermier','aventurier','mage','plates')
+GENERIQUE_F=('serveuse','robe','fermier','aventurier','mage','plates','barbare_f')
 # corps UNISEXES : portés par une femme, ils sont resserrés de 10 % en largeur
 UNISEXE=('aventurier','mage','fermier','garde','plates')
 # équivalents féminins : cuisinier -> serveuse ; pourpoint -> robe. Barbare et forgeron : hommes seulement (torse nu), pas d'équivalent pour l'instant.
-EQUIV_F={'cuisinier':'serveuse','pourpoint':'robe'};HOMMES=('barbare','forgeron','cuisinier','pourpoint');FEMMES=('serveuse','robe');SERRE_F=.9
+EQUIV_F={'cuisinier':'serveuse','pourpoint':'robe','barbare':'barbare_f'};HOMMES=('barbare','forgeron','cuisinier','pourpoint');FEMMES=('serveuse','robe');SERRE_F=.9
 TETES={
  # têtes GÉNÉRIQUES : sur n'importe quel corps (un métier « sans » son chapeau), sauf le garde, qui est TOUJOURS casqué
  **{f'm_v_{i:02d}':GENERIQUE for i in range(1,10)},
@@ -24,7 +24,7 @@ TETES={
  'f_s_erudite':('robe','mage'),'f_s_marchande':('robe','serveuse'),'f_s_barde':('robe',),'f_s_capuche':('aventurier',),'f_s_fermiere':('fermier',),
  'f_n_diademe':('robe',),'f_n_tresses':('robe',),'f_n_perles':('robe',),'f_c_cerveliere':('garde','plates'),
 }
-CORPS=('aventurier','mage','fermier','garde','plates','barbare','forgeron','cuisinier','serveuse','pourpoint','robe')
+CORPS=('aventurier','mage','fermier','garde','plates','barbare','barbare_f','forgeron','cuisinier','serveuse','pourpoint','robe')
 def corps_pour(tete): return TETES[tete]
 def tetes_pour(corps): return [t for t,c in TETES.items() if corps in c]
 if __name__=='__main__':
