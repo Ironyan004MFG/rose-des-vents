@@ -234,3 +234,8 @@ def barb_f_grip(P):
 def _brace(P,box):
     """Bracelet clouté d'un bras qui a bougé : dans la boîte, ce qui est très clair est un clou (métal), le reste est du cuir."""
     A,L=P;L=L.copy();x0,y0,x1,y1=box;g=ndi.gaussian_filter(A[...,:3].mean(-1),1.5)[y0:y1,x0:x1];al=A[y0:y1,x0:x1,3]>40;s=L[y0:y1,x0:x1];s[al&(g>168)]=4;s[al&(g<=168)]=6;return A,L
+
+def guard(grey='../std/grd_relaxed.png',mp='../std/grd_relaxed_map.png'):
+    """Garde standard. NE PAS passer `pierce` sur une armure : les reflets blancs du métal seraient percés. Dans le calque, ORANGE = mailles
+    partout (manches, flancs, encolure remplie) -> 15 ; aucune peau."""
+    A,L=prep(grey,mp);L=L.copy();L[L==7]=15;L[L==1]=4;G.update({5:.85,15:.8,14:.85,4:.95});return A,L
