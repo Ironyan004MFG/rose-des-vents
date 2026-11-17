@@ -18,9 +18,10 @@ def build(name,src,s,nose,seeds,er=0):
 # Têtes d'avant les lots : remontées pour suivre la règle de hauteur (sourcils sur la ligne des épaules, y = EYE_Y). Valeur = décalage vers le haut, en pixels.
 RAISE={'fix':38,'hood':38,'widehat':45,'helm':40,'greathelm':24,'greathelm_nobeard':25,'greathelm_camail':24,'barbute':36,'barbute_shaved':35,'barbute_nobeard':36,
        'coif':43,'coif_shaved':45,'coif_f':35,'toque':48,'naine':25,'dame':22,'dame2':22,'dame3':25}
-def raise_(im,dy):
+DX=-6                                            # anciennes têtes : construites sur NOSE x=262, donc 6 px à droite de l'axe des corps (256) ; recentrées ici
+def raise_(im,dy,dx=DX):
     if not dy: return im
-    o=Image.new('RGBA',im.size);o.alpha_composite(im.crop((0,dy,im.size[0],im.size[1])),(0,0));return o
+    o=Image.new('RGBA',im.size);o.alpha_composite(im.crop((-dx,dy,im.size[0],im.size[1])),(0,0));return o
 def tint(name,cols):
     a=np.array(Image.open(f'assets/head_{name}.png').convert('RGBA')).astype(float);lab=np.load(f'assets/head_{name}_lab.npy')
     lum=(a[...,0]*.3+a[...,1]*.59+a[...,2]*.11)/255;out=a.copy()
@@ -185,11 +186,12 @@ EYE_Y=200;BROW_DY=14                             # RÈGLE DE HAUTEUR (nain) : le
 #                                                  Plus bas, le personnage a « la tête entre les épaules ». Ne plus caler sur le nez de la tête barbue.
 # Ce qui arrive sur la ligne du haut des épaules dépend de la morphologie (règle donnée par Yannick) :
 LIGNE={'nain':'sourcils','halfelin':'sourcils','humain':'yeux','elfe':'yeux','tieffelin':'yeux','demi-orc':'nez'}
+AXIS=256                                         # axe de TOUS les corps sur la toile (col et épaules mesurés à 256). NOSE[0]=262 décalait les têtes de 6 px vers la droite.
 def build_map(name,src,nose,mlab,up=0,s=0.62,eye=None):
     if eye is not None: up=round(EYE_Y-(NOSE[1]+(eye-BROW_DY-nose[1])*s))
     im=Image.open(src).convert('RGBA');a=np.array(im);al=a[...,3]>40;w,h=im.size;L=np.array(Image.fromarray(mlab).resize((w,h),Image.NEAREST))
     _,ix=ndi.distance_transform_edt(L==0,return_indices=True);L=L[ix[0],ix[1]];L[~al]=0                     # bords mal recouverts : matière la plus proche
-    sm=im.resize((round(w*s),round(h*s)),Image.LANCZOS);o=Image.new('RGBA',(512,512));off=(round(NOSE[0]-nose[0]*s),round(NOSE[1]-nose[1]*s)+up);o.paste(sm,off)
+    sm=im.resize((round(w*s),round(h*s)),Image.LANCZOS);o=Image.new('RGBA',(512,512));off=(round(AXIS-nose[0]*s),round(NOSE[1]-nose[1]*s)+up);o.paste(sm,off)
     Ls=Image.fromarray(L.astype('uint8')).resize(sm.size,Image.NEAREST);lo=Image.new('L',(512,512));lo.paste(Ls,off);o.save(f'assets/head_{name}.png');np.save(f'assets/head_{name}_lab.npy',np.array(lo));return L
 def split_sheet(path,out,n=8,rows=2):
     """Découpe une planche grise en n têtes (out % k), rangées par ligne puis par colonne."""
@@ -227,6 +229,15 @@ EYE1={1:197,2:217,3:290,4:207,5:226,6:283,7:210,8:280}      # y des yeux dans ch
 EYE2={1:203,2:228,3:222,4:228,5:232,6:243,7:270,8:278}
 EYE3={1:238,2:320,3:300,4:285,5:262,6:305,7:268,8:250}
 EYE4={1:255,2:245,3:250,4:222,5:212,6:220}
+# --- HALFELIN. Les sourcils sont lus dans le calque (les deux petites bandes bleues isolées dans le rouge) : plus de repère à poser à la main.
+# HA[k] = (x du milieu du visage, y des sourcils) dans l'image découpée. Échelle 0,54 : tête à 0,92 de celle du nain (morpho.RACES).
+HA={1:(162,246),2:(147,225),3:(154,230),4:(146,232),5:(176,258),6:(151,225),7:(163,211),8:(162,247)}
+def brows_from_map(m):
+    c,k=ndi.label(m==2);idx=range(1,k+1);sz=ndi.sum(m==2,c,idx);cm=ndi.center_of_mass(m==2,c,idx);b=sorted([(cm[i],sz[i]) for i in range(k) if 60<sz[i]<2500],key=lambda t:-t[1])[:2]
+    return (round((b[0][0][1]+b[1][0][1])/2),round((b[0][0][0]+b[1][0][0])/2)) if len(b)==2 else None
+def build_lotH(lot,tab,s=0.54):
+    M=split_map(f'../{lot}/map.png',n=len(tab))
+    for k,(cx,by) in tab.items(): build_map(f'{lot}_{k}',f'../{lot}/t{k}.png',(cx,by),M[k-1],s=s,eye=by+BROW_DY)
 if __name__=='__main__':
     import sys
     if len(sys.argv)>1 and sys.argv[1]=='helm':

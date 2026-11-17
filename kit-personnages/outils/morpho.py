@@ -30,3 +30,15 @@ def emblem_on(bd,emb_fn,mask,chest=(257,358),size=84,**p):
     s=int(min(size*(1.12 if p.get('tronc',0) else 1.0),w*0.86));e=emb_fn(s);lay=Image.new('RGBA',b.size);lay.alpha_composite(e,(round(cx-s/2),round(cy-s/2)))
     import numpy as np
     lay.putalpha(Image.fromarray(np.minimum(np.array(lay.split()[3]),np.array(m))));b.alpha_composite(lay);return b
+
+def neck(c,sk,cx=256,y0=176,y1=300,w=96,dark=100):
+    """Cou : comble l'encolure sous une tête SANS BARBE (sinon on voit un trou sombre sous le menton). À poser sur le corps, AVANT la tête.
+    Seuls les pixels SOMBRES de l'encolure (l'intérieur du col) deviennent de la peau : cols, boutons et bretelles restent intacts."""
+    from PIL import ImageDraw,ImageFilter
+    import numpy as np
+    from scipy import ndimage as ndi
+    r,g,b=[int(sk[i:i+2],16) for i in (1,3,5)];S=3;m=Image.new('L',(c.size[0]*S,c.size[1]*S),0);ImageDraw.Draw(m).ellipse([(cx-w/2)*S,y0*S,(cx+w/2)*S,y1*S],fill=255);m=np.array(m.resize(c.size,Image.LANCZOS))>128
+    a=np.array(c).astype(float);lum=a[...,:3].mean(-1);hole=m&(a[...,3]>60)&(lum<dark);hole=ndi.binary_opening(hole,iterations=2);lab,k=ndi.label(hole)
+    if k: hole=lab==(np.argmax(ndi.sum(hole,lab,range(1,k+1)))+1);hole=ndi.binary_dilation(ndi.binary_fill_holes(hole),iterations=2)&m
+    al=np.array(Image.fromarray((hole*255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.2)));yy=np.mgrid[:c.size[1],:c.size[0]][0];sh=np.clip(.86-(yy-y0)/(y1-y0)*.16,.6,1)
+    lay=np.dstack([r*sh*.98,g*sh*.94,b*sh*.92,al]).astype('uint8');c.alpha_composite(Image.fromarray(lay));return c
