@@ -251,3 +251,13 @@ def guard_lantern(P):
     m=Image.new('L',(A.shape[1],A.shape[0]),0);ImageDraw.Draw(m).polygon([(425,585),(510,585),(510,810),(425,810)],fill=255);hole=(np.array(m)>0)&(A[...,:3].min(-1)>236);A[ndi.binary_dilation(hole,iterations=2),3]=0
     P=paint((A,L),[(4,[(250,548),(462,548),(455,700),(470,800),(470,1260),(250,1260)])]);A,L=P
     box=np.zeros(L.shape,bool);box[1015:1165,300:440]=True;gl=box&(ndi.gaussian_filter(g,1.5)>205);gl=ndi.binary_opening(gl,iterations=2);L[gl]=70;L[A[...,3]<=40]=0;return A,L
+
+def plates(grey='../std/plt_relaxed.png'):
+    """Plates standard. Le calque de GPT a redessiné un autre corps (inutilisable) : tout est métal (4) ; les mailles (15) sont reprises du
+    garde là où le dessin est resté grenu (manches, encolure) ; la ceinture (6) est la grande bande sombre du torse."""
+    A,_=prep(grey,'../std/grd_relaxed_map.png');A0,L0=guard();al=A[...,3]>40;g=A[...,:3].mean(-1);L=np.where(al,4,0)
+    v=ndi.gaussian_filter((g-ndi.gaussian_filter(g,3))**2,6)**.5;mail=ndi.binary_dilation(L0==15,iterations=6)&(v>17)&al;mail=ndi.binary_opening(ndi.binary_closing(mail,iterations=6),iterations=4);L[mail]=15
+    # la ceinture : bande courbe relevée sur un gros plan (coordonnées du gros plan -> toile), limitée à ce qui est sombre (la boucle reste en métal)
+    Z=[(215,418),(330,452),(450,478),(570,478),(690,452),(800,420),(800,482),(690,524),(570,552),(450,552),(330,524),(215,480)]
+    pts=[((130+x/4-256)/.29+625,(230+y/4-229)/.29+360) for x,y in Z];Lb=paint((A,np.where(al,4,0)),[(6,pts)])[1];L[(Lb==6)&(ndi.gaussian_filter(g,1.5)<150)]=6
+    G.update({15:.8,4:.95,6:.75});return A,L
