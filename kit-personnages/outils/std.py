@@ -239,3 +239,15 @@ def guard(grey='../std/grd_relaxed.png',mp='../std/grd_relaxed_map.png'):
     """Garde standard. NE PAS passer `pierce` sur une armure : les reflets blancs du métal seraient percés. Dans le calque, ORANGE = mailles
     partout (manches, flancs, encolure remplie) -> 15 ; aucune peau."""
     A,L=prep(grey,mp);L=L.copy();L[L==7]=15;L[L==1]=4;G.update({5:.85,15:.8,14:.85,4:.95});return A,L
+
+# GARDE STANDARD. Prise d'arme : gantelet (métal) et bouts du manche (68). Lanterne (toile élargie pad=120) : bras et lanterne en métal,
+# vitres = 70 (lueur, à teinter en jaune chaud et à faire vaciller) ; le vide blanc entre le bras et le corps est rendu transparent.
+G.update({70:1.0})
+GRIP_GUARD=[(4,[(215,592),(265,572),(350,600),(380,612),(448,625),(448,715),(395,737),(300,737),(225,692)]),(68,[(378,548),(422,548),(422,614),(378,614)]),(68,[(376,722),(422,722),(422,790),(376,790)])]
+def guard_grip(P): return paint(P,GRIP_GUARD)
+def guard_lantern(P):
+    from PIL import ImageDraw
+    A,L=P;A=A.copy();g=A[...,:3].mean(-1)
+    m=Image.new('L',(A.shape[1],A.shape[0]),0);ImageDraw.Draw(m).polygon([(425,585),(510,585),(510,810),(425,810)],fill=255);hole=(np.array(m)>0)&(A[...,:3].min(-1)>236);A[ndi.binary_dilation(hole,iterations=2),3]=0
+    P=paint((A,L),[(4,[(250,548),(462,548),(455,700),(470,800),(470,1260),(250,1260)])]);A,L=P
+    box=np.zeros(L.shape,bool);box[1015:1165,300:440]=True;gl=box&(ndi.gaussian_filter(g,1.5)>205);gl=ndi.binary_opening(gl,iterations=2);L[gl]=70;L[A[...,3]<=40]=0;return A,L
