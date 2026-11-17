@@ -251,6 +251,8 @@ EC_Y={1:215,2:235,3:225,4:245,5:235,6:230,7:215,8:250}      # elfe lot C : marin
 ED_Y={1:228,2:265,3:268,4:295,5:310,6:255,7:240,8:235}      # elfe lot D : mineur, mendiant, casque à nasal-feuille, heaume ailé (cheveux), heaume ailé, casque ouvert (cheveux), casque ouvert, cervelière (cheveux)
 EE_Y={1:225,2:240,3:228,4:270,5:250,6:270,7:245,8:300}      # elfe lot E : cervelière, puis femmes : fichu, nattes, chignon, âgée au châle, érudite, marchande, barde
 EF_Y={1:280,2:265,3:280,4:230,5:260,6:235}      # elfe lot F (femmes) : capuche, fermière, noble au diadème, noble aux tresses, noble aux perles, cervelière
+CORNE=72;G[CORNE]=.9      # tieffelin : cornes, colorables à part (MAGENTA dans le calque du lot A)
+TA_Y={1:225,2:258,3:225,4:265,5:258,6:245,7:255,8:240}      # TIEFFELIN lot A : y des yeux ; échelle 0,44 comme l'elfe
 def brows_from_map(m):
     c,k=ndi.label(m==2);idx=range(1,k+1);sz=ndi.sum(m==2,c,idx);cm=ndi.center_of_mass(m==2,c,idx);b=sorted([(cm[i],sz[i]) for i in range(k) if 60<sz[i]<2500],key=lambda t:-t[1])[:2]
     return (round((b[0][0][1]+b[1][0][1])/2),round((b[0][0][0]+b[1][0][0])/2)) if len(b)==2 else None
