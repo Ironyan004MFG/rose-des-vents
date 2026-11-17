@@ -26,3 +26,16 @@ def char(P,cols,pants='#4a4038',boots='#3a2a1c',ph=0,H=560,larg=.8):
     cols : {matière: couleur}. Les jambes du nain sont resserrées à la même largeur que le corps standard."""
     a,lab=P;full.G.update(G);c=Image.new('RGBA',(512,H));lg=morpho.body(brb._legs(pants,boots,ph),larg=larg);c.alpha_composite(lg,((512-lg.size[0])//2,brb.DY))
     im=full.tint(a,lab,{7:shade(cols[1]),**cols});w,h=im.size;t=im.resize((round(w*.29),round(h*.29)),Image.LANCZOS);o=Image.new('RGBA',(512,H));o.paste(t,(round(256-625*.29),round(229-360*.29)));c.alpha_composite(o);return c
+
+def prep_from(grey,ref):
+    """Pose dessinée à partir de `ref` (déjà préparé) : même torse, bras déplacés. Les matières ne viennent PAS d'un calque de la pose
+    (le calque GPT d'une pose ne retombe jamais exactement sur son gris) : on mesure le déplacement de chaque point entre le gris de `ref`
+    et celui de la pose (flot optique), et on déplace les matières de `ref` du même mouvement."""
+    import cv2
+    im=Image.open(grey).convert('RGBA');top,l,r=brb.norm.collar(grey);s=cui.SC;cx=(l+r)/2;rcx=(brb.norm.REF[1]+brb.norm.REF[2])/2;M=(1/s,0,cx-rcx/s,0,1/s,top-brb.norm.REF[0]/s)
+    A=np.array(im.transform((1254,1500),Image.AFFINE,M,Image.BICUBIC)).astype(float);A0,L0=ref;al=A[...,3]>40
+    g=lambda X:np.where(X[...,3]>40,X[...,:3].mean(-1),255.).astype('uint8');G1,G0=g(A),g(A0)
+    fl=cv2.calcOpticalFlowFarneback(G1,G0,None,0.5,6,61,8,7,1.5,0);yy,xx=np.mgrid[0:1500,0:1254].astype('float32')   # pour chaque point de la pose : où il était dans ref
+    L=cv2.remap(L0.astype('uint8'),xx+fl[...,0],yy+fl[...,1],cv2.INTER_NEAREST);W=cv2.remap(G0,xx+fl[...,0],yy+fl[...,1],cv2.INTER_LINEAR)
+    bad=ndi.binary_opening(np.abs(W.astype(float)-G1)>60,iterations=2);L=L.astype(int);L[bad]=0
+    _,ix=ndi.distance_transform_edt(L==0,return_indices=True);L=L[ix[0],ix[1]];L[~al]=0;print('déplacement max :',round(float(np.hypot(fl[...,0],fl[...,1])[al].max())),'px ; points non retrouvés :',round(100*bad[al].mean(),1),'%');return A,L
