@@ -246,6 +246,7 @@ UD={1:(155,240),2:(165,245),3:(125,255),4:(185,258),5:(160,280),6:(130,255),7:(1
 UE={1:(145,240),2:(200,255),3:(155,262),4:(152,280),5:(175,278),6:(150,285),7:(171,265),8:(200,305)}      # humain lot E : cervelière rasée, puis femmes : fichu, nattes, chignon, âgée, érudite, marchande, barde
 UF={1:(201,297),2:(272,290),3:(154,305),4:(203,260),5:(166,290),6:(145,288)}      # humain lot F (femmes) : capuche, fermière, noble au diadème, noble aux tresses, noble aux perles, cervelière ; x = milieu de la peau sous les yeux, mesuré dans le calque
 EA_Y={1:228,2:285,3:228,4:240,5:218,6:225,7:225,8:255}      # ELFE lot A : y des yeux ; x mesuré par centers() ; échelle 0,44
+EB_Y={1:275,2:275,3:238,4:290,5:205,6:280,7:215,8:262}      # elfe lot B : chignon, capuche, grand chapeau, toque, moine, noble toque, noble cercle, noble chapeau
 def brows_from_map(m):
     c,k=ndi.label(m==2);idx=range(1,k+1);sz=ndi.sum(m==2,c,idx);cm=ndi.center_of_mass(m==2,c,idx);b=sorted([(cm[i],sz[i]) for i in range(k) if 60<sz[i]<2500],key=lambda t:-t[1])[:2]
     return (round((b[0][0][1]+b[1][0][1])/2),round((b[0][0][0]+b[1][0][0])/2)) if len(b)==2 else None
