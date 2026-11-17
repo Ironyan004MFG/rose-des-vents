@@ -239,11 +239,12 @@ G.update({15:.8})
 HE={1:(140,215),2:(180,212),3:(160,212),4:(158,258),5:(150,245),6:(148,240),7:(160,232),8:(175,282)}      # halfelin lot E : cervelière rasée, puis femmes : fichu, nattes, chignon, âgée, érudite, marchande, barde
 HF={1:(200,262),2:(245,265),3:(175,290),4:(195,272),5:(190,282),6:(160,272)}      # halfelin lot F (femmes) : capuche, fermière, noble au diadème, noble aux tresses, noble aux perles, cervelière
 G.update({52:.95,69:1.0})      # 52 = pierre, 69 = perles
-UA={1:(140,255),2:(155,262),3:(137,232),4:(140,245),5:(145,255),6:(165,257),7:(145,248),8:(158,255)}      # HUMAIN lot A : (x milieu du visage, y des YEUX) — yeux sur la ligne des épaules ; échelle 0,50
-UB={1:(130,285),2:(170,265),3:(205,268),4:(170,305),5:(145,235),6:(185,300),7:(165,240),8:(185,245)}      # humain lot B : chignon, capuche, grand chapeau, toque, moine, noble toque, noble cercle, noble chapeau
-UC={1:(148,245),2:(160,245),3:(130,240),4:(180,275),5:(160,255),6:(155,235),7:(205,235),8:(160,235)}      # humain lot C : marin, érudit, forgeron, barde, rôdeur, roublard, fermier, druide
+UA={1:(140,255),2:(155,262),3:(137,232),4:(140,245),5:(139,255),6:(165,257),7:(145,248),8:(158,255)}      # HUMAIN lot A : (x milieu du visage, y des YEUX) — yeux sur la ligne des épaules ; échelle 0,50
+UB={1:(130,285),2:(170,265),3:(211,268),4:(170,305),5:(145,235),6:(185,300),7:(165,240),8:(185,245)}      # humain lot B : chignon, capuche, grand chapeau, toque, moine, noble toque, noble cercle, noble chapeau
+UC={1:(148,245),2:(166,245),3:(130,240),4:(180,275),5:(160,255),6:(155,235),7:(210,235),8:(160,235)}      # humain lot C : marin, érudit, forgeron, barde, rôdeur, roublard, fermier, druide
 UD={1:(155,240),2:(165,245),3:(125,255),4:(185,258),5:(160,280),6:(130,255),7:(130,265),8:(140,265)}      # humain lot D : mineur, mendiant, casque à nasal, chapel de fer (barbe), morion (barbe), armet fermé, casque orné (barbe), salade (rasé)
-UE={1:(145,240),2:(200,255),3:(155,262),4:(152,280),5:(175,278),6:(150,285),7:(160,265),8:(200,305)}      # humain lot E : cervelière rasée, puis femmes : fichu, nattes, chignon, âgée, érudite, marchande, barde
+UE={1:(145,240),2:(200,255),3:(155,262),4:(152,280),5:(175,278),6:(150,285),7:(171,265),8:(200,305)}      # humain lot E : cervelière rasée, puis femmes : fichu, nattes, chignon, âgée, érudite, marchande, barde
+UF={1:(201,297),2:(272,290),3:(154,305),4:(203,260),5:(166,290),6:(145,288)}      # humain lot F (femmes) : capuche, fermière, noble au diadème, noble aux tresses, noble aux perles, cervelière ; x = milieu de la peau sous les yeux, mesuré dans le calque
 def brows_from_map(m):
     c,k=ndi.label(m==2);idx=range(1,k+1);sz=ndi.sum(m==2,c,idx);cm=ndi.center_of_mass(m==2,c,idx);b=sorted([(cm[i],sz[i]) for i in range(k) if 60<sz[i]<2500],key=lambda t:-t[1])[:2]
     return (round((b[0][0][1]+b[1][0][1])/2),round((b[0][0][0]+b[1][0][0])/2)) if len(b)==2 else None
