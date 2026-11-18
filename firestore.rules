@@ -295,6 +295,10 @@ service cloud.firestore {
     match /scenarios/{id} {
       allow read, write: if isAdmin();
     }
+    // Objets à montrer aux joueurs (lettres, insignes, reliques…) : fiches du DM
+    match /objets/{id} {
+      allow read, write: if isAdmin();
+    }
 
     // ---------- Wiki des règles maison (lecture publique, écriture admin) ----------
     match /wiki/{id} {
