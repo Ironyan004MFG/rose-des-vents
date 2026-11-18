@@ -11,12 +11,22 @@ def labels(cal,fg):
     lab=lab.astype(int);lab[bad]=-1
     # cases inconnues dans la silhouette : matière voisine la plus proche
     idx=ndi.distance_transform_edt(lab<0,return_distances=False,return_indices=True)
-    lab=lab[idx[0],idx[1]];lab[~fg]=-1;return lab,ks
+    lab=lab[idx[0],idx[1]];lab[~fg]=-1
+    # petites zones JAUNES entourées de peau (cicatrice, plis peints en jaune) : c'est de la peau
+    pe,ga=ks.index('peau'),ks.index('galon');cg,ng=ndi.label(lab==ga)
+    for i in range(1,ng+1):
+        m=cg==i
+        if m.sum()>4000: continue
+        r=ndi.binary_dilation(m,iterations=3)&~m;v=lab[r]
+        if ((v==pe)|(v==ks.index('poils'))).mean()>0.7: lab[m]=pe
+    return lab,ks
 def colore(gris,calque,cols,blancs=False):
     g=np.array(Image.open(gris).convert('RGB')).astype(float)/255;L=g.mean(-1)
     cal=np.array(Image.open(calque).convert('RGB').resize(Image.open(gris).size)).astype(int)
     # fond = blanc dans le gris ET blanc dans le calque : y compris les vides enfermés (entre bras et corps, dans les cheveux)
     fond=(L>0.88)&(cal.min(-1)>215)
+    # blanc du gris relié au bord de l'image : c'est du fond, même si le calque déborde un peu du dessin
+    bl=L>0.9;cb,_=ndi.label(bl);bord=np.unique(np.concatenate([cb[0],cb[-1],cb[:,0],cb[:,-1]]));fond|=np.isin(cb,bord[bord>0])
     fg=~fond;fg=ndi.binary_opening(fg,iterations=1)
     c,n=ndi.label(fg);s=ndi.sum(fg,c,range(1,n+1));fg=np.isin(c,1+np.where(s>max(400,s.max()*0.002))[0])
     # petits trous de quelques pixels (reflets) : rebouchés
