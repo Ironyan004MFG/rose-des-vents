@@ -12,10 +12,19 @@ def labels(cal,fg):
     # cases inconnues dans la silhouette : matière voisine la plus proche
     idx=ndi.distance_transform_edt(lab<0,return_distances=False,return_indices=True)
     lab=lab[idx[0],idx[1]];lab[~fg]=-1;return lab,ks
-def colore(gris,calque,cols):
+def colore(gris,calque,cols,blancs=False):
     g=np.array(Image.open(gris).convert('RGB')).astype(float)/255;L=g.mean(-1)
-    fg=ndi.binary_fill_holes(ndi.binary_closing(L<0.92,iterations=3));c,n=ndi.label(fg);s=ndi.sum(fg,c,range(1,n+1));fg=c==(1+np.argmax(s))
-    lab,ks=labels(np.array(Image.open(calque).convert('RGB').resize(Image.open(gris).size)),fg)
+    cal=np.array(Image.open(calque).convert('RGB').resize(Image.open(gris).size)).astype(int)
+    # fond = blanc dans le gris ET blanc dans le calque : y compris les vides enfermés (entre bras et corps, dans les cheveux)
+    fond=(L>0.88)&(cal.min(-1)>215)
+    fg=~fond;fg=ndi.binary_opening(fg,iterations=1)
+    c,n=ndi.label(fg);s=ndi.sum(fg,c,range(1,n+1));fg=np.isin(c,1+np.where(s>max(400,s.max()*0.002))[0])
+    # petits trous de quelques pixels (reflets) : rebouchés
+    trous=ndi.binary_fill_holes(fg)&~fg;ct,nt=ndi.label(trous);st=ndi.sum(trous,ct,range(1,nt+1));fg|=np.isin(ct,1+np.where(st<40)[0])
+    lab,ks=labels(cal,fg)
+    # liseré blanc au bord (le calque déborde un peu du dessin) : retiré, sauf les cheveux blancs
+    d=ndi.distance_transform_edt(fg);halo=fg&(d<=5)&(L>0.955)&((lab!=ks.index('poils'))|(not blancs))
+    fg&=~halo;lab[halo]=-1
     out=np.zeros(g.shape)
     for i,k in enumerate(ks):
         m=lab==i
@@ -42,7 +51,7 @@ if __name__=='__main__':
     import sys
     ims=[]
     for n,c in EMP.items():
-        im=colore(f'guilde/{n}/{n}_relaxed.png',f'guilde/{n}/{n}_relaxed_calque.png',dict(BASE,**c));im.save(f'guilde/{n}/{n}_relaxed_couleur.png');ims.append(im)
+        im=colore(f'guilde/{n}/{n}_relaxed.png',f'guilde/{n}/{n}_relaxed_calque.png',dict(BASE,**c),blancs=n in ('pax','oswin','corisande','seraphine'));im.save(f'guilde/{n}/{n}_relaxed_couleur.png');ims.append(im)
     W,H=360,480;S=Image.new('RGBA',(5*W,2*H),(139,105,72,255))
     for i,im in enumerate(ims): S.alpha_composite(im.resize((W,H),Image.LANCZOS),((i%5)*W,(i//5)*H))
     S.convert('RGB').save('planches/guilde_couleur.png')
