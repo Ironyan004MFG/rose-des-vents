@@ -237,3 +237,4 @@ Aucun corps à redemander à GPT : toutes les tenues, poses et marches du nain s
 - Calque commun : ROUGE peau, BLEU poils, MAGENTA veste d'uniforme, JAUNE liserés et blason, VERT métal, CYAN cuir, ORANGE autres tissus, VIOLET (#8000FF) cornes et défenses, GRIS (#808080) objets portés.
 - Poses à faire pour chacun : pas 1, pas 3, bras tendu, tenir un livre, écrire dans le livre (sans calque : `std.prep_from` depuis le repos).
 - Aperçu : `planches/guilde_repos.png`.
+- **Couleurs** : `outils/guilde_couleur.py` (incrustation de la teinte de chaque matière sur le gris, couleurs par employé dans `EMP` : uniforme bleu nuit, galons et métal dorés, cuir brun ; Pax en manteau rouge comme son portrait). Rendu : `guilde/<nom>/<nom>_relaxed_couleur.png`, planche `planches/guilde_couleur.png`.
