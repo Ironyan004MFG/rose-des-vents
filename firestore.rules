@@ -373,7 +373,7 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
     // ---------- Table virtuelle : l'écran de table, pour les inscrits qui jouent à distance ----------
-    // Le DM publie la carte (seulement ce que le groupe voit) ; chaque joueur ne peut poser et déplacer que SA figurine.
+    // Le DM publie la carte (seulement ce que le groupe voit) et pose les figurines ; chaque joueur ne peut que déplacer la sienne.
     match /table/{qid} {
       allow read: if isAdmin() || inscritA(qid);
       allow write: if isAdmin();
@@ -381,16 +381,18 @@ service cloud.firestore {
         allow read: if isAdmin() || inscritA(qid);
         allow write: if isAdmin();
       }
-      // Figurine virtuelle : une par joueur (son uid), position seulement. Elle ne donne aucune vision.
+      // Figurine virtuelle : une par joueur (son uid). Le DM la pose, la remplace ou la retire ;
+      // le joueur peut seulement la déplacer sur la même carte. Elle ne donne aucune vision.
       match /figs/{uid} {
         allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
-        allow delete: if isAdmin();
-        allow create, update: if signedIn() && request.auth.uid == uid && inscritA(qid)
-          && request.resource.data.keys().hasOnly(['x', 'y', 'carte', 'ms'])
-          && request.resource.data.x is number && request.resource.data.x >= 0 && request.resource.data.x <= 1000
-          && request.resource.data.y is number && request.resource.data.y >= 0 && request.resource.data.y <= 1000
-          && str(request.resource.data.carte, 1, 200)
-          && request.resource.data.ms is number;
+        allow create, delete: if isAdmin();
+        allow update: if isAdmin()
+          || (signedIn() && request.auth.uid == uid && inscritA(qid)
+            && request.resource.data.keys().hasOnly(['x', 'y', 'carte', 'ms'])
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['x', 'y', 'ms'])
+            && request.resource.data.x is number && request.resource.data.x >= 0 && request.resource.data.x <= 1000
+            && request.resource.data.y is number && request.resource.data.y >= 0 && request.resource.data.y <= 1000
+            && request.resource.data.ms is number);
       }
     }
     match /config/{id} {
