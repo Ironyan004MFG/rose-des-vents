@@ -3156,7 +3156,26 @@ const EC_GRP={ext:"Extérieur",int:"Intérieur",abri:"Abri"};
 function ecMapLbl(t){const m=EC_MAPS[t==="chemin"?"route":t];return m?EC_GRP[m.g]+" – "+m.l:t;}
 function ecIndoor(t){const m=EC_MAPS[t==="chemin"?"route":t];return !!m&&m.g!=="ext";}
 const ecGenCache={};
-function ecGenGeo(c){const e=+c.etage||0,nv=c.niv?(c.niv.min+":"+c.niv.max):"",key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h+"|"+(c.bureau||"")+"|"+e+"|"+nv;if(!ecGenCache[key]){const G=EC_GEN[c.type];ecGenCache[key]=G.geo(c,ecRng(ecSeed(c.seed+(e?"|e"+e:""))));}return ecGenCache[key];}
+function ecGenGeo(c){const e=+c.etage||0,nv=c.niv?(c.niv.min+":"+c.niv.max):"",key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h+"|"+(c.bureau||"")+"|"+e+"|"+nv;if(!ecGenCache[key]){const G=EC_GEN[c.type];ecGenCache[key]=ecAutoLights(c,G.geo(c,ecRng(ecSeed(c.seed+(e?"|e"+e:"")))));}return ecGenCache[key];}
+// Éclairage des intérieurs : chaque chandelle et chaque petite flamme éclaire un peu ; puis on pose des appliques murales
+// (torche ou lampe fixée au mur) là où il fait encore noir, jusqu'à la part de la pièce qu'un lieu habité éclaire d'ordinaire.
+// Les lieux sombres par nature (donjon, grotte, mine, égouts, cave) gardent leur obscurité, et les appliques s'éteignent quand le DM choisit « Ténèbres »
+// (hors bureau). Déterministe : même carte, mêmes appliques.
+let ecLumNow="";
+const EC_AUTOLUM={taverne:0.85,manoir:0.85,temple:0.75,maison:0.7,entrepot:0.45,tour:0.7,chateau:0.6,bureau:1};
+function ecAutoLights(c,g){if(!g)return g;g.lights=g.lights||[];g.fires=g.fires||[];
+  g.fires.forEach(f=>{if(!g.lights.some(l=>Math.hypot(l.x-f.x,l.y-f.y)<1.3))g.lights.push({x:f.x,y:f.y,r:f.candle?2:3});});
+  const tgt=EC_AUTOLUM[c.type],G=g.G;if(!tgt||!G||(c.type!=="bureau"&&ecDarkPlace(c)))return g;
+  const W=c.w,H=c.h,lit=new Uint8Array(W*H),fl=[];for(let i=0;i<W*H;i++)if(G[i]==="F")fl.push(i);if(!fl.length)return g;
+  const reach=(o,fn)=>{for(let y=Math.max(0,Math.floor(o.y-o.r));y<Math.min(H,Math.ceil(o.y+o.r));y++)for(let x=Math.max(0,Math.floor(o.x-o.r));x<Math.min(W,Math.ceil(o.x+o.r));x++){const i=y*W+x;if(G[i]==="F"&&Math.hypot(x+0.5-o.x,y+0.5-o.y)<=o.r&&ecLos(G,W,o.x,o.y,x+0.5,y+0.5))fn(i);}};
+  g.lights.filter(l=>!l.nuit).forEach(l=>reach({x:l.x,y:l.y,r:+l.r||4},i=>{lit[i]=1;}));
+  let n=fl.filter(i=>lit[i]).length;
+  // Emplacements d'applique : une case de sol collée à un mur, la flamme contre le mur
+  const cand=[],used=new Set();fl.forEach(i=>{const x=i%W,y=Math.floor(i/W);[[0,-1],[-1,0],[1,0],[0,1]].some(d=>{const X=x+d[0],Y=y+d[1];if(X<0||Y<0||X>=W||Y>=H||G[Y*W+X]!=="W")return false;cand.push({i,x:x+0.5+d[0]*0.32,y:y+0.5+d[1]*0.32,d});return true;});});
+  for(let k=0;k<60&&n<tgt*fl.length;k++){let best=null,bg=3;
+    cand.forEach(p=>{if(used.has(p.i)||g.lights.some(l=>Math.hypot(l.x-p.x,l.y-p.y)<2.5))return;let gain=0;reach({x:p.x,y:p.y,r:4},i=>{if(!lit[i])gain++;});if(gain>bg){bg=gain;best=p;}});
+    if(!best)break;used.add(best.i);g.fires.push({x:best.x,y:best.y,r:0.2,sconce:best.d,auto:1});g.lights.push({x:best.x,y:best.y,r:4,auto:1});reach({x:best.x,y:best.y,r:4},i=>{if(!lit[i]){lit[i]=1;n++;}});}
+  return g;}
 function ecGenLights(c){if(!EC_GEN[c.type])return [];return ecGenGeo(c).lights||[];}
 // Outils de grille
 function gGrid(W,H,v){const a=new Array(W*H).fill(v);a.W=W;a.H=H;return a;}
@@ -3280,7 +3299,7 @@ function statInt(x,g,s,c){const SA=ecSaison();x.fillStyle=c.type==="manoir"||c.t
   else{const R=ecRng(ecSeed(c.seed+"out"));for(let i=0;i<c.w*c.h/6;i++){x.fillStyle=SA==="hiver"?"rgba(255,255,255,.3)":"rgba(90,120,55,.3)";x.beginPath();x.arc(R()*c.w*s,R()*c.h*s,(0.8+R()*2)*s,0,6.283);x.fill();}}
   if(g.door){x.fillStyle="#8a7354";x.fillRect((g.door.x-0.5)*s,(g.door.y+0.5)*s,2*s,(c.h-g.door.y)*s);}
   x.fillStyle="rgba(0,0,0,.35)";x.fillRect((g.box.x0+0.4)*s,(g.box.y0+0.5)*s,(g.box.x1-g.box.x0)*s,(g.box.y1-g.box.y0)*s);gFloor(x,g.G,s,g.floor);g.furn.forEach(o=>gFurn(x,o,s));gWalls(x,g.G,s,"#3a2f26","#57483a");}
-function dynFires(x,g,s,t){(g.fires||[]).forEach(f=>{if(f.candle){gFire(x,f.x,f.y,s,t,0.14);}else gFire(x,f.x,f.y,s,t,f.r);});}
+function dynFires(x,g,s,t){(g.fires||[]).forEach(f=>{if(f.auto&&ecLumNow==="tenebres"&&g.bid==null)return;if(f.sconce){const d=f.sconce;x.fillStyle="#2a2420";x.fillRect((f.x+d[0]*0.12)*s-s*0.07,(f.y+d[1]*0.12)*s-s*0.07,s*0.14,s*0.14);x.strokeStyle="#2a2420";x.lineWidth=Math.max(1,s*0.05);x.beginPath();x.moveTo((f.x+d[0]*0.2)*s,(f.y+d[1]*0.2)*s);x.lineTo(f.x*s,f.y*s);x.stroke();gFire(x,f.x,f.y,s,t,0.2);return;}if(f.candle){gFire(x,f.x,f.y,s,t,0.14);}else gFire(x,f.x,f.y,s,t,f.r);});}
 // --- Donjon : salles reliées par des couloirs ---
 function geoDonjon(c,R){const W=c.w,H=c.h,G=gGrid(W,H,"W"),g={G,furn:[],fires:[],lights:[],floor:"pierre",stairs:[]},rooms=[],e=+c.etage||0,nv=ecNiv(c),stp=[];
   [[e+1,"up",e<nv.max],[e,"down",e>nv.min]].forEach(([L,dir,ok])=>{if(!ok)return;const p=ecStairPt(c,L,W,H,4);stp.push({x:p.x,y:p.y,dir});const r={x:p.x-2,y:p.y-2,w:6,h:5};if(!rooms.some(q=>r.x<q.x+q.w+1&&r.x+r.w+1>q.x&&r.y<q.y+q.h+1&&r.y+r.h+1>q.y))rooms.push(r);});
@@ -4614,42 +4633,85 @@ const EC_DARKPL={grotte:1,mine:1,egouts:1,donjon:1,cave:1};
 function ecDarkPlace(c){return !!EC_DARKPL[c.type]||((c.type==="bureau"||c.type==="tour"||c.type==="chateau")&&(+c.etage||0)<0);}
 // Voile de la météo au-delà de ce qu'on distingue : blanc (neige, brouillard), gris (pluie) ; jamais tout noir, sauf tempête de neige presque opaque.
 const EC_VEIL={brume:[[214,220,226],0.35],brouillard:[[220,224,228],0.7],pluie:[[78,88,100],0.3],orage:[[60,68,80],0.45],neige:[[236,240,245],0.4],blizzard:[[242,245,248],0.9]};
-// Ligne de vue sur la grille : les murs (W) arrêtent la vue et la lumière ; les portes laissent passer.
-function ecLos(G,W,x0,y0,x1,y1){let x=Math.floor(x0),y=Math.floor(y0);const tx=Math.floor(x1),ty=Math.floor(y1),dx=Math.abs(tx-x),dy=Math.abs(ty-y),sx=x<tx?1:-1,sy=y<ty?1:-1;let err=dx-dy;
-  while(x!==tx||y!==ty){const e2=2*err;if(e2>-dy){err-=dy;x+=sx;}if(e2<dx){err+=dx;y+=sy;}if(x===tx&&y===ty)return true;if(G[y*W+x]==="W")return false;}return true;}
+// Ce qui cache la vue dehors : toits et maisons (R), troncs et feuillages des grands arbres (T), murs des ruines (W).
+// En plein jour, toute la carte est en vue, mais une créature derrière un bâtiment ou un arbre reste cachée aux PJ.
+// Un PJ sur un toit voit par-dessus les autres toits.
+const ecOccCache={};
+function ecOccluders(c){if(!c||c.type==="image"||ecIndoor(c.type))return null;const key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h;if(key in ecOccCache)return ecOccCache[key];
+  const W=c.w,H=c.h,O=new Array(W*H).fill(""),put=(X,Y,ch)=>{if(X>=0&&Y>=0&&X<W&&Y<H){O[Y*W+X]=ch;any=true;}};let any=false;
+  const rect=(x,y,w,h,ch)=>{for(let Y=Math.floor(y);Y<Math.ceil(y+h);Y++)for(let X=Math.floor(x);X<Math.ceil(x+w);X++)put(X,Y,ch);};
+  const tree=t=>{if(!t||t.r<0.9)return;const k=t.r*0.55;for(let Y=Math.floor(t.y-k);Y<=t.y+k;Y++)for(let X=Math.floor(t.x-k);X<=t.x+k;X++)if(Math.hypot(X+0.5-t.x,Y+0.5-t.y)<=k)put(X,Y,"T");};
+  const g=EC_GEN[c.type]?ecGenGeo(c):(["route","chemin","foret","collines"].indexOf(c.type)>=0?ecGeo(c):null);
+  if(g){(g.roofs||[]).forEach(r=>rect(r.x,r.y,r.w,r.h,"R"));(g.houses||[]).forEach(h=>rect(h.x,h.y,h.w,h.h,"R"));(g.tents||[]).forEach(t=>rect(t.x-0.8,t.y-0.8,1.6,1.6,"R"));(g.trees||[]).forEach(tree);
+    (g.walls||[]).forEach(w=>{const L=Math.hypot(w.x1-w.x0,w.y1-w.y0)||1;for(let u=0;u<=L;u+=0.4)put(Math.floor(w.x0+(w.x1-w.x0)*u/L),Math.floor(w.y0+(w.y1-w.y0)*u/L),"W");});}
+  return ecOccCache[key]=any?O:null;}
+// Portes ouvertes par le DM (clic sur la porte, outil Déplacer) : la vue et la lumière passent. Liste d'index de cases dans carte.ouv.
+function ecOpenG(G,c){if(!G)return G;const o=(c&&c.ouv)||[],gg=ecGenGeo(c),cols=(gg.furn||[]).filter(f=>f.k==="column"||f.k==="0");if(!o.length&&!cols.length)return G;const g=G.slice();
+  o.forEach(i=>{if(g[i]==="D")g[i]="O";});cols.forEach(f=>{const X=Math.floor(f.x+(f.k==="0"?0.5:0)),Y=Math.floor(f.y+(f.k==="0"?0.5:0)),i=Y*c.w+X;if(X>=0&&Y>=0&&X<c.w&&Y<c.h&&g[i]!=="W")g[i]="P";});return g;}
+function ecDoorAt(c,p){if(!c||!EC_GEN[c.type]||c.type==="image"||!ecIndoor(c.type))return -1;const G=ecGenGeo(c).G;if(!G)return -1;const x=Math.floor(p[0]),y=Math.floor(p[1]),i=y*c.w+x;return x>=0&&y>=0&&x<c.w&&y<c.h&&G[i]==="D"?i:-1;}
+// Dessin d'une porte ouverte : l'embrasure dégagée (seuil sombre) et le battant rabattu contre le chambranle.
+function ecOpenDoors(x,c,s){const o=c.ouv||[];if(!o.length||!EC_GEN[c.type])return;const G=ecGenGeo(c).G;if(!G)return;
+  o.forEach(i=>{if(G[i]!=="D")return;const X=i%c.w,Y=Math.floor(i/c.w),h=gAt(G,X-1,Y)==="W"||gAt(G,X+1,Y)==="W";
+    x.fillStyle="#2a1c10";if(h)x.fillRect(X*s+s*0.03,Y*s+s*0.28,s*0.94,s*0.44);else x.fillRect(X*s+s*0.28,Y*s+s*0.03,s*0.44,s*0.94);
+    x.fillStyle="rgba(255,200,120,.10)";x.fillRect(X*s,Y*s,s,s);
+    x.fillStyle="#6a4424";x.strokeStyle="#2a1a0c";x.lineWidth=Math.max(1,s*0.03);
+    if(h){x.fillRect(X*s+s*0.04,Y*s+s*0.42,s*0.14,s*0.9);x.strokeRect(X*s+s*0.04,Y*s+s*0.42,s*0.14,s*0.9);}else{x.fillRect(X*s+s*0.42,Y*s+s*0.04,s*0.9,s*0.14);x.strokeRect(X*s+s*0.42,Y*s+s*0.04,s*0.9,s*0.14);}});}
+// Ligne de vue sur la grille : les murs (W) et les portes (D, considérées fermées) arrêtent la vue et la lumière.
+// On voit la porte elle-même ; pour voir la pièce suivante, il faut se tenir dans l'embrasure ou l'avoir passée.
+// Un pas en diagonale ne se glisse pas entre deux coins de mur.
+function ecBlk(v,r0){return v==="W"||v==="D"||v==="T"||v==="P"||(v==="R"&&r0!=="R");}
+// Rayon exact entre deux points (traversée des cases, comme une vraie ligne de vue) : bloqué par toute case opaque traversée, sauf celle de départ et celle d'arrivée.
+function ecLos(G,W,x0,y0,x1,y1){let cx=Math.floor(x0),cy=Math.floor(y0);const tx=Math.floor(x1),ty=Math.floor(y1),r0=G[cy*W+cx];if(cx===tx&&cy===ty)return true;
+  const dx=x1-x0,dy=y1-y0,sx=dx>0?1:-1,sy=dy>0?1:-1,tdx=dx?Math.abs(1/dx):1e9,tdy=dy?Math.abs(1/dy):1e9;let tmx=dx?(sx>0?cx+1-x0:x0-cx)*tdx:1e9,tmy=dy?(sy>0?cy+1-y0:y0-cy)*tdy:1e9;
+  for(let n=0;n<600;n++){if(Math.abs(tmx-tmy)<1e-9){if(ecBlk(G[cy*W+cx+sx],r0)&&ecBlk(G[(cy+sy)*W+cx],r0))return false;cx+=sx;cy+=sy;tmx+=tdx;tmy+=tdy;}else if(tmx<tmy){cx+=sx;tmx+=tdx;}else{cy+=sy;tmy+=tdy;}
+    if(cx===tx&&cy===ty)return true;if(cx<0||cy<0||cx>=W)return true;if(ecBlk(G[cy*W+cx],r0))return false;}return true;}
 function ecVision(st){const c=st.carte,W=c.w,H=c.h,vis=new Uint8Array(W*H),lit=new Float32Array(W*H),toks=st.tokens||[],ind=ecIndoor(c.type)||c.type==="image",dp=ecDarkPlace(c);
   // À l'intérieur, la météo ne compte pas ; dans un lieu sombre, il fait noir même en plein jour.
   let L0=EC_LUM[st.lum]||EC_LUM.jour;if(dp&&L0.dark<EC_LUM.tenebres.dark)L0=EC_LUM.tenebres;const M=ind?EC_METEO.clair:(EC_METEO[st.meteo]||EC_METEO.clair);
   const L={vis:Math.min(L0.vis,M.vis),dark:Math.min(0.95,L0.dark+M.dk)},noFlame=!ind&&!!(M.rain||M.wind);
-  const G=EC_GEN[c.type]&&c.type!=="image"&&ecIndoor(c.type)?ecGenGeo(c).G:null,see=(ax,ay,bx,by)=>!G||ecLos(G,W,ax,ay,bx,by);
-  const lights=toks.filter(k=>(k.k==="lum"&&!(noFlame&&k.flamme!==false))||(k.k==="pj"&&k.torche&&!noFlame)).map(k=>({x:k.x,y:k.y,r:k.k==="lum"?(+k.r||4):4})).concat(ecGenLights(c).filter(l=>!l.nuit||L0.dark>0.2).filter(l=>!(l.nuit&&noFlame)));
+  const G=EC_GEN[c.type]&&c.type!=="image"&&ecIndoor(c.type)?ecGenGeo(c).G:null,Gs=ecOpenG(G,c)||ecOccluders(c),see=(ax,ay,bx,by)=>!Gs||ecLos(Gs,W,ax,ay,bx,by);
+  const lights=toks.filter(k=>(k.k==="lum"&&!(noFlame&&k.flamme!==false))||(k.k==="pj"&&k.torche&&!noFlame)).map(k=>({x:k.x,y:k.y,r:k.k==="lum"?(+k.r||4):4})).concat(ecGenLights(c).filter(l=>!(l.auto&&st.lum==="tenebres"&&c.type!=="bureau")).filter(l=>!l.nuit||L0.dark>0.2).filter(l=>!(l.nuit&&noFlame)));
   lights.forEach(o=>{const R=o.r*2;for(let y=Math.max(0,Math.floor(o.y-R));y<Math.min(H,Math.ceil(o.y+R));y++)for(let x=Math.max(0,Math.floor(o.x-R));x<Math.min(W,Math.ceil(o.x+R));x++){const d=Math.hypot(x+0.5-o.x,y+0.5-o.y),i=y*W+x;if(d>R||!see(o.x,o.y,x+0.5,y+0.5))continue;lit[i]=Math.max(lit[i],d<=o.r?1:1-(d-o.r)/o.r*0.6);}});
   const pjs=toks.filter(k=>k.k==="pj");pjs.forEach(p=>{const vr=Math.min(M.vis,Math.max(L.vis,(+p.dv||0))),R=Math.min(Math.max(W,H),Math.max(vr,24)),R2=Math.max(W,H);
     for(let y=Math.max(0,Math.floor(p.y-R2));y<Math.min(H,Math.ceil(p.y+R2));y++)for(let x=Math.max(0,Math.floor(p.x-R2));x<Math.min(W,Math.ceil(p.x+R2));x++){const d=Math.hypot(x+0.5-p.x,y+0.5-p.y),i=y*W+x;if((d<=vr||(lit[i]>0&&d<=Math.min(60,M.vis*2)))&&see(p.x,p.y,x+0.5,y+0.5))vis[i]=1;}});
   // Ce qu'une lumière éclaire est vu par les PJ qui ont la ligne de vue (les murs la coupent) ; sans aucun PJ sur la carte, tout ce qui est éclairé est visible
-  if(!pjs.length)for(let i=0;i<W*H;i++)if(lit[i]>=1)vis[i]=1;
+  // Dans un lieu fermé (murs), sans PJ sur la carte, on ne voit rien : même éclairée, une pièce reste cachée tant que personne n'y regarde.
+  if(!pjs.length&&!G)for(let i=0;i<W*H;i++)if(lit[i]>=1)vis[i]=1;
   // Plein jour à l'extérieur sans brume ni brouillard : tout est en vue, même sans jeton PJ
-  if(!ind&&L.vis>=Math.max(W,H))vis.fill(1);
+  const forced=new Uint8Array(W*H);if(!ind&&L.vis>=Math.max(W,H)){vis.fill(1);forced.fill(1);}
   // Autour d'un bureau (rez-de-chaussée), la rue est dehors : de jour, elle se voit comme une carte extérieure
-  if(G&&c.type==="bureau"&&!(+c.etage)&&L0.dark<0.5)for(let i=0;i<W*H;i++)if(G[i]===".")vis[i]=1;
+  if(G&&c.type==="bureau"&&!(+c.etage)&&L0.dark<0.5)for(let i=0;i<W*H;i++)if(G[i]==="."){vis[i]=1;forced[i]=1;}
+  // Bureaux de la Guilde : à l'intérieur, tout est toujours éclairé et en vue (intergames, débuts et fins de partie)
+  if(G&&c.type==="bureau")for(let i=0;i<W*H;i++)if(G[i]!=="."){vis[i]=1;lit[i]=1;forced[i]=1;}
   // Zones cachées à la main par le DM (« Cacher ») : restent cachées tant qu'il ne les révèle pas
   const vu=(st.fog&&st.fog.vu)||"";for(let i=0;i<vu.length&&i<W*H;i++)if(vu[i]==="2")vis[i]=0;
-  return {vis,lit,dark:L.dark,L0,M,ind,dp};}
+  // Jetons : en vue si leur case est vue ; en plein jour dehors, il faut en plus qu'un PJ ait la ligne de vue (bâtiments, arbres)
+  // Point précis vu par au moins un PJ (ombres nettes au rendu) : même règle que les cases, mais au point près
+  const seeAt=(x,y)=>{const i=Math.floor(y)*W+Math.floor(x);if(i<0||i>=W*H)return false;if(vu[i]==="2")return false;if(!pjs.length||!Gs||forced[i])return !!vis[i];
+    return pjs.some(p=>{const vr=Math.min(M.vis,Math.max(L.vis,(+p.dv||0))),d=Math.hypot(x-p.x,y-p.y);return (d<=vr||(lit[i]>0&&d<=Math.min(60,M.vis*2)))&&ecLos(Gs,W,p.x,p.y,x,y);});};
+  const dayOut=!ind&&L.vis>=Math.max(W,H),tokSeen=(x,y)=>{const i=Math.floor(y)*W+Math.floor(x);if(!vis[i])return false;if(!dayOut||!Gs||!pjs.length)return true;return pjs.some(p=>ecLos(Gs,W,p.x,p.y,x,y));};
+  return {vis,lit,dark:L.dark,L0,M,ind,dp,tokSeen,seeAt};}
 // Brouillard « organique » :
 // - dehors, le terrain reste toujours là : de jour il est clair, à l'aube et au crépuscule il est assombri, la nuit il est noir hors de la vue et de la lumière ;
 // - la météo voile ce qui est loin (blanc pour la neige et le brouillard, gris pour la pluie) sans tout masquer ;
 // - à l'intérieur et dans les lieux sombres, ce qui n'a pas été vu reste noir ; ce qui a été exploré reste en mémoire, assombri ;
 // - les créatures non vues restent cachées dans tous les cas (gérées au rendu des jetons).
-function ecFogCanvas(st,V,forDm){const c=st.carte,W=c.w,H=c.h,cv=document.createElement("canvas");cv.width=W;cv.height=H;const x=cv.getContext("2d"),im=x.createImageData(W,H),vu=(st.fog&&st.fog.vu)||"",fogOn=!!(st.fog&&st.fog.on);
+function ecFogCanvas(st,V,forDm){const c=st.carte,W=c.w,H=c.h,cv=document.createElement("canvas"),K=4;cv.width=W*K;cv.height=H*K;const x=cv.getContext("2d"),im=x.createImageData(W*K,H*K),vu=(st.fog&&st.fog.vu)||"",fogOn=!!(st.fog&&st.fog.on);
   const out=!V.ind&&!V.dp,ld=V.L0.dark,vl=out?EC_VEIL[st.meteo]:null;
-  for(let i=0;i<W*H;i++){const seen=!!V.vis[i],mem=vu[i]==="1",hid=vu[i]==="2",d=V.dark*(1-V.lit[i]*0.92);let a=d,va=0;
+  const px=(i,seen)=>{const mem=vu[i]==="1",hid=vu[i]==="2",d=V.dark*(1-V.lit[i]*0.92);let a=d,va=0;
     if(!seen){
       if(hid&&fogOn)a=1;
       else if(out){if(ld<=0.01)a=d;else if(ld<0.5)a=Math.min(0.85,d+0.22);else a=fogOn?(mem?0.86:1):Math.max(d,0.8);if(vl)va=vl[1];}
       else a=fogOn?(mem?(V.dp?0.82:0.72):1):Math.max(d,c.type==="bureau"&&!V.dp&&V.L0.dark<0.5?0.18:0.6);}
     // mélange : noir (obscurité) puis voile coloré de la météo par-dessus
     const A0=a+va*(1-a);let r=0,g=0,b=0;if(A0>0&&va){const k=va*(1-a)/A0;r=vl[0][0]*k;g=vl[0][1]*k;b=vl[0][2]*k;}
-    const A=forDm?Math.min(A0,seen?0.38:0.62):A0;im.data[i*4]=r;im.data[i*4+1]=g;im.data[i*4+2]=b;im.data[i*4+3]=Math.round(A*255);}
+    const A=forDm?Math.min(A0,seen?0.38:0.62):A0;return [r,g,b,Math.round(A*255)];};
+  // Ombres nettes : aux cases à la frontière du champ de vision, chaque case est découpée en 4 × 4 et chaque point est testé par rayon
+  const WK=W*K,put=(X,Y,p)=>{const o=(Y*WK+X)*4;im.data[o]=p[0];im.data[o+1]=p[1];im.data[o+2]=p[2];im.data[o+3]=p[3];};
+  for(let y=0;y<H;y++)for(let X=0;X<W;X++){const i=y*W+X,sv=!!V.vis[i];let edge=false;
+    for(let dy=-1;dy<=1&&!edge;dy++)for(let dx=-1;dx<=1;dx++){const u=X+dx,v=y+dy;if(u<0||v<0||u>=W||v>=H)continue;if(!!V.vis[v*W+u]!==sv){edge=true;break;}}
+    if(!edge||!V.seeAt){const p=px(i,sv);for(let b=0;b<K;b++)for(let a=0;a<K;a++)put(X*K+a,y*K+b,p);continue;}
+    const pS=px(i,true),pU=px(i,false);for(let b=0;b<K;b++)for(let a=0;a<K;a++)put(X*K+a,y*K+b,V.seeAt(X+(a+0.5)/K,y+(b+0.5)/K)?pS:pU);}
   x.putImageData(im,0,0);return cv;}
 // Un rendu = un canvas + son état ; la boucle anime tous les rendus présents dans la page.
 function ecBind(id,mode){const cv=document.getElementById(id);if(!cv){delete ecRenderers[id];return null;}let r=ecRenderers[id];if(!r||r.cv!==cv){r=ecRenderers[id]={cv,mode,key:"",A:null,st:null,stat:null,img:null,fog:null,fogKey:""};}if(!ecRaf)ecRaf=requestAnimationFrame(ecLoop);return r;}
@@ -4668,18 +4730,18 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),p
   const key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h+"|"+(c.url||"")+"|"+Math.round(sq*dpr*10)+"|"+ecSaison()+"|"+(c.bureau||"")+"|"+(+c.etage||0)+"|"+(c.niv?c.niv.min+":"+c.niv.max:"");
   if(r.key!==key){r.key=key;r.A=EC_GEN[c.type]?{}:c.type==="image"?null:ecAnimInit(c);r.stat=null;r.img=null;if(c.type==="image"&&c.url){const im=new Image();im.crossOrigin="anonymous";im.onload=()=>{r.img=im;};im.src=c.url;}else if(EC_GEN[c.type])r.stat=ecStaticGen(c,sq*dpr);else r.stat=ecStatic(c,sq*dpr);}
   x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle="#000";x.fillRect(0,0,cw,ch);x.save();x.translate(ox,oy);x.beginPath();x.rect(0,0,c.w*s,c.h*s);x.clip();
-  if(c.type==="image"){if(r.img)x.drawImage(r.img,0,0,c.w*s,c.h*s);}else if(r.stat){x.drawImage(r.stat,0,0,c.w*s,c.h*s);x.save();if(EC_GEN[c.type])EC_GEN[c.type].dyn(x,ecGenGeo(c),s,t,dt,r.A,c,st);else ecDynamic(x,c,s,t,dt,r.A,st);x.restore();}
+  if(c.type==="image"){if(r.img)x.drawImage(r.img,0,0,c.w*s,c.h*s);}else if(r.stat){x.drawImage(r.stat,0,0,c.w*s,c.h*s);x.save();ecLumNow=(st&&st.lum)||"";if(EC_GEN[c.type]){ecOpenDoors(x,c,s);EC_GEN[c.type].dyn(x,ecGenGeo(c),s,t,dt,r.A,c,st);}else ecDynamic(x,c,s,t,dt,r.A,st);x.restore();}
   const M=EC_METEO[st.meteo]||EC_METEO.clair;if(r.A){r.A.wind=!!M.wind;r.A.cloudy=st.meteo==="nuageux"||!!M.rain;}
   if(M.snow>=1){x.fillStyle="rgba(244,247,251,.42)";x.fillRect(0,0,c.w*s,c.h*s);}
   if(M.fog)ecMist(x,c,s,t,M.fog,r);
   // Brouillard et obscurité (adoucis par l'agrandissement)
-  const fk=JSON.stringify([st.tokens,st.lum,st.fog,st.meteo,c.w,c.h,tv]);if(r.fogKey!==fk){r.fogKey=fk;r.V=ecVision(st);r.fog=ecFogCanvas(st,r.V,!tv);}
-  x.imageSmoothingEnabled=true;x.save();x.filter="blur("+Math.max(2,Math.round(s*0.45))+"px)";x.drawImage(r.fog,0,0,c.w*s,c.h*s);x.restore();
+  const fk=JSON.stringify([st.tokens,st.lum,st.fog,st.meteo,c.w,c.h,tv,c.ouv||[]]);if(r.fogKey!==fk){r.fogKey=fk;r.V=ecVision(st);r.fog=ecFogCanvas(st,r.V,!tv);}
+  x.imageSmoothingEnabled=true;x.save();x.filter="blur("+Math.max(1,Math.round(s*0.12))+"px)";x.drawImage(r.fog,0,0,c.w*s,c.h*s);x.restore();
   // Lueurs chaudes des lumières
   {const nf=!!(M.rain||M.wind);(st.tokens||[]).filter(k=>(k.k==="lum"&&!(nf&&k.flamme!==false))||(k.k==="pj"&&k.torche&&!nf)).forEach(k=>{if(Math.min(0.95,(EC_LUM[st.lum]||EC_LUM.jour).dark+M.dk)<0.2)return;const R=(k.k==="lum"?(+k.r||4):4)*s,fl=1+Math.sin(t*9+k.x)*0.04+Math.sin(t*13.7)*0.03,g=x.createRadialGradient(k.x*s,k.y*s,0,k.x*s,k.y*s,R*fl);g.addColorStop(0,"rgba(255,180,90,.28)");g.addColorStop(1,"rgba(255,140,60,0)");x.fillStyle=g;x.fillRect(k.x*s-R,k.y*s-R,R*2,R*2);});}
   if(st.grid){x.strokeStyle=tv?"rgba(255,255,255,.14)":"rgba(255,255,255,.18)";x.lineWidth=1;x.beginPath();for(let i=0;i<=c.w;i++){x.moveTo(i*s,0);x.lineTo(i*s,c.h*s);}for(let j=0;j<=c.h;j++){x.moveTo(0,j*s);x.lineTo(c.w*s,j*s);}x.stroke();}
   // Jetons
-  const V=r.V;(st.tokens||[]).forEach(k=>{const X=k.x*s,Y=k.y*s,i=Math.floor(k.y)*c.w+Math.floor(k.x),seen=(V&&V.vis[i])||!(st.fog&&st.fog.on);
+  const V=r.V;(st.tokens||[]).forEach(k=>{const X=k.x*s,Y=k.y*s,i=Math.floor(k.y)*c.w+Math.floor(k.x),seen=(V&&V.tokSeen(k.x,k.y))||!(st.fog&&st.fog.on);
     if(k.k==="lum"){ecLightSprite(x,k,X,Y,s,t,st,tv);if(!tv){x.strokeStyle=r.sel===k.id?"#fff":"rgba(255,220,140,.55)";x.lineWidth=r.sel===k.id?3:1.5;x.setLineDash(r.sel===k.id?[]:[3,3]);x.beginPath();x.arc(X,Y,s*0.42,0,6.283);x.stroke();x.setLineDash([]);}return;}
     // Télé : les figurines sont posées sur l'écran, on ne dessine qu'un anneau. Joueur à distance : il faut voir les pions.
     if(tv){if(k.k==="pj"){x.strokeStyle=k.c||"#d8b45e";x.lineWidth=Math.max(2,s*0.06);x.beginPath();x.arc(X,Y,s*0.47,0,6.283);x.stroke();return;}if(!k.vis||!seen)return;}
@@ -4689,7 +4751,7 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),p
       const rc=k.k==="en"?"#c0392b":k.k==="pj"?(k.c||"#d8b45e"):"#4a8ab8";if(r.sel===k.id){x.strokeStyle="#fff";x.lineWidth=Math.max(3,s*0.1);x.beginPath();x.arc(X,Y,s*big+s*0.05,0,6.283);x.stroke();}
       x.strokeStyle=rc;x.lineWidth=Math.max(2,s*0.07);if(dim)x.setLineDash([6,4]);x.beginPath();x.arc(X,Y,s*big,0,6.283);x.stroke();x.setLineDash([]);x.globalAlpha=1;return;}
     if(k.k==="pnj"&&k.look){const TT=Date.now()/1000;if(c.type==="bureau"){const gg=ecGenGeo(c);gg.pjPos=(st.tokens||[]).filter(q=>q.k==="pj").map(q=>[q.x,q.y]);}let k2=k,X2=X,Y2=Y;if(c.type==="bureau"&&r.sel!==k.id){const m=ecRoam(k,ecGenGeo(c),c,TT);if(m){EC_ROAMPOS.set(k,[m.x,m.y]);k2=Object.assign({},k,{x:m.x,y:m.y,a:m.a!=null?m.a:k.a,walk:!m.still,talk:!!(k.look.pax&&m.still&&m.a!=null)});X2=m.x*s;Y2=m.y*s;}}
-      if(tv){const i2=Math.floor(k2.y)*c.w+Math.floor(k2.x);if(st.fog&&st.fog.on&&!(V&&V.vis[i2]))return;}ecNamedTok(x,k2,X2,Y2,s,TT,r.sel===k.id,!tv&&!k.vis);return;}
+      if(tv){if(st.fog&&st.fog.on&&!(V&&V.tokSeen(k2.x,k2.y)))return;}ecNamedTok(x,k2,X2,Y2,s,TT,r.sel===k.id,!tv&&!k.vis);return;}
     x.globalAlpha=(!tv&&k.k!=="pj"&&!k.vis)?0.55:1;x.fillStyle="rgba(0,0,0,.35)";x.beginPath();x.arc(X+s*0.04,Y+s*0.06,s*0.42,0,6.283);x.fill();
     x.fillStyle=k.k==="pj"?(k.c||"#d8b45e"):k.k==="en"?"#9b2c22":"#3f6b8a";x.beginPath();x.arc(X,Y,s*0.4,0,6.283);x.fill();x.strokeStyle=r.sel===k.id?"#fff":"rgba(0,0,0,.6)";x.lineWidth=r.sel===k.id?3:1.5;if(!tv&&k.k!=="pj"&&!k.vis)x.setLineDash([4,3]);x.stroke();x.setLineDash([]);
     x.fillStyle=k.k==="pj"?"#1b140c":"#fff";x.font="700 "+Math.round(s*0.42)+"px serif";x.textAlign="center";x.textBaseline="middle";x.fillText(String(k.n||"?").slice(0,1).toUpperCase(),X,Y+1);x.globalAlpha=1;
@@ -4824,7 +4886,7 @@ function ecCam(E,c){const tv=(ecDoc&&ecDoc.tv)||{cols:40,rows:22},pj=(c.tokens||
 function ecState(){const E=ecP(),c=ecCard(),q=ui.pt;if(!c)return null;
   let ordre=null;if(E.ordre&&E.ordre.mode==="combat"&&q.combat&&q.combat.phase==="combat"){ordre={titre:"Ordre de combat · round "+(q.round||1),liste:ptOrder().filter(x=>!(x.kind!=="pj"&&x.pv<=0)&&!x.cache).map(x=>({n:x.nom,k:x.kind==="pj"?"pj":"en",cur:x.cid===q.cur}))};}
   else if(E.ordre&&E.ordre.mode==="parole"){const L=String(E.ordre.parole||"").split("\n").map(x=>x.trim()).filter(Boolean),i=(E.ordre.idx||0)%Math.max(1,L.length);ordre={titre:"Ordre de parole",liste:L.map((n,j)=>({n,k:"pj",cur:j===i}))};}
-  return {vie:Date.now(),qid:q.id,carte:{id:c.id,nom:c.nom,type:c.type,seed:c.seed,w:c.w,h:c.h,url:c.url||"",gone:c.gone||[],back:c.back||{},vie:c.vie||"",bureau:c.bureau||"",etage:+c.etage||0,niv:c.niv||null},cam:ecCam(E,c),tokens:c.tokens||[],fog:{on:E.fog!==false,vu:c.vu||""},lum:E.lum||"jour",meteo:(c.abri||ecIndoor(c.type))?"clair":(E.meteo||"clair"),date:calLabel(calNow()),jour:E.jour||1,grid:!!E.grid,info:E.info||"",ordre,figs:tbFigList(tbQuest(),c),calib:(ecDoc&&ecDoc.calib)||{},ms:Date.now()};}
+  return {vie:Date.now(),qid:q.id,carte:{id:c.id,nom:c.nom,type:c.type,seed:c.seed,w:c.w,h:c.h,url:c.url||"",gone:c.gone||[],back:c.back||{},vie:c.vie||"",bureau:c.bureau||"",etage:+c.etage||0,niv:c.niv||null,ouv:c.ouv||[]},cam:ecCam(E,c),tokens:c.tokens||[],fog:{on:E.fog!==false,vu:c.vu||""},lum:E.lum||"jour",meteo:(c.abri||ecIndoor(c.type))?"clair":(E.meteo||"clair"),date:calLabel(calNow()),jour:E.jour||1,grid:!!E.grid,info:E.info||"",ordre,figs:tbFigList(tbQuest(),c),calib:(ecDoc&&ecDoc.calib)||{},ms:Date.now()};}
 /* ---------- Table virtuelle : l'écran de table, ouvert à distance par les inscrits d'une quête en cours ----------
    Comme à la table : chaque joueur à distance pose UNE figurine virtuelle (pion plein, à l'image de son personnage) et la déplace.
    Elle ne donne aucune vision : c'est le DM qui ajuste l'anneau du personnage dessous, comme sous une figurine posée sur l'écran.
@@ -4847,7 +4909,7 @@ function tbFigList(q,c){if(!q||!c)return [];return Object.keys(tbFigs).map(uid=>
 // Copie publiée : les ennemis, alliés et objets cachés ou hors de vue n'y sont pas du tout (pas seulement masqués à l'affichage).
 function tbState(q,st){const c=st&&st.carte;if(!c)return {qid:q.id,titre:q.titre,carte:null,ms:Date.now()};
   const fogOn=!!(st.fog&&st.fog.on),V=fogOn?ecVision(st):null;
-  const tokens=(st.tokens||[]).filter(k=>{if(k.k==="pj"||k.k==="lum")return true;if(!k.vis)return false;if(!fogOn)return true;const i=Math.floor(k.y)*c.w+Math.floor(k.x);return !!(V&&V.vis[i]);});
+  const tokens=(st.tokens||[]).filter(k=>{if(k.k==="pj"||k.k==="lum")return true;if(!k.vis)return false;if(!fogOn)return true;return !!(V&&V.tokSeen(k.x,k.y));});
   const out=Object.assign({},st,{vie:Date.now(),qid:q.id,titre:q.titre,tokens,vue:(ecDoc&&ecDoc.tv)?{cols:ecDoc.tv.cols,rows:ecDoc.tv.rows}:{cols:40,rows:22},ms:Date.now()});delete out.calib;delete out.tvv;return JSON.parse(JSON.stringify(out));}
 function tbPush(){const q=tbQuest();if(!q||!isAdmin)return;tbListen(q.id);clearTimeout(tbPushT);tbPushT=setTimeout(()=>{if(tbQuest()!==q)return;let st=null;try{st=ecState();}catch(e){}
   setDoc(doc(db,"table",q.id),tbState(q,st)).catch(e=>console.error(e));},600);}
@@ -4951,7 +5013,7 @@ function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc
   if(!c)return h+'</div>';
   const sel=(c.tokens||[]).find(k=>k.id===ui.ecSel);
   h+=tbDmLine(q);
-  h+='<div class="ecbar"><span class="ectool">'+[["move","✋ Déplacer"],["reveal","☀ Révéler"],["hide","☁ Cacher"]].map(x=>'<button class="chip'+((ui.ecTool||"move")===x[0]?' on':'')+'" data-a="pt-ec-tool" data-v="'+x[0]+'">'+x[1]+'</button>').join("")+'</span>'+
+  h+='<div class="ecbar"><span class="ectool">'+[["move","✋ Déplacer · 🚪 portes"],["reveal","☀ Révéler"],["hide","☁ Cacher"]].map(x=>'<button class="chip'+((ui.ecTool||"move")===x[0]?' on':'')+'" data-a="pt-ec-tool" data-v="'+x[0]+'">'+x[1]+'</button>').join("")+'</span>'+
     '<label for="ec-lum">Lumière<select id="ec-lum" data-ec="lum">'+Object.keys(EC_LUM).map(k=>'<option value="'+k+'"'+(k===(E.lum||"jour")?' selected':'')+'>'+EC_LUM[k].l+'</option>').join("")+'</select></label>'+
     '<span class="ecdate">📅 '+esc(calLabel(calNow()))+' · '+esc(EC_SAISON[ecSaison()].l)+'</span>'+
     '<label for="ec-met">Météo<select id="ec-met" data-ec="meteo">'+EC_OK[ecSaison()].map(k=>'<option value="'+k+'"'+(k===(E.meteo||"clair")?' selected':'')+'>'+EC_METEO[k].i+' '+EC_METEO[k].l+'</option>').join("")+'</select></label>'+
@@ -4960,7 +5022,7 @@ function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc
     ' <span class="desc">'+esc(ecFloorName(c,cur))+'</span> <button class="mini" data-a="pt-ec-follow" aria-pressed="'+(ui.ecFollow!==false)+'">'+(ui.ecFollow!==false?'☑':'☐')+' Le groupe suit</button>'+(c.type!=="bureau"&&(EC_GEN[c.type]||{}).floors?' <button class="mini" data-a="pt-ec-niv" data-v="haut">+ étage</button><button class="mini" data-a="pt-ec-niv" data-v="bas">+ sous-sol</button>':'')+'</div>';}}
   if(c.type==="donjon"){const G=ecGenGeo(c);h+='<details class="ecmet"><summary>Surprises du donjon (toi seul) : '+(G.traps||[]).length+' pièges, '+(G.secrets||[]).length+' passages secrets, '+(G.loot||[]).length+' trésors, '+(G.lurk||[]).length+' groupes tapis</summary><ul>'+(G.traps||[]).map(t=>'<li><strong>'+esc(t.n)+'</strong> : '+esc(t.d)+'</li>').join("")+'</ul><p class="desc">Sur ta carte : ! piège, S passage secret, $ trésor, ?N ennemis (N = nombre). Les joueurs ne les voient jamais.</p></details>';}
   {const M=EC_METEO[E.meteo||"clair"];if(M.fx.length||ui.ecMetRoll)h+='<div class="ecmet"><strong>'+M.i+' '+esc(M.l)+'</strong>'+(ui.ecMetRoll?' <span class="desc">(d20 = '+ui.ecMetRoll+')</span>':'')+(M.fx.length?'<ul>'+M.fx.map(f=>'<li>'+esc(f)+'</li>').join("")+'</ul>':'<span class="desc"> : aucun effet en combat.</span>')+(M.vis<999?'<p class="desc">Vision limitée à '+M.vis+' cases ('+(M.vis*5)+' pieds) sur l\'écran.</p>':'')+'</div>';}
-  h+='<div class="eccanvas'+(ui.ecBig?' big':'')+'">'+(ui.ecBig?'<div class="ecbigbar">'+[["move","✋ Déplacer"],["reveal","☀ Révéler"],["hide","☁ Cacher"]].map(x=>'<button class="chip'+((ui.ecTool||"move")===x[0]?' on':'')+'" data-a="pt-ec-tool" data-v="'+x[0]+'">'+x[1]+'</button>').join("")+'<button class="btn gold sm" data-a="pt-ec-big">Réduire ✕</button></div>':'')+'<canvas id="ec-dm" aria-label="Carte DM : glisse les jetons"></canvas></div>'+(ui.ecBig?'':'<p class="ecbigp"><button class="mini" data-a="pt-ec-big">⛶ Agrandir la carte</button></p>');
+  h+='<div class="eccanvas'+(ui.ecBig?' big':'')+'">'+(ui.ecBig?'<div class="ecbigbar">'+[["move","✋ Déplacer · 🚪 portes"],["reveal","☀ Révéler"],["hide","☁ Cacher"]].map(x=>'<button class="chip'+((ui.ecTool||"move")===x[0]?' on':'')+'" data-a="pt-ec-tool" data-v="'+x[0]+'">'+x[1]+'</button>').join("")+'<button class="btn gold sm" data-a="pt-ec-big">Réduire ✕</button></div>':'')+'<canvas id="ec-dm" aria-label="Carte DM : glisse les jetons, clique sur une porte pour l\'ouvrir ou la fermer"></canvas></div>'+(ui.ecBig?'':'<p class="ecbigp"><button class="mini" data-a="pt-ec-big">⛶ Agrandir la carte</button></p>');
   h+=ecTray(q,c)+'<div class="ecbar">'+
     '<span class="ecsp"></span><span>Cadre télé :</span>'+[["←",-5,0],["↑",0,-5],["↓",0,5],["→",5,0]].map(a=>'<button class="mini" data-a="pt-ec-cam" data-v="'+a[1]+','+a[2]+'" aria-label="Déplacer le cadre télé">'+a[0]+'</button>').join("")+'<button class="mini'+(ui.ecPv?' gold':'')+'" data-a="pt-ec-pv" aria-pressed="'+!!ui.ecPv+'">👁 '+(ui.ecPv?'Retour à la vue DM':'Vue joueurs')+'</button><button class="mini" data-a="pt-ec-fogreset">Tout recacher</button><button class="mini" data-a="pt-ec-vie">🦌 Renouveler la vie</button><button class="mini" data-a="pt-ec-seed">Nouvelle graine</button><button class="mini" data-a="pt-ec-del">Supprimer la carte</button></div>';
   if(sel)h+='<div class="ecsel"><label for="ec-sn">Jeton<input id="ec-sn" maxlength="30" value="'+esc(sel.n||"")+'" data-ec="sn"></label>'+(sel.src?'<button class="mini gold" data-a="pt-ec-release" title="Le jeton redevient une bête ou un passant du décor, qui rejoint son chemin">↩ Relâcher</button>':'')+(sel.k==="pj"?'<label class="ecck"><input type="checkbox" data-ec="torche"'+(sel.torche?' checked':'')+'> Torche</label><label for="ec-dv">Vision dans le noir (cases)<input id="ec-dv" type="number" min="0" max="24" value="'+(+sel.dv||0)+'" data-ec="dv"></label>':sel.k==="lum"?'<label for="ec-r">Rayon (cases)<input id="ec-r" type="number" min="1" max="20" value="'+(+sel.r||4)+'" data-ec="r"></label><label class="ecck"><input type="checkbox" data-ec="magie"'+(sel.flamme===false?' checked':'')+'> Lumière magique (résiste à la pluie et au vent)</label>':'<label class="ecck"><input type="checkbox" data-ec="vis"'+(sel.vis?' checked':'')+'> Visible quand un joueur le voit (décocher = caché, ex. furtif)</label>')+(sel.k!=="pj"||!sel.src?'<button class="mini" data-a="pt-ec-back" title="Le jeton quitte la carte et retourne dans la réserve, prêt à être reposé ailleurs">↩ Remettre dans la réserve</button>':'')+'<button class="mini" data-a="pt-ec-tokdel">Retirer</button></div>';
@@ -4976,6 +5038,7 @@ function ecAfter(){if(ui.office==="ecran")return;const cv=document.getElementByI
   const paint=(p)=>{const cc=ecCard();let vu=(cc.vu||"").padEnd(cc.w*cc.h,"0").split("");for(let y=Math.floor(p[1]-1.5);y<=p[1]+1.5;y++)for(let x=Math.floor(p[0]-1.5);x<=p[0]+1.5;x++){if(x<0||y<0||x>=cc.w||y>=cc.h)continue;if(Math.hypot(x+0.5-p[0],y+0.5-p[1])<=1.6)vu[y*cc.w+x]=ui.ecTool==="hide"?"2":"1";}cc.vu=vu.join("");};
   cv.addEventListener("pointerdown",e=>{if(ui.ecPv)return;if(ui.ecArm){const p0=ecCellAt(e.clientX,e.clientY);if(p0){ecDrop(ui.ecArm,p0);return;}}const p=cell(e),cc=ecCard();cv.setPointerCapture(e.pointerId);const tool=ui.ecTool||"move";
     if(tool==="move"){const k=(cc.tokens||[]).slice().reverse().find(k=>{const q=EC_ROAMPOS.get(k)||[k.x,k.y];return Math.hypot(q[0]-p[0],q[1]-p[1])<0.6;});if(k){drag={k,dx:k.x-p[0],dy:k.y-p[1],resel:ui.ecSel!==k.id};ui.ecSel=k.id;const rr=ecRenderers["ec-dm"];if(rr)rr.sel=k.id;}
+      else if(ecDoorAt(cc,p)>=0){const i=ecDoorAt(cc,p),o=(cc.ouv||[]).slice(),j=o.indexOf(i);if(j>=0)o.splice(j,1);else o.push(i);cc.ouv=o;ecUpd();ptSave();ecPush(true);return;}
       else if(ecPromote(p))return;
       else{const tv=ecDoc&&ecDoc.tv,cam=cc.cam||{x:0,y:0};if(tv&&p[0]>=cam.x&&p[1]>=cam.y&&p[0]<=cam.x+tv.cols&&p[1]<=cam.y+tv.rows)drag={cam:true,dx:cam.x-p[0],dy:cam.y-p[1]};else if(ui.ecSel){ui.ecSel=null;render();}}}
     else{drag={paint:true};paint(p);ecUpd();}});
