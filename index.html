@@ -3941,7 +3941,7 @@ function ecPaxBubble(x,X,Y,s,o,TT){const sg=o.seg;if(!sg||(sg.k!=="talk"&&sg.k!=
   const page=Math.floor((n-1)/slots),inPage=(n-1)%slots+1,toks=[];
   const pool=o.act==="board"?[4,4,5,1,2,0]:sg.k==="grr"?[6,5,6,5]:[0,1,2,3,0,1];
   for(let i=0;i<(page+1)*slots;i++){const r=R();toks.push(sg.k==="grr"?pool[Math.floor(r*pool.length)]:r<0.62?{w:0.12+R()*0.22}:pool[Math.floor(R()*pool.length)]);}
-  const pop=Math.min(1,tin*5),sd=Math.cos(o.a!=null?o.a:0)<-0.3?-1:1,h=s*0.52,w=s*1.25,cx=X+sd*s*0.85,cy=Y-s*0.75,tx=X+sd*s*0.15,ty=Y-s*0.2;
+  const pop=Math.min(1,tin*5),sd=o.bs||1,h=s*0.52,w=s*1.25,cx=X+sd*s*0.85,cy=Y-s*0.75,tx=X+sd*s*0.15,ty=Y-s*0.2;
   x.save();x.translate(cx,cy);const sc=0.7+0.3*pop;x.scale(sc,sc);x.translate(-cx,-cy);ecBubbleBox(x,cx,cy,w,h,tx,ty,s,pop);
   const u=s*0.3;let px=cx-w/2+s*0.16;for(let i=0;i<inPage;i++){const t=toks[page*slots+i],age=(n-1)-(page*slots+i),f=age===0?Math.min(1,((tin%word)/word)*3):1,z=age===0?1+0.35*Math.sin(f*Math.PI):1;
     if(typeof t==="number"){x.save();x.translate(px+u*0.5,cy);x.scale(z*f,z*f);ecPaxIcon(x,t,u);x.restore();px+=u*1.15;}
@@ -3951,15 +3951,20 @@ function ecPaxBubble(x,X,Y,s,o,TT){const sg=o.seg;if(!sg||(sg.k!=="talk"&&sg.k!=
 function ecPaxReact(x,g,s,o,TT,ox,oy){const sg=o.seg;if(!sg||!g.paxPos)return;const near=[];(g.people||[]).forEach(p=>{if(Math.hypot(p.x-o.x,p.y-o.y)<2.6)near.push([p.x,p.y]);});(g.advPax||[]).forEach(p=>{if(Math.hypot(p[0]-o.x,p[1]-o.y)<2.6)near.push(p);});
   near.forEach((p,i)=>{let txt=null,a=0;const tin=o.tin||0;if(sg.k==="laugh"){const t=tin-0.15*i;if(t>0&&t<1.6){txt="ha ha";a=Math.min(1,t*5,(1.6-t)*4);}}
     else if(sg.k==="talk"&&(sg.seed+i*7)%3===0){const t=tin-1.2-0.3*i;if(t>0&&t<1.1){txt="!";a=Math.min(1,t*6,(1.1-t)*5);}}
-    if(!txt)return;const X=ox+p[0]*s,Y=oy+p[1]*s,w=txt==="!"?s*0.36:s*0.72,h=s*0.34,cx=X+s*0.28,cy=Y-s*0.72-(1-a)*s*0.1;ecBubbleBox(x,cx,cy,w,h,X+s*0.08,Y-s*0.4,s*0.7,a);
-    x.save();x.globalAlpha*=a;x.fillStyle=txt==="!"?"#b8281e":"#5a3a1a";x.font=(txt==="!"?"900 ":"italic 700 ")+Math.round(s*(txt==="!"?0.3:0.22))+"px Georgia,serif";x.textAlign="center";x.textBaseline="middle";x.fillText(txt,cx,cy+s*0.01);x.restore();});}
+    if(!txt)return;const X0=ox+p[0]*s,Y0=oy+p[1]*s,w=txt==="!"?s*0.36:s*0.72,h=s*0.34,X=0,Y=0,cx=X+s*0.28,cy=Y-s*0.72-(1-a)*s*0.1;x.save();x.translate(X0,Y0);x.rotate((o.persp?o.persp(p[0],p[1]):Math.PI/2)-Math.PI/2);ecBubbleBox(x,cx,cy,w,h,X+s*0.08,Y-s*0.4,s*0.7,a);
+    x.save();x.globalAlpha*=a;x.fillStyle=txt==="!"?"#b8281e":"#5a3a1a";x.font=(txt==="!"?"900 ":"italic 700 ")+Math.round(s*(txt==="!"?0.3:0.22))+"px Georgia,serif";x.textAlign="center";x.textBaseline="middle";x.fillText(txt,cx,cy+s*0.01);x.restore();x.restore();});}
 // Dessin de Pax en pied : ombre, pose (miroir), café dans la tasse (son niveau baisse à chaque gorgée), vapeur
+// Point de perspective (idée de Yannick) : la télé est posée à plat au milieu de la table. Le cadre de la télé est coupé en quatre cadrans par ses diagonales ;
+// dans chaque cadran, un personnage fait face vers l'extérieur, dos au centre, pour que chaque joueur voie de face ceux de son côté. Bascule douce près des diagonales.
+function ecPerspA(st,c,X,Y){const v=st.vue||st.tvv||{cols:c.w,rows:c.h},cam=st.cam||{x:0,y:0},hw=Math.max(1,Math.min(v.cols,c.w)/2),hh=Math.max(1,Math.min(v.rows,c.h)/2),nx=(X-cam.x-hw)/hw,ny=(Y-cam.y-hh)/hh;
+  if(Math.abs(nx)<1e-3&&Math.abs(ny)<1e-3)return Math.PI/2;const th=Math.atan2(ny,nx),Q=Math.PI/2,q=Math.round(th/Q)*Q,d=th-q,w=0.1;
+  if(Math.abs(d)>Math.PI/4-w){const t=(Math.abs(d)-(Math.PI/4-w))/(2*w);return q+Math.sign(d)*Q*t;}return q;}
 // Pax couché sur la carte comme un jeton vu de haut : son devant (le bas du dessin) pointe dans la direction où il va ou vers qui il parle
 const EC_PAXLEN=1.9;
 function ecPaxSprite(x,X,Y,s,o,TT){const fi=Math.max(0,EC_PAXF.indexOf(o.pose)),h=s*EC_PAXLEN,w=h*EC_PAXFW/EC_PAXFH,a=o.a!=null?o.a:Math.PI/2,rot=a-Math.PI/2,
     bob=o.still?1+Math.sin(TT*1.5)*0.006:1+Math.abs(Math.sin((o.step||0)*Math.PI/2))*0.015;
   x.save();x.translate(X+s*0.05,Y+s*0.07);x.rotate(rot);const gs=x.createRadialGradient(0,0,0,0,0,h*0.5);gs.addColorStop(0,"rgba(0,0,0,.38)");gs.addColorStop(1,"rgba(0,0,0,0)");x.fillStyle=gs;x.scale(w*0.55/(h*0.5),1);x.beginPath();x.arc(0,0,h*0.5,0,6.283);x.fill();x.restore();
-  const B=x.getTransform();x.save();x.translate(X,Y);x.rotate(rot);x.scale(bob,bob);const k=h/EC_PAXFH,top=-h/2,left=-w/2;
+  const B=x.getTransform();x.save();x.translate(X,Y);x.rotate(rot);x.scale(o.flip?-bob:bob,bob);const k=h/EC_PAXFH,top=-h/2,left=-w/2;
   x.drawImage(EC_PAXSP,fi*EC_PAXFW,0,EC_PAXFW,EC_PAXFH,left,top,w,h);
   const m=o.cup&&EC_PAXMUG[o.pose];let steam=null;
   if(m){const cx=left+m[0]*k,cy=top+m[1]*k,rx=17.5*k,ry=9.7*k;steam=x.getTransform().transformPoint(new DOMPoint(cx,cy));
@@ -3969,8 +3974,9 @@ function ecPaxSprite(x,X,Y,s,o,TT){const fi=Math.max(0,EC_PAXF.indexOf(o.pose)),
   const head=x.getTransform().transformPoint(new DOMPoint(0,top+h*0.1));x.restore();
   const iv=B.inverse(),hp=iv.transformPoint(head);
   // vapeur : monte toujours vers le haut de l'écran
-  if(steam&&o.lvl>0.25){const sp=iv.transformPoint(steam),S=s/60;for(let i=0;i<5;i++){const u=((TT*0.4+i/5)%1);x.save();x.filter="blur("+((1+u*3)*S).toFixed(2)+"px)";x.fillStyle="rgba(245,245,245,"+(0.45*Math.sin(Math.PI*Math.min(1,u*1.3))*(1-u)*o.lvl).toFixed(3)+")";x.beginPath();x.ellipse(sp.x+Math.sin(TT*1.7+i*1.3+u*5)*5*S*u,sp.y-u*30*S,(2+u*5)*S,(3+u*4)*S,0,0,6.283);x.fill();x.restore();}}
-  ecPaxBubble(x,hp.x,hp.y,s,o,TT);}
+  // vapeur, bulle : dans le repère du personnage (lisibles par le joueur de son côté de la table)
+  if(steam&&o.lvl>0.25){const sp=iv.transformPoint(steam),S=s/60;x.save();x.translate(sp.x,sp.y);x.rotate(rot);for(let i=0;i<5;i++){const u=((TT*0.4+i/5)%1);x.save();x.filter="blur("+((1+u*3)*S).toFixed(2)+"px)";x.fillStyle="rgba(245,245,245,"+(0.45*Math.sin(Math.PI*Math.min(1,u*1.3))*(1-u)*o.lvl).toFixed(3)+")";x.beginPath();x.ellipse(Math.sin(TT*1.7+i*1.3+u*5)*5*S*u,-u*30*S,(2+u*5)*S,(3+u*4)*S,0,0,6.283);x.fill();x.restore();}x.restore();}
+  x.save();x.translate(hp.x,hp.y);x.rotate(rot);o.bs=o.flip?-1:1;ecPaxBubble(x,0,0,s,o,TT);x.restore();}
 // Pax immobile (étage, autres cartes) : debout, café à la main, une gorgée de temps en temps
 function ecPaxIdle(k,TT){const t=(TT+(k.x*13+k.y*7))%30;return {x:k.x,y:k.y,a:k.a!=null?k.a:Math.PI/2,still:true,flip:false,cup:true,lvl:0.35+0.6*(1-((TT/240)%1)),pose:t>24&&t<26.6?"boire":"cafe_repos"};}
 // Employés sans nom : un cuisinier et un serveur qui servent À LA COMMANDE, un marchand derrière ses étals de boutique
@@ -4883,6 +4889,7 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),p
       x.save();x.globalAlpha=!tv&&!k.vis?0.55:1;const PX=o.x*s,PY=o.y*s;
       if(r.sel===k.id){x.strokeStyle="#fff";x.lineWidth=Math.max(3,s*0.08);x.beginPath();x.arc(PX,PY,s*0.95,0,6.283);x.stroke();}
       x.strokeStyle="rgba(240,208,112,"+(0.55+Math.sin(TT*1.6)*0.2).toFixed(2)+")";x.lineWidth=Math.max(1.5,s*0.045);x.beginPath();x.arc(PX,PY,s*0.9,0,6.283);x.stroke();
+      {const mv=o.a!=null?o.a:Math.PI/2,fa=ecPerspA(st,c,o.x,o.y),rot=fa-Math.PI/2,sd=Math.cos(mv-rot);o.a=fa;o.flip=sd<-0.2;o.persp=(X,Y)=>ecPerspA(st,c,X,Y);}
       ecPaxSprite(x,PX,PY,s,o,TT);if(gg)ecPaxReact(x,gg,s,o,TT,0,0);x.restore();return;}
     if(k.k==="pnj"&&k.look){const TT=Date.now()/1000;if(c.type==="bureau"){const gg=ecGenGeo(c);gg.pjPos=(st.tokens||[]).filter(q=>q.k==="pj").map(q=>[q.x,q.y]);}let k2=k,X2=X,Y2=Y;if(c.type==="bureau"&&r.sel!==k.id){const m=ecRoam(k,ecGenGeo(c),c,TT);if(m){EC_ROAMPOS.set(k,[m.x,m.y]);k2=Object.assign({},k,{x:m.x,y:m.y,a:m.a!=null?m.a:k.a,walk:!m.still,talk:!!(k.look.pax&&m.still&&m.a!=null)});X2=m.x*s;Y2=m.y*s;}}
       if(tv){if(st.fog&&st.fog.on&&!(V&&V.tokSeen(k2.x,k2.y)))return;}ecNamedTok(x,k2,X2,Y2,s,TT,r.sel===k.id,!tv&&!k.vis);return;}
