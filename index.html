@@ -1330,7 +1330,7 @@ function listenPrivate(on){
   privUnsubs.push(onSnapshot(collection(db,"notesdm"),snap=>{notesDm=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(collection(db,"evolutions"),snap=>{evols=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","monde"),snap=>{monde=snap.exists()?snap.data():null;render();},err));
-  privUnsubs.push(onSnapshot(doc(db,"prive","ecran"),snap=>{const d=snap.exists()?snap.data():null;if(!d){ecDoc=null;}else if(!ecDoc||(+d.ms||0)>=(+ecDoc.ms||0))ecDoc=d;else ecDoc=Object.assign({},ecDoc,{tv:d.tv,calib:d.calib});
+  privUnsubs.push(onSnapshot(doc(db,"prive","ecran"),snap=>{const d=snap.exists()?snap.data():null;hbSaw("ec",d);if(!d){ecDoc=null;}else if(!ecDoc||(+d.ms||0)>=(+ecDoc.ms||0))ecDoc=d;else ecDoc=Object.assign({},ecDoc,{tv:d.tv,calib:d.calib});
     if(ui.office==="ecran")ecTvUpdate();else if(ecRenderers["ec-dm"]&&ecRenderers["ec-dm"].st)ecRenderers["ec-dm"].st.tvv=ecDoc&&ecDoc.tv;},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","vitrine"),snap=>{const d=snap.exists()?snap.data():null;if(!d||!vitrine||(+d.ms||0)>=(+vitrine.ms||0))vitrine=d;vitUi();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","boutiques"),snap=>{shopCfg=snap.exists()?snap.data():null;},err));
@@ -2674,7 +2674,10 @@ function render(){
 function route(){
   const id=(location.hash||"").slice(1);
   const next=id&&id!=="carte"?id:null;
-  if(next!==ui.office){if(next&&next.indexOf("perso-")===0&&!(ui.office&&ui.office.indexOf("perso-")===0))ui.persoFrom=ui.office||"";ui.office=next;if(!(next==="personnages"&&ui.sheetEdit==="new"))ui.sheetEdit=null;if(!(next==="compendium"&&ui.compEdit==="new"))ui.compEdit=null;ui.compHist=null;ui.compVer=null;ui.confirmComp=null;ui.evolve=null;ui.noteEdit=null;ui.newsEdit=null;if(!ui.pendingMan){ui.manEdit=null;}ui.pendingMan=false;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=ui.pendingEdit||null;ui.pendingEdit=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter=ui.pendingFilter||"ouverte";ui.rank="all";const focusQ=ui.pendingQuest;ui.pendingFilter=null;ui.pendingQuest=null;render();
+  if(next!==ui.office){const wasPt=!!ui.office&&ui.office.indexOf("partie-")===0,isPt=!!next&&next.indexOf("partie-")===0;
+    if(wasPt&&!isPt)ecCloseScreens();
+    if(isPt&&!wasPt)setTimeout(()=>{if(ui.pt&&ui.office==="partie-"+ui.pt.id&&ui.pt.id!=="libre")ecPush(true);},400);
+    if(next&&next.indexOf("perso-")===0&&!(ui.office&&ui.office.indexOf("perso-")===0))ui.persoFrom=ui.office||"";ui.office=next;if(!(next==="personnages"&&ui.sheetEdit==="new"))ui.sheetEdit=null;if(!(next==="compendium"&&ui.compEdit==="new"))ui.compEdit=null;ui.compHist=null;ui.compVer=null;ui.confirmComp=null;ui.evolve=null;ui.noteEdit=null;ui.newsEdit=null;if(!ui.pendingMan){ui.manEdit=null;}ui.pendingMan=false;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=ui.pendingEdit||null;ui.pendingEdit=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter=ui.pendingFilter||"ouverte";ui.rank="all";const focusQ=ui.pendingQuest;ui.pendingFilter=null;ui.pendingQuest=null;render();
     try{const el=focusQ&&document.getElementById("q-"+focusQ);if(el){el.scrollIntoView({block:"center"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1600);}else window.scrollTo(0,0);}catch(e){}}
 }
 window.addEventListener("hashchange",route);
@@ -4714,7 +4717,7 @@ function ecTvShell(){return '<div class="ectv"><canvas id="ec-tv"></canvas><div 
 // Écran posé à plat : la fiche est montrée deux fois, tête-bêche, pour les deux bords de la table (réglable dans le calibrage).
 function ecMirror(){return !(ecDoc&&ecDoc.calib&&ecDoc.calib.miroir===false);}
 function ecFicheHtml(v){return '<img src="'+esc(v.image)+'" alt="'+esc(v.nom?"Portrait de "+v.nom:"Image")+'">'+(v.nom?'<h2>'+esc(v.nom)+'</h2>':'');}
-function ecTvFiche(){const f=document.getElementById("ec-fiche");if(!f)return;const on=vitOn(),mir=ecMirror(),key=on?vitrine.ms+"|"+vitrine.nom+"|"+mir:"";if(f.getAttribute("data-k")===key)return;f.setAttribute("data-k",key);
+function ecTvFiche(){const f=document.getElementById("ec-fiche");if(!f)return;const on=vitOn()&&hbLive("ec"),mir=ecMirror(),key=on?vitrine.ms+"|"+vitrine.nom+"|"+mir:"";if(f.getAttribute("data-k")===key)return;f.setAttribute("data-k",key);
   if(on){f.innerHTML=mir?'<div class="fc fa">'+ecFicheHtml(vitrine)+'</div><div class="fc fb" aria-hidden="true">'+ecFicheHtml(vitrine)+'</div>':ecFicheHtml(vitrine);f.classList.toggle("mir",mir);f.classList.add("on");}
   else{f.classList.remove("on");setTimeout(()=>{if(!vitOn())f.innerHTML="";},400);}
   {const w=f.closest(".ectv");if(w)w.classList.toggle("fon",on);}}
@@ -4722,7 +4725,8 @@ function ecTvUpdate(){if(ui.office!=="ecran")return;const app=document.getElemen
   const m=document.getElementById("ec-msg"),st=ecDoc;
   if(!isAdmin){m.textContent="Écran de table : connecte-toi avec le compte du Maître de la Guilde, puis recharge.";return;}
   ecTvFiche();
-  if(!st||!st.carte){m.textContent=vitOn()?"":"En attente d'une carte… Ouvre une carte dans le Mode Partie (onglet Écran) ou dans l'Espace DM → Cartes (« Montrer aux joueurs »).";const r=ecBind("ec-tv","tv");if(r)r.st=null;return;}
+  if(st&&st.carte&&!hbLive("ec")){["ec-met","ec-info","ec-ord"].forEach(k=>{const el=document.getElementById(k);if(el)el.innerHTML="";});m.textContent="Le Maître de la Guilde s'est déconnecté. L'écran reviendra dès qu'il rouvrira la partie.";const r=ecBind("ec-tv","tv");if(r)r.st=null;return;}
+  if(!st||!st.carte){["ec-met","ec-info","ec-ord"].forEach(k=>{const el=document.getElementById(k);if(el)el.innerHTML="";});m.textContent=vitOn()?"":"En attente d'une carte… Ouvre une carte dans le Mode Partie (onglet Écran) ou dans l'Espace DM → Cartes (« Montrer aux joueurs »).";const r=ecBind("ec-tv","tv");if(r)r.st=null;return;}
   m.textContent="";const r=ecBind("ec-tv","tv");if(r)ecSet(r,st);
   {const M=EC_METEO[st.meteo]||EC_METEO.clair;document.getElementById("ec-met").innerHTML=(st.date?'<span class="dt">📜 '+esc(st.date)+'</span>':'')+(st.meteo&&st.meteo!=="clair"?'<strong>'+M.i+' '+esc(M.l)+'</strong>'+(M.fx.length?'<span>'+esc(M.fx[0])+'</span>':''):'');}
   document.getElementById("ec-info").innerHTML=st.info?'<p>'+esc(st.info).replace(/\n/g,"<br>")+'</p>':'';
@@ -4805,7 +4809,7 @@ function ecCam(E,c){const tv=(ecDoc&&ecDoc.tv)||{cols:40,rows:22},pj=(c.tokens||
 function ecState(){const E=ecP(),c=ecCard(),q=ui.pt;if(!c)return null;
   let ordre=null;if(E.ordre&&E.ordre.mode==="combat"&&q.combat&&q.combat.phase==="combat"){ordre={titre:"Ordre de combat · round "+(q.round||1),liste:ptOrder().filter(x=>!(x.kind!=="pj"&&x.pv<=0)&&!x.cache).map(x=>({n:x.nom,k:x.kind==="pj"?"pj":"en",cur:x.cid===q.cur}))};}
   else if(E.ordre&&E.ordre.mode==="parole"){const L=String(E.ordre.parole||"").split("\n").map(x=>x.trim()).filter(Boolean),i=(E.ordre.idx||0)%Math.max(1,L.length);ordre={titre:"Ordre de parole",liste:L.map((n,j)=>({n,k:"pj",cur:j===i}))};}
-  return {qid:q.id,carte:{id:c.id,nom:c.nom,type:c.type,seed:c.seed,w:c.w,h:c.h,url:c.url||"",gone:c.gone||[],back:c.back||{},vie:c.vie||"",bureau:c.bureau||"",etage:+c.etage||0,niv:c.niv||null},cam:ecCam(E,c),tokens:c.tokens||[],fog:{on:E.fog!==false,vu:c.vu||""},lum:E.lum||"jour",meteo:(c.abri||ecIndoor(c.type))?"clair":(E.meteo||"clair"),date:calLabel(calNow()),jour:E.jour||1,grid:!!E.grid,info:E.info||"",ordre,figs:tbFigList(tbQuest(),c),calib:(ecDoc&&ecDoc.calib)||{},ms:Date.now()};}
+  return {vie:Date.now(),qid:q.id,carte:{id:c.id,nom:c.nom,type:c.type,seed:c.seed,w:c.w,h:c.h,url:c.url||"",gone:c.gone||[],back:c.back||{},vie:c.vie||"",bureau:c.bureau||"",etage:+c.etage||0,niv:c.niv||null},cam:ecCam(E,c),tokens:c.tokens||[],fog:{on:E.fog!==false,vu:c.vu||""},lum:E.lum||"jour",meteo:(c.abri||ecIndoor(c.type))?"clair":(E.meteo||"clair"),date:calLabel(calNow()),jour:E.jour||1,grid:!!E.grid,info:E.info||"",ordre,figs:tbFigList(tbQuest(),c),calib:(ecDoc&&ecDoc.calib)||{},ms:Date.now()};}
 /* ---------- Table virtuelle : l'écran de table, ouvert à distance par les inscrits d'une quête en cours ----------
    Comme à la table : chaque joueur à distance pose UNE figurine virtuelle (pion plein, à l'image de son personnage) et la déplace.
    Elle ne donne aucune vision : c'est le DM qui ajuste l'anneau du personnage dessous, comme sous une figurine posée sur l'écran.
@@ -4829,7 +4833,7 @@ function tbFigList(q,c){if(!q||!c)return [];return Object.keys(tbFigs).map(uid=>
 function tbState(q,st){const c=st&&st.carte;if(!c)return {qid:q.id,titre:q.titre,carte:null,ms:Date.now()};
   const fogOn=!!(st.fog&&st.fog.on),V=fogOn?ecVision(st):null;
   const tokens=(st.tokens||[]).filter(k=>{if(k.k==="pj"||k.k==="lum")return true;if(!k.vis)return false;if(!fogOn)return true;const i=Math.floor(k.y)*c.w+Math.floor(k.x);return !!(V&&V.vis[i]);});
-  const out=Object.assign({},st,{qid:q.id,titre:q.titre,tokens,vue:(ecDoc&&ecDoc.tv)?{cols:ecDoc.tv.cols,rows:ecDoc.tv.rows}:{cols:40,rows:22},ms:Date.now()});delete out.calib;delete out.tvv;return JSON.parse(JSON.stringify(out));}
+  const out=Object.assign({},st,{vie:Date.now(),qid:q.id,titre:q.titre,tokens,vue:(ecDoc&&ecDoc.tv)?{cols:ecDoc.tv.cols,rows:ecDoc.tv.rows}:{cols:40,rows:22},ms:Date.now()});delete out.calib;delete out.tvv;return JSON.parse(JSON.stringify(out));}
 function tbPush(){const q=tbQuest();if(!q||!isAdmin)return;tbListen(q.id);clearTimeout(tbPushT);tbPushT=setTimeout(()=>{if(tbQuest()!==q)return;let st=null;try{st=ecState();}catch(e){}
   setDoc(doc(db,"table",q.id),tbState(q,st)).catch(e=>console.error(e));},600);}
 // Côté DM : écoute les figurines des joueurs, pour les montrer sur sa vue, la télé et la copie publiée.
@@ -4851,7 +4855,7 @@ function tbDmLine(q){const c=ecCard();if(!c||q.libre)return "";const F=tbFigList
 let tbDoc=null,tbVit=null,tbSubQ=null,tbSubs=[],tbErr="",tbMine=null;
 function tbUnsub(){tbSubs.forEach(f=>{try{f();}catch(e){}});tbSubs=[];tbSubQ=null;tbDoc=null;tbVit=null;tbErr="";tbMine=null;}
 function tbSub(qid){if(tbSubQ===qid)return;tbUnsub();tbSubQ=qid;const er=e=>{console.error(e);tbErr=e&&e.code==="permission-denied"?"Cette carte est réservée aux aventuriers inscrits à la quête.":"La carte n'a pas pu être chargée.";tbUpdate();};
-  tbSubs.push(onSnapshot(doc(db,"table",qid),s=>{tbDoc=s.exists()?s.data():null;tbErr="";tbUpdate();},er));
+  tbSubs.push(onSnapshot(doc(db,"table",qid),s=>{tbDoc=s.exists()?s.data():null;hbSaw("tb",tbDoc);tbErr="";tbUpdate();},er));
   tbSubs.push(onSnapshot(doc(db,"table",qid,"vitrine","live"),s=>{tbVit=s.exists()?s.data():null;tbUpdate();},()=>{}));
   tbSubs.push(onSnapshot(doc(db,"table",qid,"figs",user.uid),s=>{tbMine=s.exists()?s.data():null;tbUpdate();},()=>{}));}
 // Vue transmise par le DM : le cadre de la télé, ajusté à la fenêtre du joueur.
@@ -4864,9 +4868,9 @@ function tbView(qid){const app=document.getElementById("app");if(!document.getEl
 // Ma figurine sur la carte affichée : la position déposée, ou celle que je suis en train de glisser.
 function tbMyFig(st,r){if(r.drag)return {x:r.drag[0],y:r.drag[1]};if(tbMine&&st.carte&&tbMine.carte===st.carte.id)return {x:+tbMine.x,y:+tbMine.y};return null;}
 function tbUpdate(){if(!ui.office||ui.office.indexOf("table-")!==0)return;const m=document.getElementById("pl-msg");if(!m)return;const st=tbDoc;
-  const f=document.getElementById("pl-fiche"),v=tbVit&&tbVit.image?tbVit:null,fk=v?v.ms+"|"+v.nom:"";if(f.getAttribute("data-k")!==fk){f.setAttribute("data-k",fk);if(v){f.innerHTML=ecFicheHtml(v);f.classList.add("on");}else{f.classList.remove("on");f.innerHTML="";}const w=f.closest(".ectv");if(w)w.classList.toggle("fon",!!v);}
+  const off=!!(st&&st.carte)&&!hbLive("tb"),f=document.getElementById("pl-fiche"),v=tbVit&&tbVit.image&&!off?tbVit:null,fk=v?v.ms+"|"+v.nom:"";if(f.getAttribute("data-k")!==fk){f.setAttribute("data-k",fk);if(v){f.innerHTML=ecFicheHtml(v);f.classList.add("on");}else{f.classList.remove("on");f.innerHTML="";}const w=f.closest(".ectv");if(w)w.classList.toggle("fon",!!v);}
   const q=questById(tbSubQ),sg=q&&user?tbSign(q,user.uid):null;
-  if(tbErr||!st||!st.carte){m.textContent=tbErr||(v?"":"En attente du Maître de la Guilde… La carte apparaîtra dès qu'il en ouvre une.");const r=ecBind("ec-pl","joueur");if(r)r.st=null;return;}
+  if(tbErr||!st||!st.carte||off){if(off)["pl-met","pl-info","pl-ord"].forEach(k=>{const el=document.getElementById(k);if(el)el.innerHTML="";});m.textContent=tbErr||(off?"Le Maître de la Guilde s'est déconnecté. La carte reviendra dès qu'il rouvrira la partie.":v?"":"En attente du Maître de la Guilde… La carte apparaîtra dès qu'il en ouvre une.");const r=ecBind("ec-pl","joueur");if(r)r.st=null;return;}
   m.textContent="";const r=ecBind("ec-pl","joueur");if(!r)return;r.me=user.uid;
   const S=JSON.parse(JSON.stringify(st)),mine=tbMyFig(S,r),av=sg&&sg.aventurier&&aventuriers.find(a=>a.id===sg.aventurier);
   S.figs=(S.figs||[]).filter(x=>x.u!==user.uid);if(mine&&sg){const old=(st.figs||[]).find(x=>x.u===user.uid);S.figs.push({u:user.uid,a:av?av.id:"",n:av?av.nom:sg.nom,x:mine.x,y:mine.y,c:old?old.c:"#d8b45e"});}
@@ -4898,6 +4902,23 @@ function tbBind(r){const cv=r.cv;if(cv.dataset.bound)return;cv.dataset.bound="1"
     act=null;};
   cv.addEventListener("pointerup",end);cv.addEventListener("pointercancel",end);
   cv.addEventListener("wheel",e=>{e.preventDefault();zoomAt(e.deltaY<0?1.15:1/1.15,e.clientX,e.clientY);},{passive:false});}
+/* ----- Signal de présence du DM : si son Mode Partie se ferme sans prévenir (onglet fermé, Wi-Fi coupé, veille),
+   la télé et les joueurs à distance passent d'eux-mêmes en attente au bout d'environ 1 min 30. ----- */
+const HB_EVERY=30000,HB_LOST=95000,HB={ec:{vie:null,seen:0,live:true},tb:{vie:null,seen:0,live:true}};
+// On mesure l'arrivée des signaux avec l'horloge locale (pas celle du DM) ; au premier chargement, un signal trop vieux compte comme absent.
+function hbSaw(k,d){const h=HB[k],v=d&&+d.vie||0,now=Date.now();if(!v){h.vie=null;h.seen=0;return;}if(v===h.vie)return;
+  h.seen=h.vie==null?(now-v>HB_LOST+60000?0:now):now;h.vie=v;}
+function hbLive(k){const h=HB[k];if(h.vie==null)return true;return !!h.seen&&Date.now()-h.seen<HB_LOST;}
+function hbDmOn(){if(!isAdmin||!ui.pt)return false;if(ui.office&&ui.office.indexOf("partie-")===0)return true;return ui.office==="dm"&&ui.dmTab==="cartes"&&!!ecP().tv;}
+function hbBeat(){if(!hbDmOn())return;const now=Date.now();setDoc(doc(db,"prive","ecran"),{vie:now},{merge:true}).catch(()=>{});const q=tbQuest();if(q)setDoc(doc(db,"table",q.id),{vie:now},{merge:true}).catch(()=>{});}
+setInterval(hbBeat,HB_EVERY);
+setInterval(()=>{["ec","tb"].forEach(k=>{const l=hbLive(k);if(l!==HB[k].live){HB[k].live=l;if(k==="ec"&&ui.office==="ecran")ecTvUpdate();if(k==="tb")tbUpdate();}});},5000);
+// Quitter le Mode Partie ferme l'écran des joueurs : la télé et la table virtuelle repassent en attente, la fiche montrée est retirée.
+function ecCloseScreens(){if(!isAdmin)return;clearTimeout(ecPushT);clearTimeout(tbPushT);const q=tbQuest();
+  try{if(vitOn())vitHide();}catch(e){}
+  const blank={carte:null,tokens:[],figs:[],ordre:null,info:"",ms:Date.now()};ecDoc=Object.assign({},ecDoc||{},blank);try{ecBC&&ecBC.postMessage(blank);}catch(e){}
+  setDoc(doc(db,"prive","ecran"),blank,{merge:true}).catch(e=>console.error(e));
+  if(q)setDoc(doc(db,"table",q.id),{qid:q.id,titre:q.titre,carte:null,ms:Date.now()}).catch(e=>console.error(e));}
 function ecPush(now){if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);ecPushT=setTimeout(()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},now?0:250);}
 function ecReveal(c){const E=ecP();const st=ecState();if(!st)return;const V=ecVision(st);let vu=(c.vu||"").padEnd(c.w*c.h,"0").split("");let ch=false;for(let i=0;i<V.vis.length;i++)if(V.vis[i]&&vu[i]!=="1"){vu[i]="1";ch=true;}if(ch)c.vu=vu.join("");}
 function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc.calib)||{};
