@@ -4646,7 +4646,8 @@ function ecOccluders(c){if(!c||c.type==="image"||ecIndoor(c.type))return null;co
     (g.walls||[]).forEach(w=>{const L=Math.hypot(w.x1-w.x0,w.y1-w.y0)||1;for(let u=0;u<=L;u+=0.4)put(Math.floor(w.x0+(w.x1-w.x0)*u/L),Math.floor(w.y0+(w.y1-w.y0)*u/L),"W");});}
   return ecOccCache[key]=any?O:null;}
 // Portes ouvertes par le DM (clic sur la porte, outil Déplacer) : la vue et la lumière passent. Liste d'index de cases dans carte.ouv.
-function ecOpenG(G,c){const o=(c&&c.ouv)||[];if(!G||!o.length)return G;const g=G.slice();o.forEach(i=>{if(g[i]==="D")g[i]="O";});return g;}
+function ecOpenG(G,c){if(!G)return G;const o=(c&&c.ouv)||[],gg=ecGenGeo(c),cols=(gg.furn||[]).filter(f=>f.k==="column"||f.k==="0");if(!o.length&&!cols.length)return G;const g=G.slice();
+  o.forEach(i=>{if(g[i]==="D")g[i]="O";});cols.forEach(f=>{const X=Math.floor(f.x+(f.k==="0"?0.5:0)),Y=Math.floor(f.y+(f.k==="0"?0.5:0)),i=Y*c.w+X;if(X>=0&&Y>=0&&X<c.w&&Y<c.h&&g[i]!=="W")g[i]="P";});return g;}
 function ecDoorAt(c,p){if(!c||!EC_GEN[c.type]||c.type==="image"||!ecIndoor(c.type))return -1;const G=ecGenGeo(c).G;if(!G)return -1;const x=Math.floor(p[0]),y=Math.floor(p[1]),i=y*c.w+x;return x>=0&&y>=0&&x<c.w&&y<c.h&&G[i]==="D"?i:-1;}
 // Dessin d'une porte ouverte : l'embrasure dégagée (seuil sombre) et le battant rabattu contre le chambranle.
 function ecOpenDoors(x,c,s){const o=c.ouv||[];if(!o.length||!EC_GEN[c.type])return;const G=ecGenGeo(c).G;if(!G)return;
@@ -4658,9 +4659,12 @@ function ecOpenDoors(x,c,s){const o=c.ouv||[];if(!o.length||!EC_GEN[c.type])retu
 // Ligne de vue sur la grille : les murs (W) et les portes (D, considérées fermées) arrêtent la vue et la lumière.
 // On voit la porte elle-même ; pour voir la pièce suivante, il faut se tenir dans l'embrasure ou l'avoir passée.
 // Un pas en diagonale ne se glisse pas entre deux coins de mur.
-function ecLos(G,W,x0,y0,x1,y1){let x=Math.floor(x0),y=Math.floor(y0);const tx=Math.floor(x1),ty=Math.floor(y1),dx=Math.abs(tx-x),dy=Math.abs(ty-y),sx=x<tx?1:-1,sy=y<ty?1:-1,r0=G[y*W+x],bl=v=>v==="W"||v==="D"||v==="T"||(v==="R"&&r0!=="R");let err=dx-dy;
-  while(x!==tx||y!==ty){const e2=2*err,px=x,py=y;if(e2>-dy){err-=dy;x+=sx;}if(e2<dx){err+=dx;y+=sy;}
-    if(x!==px&&y!==py&&bl(G[py*W+x])&&bl(G[y*W+px]))return false;if(x===tx&&y===ty)return true;if(bl(G[y*W+x]))return false;}return true;}
+function ecBlk(v,r0){return v==="W"||v==="D"||v==="T"||v==="P"||(v==="R"&&r0!=="R");}
+// Rayon exact entre deux points (traversée des cases, comme une vraie ligne de vue) : bloqué par toute case opaque traversée, sauf celle de départ et celle d'arrivée.
+function ecLos(G,W,x0,y0,x1,y1){let cx=Math.floor(x0),cy=Math.floor(y0);const tx=Math.floor(x1),ty=Math.floor(y1),r0=G[cy*W+cx];if(cx===tx&&cy===ty)return true;
+  const dx=x1-x0,dy=y1-y0,sx=dx>0?1:-1,sy=dy>0?1:-1,tdx=dx?Math.abs(1/dx):1e9,tdy=dy?Math.abs(1/dy):1e9;let tmx=dx?(sx>0?cx+1-x0:x0-cx)*tdx:1e9,tmy=dy?(sy>0?cy+1-y0:y0-cy)*tdy:1e9;
+  for(let n=0;n<600;n++){if(Math.abs(tmx-tmy)<1e-9){if(ecBlk(G[cy*W+cx+sx],r0)&&ecBlk(G[(cy+sy)*W+cx],r0))return false;cx+=sx;cy+=sy;tmx+=tdx;tmy+=tdy;}else if(tmx<tmy){cx+=sx;tmx+=tdx;}else{cy+=sy;tmy+=tdy;}
+    if(cx===tx&&cy===ty)return true;if(cx<0||cy<0||cx>=W)return true;if(ecBlk(G[cy*W+cx],r0))return false;}return true;}
 function ecVision(st){const c=st.carte,W=c.w,H=c.h,vis=new Uint8Array(W*H),lit=new Float32Array(W*H),toks=st.tokens||[],ind=ecIndoor(c.type)||c.type==="image",dp=ecDarkPlace(c);
   // À l'intérieur, la météo ne compte pas ; dans un lieu sombre, il fait noir même en plein jour.
   let L0=EC_LUM[st.lum]||EC_LUM.jour;if(dp&&L0.dark<EC_LUM.tenebres.dark)L0=EC_LUM.tenebres;const M=ind?EC_METEO.clair:(EC_METEO[st.meteo]||EC_METEO.clair);
@@ -4674,31 +4678,40 @@ function ecVision(st){const c=st.carte,W=c.w,H=c.h,vis=new Uint8Array(W*H),lit=n
   // Dans un lieu fermé (murs), sans PJ sur la carte, on ne voit rien : même éclairée, une pièce reste cachée tant que personne n'y regarde.
   if(!pjs.length&&!G)for(let i=0;i<W*H;i++)if(lit[i]>=1)vis[i]=1;
   // Plein jour à l'extérieur sans brume ni brouillard : tout est en vue, même sans jeton PJ
-  if(!ind&&L.vis>=Math.max(W,H))vis.fill(1);
+  const forced=new Uint8Array(W*H);if(!ind&&L.vis>=Math.max(W,H)){vis.fill(1);forced.fill(1);}
   // Autour d'un bureau (rez-de-chaussée), la rue est dehors : de jour, elle se voit comme une carte extérieure
-  if(G&&c.type==="bureau"&&!(+c.etage)&&L0.dark<0.5)for(let i=0;i<W*H;i++)if(G[i]===".")vis[i]=1;
+  if(G&&c.type==="bureau"&&!(+c.etage)&&L0.dark<0.5)for(let i=0;i<W*H;i++)if(G[i]==="."){vis[i]=1;forced[i]=1;}
   // Bureaux de la Guilde : à l'intérieur, tout est toujours éclairé et en vue (intergames, débuts et fins de partie)
-  if(G&&c.type==="bureau")for(let i=0;i<W*H;i++)if(G[i]!=="."){vis[i]=1;lit[i]=1;}
+  if(G&&c.type==="bureau")for(let i=0;i<W*H;i++)if(G[i]!=="."){vis[i]=1;lit[i]=1;forced[i]=1;}
   // Zones cachées à la main par le DM (« Cacher ») : restent cachées tant qu'il ne les révèle pas
   const vu=(st.fog&&st.fog.vu)||"";for(let i=0;i<vu.length&&i<W*H;i++)if(vu[i]==="2")vis[i]=0;
   // Jetons : en vue si leur case est vue ; en plein jour dehors, il faut en plus qu'un PJ ait la ligne de vue (bâtiments, arbres)
+  // Point précis vu par au moins un PJ (ombres nettes au rendu) : même règle que les cases, mais au point près
+  const seeAt=(x,y)=>{const i=Math.floor(y)*W+Math.floor(x);if(i<0||i>=W*H)return false;if(vu[i]==="2")return false;if(!pjs.length||!Gs||forced[i])return !!vis[i];
+    return pjs.some(p=>{const vr=Math.min(M.vis,Math.max(L.vis,(+p.dv||0))),d=Math.hypot(x-p.x,y-p.y);return (d<=vr||(lit[i]>0&&d<=Math.min(60,M.vis*2)))&&ecLos(Gs,W,p.x,p.y,x,y);});};
   const dayOut=!ind&&L.vis>=Math.max(W,H),tokSeen=(x,y)=>{const i=Math.floor(y)*W+Math.floor(x);if(!vis[i])return false;if(!dayOut||!Gs||!pjs.length)return true;return pjs.some(p=>ecLos(Gs,W,p.x,p.y,x,y));};
-  return {vis,lit,dark:L.dark,L0,M,ind,dp,tokSeen};}
+  return {vis,lit,dark:L.dark,L0,M,ind,dp,tokSeen,seeAt};}
 // Brouillard « organique » :
 // - dehors, le terrain reste toujours là : de jour il est clair, à l'aube et au crépuscule il est assombri, la nuit il est noir hors de la vue et de la lumière ;
 // - la météo voile ce qui est loin (blanc pour la neige et le brouillard, gris pour la pluie) sans tout masquer ;
 // - à l'intérieur et dans les lieux sombres, ce qui n'a pas été vu reste noir ; ce qui a été exploré reste en mémoire, assombri ;
 // - les créatures non vues restent cachées dans tous les cas (gérées au rendu des jetons).
-function ecFogCanvas(st,V,forDm){const c=st.carte,W=c.w,H=c.h,cv=document.createElement("canvas");cv.width=W;cv.height=H;const x=cv.getContext("2d"),im=x.createImageData(W,H),vu=(st.fog&&st.fog.vu)||"",fogOn=!!(st.fog&&st.fog.on);
+function ecFogCanvas(st,V,forDm){const c=st.carte,W=c.w,H=c.h,cv=document.createElement("canvas"),K=4;cv.width=W*K;cv.height=H*K;const x=cv.getContext("2d"),im=x.createImageData(W*K,H*K),vu=(st.fog&&st.fog.vu)||"",fogOn=!!(st.fog&&st.fog.on);
   const out=!V.ind&&!V.dp,ld=V.L0.dark,vl=out?EC_VEIL[st.meteo]:null;
-  for(let i=0;i<W*H;i++){const seen=!!V.vis[i],mem=vu[i]==="1",hid=vu[i]==="2",d=V.dark*(1-V.lit[i]*0.92);let a=d,va=0;
+  const px=(i,seen)=>{const mem=vu[i]==="1",hid=vu[i]==="2",d=V.dark*(1-V.lit[i]*0.92);let a=d,va=0;
     if(!seen){
       if(hid&&fogOn)a=1;
       else if(out){if(ld<=0.01)a=d;else if(ld<0.5)a=Math.min(0.85,d+0.22);else a=fogOn?(mem?0.86:1):Math.max(d,0.8);if(vl)va=vl[1];}
       else a=fogOn?(mem?(V.dp?0.82:0.72):1):Math.max(d,c.type==="bureau"&&!V.dp&&V.L0.dark<0.5?0.18:0.6);}
     // mélange : noir (obscurité) puis voile coloré de la météo par-dessus
     const A0=a+va*(1-a);let r=0,g=0,b=0;if(A0>0&&va){const k=va*(1-a)/A0;r=vl[0][0]*k;g=vl[0][1]*k;b=vl[0][2]*k;}
-    const A=forDm?Math.min(A0,seen?0.38:0.62):A0;im.data[i*4]=r;im.data[i*4+1]=g;im.data[i*4+2]=b;im.data[i*4+3]=Math.round(A*255);}
+    const A=forDm?Math.min(A0,seen?0.38:0.62):A0;return [r,g,b,Math.round(A*255)];};
+  // Ombres nettes : aux cases à la frontière du champ de vision, chaque case est découpée en 4 × 4 et chaque point est testé par rayon
+  const WK=W*K,put=(X,Y,p)=>{const o=(Y*WK+X)*4;im.data[o]=p[0];im.data[o+1]=p[1];im.data[o+2]=p[2];im.data[o+3]=p[3];};
+  for(let y=0;y<H;y++)for(let X=0;X<W;X++){const i=y*W+X,sv=!!V.vis[i];let edge=false;
+    for(let dy=-1;dy<=1&&!edge;dy++)for(let dx=-1;dx<=1;dx++){const u=X+dx,v=y+dy;if(u<0||v<0||u>=W||v>=H)continue;if(!!V.vis[v*W+u]!==sv){edge=true;break;}}
+    if(!edge||!V.seeAt){const p=px(i,sv);for(let b=0;b<K;b++)for(let a=0;a<K;a++)put(X*K+a,y*K+b,p);continue;}
+    const pS=px(i,true),pU=px(i,false);for(let b=0;b<K;b++)for(let a=0;a<K;a++)put(X*K+a,y*K+b,V.seeAt(X+(a+0.5)/K,y+(b+0.5)/K)?pS:pU);}
   x.putImageData(im,0,0);return cv;}
 // Un rendu = un canvas + son état ; la boucle anime tous les rendus présents dans la page.
 function ecBind(id,mode){const cv=document.getElementById(id);if(!cv){delete ecRenderers[id];return null;}let r=ecRenderers[id];if(!r||r.cv!==cv){r=ecRenderers[id]={cv,mode,key:"",A:null,st:null,stat:null,img:null,fog:null,fogKey:""};}if(!ecRaf)ecRaf=requestAnimationFrame(ecLoop);return r;}
@@ -4723,7 +4736,7 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),p
   if(M.fog)ecMist(x,c,s,t,M.fog,r);
   // Brouillard et obscurité (adoucis par l'agrandissement)
   const fk=JSON.stringify([st.tokens,st.lum,st.fog,st.meteo,c.w,c.h,tv,c.ouv||[]]);if(r.fogKey!==fk){r.fogKey=fk;r.V=ecVision(st);r.fog=ecFogCanvas(st,r.V,!tv);}
-  x.imageSmoothingEnabled=true;x.save();x.filter="blur("+Math.max(2,Math.round(s*0.45))+"px)";x.drawImage(r.fog,0,0,c.w*s,c.h*s);x.restore();
+  x.imageSmoothingEnabled=true;x.save();x.filter="blur("+Math.max(1,Math.round(s*0.12))+"px)";x.drawImage(r.fog,0,0,c.w*s,c.h*s);x.restore();
   // Lueurs chaudes des lumières
   {const nf=!!(M.rain||M.wind);(st.tokens||[]).filter(k=>(k.k==="lum"&&!(nf&&k.flamme!==false))||(k.k==="pj"&&k.torche&&!nf)).forEach(k=>{if(Math.min(0.95,(EC_LUM[st.lum]||EC_LUM.jour).dark+M.dk)<0.2)return;const R=(k.k==="lum"?(+k.r||4):4)*s,fl=1+Math.sin(t*9+k.x)*0.04+Math.sin(t*13.7)*0.03,g=x.createRadialGradient(k.x*s,k.y*s,0,k.x*s,k.y*s,R*fl);g.addColorStop(0,"rgba(255,180,90,.28)");g.addColorStop(1,"rgba(255,140,60,0)");x.fillStyle=g;x.fillRect(k.x*s-R,k.y*s-R,R*2,R*2);});}
   if(st.grid){x.strokeStyle=tv?"rgba(255,255,255,.14)":"rgba(255,255,255,.18)";x.lineWidth=1;x.beginPath();for(let i=0;i<=c.w;i++){x.moveTo(i*s,0);x.lineTo(i*s,c.h*s);}for(let j=0;j<=c.h;j++){x.moveTo(0,j*s);x.lineTo(c.w*s,j*s);}x.stroke();}
