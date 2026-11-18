@@ -3156,7 +3156,26 @@ const EC_GRP={ext:"Extérieur",int:"Intérieur",abri:"Abri"};
 function ecMapLbl(t){const m=EC_MAPS[t==="chemin"?"route":t];return m?EC_GRP[m.g]+" – "+m.l:t;}
 function ecIndoor(t){const m=EC_MAPS[t==="chemin"?"route":t];return !!m&&m.g!=="ext";}
 const ecGenCache={};
-function ecGenGeo(c){const e=+c.etage||0,nv=c.niv?(c.niv.min+":"+c.niv.max):"",key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h+"|"+(c.bureau||"")+"|"+e+"|"+nv;if(!ecGenCache[key]){const G=EC_GEN[c.type];ecGenCache[key]=G.geo(c,ecRng(ecSeed(c.seed+(e?"|e"+e:""))));}return ecGenCache[key];}
+function ecGenGeo(c){const e=+c.etage||0,nv=c.niv?(c.niv.min+":"+c.niv.max):"",key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h+"|"+(c.bureau||"")+"|"+e+"|"+nv;if(!ecGenCache[key]){const G=EC_GEN[c.type];ecGenCache[key]=ecAutoLights(c,G.geo(c,ecRng(ecSeed(c.seed+(e?"|e"+e:"")))));}return ecGenCache[key];}
+// Éclairage des intérieurs : chaque chandelle et chaque petite flamme éclaire un peu ; puis on pose des appliques murales
+// (torche ou lampe fixée au mur) là où il fait encore noir, jusqu'à la part de la pièce qu'un lieu habité éclaire d'ordinaire.
+// Les lieux sombres par nature (donjon, grotte, mine, égouts, cave) gardent leur obscurité, et les appliques s'éteignent quand le DM choisit « Ténèbres »
+// (hors bureau). Déterministe : même carte, mêmes appliques.
+let ecLumNow="";
+const EC_AUTOLUM={taverne:0.85,manoir:0.85,temple:0.75,maison:0.7,entrepot:0.45,tour:0.7,chateau:0.6,bureau:1};
+function ecAutoLights(c,g){if(!g)return g;g.lights=g.lights||[];g.fires=g.fires||[];
+  g.fires.forEach(f=>{if(!g.lights.some(l=>Math.hypot(l.x-f.x,l.y-f.y)<1.3))g.lights.push({x:f.x,y:f.y,r:f.candle?2:3});});
+  const tgt=EC_AUTOLUM[c.type],G=g.G;if(!tgt||!G||(c.type!=="bureau"&&ecDarkPlace(c)))return g;
+  const W=c.w,H=c.h,lit=new Uint8Array(W*H),fl=[];for(let i=0;i<W*H;i++)if(G[i]==="F")fl.push(i);if(!fl.length)return g;
+  const reach=(o,fn)=>{for(let y=Math.max(0,Math.floor(o.y-o.r));y<Math.min(H,Math.ceil(o.y+o.r));y++)for(let x=Math.max(0,Math.floor(o.x-o.r));x<Math.min(W,Math.ceil(o.x+o.r));x++){const i=y*W+x;if(G[i]==="F"&&Math.hypot(x+0.5-o.x,y+0.5-o.y)<=o.r&&ecLos(G,W,o.x,o.y,x+0.5,y+0.5))fn(i);}};
+  g.lights.filter(l=>!l.nuit).forEach(l=>reach({x:l.x,y:l.y,r:+l.r||4},i=>{lit[i]=1;}));
+  let n=fl.filter(i=>lit[i]).length;
+  // Emplacements d'applique : une case de sol collée à un mur, la flamme contre le mur
+  const cand=[],used=new Set();fl.forEach(i=>{const x=i%W,y=Math.floor(i/W);[[0,-1],[-1,0],[1,0],[0,1]].some(d=>{const X=x+d[0],Y=y+d[1];if(X<0||Y<0||X>=W||Y>=H||G[Y*W+X]!=="W")return false;cand.push({i,x:x+0.5+d[0]*0.32,y:y+0.5+d[1]*0.32,d});return true;});});
+  for(let k=0;k<60&&n<tgt*fl.length;k++){let best=null,bg=3;
+    cand.forEach(p=>{if(used.has(p.i)||g.lights.some(l=>Math.hypot(l.x-p.x,l.y-p.y)<2.5))return;let gain=0;reach({x:p.x,y:p.y,r:4},i=>{if(!lit[i])gain++;});if(gain>bg){bg=gain;best=p;}});
+    if(!best)break;used.add(best.i);g.fires.push({x:best.x,y:best.y,r:0.2,sconce:best.d,auto:1});g.lights.push({x:best.x,y:best.y,r:4,auto:1});reach({x:best.x,y:best.y,r:4},i=>{if(!lit[i]){lit[i]=1;n++;}});}
+  return g;}
 function ecGenLights(c){if(!EC_GEN[c.type])return [];return ecGenGeo(c).lights||[];}
 // Outils de grille
 function gGrid(W,H,v){const a=new Array(W*H).fill(v);a.W=W;a.H=H;return a;}
@@ -3280,7 +3299,7 @@ function statInt(x,g,s,c){const SA=ecSaison();x.fillStyle=c.type==="manoir"||c.t
   else{const R=ecRng(ecSeed(c.seed+"out"));for(let i=0;i<c.w*c.h/6;i++){x.fillStyle=SA==="hiver"?"rgba(255,255,255,.3)":"rgba(90,120,55,.3)";x.beginPath();x.arc(R()*c.w*s,R()*c.h*s,(0.8+R()*2)*s,0,6.283);x.fill();}}
   if(g.door){x.fillStyle="#8a7354";x.fillRect((g.door.x-0.5)*s,(g.door.y+0.5)*s,2*s,(c.h-g.door.y)*s);}
   x.fillStyle="rgba(0,0,0,.35)";x.fillRect((g.box.x0+0.4)*s,(g.box.y0+0.5)*s,(g.box.x1-g.box.x0)*s,(g.box.y1-g.box.y0)*s);gFloor(x,g.G,s,g.floor);g.furn.forEach(o=>gFurn(x,o,s));gWalls(x,g.G,s,"#3a2f26","#57483a");}
-function dynFires(x,g,s,t){(g.fires||[]).forEach(f=>{if(f.candle){gFire(x,f.x,f.y,s,t,0.14);}else gFire(x,f.x,f.y,s,t,f.r);});}
+function dynFires(x,g,s,t){(g.fires||[]).forEach(f=>{if(f.auto&&ecLumNow==="tenebres"&&g.bid==null)return;if(f.sconce){const d=f.sconce;x.fillStyle="#2a2420";x.fillRect((f.x+d[0]*0.12)*s-s*0.07,(f.y+d[1]*0.12)*s-s*0.07,s*0.14,s*0.14);x.strokeStyle="#2a2420";x.lineWidth=Math.max(1,s*0.05);x.beginPath();x.moveTo((f.x+d[0]*0.2)*s,(f.y+d[1]*0.2)*s);x.lineTo(f.x*s,f.y*s);x.stroke();gFire(x,f.x,f.y,s,t,0.2);return;}if(f.candle){gFire(x,f.x,f.y,s,t,0.14);}else gFire(x,f.x,f.y,s,t,f.r);});}
 // --- Donjon : salles reliées par des couloirs ---
 function geoDonjon(c,R){const W=c.w,H=c.h,G=gGrid(W,H,"W"),g={G,furn:[],fires:[],lights:[],floor:"pierre",stairs:[]},rooms=[],e=+c.etage||0,nv=ecNiv(c),stp=[];
   [[e+1,"up",e<nv.max],[e,"down",e>nv.min]].forEach(([L,dir,ok])=>{if(!ok)return;const p=ecStairPt(c,L,W,H,4);stp.push({x:p.x,y:p.y,dir});const r={x:p.x-2,y:p.y-2,w:6,h:5};if(!rooms.some(q=>r.x<q.x+q.w+1&&r.x+r.w+1>q.x&&r.y<q.y+q.h+1&&r.y+r.h+1>q.y))rooms.push(r);});
@@ -4622,7 +4641,7 @@ function ecVision(st){const c=st.carte,W=c.w,H=c.h,vis=new Uint8Array(W*H),lit=n
   let L0=EC_LUM[st.lum]||EC_LUM.jour;if(dp&&L0.dark<EC_LUM.tenebres.dark)L0=EC_LUM.tenebres;const M=ind?EC_METEO.clair:(EC_METEO[st.meteo]||EC_METEO.clair);
   const L={vis:Math.min(L0.vis,M.vis),dark:Math.min(0.95,L0.dark+M.dk)},noFlame=!ind&&!!(M.rain||M.wind);
   const G=EC_GEN[c.type]&&c.type!=="image"&&ecIndoor(c.type)?ecGenGeo(c).G:null,see=(ax,ay,bx,by)=>!G||ecLos(G,W,ax,ay,bx,by);
-  const lights=toks.filter(k=>(k.k==="lum"&&!(noFlame&&k.flamme!==false))||(k.k==="pj"&&k.torche&&!noFlame)).map(k=>({x:k.x,y:k.y,r:k.k==="lum"?(+k.r||4):4})).concat(ecGenLights(c).filter(l=>!l.nuit||L0.dark>0.2).filter(l=>!(l.nuit&&noFlame)));
+  const lights=toks.filter(k=>(k.k==="lum"&&!(noFlame&&k.flamme!==false))||(k.k==="pj"&&k.torche&&!noFlame)).map(k=>({x:k.x,y:k.y,r:k.k==="lum"?(+k.r||4):4})).concat(ecGenLights(c).filter(l=>!(l.auto&&st.lum==="tenebres"&&c.type!=="bureau")).filter(l=>!l.nuit||L0.dark>0.2).filter(l=>!(l.nuit&&noFlame)));
   lights.forEach(o=>{const R=o.r*2;for(let y=Math.max(0,Math.floor(o.y-R));y<Math.min(H,Math.ceil(o.y+R));y++)for(let x=Math.max(0,Math.floor(o.x-R));x<Math.min(W,Math.ceil(o.x+R));x++){const d=Math.hypot(x+0.5-o.x,y+0.5-o.y),i=y*W+x;if(d>R||!see(o.x,o.y,x+0.5,y+0.5))continue;lit[i]=Math.max(lit[i],d<=o.r?1:1-(d-o.r)/o.r*0.6);}});
   const pjs=toks.filter(k=>k.k==="pj");pjs.forEach(p=>{const vr=Math.min(M.vis,Math.max(L.vis,(+p.dv||0))),R=Math.min(Math.max(W,H),Math.max(vr,24)),R2=Math.max(W,H);
     for(let y=Math.max(0,Math.floor(p.y-R2));y<Math.min(H,Math.ceil(p.y+R2));y++)for(let x=Math.max(0,Math.floor(p.x-R2));x<Math.min(W,Math.ceil(p.x+R2));x++){const d=Math.hypot(x+0.5-p.x,y+0.5-p.y),i=y*W+x;if((d<=vr||(lit[i]>0&&d<=Math.min(60,M.vis*2)))&&see(p.x,p.y,x+0.5,y+0.5))vis[i]=1;}});
@@ -4632,6 +4651,8 @@ function ecVision(st){const c=st.carte,W=c.w,H=c.h,vis=new Uint8Array(W*H),lit=n
   if(!ind&&L.vis>=Math.max(W,H))vis.fill(1);
   // Autour d'un bureau (rez-de-chaussée), la rue est dehors : de jour, elle se voit comme une carte extérieure
   if(G&&c.type==="bureau"&&!(+c.etage)&&L0.dark<0.5)for(let i=0;i<W*H;i++)if(G[i]===".")vis[i]=1;
+  // Bureaux de la Guilde : à l'intérieur, tout est toujours éclairé et en vue (intergames, débuts et fins de partie)
+  if(G&&c.type==="bureau")for(let i=0;i<W*H;i++)if(G[i]!=="."){vis[i]=1;lit[i]=1;}
   // Zones cachées à la main par le DM (« Cacher ») : restent cachées tant qu'il ne les révèle pas
   const vu=(st.fog&&st.fog.vu)||"";for(let i=0;i<vu.length&&i<W*H;i++)if(vu[i]==="2")vis[i]=0;
   return {vis,lit,dark:L.dark,L0,M,ind,dp};}
@@ -4668,7 +4689,7 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),p
   const key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h+"|"+(c.url||"")+"|"+Math.round(sq*dpr*10)+"|"+ecSaison()+"|"+(c.bureau||"")+"|"+(+c.etage||0)+"|"+(c.niv?c.niv.min+":"+c.niv.max:"");
   if(r.key!==key){r.key=key;r.A=EC_GEN[c.type]?{}:c.type==="image"?null:ecAnimInit(c);r.stat=null;r.img=null;if(c.type==="image"&&c.url){const im=new Image();im.crossOrigin="anonymous";im.onload=()=>{r.img=im;};im.src=c.url;}else if(EC_GEN[c.type])r.stat=ecStaticGen(c,sq*dpr);else r.stat=ecStatic(c,sq*dpr);}
   x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle="#000";x.fillRect(0,0,cw,ch);x.save();x.translate(ox,oy);x.beginPath();x.rect(0,0,c.w*s,c.h*s);x.clip();
-  if(c.type==="image"){if(r.img)x.drawImage(r.img,0,0,c.w*s,c.h*s);}else if(r.stat){x.drawImage(r.stat,0,0,c.w*s,c.h*s);x.save();if(EC_GEN[c.type])EC_GEN[c.type].dyn(x,ecGenGeo(c),s,t,dt,r.A,c,st);else ecDynamic(x,c,s,t,dt,r.A,st);x.restore();}
+  if(c.type==="image"){if(r.img)x.drawImage(r.img,0,0,c.w*s,c.h*s);}else if(r.stat){x.drawImage(r.stat,0,0,c.w*s,c.h*s);x.save();ecLumNow=(st&&st.lum)||"";if(EC_GEN[c.type])EC_GEN[c.type].dyn(x,ecGenGeo(c),s,t,dt,r.A,c,st);else ecDynamic(x,c,s,t,dt,r.A,st);x.restore();}
   const M=EC_METEO[st.meteo]||EC_METEO.clair;if(r.A){r.A.wind=!!M.wind;r.A.cloudy=st.meteo==="nuageux"||!!M.rain;}
   if(M.snow>=1){x.fillStyle="rgba(244,247,251,.42)";x.fillRect(0,0,c.w*s,c.h*s);}
   if(M.fog)ecMist(x,c,s,t,M.fog,r);
