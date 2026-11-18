@@ -4633,9 +4633,12 @@ const EC_DARKPL={grotte:1,mine:1,egouts:1,donjon:1,cave:1};
 function ecDarkPlace(c){return !!EC_DARKPL[c.type]||((c.type==="bureau"||c.type==="tour"||c.type==="chateau")&&(+c.etage||0)<0);}
 // Voile de la météo au-delà de ce qu'on distingue : blanc (neige, brouillard), gris (pluie) ; jamais tout noir, sauf tempête de neige presque opaque.
 const EC_VEIL={brume:[[214,220,226],0.35],brouillard:[[220,224,228],0.7],pluie:[[78,88,100],0.3],orage:[[60,68,80],0.45],neige:[[236,240,245],0.4],blizzard:[[242,245,248],0.9]};
-// Ligne de vue sur la grille : les murs (W) arrêtent la vue et la lumière ; les portes laissent passer.
-function ecLos(G,W,x0,y0,x1,y1){let x=Math.floor(x0),y=Math.floor(y0);const tx=Math.floor(x1),ty=Math.floor(y1),dx=Math.abs(tx-x),dy=Math.abs(ty-y),sx=x<tx?1:-1,sy=y<ty?1:-1;let err=dx-dy;
-  while(x!==tx||y!==ty){const e2=2*err;if(e2>-dy){err-=dy;x+=sx;}if(e2<dx){err+=dx;y+=sy;}if(x===tx&&y===ty)return true;if(G[y*W+x]==="W")return false;}return true;}
+// Ligne de vue sur la grille : les murs (W) et les portes (D, considérées fermées) arrêtent la vue et la lumière.
+// On voit la porte elle-même ; pour voir la pièce suivante, il faut se tenir dans l'embrasure ou l'avoir passée.
+// Un pas en diagonale ne se glisse pas entre deux coins de mur.
+function ecLos(G,W,x0,y0,x1,y1){let x=Math.floor(x0),y=Math.floor(y0);const tx=Math.floor(x1),ty=Math.floor(y1),dx=Math.abs(tx-x),dy=Math.abs(ty-y),sx=x<tx?1:-1,sy=y<ty?1:-1,bl=v=>v==="W"||v==="D";let err=dx-dy;
+  while(x!==tx||y!==ty){const e2=2*err,px=x,py=y;if(e2>-dy){err-=dy;x+=sx;}if(e2<dx){err+=dx;y+=sy;}
+    if(x!==px&&y!==py&&bl(G[py*W+x])&&bl(G[y*W+px]))return false;if(x===tx&&y===ty)return true;if(bl(G[y*W+x]))return false;}return true;}
 function ecVision(st){const c=st.carte,W=c.w,H=c.h,vis=new Uint8Array(W*H),lit=new Float32Array(W*H),toks=st.tokens||[],ind=ecIndoor(c.type)||c.type==="image",dp=ecDarkPlace(c);
   // À l'intérieur, la météo ne compte pas ; dans un lieu sombre, il fait noir même en plein jour.
   let L0=EC_LUM[st.lum]||EC_LUM.jour;if(dp&&L0.dark<EC_LUM.tenebres.dark)L0=EC_LUM.tenebres;const M=ind?EC_METEO.clair:(EC_METEO[st.meteo]||EC_METEO.clair);
