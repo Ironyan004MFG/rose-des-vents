@@ -48,7 +48,7 @@ BASE={'veste':'#26355e','galon':'#d4a640','metal':'#d8b050','cuir':'#6a4426','ti
 EMP={
  'pax':dict(peau='#9a7a86',poils='#e8e0d4',veste='#8a1e22',tissu='#b89a78',metal='#e0b84a'),
  'oswin':dict(peau='#ecc4a8',poils='#f2f0ea'),
- 'tamsin':dict(peau='#b89ad8',poils='#1e1a24',corne='#3a2a3e'),
+ 'tamsin':dict(peau='#6a3460',poils='#1e1a24',corne='#7a5a6e',tissu='#6a4c34'),
  'corisande':dict(peau='#e4bc9c',poils='#b8b4ac'),
  'hrolf':dict(peau='#7e9070',poils='#1c1a1a',corne='#ece4cc'),
  'durgan':dict(peau='#e4ac8c',poils='#b24a26'),
