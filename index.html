@@ -3646,7 +3646,8 @@ function maisonPlan(c){const key="m|"+c.seed+"|"+c.w+"x"+c.h;if(EC_BURP[key])ret
   if(up){const U=mk(" ");shell(U);for(let dy=0;dy<2;dy++)for(let dx=0;dx<2;dx++)U[stairs.y+dy][stairs.x+dx]="v";
     const rs=[];const cx=x0+Math.floor(bw/2);
     if(lvl===1){vw(U,cx,y0,y1);rs.push({role:"chambre_h",x0:x0+1,y0:y0+1,x1:cx-1,y1:y1-1},{role:R()<0.5?"chambre_h":"grenier",x0:cx+1,y0:y0+1,x1:x1-1,y1:y1-1});door(U,cx,y1-2);}
-    else{const cy=y0+3;hw(U,cy,x0,x1);for(let y=cy;y<=y1;y++){}const a=x0+Math.floor(bw/3),b=x0+Math.floor(2*bw/3);vw(U,a,cy,y1);vw(U,b,cy,y1);
+    else{const cy=y0+4;hw(U,cy,x0,x1);// palier de 3 rangs : on descend de l'escalier sur le palier, pas dans le mur
+      for(let y=cy;y<=y1;y++){}const a=x0+Math.floor(bw/3),b=x0+Math.floor(2*bw/3);vw(U,a,cy,y1);vw(U,b,cy,y1);
       rs.push({role:"palier",x0:x0+1,y0:y0+1,x1:x1-1,y1:cy-1},{role:"chambre_h",x0:x0+1,y0:cy+1,x1:a-1,y1:y1-1},{role:"chambre_h",x0:a+1,y0:cy+1,x1:b-1,y1:y1-1},{role:R()<0.5?"chambre_h":"etude",x0:b+1,y0:cy+1,x1:x1-1,y1:y1-1});
       door(U,Math.floor((x0+a)/2),cy);door(U,a+2,cy);door(U,Math.floor((b+x1)/2),cy);}
     ring(U,1);rs.forEach(r=>{if(r.role!=="palier")furnish(U,r,"1");else{put(U,r,"J",1,1,"tr");put(U,r,"A",1,1,"tl");}});ring(U,0);
