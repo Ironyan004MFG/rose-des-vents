@@ -3225,7 +3225,7 @@ function gWalls(x,G,s,col,top){for(let y=0;y<G.H;y++)for(let X=0;X<G.W;X++){cons
     x.fillStyle=spMix(r?col:top,(c-0.5)*0.18);x.fillRect(bx0+bw*0.5,by+bw*0.5,bx1-bx0-bw,s*0.5-bw);x.fillStyle="rgba(255,240,215,.2)";x.fillRect(bx0+bw*0.5,by+bw*0.5,bx1-bx0-bw,Math.max(1,s*0.05));x.fillStyle="rgba(40,25,10,.25)";x.fillRect(bx0+bw*0.5,by+s*0.5-bw*0.5-s*0.06,bx1-bx0-bw,s*0.06);}}}
   // contour foncé du côté des pièces
   x.fillStyle="rgba(15,10,5,.75)";const lw=Math.max(2,s*0.07);if(fl(X,y+1))x.fillRect(X*s,(y+1)*s-lw,s+1,lw);if(fl(X,y-1))x.fillRect(X*s,y*s,s+1,lw);if(fl(X+1,y))x.fillRect((X+1)*s-lw,y*s,lw,s+1);if(fl(X-1,y))x.fillRect(X*s,y*s,lw,s+1);}
-  for(let y=0;y<G.H;y++)for(let X=0;X<G.W;X++)if(G[y*G.W+X]==="D"){const h=gAt(G,X-1,y)==="W"||gAt(G,X+1,y)==="W";x.fillStyle="#5a3a1e";if(h)x.fillRect(X*s+s*0.05,y*s+s*0.3,s*0.9,s*0.4);else x.fillRect(X*s+s*0.3,y*s+s*0.05,s*0.4,s*0.9);}}
+  for(let y=0;y<G.H;y++)for(let X=0;X<G.W;X++)if(G[y*G.W+X]==="D"){const h=gDoorH(G,X,y);x.fillStyle="#5a3a1e";if(h)x.fillRect(X*s+s*0.05,y*s+s*0.3,s*0.9,s*0.4);else x.fillRect(X*s+s*0.3,y*s+s*0.05,s*0.4,s*0.9);}}
 function gShadow(x,X,Y,w,h,s){x.fillStyle="rgba(0,0,0,.28)";x.fillRect((X+0.12)*s,(Y+0.15)*s,w*s,h*s);}
 function gRect(x,X,Y,w,h,s,c,st){gShadow(x,X,Y,w,h,s);x.fillStyle=c;x.fillRect(X*s,Y*s,w*s,h*s);if(st){x.strokeStyle=st;x.lineWidth=Math.max(1,s*0.05);x.strokeRect(X*s,Y*s,w*s,h*s);}}
 function gCirc(x,X,Y,r,s,c,st){x.fillStyle="rgba(0,0,0,.28)";x.beginPath();x.arc((X+0.1)*s,(Y+0.12)*s,r*s,0,6.283);x.fill();x.fillStyle=c;x.beginPath();x.arc(X*s,Y*s,r*s,0,6.283);x.fill();if(st){x.strokeStyle=st;x.lineWidth=Math.max(1,s*0.05);x.stroke();}}
@@ -3675,9 +3675,100 @@ function maisonUpVeil(x,g,s,c){
     x.strokeStyle="rgba(40,18,10,.55)";x.lineWidth=Math.max(1,s*0.025);for(let t=xa+(r%2?0.2:0);t<xb;t+=0.4){x.beginPath();x.moveTo(t*s,yy*s);x.lineTo(t*s,(yy+h/3)*s);x.stroke();}}
   x.fillStyle="rgba(255,220,180,.25)";x.fillRect(xa*s,Y0*s,(xb-xa)*s,Math.max(1,s*0.05));}
 function geoMaison34(c,R){const k=maisonPlan(c),g=geoBureau(Object.assign({},c,{bureau:k}),R);g.people=[];g.seats=[];g.hall=[];g.spots={p:[]};g.cult=maisonCtx(c).cult;return g;}
+/* ---------- Entrepôts de scénario en 3/4 : plan au format des bureaux, passerelle à l'étage ---------- */
+// Port (quai et eau devant les grandes portes), ville (rue pavée) ou campagne (grange) ; allées de caisses et de tonneaux, bureau du contremaître,
+// et souvent une passerelle à 10 pi du sol : à l'étage, on voit l'entrepôt en contrebas entre les planches.
+function entrepotCtx(c){const nom=String(c.nom||"").replace(/ · .*$/,""),n=(nom+" "+(c.seed||"")).toLowerCase(),R=ecRng(ecSeed(String(c.seed)+"|ctx"));
+  const st=vilStyle({nom,seed:c.seed},R),qid=String(c.seed||"").split("|")[0];let bur="";try{const q=typeof questById==="function"&&questById(qid);bur=q&&q.bureau||"";}catch(e){}
+  if(!bur)bur={bg:"baldurs-gate",lu:"luskan"}[(qid.match(/^[a-z]+/)||[""])[0]]||"";
+  const port=/port|dock|quai|sel|poisson|navire|havre|marin|p[eê]che|contreband/.test(n)||bur==="baldurs-gate"||bur==="luskan",rural=!port&&/ferme|grange|hameau|campagne|moulin|village|longsaddle/.test(n);
+  return {cult:st.cult,port,rural,pass:port||/passerelle|mezzanine|grenier/.test(n)||R()<0.5,riche:/riche|marchand|noble/.test(n)};}
+function entrepotPlan(c){const key="e|"+c.seed+"|"+c.w+"x"+c.h;if(EC_BURP[key])return key;
+  const R=ecRng(ecSeed(String(c.seed)+"|plan")),X=entrepotCtx(c),W=c.w,H=c.h,town=!X.rural&&!X.port;
+  const mk=f=>Array.from({length:H},()=>Array(W).fill(f)),get=(M,x,y)=>x<0||y<0||x>=W||y>=H?"%":M[y][x];
+  const front=X.port?6:town?5:3,bw=Math.min(W-6,24+Math.floor(R()*6)),bh=Math.max(9,Math.min(H-front-3,12+Math.floor(R()*3)));
+  const x0=Math.max(2,Math.min(W-bw-2,Math.floor((W-bw)/2)+Math.floor(R()*5)-2)),y1=H-1-front,y0=y1-bh+1,x1=x0+bw-1;
+  // ---------- Abords ----------
+  const A=mk(X.rural?",":X.port?"_":X.cult==="elfique"?",":"_");
+  if(X.port){for(let y=H-3;y<H;y++)for(let x=0;x<W;x++)A[y][x]="~";for(let y=H-6;y<H-3;y++)for(let x=0;x<W;x++)A[y][x]="=";}
+  else if(town){for(let y=H-3;y<H;y++)for(let x=0;x<W;x++)A[y][x]="_";}
+  else{for(let y=y1+1;y<H;y++)for(let x=0;x<W;x++)if(R()<0.15)A[y][x]=":";}
+  const shell=(M,f)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)M[y][x]=(x===x0||x===x1||y===y0||y===y1)?"#":f;};shell(A,".");
+  // Grandes portes (3 cases) sur la façade, petite porte de côté
+  const gx=x0+3+Math.floor(R()*Math.max(1,Math.floor(bw*0.45)-3));for(let i=0;i<3;i++)A[y1][gx+i]="E";
+  if(!X.rural){for(let y=y1+1;y<H-(X.port?6:3);y++)for(let i=0;i<3;i++)A[y][gx+i]=X.port?"=":"_";}else for(let y=y1+1;y<H;y++)for(let i=0;i<3;i++)A[y][gx+i]=":";
+  const sideL=R()<0.5,sdy=y0+2+Math.floor(R()*Math.max(1,bh-5));A[sdy][sideL?x0:x1]="E";
+  // Bureau du contremaître dans un coin du fond, escalier de la passerelle dans l'autre
+  const ow=6+Math.floor(R()*2),oh=5,oL=R()<0.5,ox0=oL?x0:x1-ow,ox1=oL?x0+ow:x1;
+  for(let y=y0;y<=y0+oh;y++){A[y][oL?ox1:ox0]="#";}for(let x=ox0;x<=ox1;x++)A[y0+oh][x]="#";A[y0+oh][oL?ox0+2:ox1-2]="+";
+  const office={x0:ox0+1,y0:y0+1,x1:ox1-1,y1:y0+oh-1};
+  const stairs=X.pass?{x:oL?x1-2:x0+1,y:y0+1}:null;if(stairs)for(let dy=0;dy<2;dy++)for(let dx=0;dx<2;dx++)A[stairs.y+dy][stairs.x+dx]="^";
+  // ---------- Ameublement ----------
+  const doorish=v=>v==="+"||v==="E";
+  const nearDoor=(M,x,y)=>{for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(doorish(get(M,x+dx,y+dy)))return true;return false;};
+  const fits=(M,x,y,w,h)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++){if(get(M,x+i,y+j)!=="."||nearDoor(M,x+i,y+j))return false;}return true;};
+  const fill=(M,x,y,w,h,ch)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)M[y+j][x+i]=typeof ch==="function"?ch(i,j):ch;};
+  const reserve=(M,x,y,w,h,on)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++){const v=get(M,x+i,y+j);if(on&&v===".")M[y+j][x+i]="r";else if(!on&&v==="r")M[y+j][x+i]=".";}};
+  // allée centrale depuis les grandes portes, abords de l'escalier et de la petite porte : jamais encombrés
+  reserve(A,gx-1,y0+1,5,bh-2,1);if(stairs)reserve(A,stairs.x-1,stairs.y-1,4,4,1);reserve(A,office.x0-1,y0+oh+1,office.x1-office.x0+3,1,1);
+  // bureau du contremaître
+  {const o=office;fill(A,o.x0+1,o.y0,Math.min(3,o.x1-o.x0-1),1,"K");const dx=Math.floor((o.x0+o.x1)/2)-1;if(fits(A,dx,o.y0+2,3,1)){fill(A,dx,o.y0+2,3,1,"d");if(get(A,dx+1,o.y0+1)===".")A[o.y0+1][dx+1]="h";}
+    if(fits(A,o.x1,o.y1,1,1))A[o.y1][o.x1]="c";if(fits(A,o.x0,o.y1,1,1))A[o.y1][o.x0]="X";if(fits(A,o.x1,o.y0,1,1))A[o.y0][o.x1]="O";}
+  // allées de piles : blocs de caisses et de tonneaux, une allée tous les 3 rangs
+  const hall={x0:x0+1,y0:y0+1,x1:x1-1,y1:y1-1};
+  for(let y=hall.y0+1;y+1<hall.y1;y+=3)for(let x=hall.x0+1;x+1<hall.x1;x+=4){const w=R()<0.3?3:2,h=2;if(!fits(A,x,y,w,h)||R()<0.12)continue;
+    const kind=R(),port=X.port;fill(A,x,y,w,h,(i,j)=>kind<(port?0.45:0.6)?"X":kind<0.85?"O":((i+j)%2?"X":"O"));}
+  // contre les murs : étagères et casiers, établi d'emballage près des portes
+  for(let k=0;k<4;k++){const L=2+Math.floor(R()*2),bot=k%2,xx=hall.x0+1+Math.floor(R()*(hall.x1-hall.x0-L)),yy=bot?hall.y1:hall.y0;if(fits(A,xx,yy,L,1))fill(A,xx,yy,L,1,X.port&&R()<0.4?"Y":"W");}
+  {const ly=hall.y1-2,lx=gx+(gx-hall.x0>5?-5:4);if(fits(A,lx,ly,3,1)){fill(A,lx,ly,3,1,"k");if(fits(A,lx+3,ly,1,1))A[ly][lx+3]="X";}}
+  for(let k=0;k<10;k++){const xx=hall.x0+Math.floor(R()*(hall.x1-hall.x0+1)),yy=hall.y0+Math.floor(R()*(hall.y1-hall.y0+1));const wall=get(A,xx-1,yy)==="#"||get(A,xx+1,yy)==="#"||get(A,xx,yy-1)==="#"||get(A,xx,yy+1)==="#";if(wall&&fits(A,xx,yy,1,1))A[yy][xx]=R()<0.5?"O":"X";}
+  reserve(A,0,0,W,H,0);
+  const floors={"0":A.map(r=>r.join(""))},names={"0":X.rural?"Grange":"Entrepôt"},rugs={},deco={"0":[]};
+  // ---------- Passerelle (à 10 pi) : le long des murs, au-dessus du bureau, et parfois une traverse ; le vide laisse voir le bas ----------
+  if(X.pass){const U=mk(" ");shell(U,'"');
+    for(let y=y0+1;y<y1;y++)for(let x=x0+1;x<x1;x++){const ring=x===x0+1||x===x1-1||y===y0+1||y===y1-1,loft=x>=office.x0-1&&x<=office.x1+1&&y<=office.y1+1;if(ring||loft)U[y][x]=".";}
+    if(R()<0.6){const my=y0+Math.floor(bh/2);for(let x=x0+1;x<x1;x++)U[my][x]=".";}
+    for(let dy=-1;dy<=2;dy++)for(let dx=-1;dx<=2;dx++){const xx=stairs.x+dx,yy=stairs.y+dy;if(get(U,xx,yy)==='"')U[yy][xx]=".";}
+    for(let dy=0;dy<2;dy++)for(let dx=0;dx<2;dx++)U[stairs.y+dy][stairs.x+dx]="v";
+    // quelques caisses rangées sur le grenier du bureau
+    for(let k=0;k<4;k++){const xx=office.x0+Math.floor(R()*(office.x1-office.x0+1)),yy=office.y0;if(U[yy][xx]===".")U[yy][xx]=R()<0.5?"X":"O";}
+    floors["1"]=U.map(r=>r.join(""));names["1"]="Passerelle (10 pi)";}
+  // ---------- Décor extérieur ----------
+  if(X.port){deco["0"].push(["wagon",gx+(gx-x0>8?-4:7),y1+2.8]);}
+  else if(town){deco["0"].push(["wagon",Math.min(W-4,gx+7),y1+2.6]);if(R()<0.6)deco["0"].push(["horse",Math.min(W-2,gx+10),y1+2.8]);}
+  else{deco["0"].push(["wagon",gx+6,y1+2.6]);deco["0"].push(["trough",x1+1,y1-1]);[[2,2],[W-4,3],[3,y1-2]].forEach(p=>{if(R()<0.8)deco["0"].push(["tree",p[0],p[1]]);});}
+  EC_BURP[key]={floors,names,rugs,deco};
+  // aux murs : outils du métier (filets et cordages au port, sellerie à la grange, ardoises de comptage en ville)
+  V34THEME[key]=X.port?["net","rope","tally","anchor","oars","rope","tide","net","harpoon","tally"]:X.rural?["saddle","shoe","rope","tally","picks","saddle","shoe"]:["tally","rope","scales","wanted","keg","tally","rope","scales"];
+  EC_BUR[key]={n:"Entrepôt",floor:"bois",wall:X.port?["#4e4a44","#6a645a"]:X.rural?["#7a5a3a","#9a7a52"]:["#5a4a3a","#7a6650"],out:X.rural?"herbe":"pave"};
+  BUR_TIER[key]=X.rural?"village":X.cult==="cite"||X.port?"cite":"ville";BUR_DENSE[key]=X.rural?0.6:X.port?1.6:X.cult==="cite"?2.2:1.2;
+  return key;}
+function geoEntrepot34(c,R){const k=entrepotPlan(c),g=geoBureau(Object.assign({},c,{bureau:k}),R);g.people=[];g.seats=[];g.hall=[];g.spots={p:[]};g.cult=entrepotCtx(c).cult;
+  if(+c.etage>0){const vd=[];g.rows.forEach((row,py)=>{for(let px=0;px<row.length;px++)if(row[px]==='"')vd.push((py+g.oy)*c.w+px+g.ox);});g.void=vd;}return g;}
+// Le vide de la passerelle : l'entrepôt d'en bas, assombri, et une rambarde de bois le long des planches
+function entrepotVoid(x,g,s,c){if(!g.void||!g.void.length)return;const W=c.w,H=c.h,c0=Object.assign({},c,{etage:0}),g0=ecGenGeo(c0);
+  let cv=g._voidCv;if(!cv||cv._s!==s){cv=document.createElement("canvas");cv.width=Math.ceil(W*s);cv.height=Math.ceil(H*s);cv._s=s;const o=cv.getContext("2d");try{statBureau(o,g0,s,c0);}catch(e){}g._voidCv=cv;}
+  const isV=new Uint8Array(W*H);g.void.forEach(i=>isV[i]=1);
+  g.void.forEach(i=>{const X=i%W,Y=(i/W)|0;x.drawImage(cv,X*s,Y*s,s,s,X*s,Y*s,s+0.5,s+0.5);});
+  x.fillStyle="rgba(10,8,6,.42)";g.void.forEach(i=>{const X=i%W,Y=(i/W)|0;x.fillRect(X*s,Y*s,s+0.5,s+0.5);});
+  // bord des planches : épaisseur de la passerelle vue de 3/4 sur le côté sud, ombre portée dans le vide
+  const lw=Math.max(1,s*0.04);
+  g.void.forEach(i=>{const X=i%W,Y=(i/W)|0,n=Y>0&&!isV[i-W],w=X>0&&!isV[i-1],e=X<W-1&&!isV[i+1];
+    if(n){x.fillStyle="rgba(0,0,0,.35)";x.fillRect(X*s,Y*s,s+0.5,s*0.35);x.fillStyle="#5a3e24";x.fillRect(X*s,Y*s,s+0.5,s*0.16);x.fillStyle="#3a2614";x.fillRect(X*s,(Y+0.16)*s,s+0.5,lw);}
+    if(w){x.fillStyle="rgba(0,0,0,.25)";x.fillRect(X*s,Y*s,s*0.18,s+0.5);}if(e){x.fillStyle="rgba(0,0,0,.25)";x.fillRect((X+0.82)*s,Y*s,s*0.18,s+0.5);}});}
+// Rambardes : poteaux et main courante le long des bords de la passerelle (dessinées par-dessus le plancher)
+function entrepotRail(x,g,s,c){if(!g.void||!g.void.length)return;const W=c.w,isV=new Uint8Array(W*c.h);g.void.forEach(i=>isV[i]=1);const G=g.G,walk=i=>G[i]!=="W"&&!isV[i];
+  const rail=(ax,ay,bx,by,post)=>{x.strokeStyle="#4a3018";x.lineWidth=Math.max(1,s*0.07);x.lineCap="round";x.beginPath();x.moveTo(ax*s,(ay-0.42)*s);x.lineTo(bx*s,(by-0.42)*s);x.stroke();
+    x.strokeStyle="rgba(200,160,110,.5)";x.lineWidth=Math.max(1,s*0.025);x.beginPath();x.moveTo(ax*s,(ay-0.45)*s);x.lineTo(bx*s,(by-0.45)*s);x.stroke();
+    if(post)post.forEach(p=>{x.fillStyle="#3e2812";x.fillRect((p[0]-0.04)*s,(p[1]-0.42)*s,0.08*s,0.42*s);});};
+  g.void.forEach(i=>{const X=i%W,Y=(i/W)|0;
+    if(Y>0&&walk(i-W))rail(X,Y,X+1,Y,[[X+0.06,Y],[X+0.94,Y]]);
+    if(Y<c.h-1&&walk(i+W))rail(X,Y+1,X+1,Y+1,[[X+0.06,Y+1],[X+0.94,Y+1]]);
+    if(X>0&&walk(i-1))rail(X,Y+0.2,X,Y+1,[[X,Y+1]]);
+    if(X<W-1&&walk(i+1))rail(X+1,Y+0.2,X+1,Y+1,[[X+1,Y+1]]);});}
 const EC_GEN={
   taverne:{geo:geoInt,stat:statInt,dyn:(x,g,s,t)=>dynFires(x,g,s,t)},temple:{geo:geoInt,stat:statInt,dyn:(x,g,s,t)=>dynFires(x,g,s,t)},maison:{geo:geoMaison34,stat:statBureau,dyn:dynBureau},
-  entrepot:{geo:geoInt,stat:statInt,dyn:(x,g,s,t,dt,A)=>{dynFires(x,g,s,t);ecRats(x,g,s,t,dt,A);}},manoir:{geo:geoInt,stat:statInt,dyn:(x,g,s,t)=>dynFires(x,g,s,t)},
+  entrepot:{geo:geoEntrepot34,stat:statBureau,dyn:(x,g,s,t,dt,A,c,st)=>{dynBureau(x,g,s,t,dt,A,c,st);ecRats(x,g,s,t,dt,A);}},manoir:{geo:geoInt,stat:statInt,dyn:(x,g,s,t)=>dynFires(x,g,s,t)},
   donjon:{geo:geoDonjon,stat:statDonjon,dm:dmDonjon,dyn:(x,g,s,t,dt,A)=>{dynFires(x,g,s,t);ecRats(x,g,s,t,dt,A);}},
   grotte:{geo:geoGrotte,stat:statGrotte,dyn:dynGrotte},mine:{geo:geoMine,stat:statMine,dyn:dynMine},egouts:{geo:geoEgouts,stat:statEgouts,dyn:dynEgouts},
   ville:{geo:geoVille34,stat:statVille34,dyn:dynVille34},port:{geo:geoPort,stat:statPort,dyn:dynPort},marais:{geo:geoMarais,stat:statMarais,dyn:dynMarais}};
@@ -3822,9 +3913,9 @@ function burPlan(b,e){const P=burP(b);return P.floors[String(e||0)]||P.floors["0
 function burFloors(b){return Object.keys(burP(b).floors).map(Number).sort((a,c)=>a-c);}
 function burDims(b){const r=burPlan(b,0);return [r[0].length,r.length];}
 // Étages : liste des niveaux d'une carte et leur nom
-function ecFloors(c){if(!c)return [0];if(c.type==="bureau")return burFloors(c.bureau);if(c.type==="maison")return burFloors(maisonPlan(c));const G=EC_GEN[c.type];if(G&&G.floors){const n=ecNiv(c);const a=[];for(let i=n.min;i<=n.max;i++)a.push(i);return a;}return [0];}
+function ecFloors(c){if(!c)return [0];if(c.type==="bureau")return burFloors(c.bureau);if(c.type==="maison")return burFloors(maisonPlan(c));if(c.type==="entrepot")return burFloors(entrepotPlan(c));const G=EC_GEN[c.type];if(G&&G.floors){const n=ecNiv(c);const a=[];for(let i=n.min;i<=n.max;i++)a.push(i);return a;}return [0];}
 function ecNiv(c){const d=(EC_GEN[c.type]||{}).niv||{min:0,max:0};return {min:c.niv&&c.niv.min!=null?+c.niv.min:d.min,max:c.niv&&c.niv.max!=null?+c.niv.max:d.max};}
-function ecFloorName(c,n){if(c&&(c.type==="bureau"||c.type==="maison")){const N=burP(c.type==="maison"?maisonPlan(c):c.bureau).names||{};if(N[String(n)])return N[String(n)];}
+function ecFloorName(c,n){if(c&&(c.type==="bureau"||c.type==="maison"||c.type==="entrepot")){const N=burP(c.type==="maison"?maisonPlan(c):c.type==="entrepot"?entrepotPlan(c):c.bureau).names||{};if(N[String(n)])return N[String(n)];}
   return n===0?(c&&c.type==="donjon"?"Niveau d'entrée":"Rez-de-chaussée"):n>0?(n===1?"1er étage":n+"e étage"):(n===-1?"Sous-sol":"Sous-sol "+(-n));}
 function ecFloorShort(n){return n===0?"RDC":n>0?(n===1?"1er":n+"e"):"S"+(-n);}
 
@@ -4254,12 +4345,12 @@ function statBureau(x,g,s,c){const B=EC_BUR[g.bid],SA=ecSaison(),R=ecRng(ecSeed(
         if(Y%2===0){const hx=ex+dx*0.02;x.fillStyle="#2e1e0e";x.beginPath();x.ellipse(hx*s,(Y+0.5)*s,0.1*s,0.06*s,0,0,6.283);x.fill();x.fillStyle="#6a4a2a";x.beginPath();x.ellipse(hx*s,(Y+0.48)*s,0.08*s,0.045*s,0,0,6.283);x.fill();
           x.strokeStyle="rgba(220,250,250,.45)";x.lineWidth=Math.max(1,s*0.02);x.beginPath();x.ellipse((hx+dx*0.06)*s,(Y+0.58)*s,0.12*s,0.035*s,0,0,6.283);x.stroke();}}}}
   // Étage d'une maison : le voisinage reste le même qu'au rez-de-chaussée (mêmes maisons, mêmes passants)
-  const MUP=g.e>0&&String(g.bid).indexOf("m|")===0;if(MUP){g.mup=1;for(let Y=0;Y<H;Y++)for(let X=0;X<W;X++){const t0=tAt(X,Y,g.r0);OT[Y*W+X]=BUR_OUT.indexOf(t0)>=0?t0:null;}}
+  const MUP=g.e>0&&/^[me]\|/.test(String(g.bid));if(MUP){g.mup=1;for(let Y=0;Y<H;Y++)for(let X=0;X<W;X++){const t0=tAt(X,Y,g.r0);OT[Y*W+X]=BUR_OUT.indexOf(t0)>=0?t0:null;}}
   if(g.e===0||MUP)burSurround(x,g,s,c,OT,SA);
-  if(g.e>0&&String(g.bid).indexOf("m|")===0)maisonUpVeil(x,g,s,c);
-  gFloor(x,g.G,s,g.floor);
+  if(g.e>0&&/^[me]\|/.test(String(g.bid)))maisonUpVeil(x,g,s,c);
+  gFloor(x,g.G,s,g.floor);if(g.void)entrepotVoid(x,g,s,c);
   ((burP(g.bid).rugs||{})[String(g.e)]||[]).forEach(r=>gFurn(x,{k:"rug",x:r[0]+ox,y:r[1]+oy,w:r[2],h:r[3],c:r[4]},s));
-  v34Fix(g);g.furn.forEach(o=>{if(!V34H[o.k]&&!o.orne)gFurnB(x,o,s);});{const col=g.e<0?"#5a4430":B.wall[0],top=g.e<0?"#7e6244":B.wall[1];g.v34col={col,top};v34Caps(g.G,s,col,top);v34PlanDeco(g);v34Doors(x,g.G,s);v34List(g).forEach(it=>v34Draw(x,g,s,it,g.v34col));}
+  v34Fix(g);g.furn.forEach(o=>{if(!V34H[o.k]&&!o.orne)gFurnB(x,o,s);});{const col=g.e<0?"#5a4430":B.wall[0],top=g.e<0?"#7e6244":B.wall[1];g.v34col={col,top};v34Caps(g.G,s,col,top);v34PlanDeco(g);v34Doors(x,g.G,s);v34List(g).forEach(it=>v34Draw(x,g,s,it,g.v34col));}if(g.void)entrepotRail(x,g,s,c);
   x.save();x.translate(0,-0.95*s);((burP(g.bid).deco||{})[String(g.e)]||[]).forEach(d=>{if(d[0]==="wagon"||d[0]==="horse")return;
     // bannière ou trophée au mur : jamais au-dessus d'un meuble posé devant ce mur (caisse, armure…) ; on la décale sur le mur libre le plus proche
     if(d[0]==="banner"||d[0]==="trophy"||d[0]==="shield"){const hit=X=>g.furn.some(o=>((V34H[o.k]||0)>=0.3||o.k==="Q"||o.k==="G")&&X+0.5>o.x-0.2&&X-0.5<o.x+(o.w||1)+0.2&&Math.floor(o.y)>=Math.floor(d[2]+oy)&&Math.floor(o.y)<=Math.floor(d[2]+oy)+2);
@@ -4907,7 +4998,9 @@ function v34WallCell(x,G,s,X,y,col,top){const n=gAt(G,X,y+1),HW=v34WH(G,X,y),fac
   if(n&&n!=="W"&&HW>=V34W-0.01)v34WallDeco(x,G,s,X,y);}
 function v34Caps(G,s,col,top){if(G.v34cap&&G.v34cap.k===s)return;const c=document.createElement("canvas");c.width=Math.ceil(G.W*s);c.height=Math.ceil(G.H*s);const z=c.getContext("2d");gWalls(z,G,s,col,top);
   for(let y=0;y<G.H;y++)for(let X=0;X<G.W;X++)if(G[y*G.W+X]==="D")z.clearRect(X*s,y*s,s+1,s+1);c.k=s;G.v34cap=c;}
-function v34Doors(x,G,s){for(let y=0;y<G.H;y++)for(let X=0;X<G.W;X++)if(G[y*G.W+X]==="D"){const h=gAt(G,X-1,y)==="W"||gAt(G,X+1,y)==="W";x.fillStyle="#5a3a1e";if(h)x.fillRect(X*s+s*0.05,y*s+s*0.3,s*0.9,s*0.4);else x.fillRect(X*s+s*0.3,y*s+s*0.05,s*0.4,s*0.9);}}
+// Sens d'une porte : dans un mur horizontal si la rangée de portes (portes doubles ou triples comprises) bute sur un mur à gauche ou à droite
+function gDoorH(G,X,y){let a=X,b=X;while(gAt(G,a-1,y)==="D")a--;while(gAt(G,b+1,y)==="D")b++;return gAt(G,a-1,y)==="W"||gAt(G,b+1,y)==="W";}
+function v34Doors(x,G,s){for(let y=0;y<G.H;y++)for(let X=0;X<G.W;X++)if(G[y*G.W+X]==="D"){const h=gDoorH(G,X,y);x.fillStyle="#5a3a1e";if(h)x.fillRect(X*s+s*0.05,y*s+s*0.3,s*0.9,s*0.4);else x.fillRect(X*s+s*0.3,y*s+s*0.05,s*0.4,s*0.9);}}
 function v34WallTouch(G,X,y){return [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]].some(d=>{const n=gAt(G,X+d[0],y+d[1]);return n&&n!=="W"&&n!==".";});}
 // Liste des objets hauts triés par profondeur (base = bord bas de l'emprise)
 function v34List(g){if(g.v34)return g.v34;const L=[];g.furn.forEach(o=>{if(o.orne){L.push({kind:"o",o,base:o.y+o.h,bx:[o.x,o.y-1.3,o.x+o.w,o.y+o.h]});return;}if(!V34H[o.k])return;const b=v34Box(o),H=o.k==="Q"?V34W:o.k==="G"?1.9:V34H[o.k];L.push({kind:"o",o,base:o.k==="Q"?o.y+0.02:b[3],bx:[b[0],b[1]-H,b[2],b[3]]});});
@@ -6869,7 +6962,7 @@ function ecOpenG(G,c){if(!G)return G;const o=(c&&c.ouv)||[],gg=ecGenGeo(c),cols=
 function ecDoorAt(c,p){if(!c||!EC_GEN[c.type]||c.type==="image"||!ecIndoor(c.type))return -1;const G=ecGenGeo(c).G;if(!G)return -1;const x=Math.floor(p[0]),y=Math.floor(p[1]),i=y*c.w+x;return x>=0&&y>=0&&x<c.w&&y<c.h&&G[i]==="D"?i:-1;}
 // Dessin d'une porte ouverte : l'embrasure dégagée (seuil sombre) et le battant rabattu contre le chambranle.
 function ecOpenDoors(x,c,s){const o=c.ouv||[];if(!o.length||!EC_GEN[c.type])return;const G=ecGenGeo(c).G;if(!G)return;
-  o.forEach(i=>{if(G[i]!=="D")return;const X=i%c.w,Y=Math.floor(i/c.w),h=gAt(G,X-1,Y)==="W"||gAt(G,X+1,Y)==="W";
+  o.forEach(i=>{if(G[i]!=="D")return;const X=i%c.w,Y=Math.floor(i/c.w),h=gDoorH(G,X,Y);
     x.fillStyle="#2a1c10";if(h)x.fillRect(X*s+s*0.03,Y*s+s*0.28,s*0.94,s*0.44);else x.fillRect(X*s+s*0.28,Y*s+s*0.03,s*0.44,s*0.94);
     x.fillStyle="rgba(255,200,120,.10)";x.fillRect(X*s,Y*s,s,s);
     x.fillStyle="#6a4424";x.strokeStyle="#2a1a0c";x.lineWidth=Math.max(1,s*0.03);
@@ -6898,11 +6991,11 @@ function ecVision(st){const c=st.carte,W=c.w,H=c.h,vis=new Uint8Array(W*H),lit=n
   // Plein jour à l'extérieur sans brume ni brouillard : tout est en vue, même sans jeton PJ
   const forced=new Uint8Array(W*H);if(!ind&&L.vis>=Math.max(W,H)){vis.fill(1);forced.fill(1);}
   // Autour d'un bureau (rez-de-chaussée), la rue est dehors : de jour, elle se voit comme une carte extérieure
-  if(G&&(c.type==="bureau"||c.type==="maison")&&!(+c.etage)&&L0.dark<0.5)for(let i=0;i<W*H;i++)if(G[i]==="."){vis[i]=1;forced[i]=1;}
+  if(G&&(c.type==="bureau"||c.type==="maison"||c.type==="entrepot")&&!(+c.etage)&&L0.dark<0.5)for(let i=0;i<W*H;i++)if(G[i]==="."){vis[i]=1;forced[i]=1;}
   // Bureaux de la Guilde : à l'intérieur, tout est toujours éclairé et en vue (intergames, débuts et fins de partie)
   if(G&&c.type==="bureau")for(let i=0;i<W*H;i++)if(G[i]!=="."){vis[i]=1;lit[i]=1;forced[i]=1;}
   // Maison de jour : les fenêtres éclairent les pièces (la vue reste celle des jetons, le brouillard décide)
-  if(G&&c.type==="maison"&&L0.dark<0.5)for(let i=0;i<W*H;i++)if(G[i]!==".")lit[i]=1;
+  if(G&&(c.type==="maison"||c.type==="entrepot")&&L0.dark<0.5)for(let i=0;i<W*H;i++)if(G[i]!==".")lit[i]=1;
   // Zones cachées à la main par le DM (« Cacher ») : restent cachées tant qu'il ne les révèle pas
   const vu=(st.fog&&st.fog.vu)||"";for(let i=0;i<vu.length&&i<W*H;i++)if(vu[i]==="2")vis[i]=0;
   // Jetons : en vue si leur case est vue ; en plein jour dehors, il faut en plus qu'un PJ ait la ligne de vue (bâtiments, arbres)
