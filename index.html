@@ -4138,10 +4138,18 @@ function v34WallDeco0(x,G,s,X,y){const g0=G.v34deco;if(!g0||!g0.has(X+","+y))ret
     x.fillStyle="#7a2e2a";x.beginPath();x.arc(0.18*s,0.08*s,0.03*s,0,6.283);x.fill();x.fillStyle="#555";[[-0.27,-0.19],[0.27,-0.19]].forEach(p=>{x.beginPath();x.arc(p[0]*s,p[1]*s,0.02*s,0,6.283);x.fill();});}
   x.restore();}
 // Décor des murs du fond selon le bureau : avis WANTED, bannières de la Guilde, souvenirs de marins (port), cartes, trophées ; l'épée de Pax trône au-dessus du comptoir
-const V34THEME={mirabar:["picks","minelamp","minemap","banner","oreshelf","minelamp","minehelm","picks","shield","minemap"],luskan:["chart","net","ship","tide","anchor","oars","rope","harpoon","chart","wheel"],waterdeep:["wanted","banner","shield","map","wanted","painting","trophy","banner","wanted","map"],
+const V34THEME={"mirabar@-1":["hops","tally","minelamp","tapsign","hops","minelamp","tally","tapsign"],mirabar:["picks","minelamp","minemap","banner","oreshelf","minelamp","minehelm","picks","shield","minemap"],luskan:["chart","net","ship","tide","anchor","oars","rope","harpoon","chart","wheel"],waterdeep:["wanted","banner","shield","map","wanted","painting","trophy","banner","wanted","map"],
   _:["wanted","banner","shield","map","wanted","painting","trophy","banner","window","wanted"]};
 function v34Deco2(x,k,cx0,Yt,cy,s,X,y){let cx=cx0;const R=ecRng(X*131+y*17),L=Math.max(1,s*0.02),P=(a,b)=>[a*s,b*s];
   const nail=(a,b)=>{x.fillStyle="#555";x.beginPath();x.arc(a*s,b*s,0.022*s,0,6.283);x.fill();};
+  // Cave à bière : guirlande de houblon, ardoise des fûts à la craie, enseigne à la chope
+  if(k==="hops"){x.strokeStyle="#6a4a2a";x.lineWidth=Math.max(1,s*0.02);x.beginPath();x.moveTo((cx-0.4)*s,(cy-0.2)*s);x.quadraticCurveTo(cx*s,(cy+0.05)*s,(cx+0.4)*s,(cy-0.2)*s);x.stroke();
+    for(let i=0;i<9;i++){const u=i/8,px=cx-0.4+0.8*u,py=cy-0.2+Math.sin(Math.PI*u)*0.12;x.fillStyle=i%2?"#8ab04a":"#a8c860";x.beginPath();x.ellipse(px*s,(py+0.04)*s,0.045*s,0.065*s,0,0,6.283);x.fill();x.fillStyle="#4a7a2a";x.beginPath();x.ellipse((px+0.04)*s,(py-0.01)*s,0.04*s,0.02*s,0.5,0,6.283);x.fill();}nail(cx-0.4,cy-0.2);nail(cx+0.4,cy-0.2);return;}
+  if(k==="tally"){const w=0.52,h=0.42;x.fillStyle="#6a4a2a";x.fillRect((cx-w/2-0.03)*s,(cy-h/2-0.03)*s,(w+0.06)*s,(h+0.06)*s);x.fillStyle="#2a2e2a";x.fillRect((cx-w/2)*s,(cy-h/2)*s,w*s,h*s);x.strokeStyle="rgba(235,235,225,.8)";x.lineWidth=1;
+    for(let r=0;r<4;r++){const yy=cy-h/2+0.08+r*0.09;x.beginPath();x.moveTo((cx-w/2+0.05)*s,yy*s);x.lineTo((cx-0.05)*s,yy*s);x.stroke();const n=1+Math.floor(R()*5);for(let t=0;t<n;t++){x.beginPath();x.moveTo((cx+0.02+t*0.035)*s,(yy-0.03)*s);x.lineTo((cx+0.02+t*0.035)*s,(yy+0.03)*s);x.stroke();}}return;}
+  if(k==="tapsign"){x.strokeStyle="#3a2a1a";x.lineWidth=Math.max(1,s*0.015);x.beginPath();x.moveTo((cx-0.15)*s,(cy-0.3)*s);x.lineTo((cx-0.15)*s,(cy-0.18)*s);x.moveTo((cx+0.15)*s,(cy-0.3)*s);x.lineTo((cx+0.15)*s,(cy-0.18)*s);x.stroke();
+    x.fillStyle="#7a5432";x.fillRect((cx-0.24)*s,(cy-0.18)*s,0.48*s,0.32*s);x.strokeStyle="#3a2414";x.strokeRect((cx-0.24)*s,(cy-0.18)*s,0.48*s,0.32*s);x.fillStyle="#d8b45e";x.fillRect((cx-0.08)*s,(cy-0.1)*s,0.13*s,0.17*s);x.fillStyle="#f2eee4";x.fillRect((cx-0.09)*s,(cy-0.12)*s,0.15*s,0.04*s);
+    x.strokeStyle="#d8b45e";x.lineWidth=Math.max(1.5,s*0.025);x.beginPath();x.arc((cx+0.07)*s,(cy-0.01)*s,0.045*s,-1.4,1.4);x.stroke();return;}
   // Mirabar (comptoir taillé dans la montagne) : pioches croisées, lampe de mineur, plan des galeries, échantillons de minerai, casque de mineur
   if(k==="picks"){x.save();x.translate(cx*s,cy*s);for(const sg of [-1,1]){x.save();x.rotate(sg*0.75);x.fillStyle="#6a4a2a";x.fillRect(-0.025*s,-0.36*s,0.05*s,0.72*s);x.fillStyle="#8a9098";x.beginPath();x.moveTo(-0.24*s,-0.3*s);x.quadraticCurveTo(0,-0.42*s,0.24*s,-0.3*s);x.lineTo(0.2*s,-0.26*s);x.quadraticCurveTo(0,-0.34*s,-0.2*s,-0.26*s);x.closePath();x.fill();x.strokeStyle="#4a4e54";x.lineWidth=1;x.stroke();x.restore();}x.restore();nail(cx,cy);return;}
   if(k==="minelamp"){x.fillStyle="#3a2a1a";x.fillRect((cx-0.03)*s,(cy-0.32)*s,0.06*s,0.12*s);x.strokeStyle="#3a2a1a";x.lineWidth=Math.max(1,s*0.02);x.beginPath();x.arc(cx*s,(cy-0.16)*s,0.09*s,Math.PI,0);x.stroke();
@@ -4213,7 +4221,7 @@ function v34Deco2(x,k,cx0,Yt,cy,s,X,y){let cx=cx0;const R=ecRng(X*131+y*17),L=Ma
     x.fillStyle="#c83a2a";[[-0.05],[0.05]].forEach(([d])=>{x.beginPath();x.arc((cx+d)*s,(cy-0.01)*s,0.018*s,0,6.283);x.fill();});return;}}
 function v34PlanDeco(g){const G=g.G;if(G.v34deco)return;const M=new Map(),busy=new Set(),low=new Set();g.furn.forEach(o=>{const hh=V34H[o.k]||0;if(hh>=0.9||o.k==="Q"||o.k==="G")for(let X=Math.floor(o.x)-1;X<(o.x||0)+(o.w||1)+1;X++)busy.add(X+","+Math.floor(o.y));else if(hh>=0.3)for(let X=Math.floor(o.x);X<(o.x||0)+(o.w||1);X++)low.add(X+","+Math.floor(o.y));});
   const fixd=new Set();((burP(g.bid).deco||{})[String(g.e)]||[]).forEach(d=>{const X=Math.floor(d[1]+(g.ox||0)),Y=Math.floor(d[2]+(g.oy||0));for(let dy=-2;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)fixd.add((X+dx)+","+(Y+dy));});
-  const T=V34THEME[g.bid]||V34THEME._,ok=(X,y)=>{if(fixd.has(X+","+y))return false;if(G[y*G.W+X]!=="W"||v34WH(G,X,y)<V34W-0.01)return false;const fl=gAt(G,X,y+1);return fl&&fl!=="D"&&gAt(G,X-1,y)!=="D"&&gAt(G,X+1,y)!=="D"&&!busy.has(X+","+(y+1));};
+  const T=V34THEME[g.bid+"@"+g.e]||V34THEME[g.bid]||V34THEME._,ok=(X,y)=>{if(fixd.has(X+","+y))return false;if(G[y*G.W+X]!=="W"||v34WH(G,X,y)<V34W-0.01)return false;const fl=gAt(G,X,y+1);return fl&&fl!=="D"&&gAt(G,X-1,y)!=="D"&&gAt(G,X+1,y)!=="D"&&!busy.has(X+","+(y+1));};
   // l'épée de Pax : la case de mur libre la plus proche au-dessus du comptoir
   const C=g.bid==="waterdeep"&&g.furn.find(o=>o.k==="C");if(C){let best=null,bd=1e9;// LUNDI, l'épée de Pax, n'est qu'à Waterdeep
   const nsc=(X,y)=>!(g.fires||[]).some(f=>f.sconce&&Math.abs(f.x-(X+0.5))<1.6&&Math.abs(f.y-(y+1.5))<0.6);for(let y=0;y<Math.floor(C.y);y++)for(let X=0;X<G.W;X++){const sok=(X2,y2)=>G[y2*G.W+X2]==="W"&&v34WH(G,X2,y2)>=V34W-0.01&&gAt(G,X2,y2+1)&&gAt(G,X2,y2+1)!=="W"&&gAt(G,X2,y2+1)!=="D"&&!busy.has(X2+","+(y2+1))&&!low.has(X2+","+(y2+1));if(!sok(X,y)||!sok(X-1,y)||!sok(X+1,y)||!nsc(X,y))continue;const d=Math.abs(X+0.5-(C.x+C.w/2))+Math.abs(C.y-y)*0.6;if(d<bd){bd=d;best=[X,y];}}if(best)M.set((best[0]+1)+","+best[1],"paxsword");}
@@ -4681,6 +4689,24 @@ function ecPaxPlanUp(g,c,nav,k){const key=k.id+"|up|"+g.e+"|"+(g.furn||[]).lengt
   S._legs=L;S._T=L.reduce((s0,r,i)=>s0+r.tot/v+(S[i].w||0),0)||1;const A=[];let acc=0;for(let i=0;i<S.length;i++){A.push(acc);acc+=(S[i].w||0)+L[i].tot/v;}
   g.paxPlan={key,S,A,v,off:(k.x*13+k.y*7)%50,up:1};g.paxTour={S,A,T:S._T,off:g.paxPlan.off};return g.paxPlan;}
 // Visiteurs de l'étage : ils montent l'escalier, regardent les vitrines et les armures, s'assoient au salon, puis redescendent ; les groupes suivent Pax pendant sa visite
+// Cave : de temps en temps, la serveuse descend l'escalier, va prendre un tonneau, et remonte en le portant devant elle
+function burCellar(x,g,s,c,TT){burChairs(x,g,s);const nav=burNav(g,c);let SC=burStairCells(g,nav);if(!SC.length)return;
+  {const st=(g.stairs||[])[0];if(st&&st.open){const d={n:[0,-1],s:[0,1],e:[1,0],w:[-1,0]}[st.open],cx=st.x+st.w/2+d[0]*(st.w/2+0.5),cy=st.y+st.h/2+d[1]*(st.h/2+0.5),c2=[Math.floor(cx)+0.5,Math.floor(cy)+0.5];if(nav.okc(c2[0],c2[1]))SC=[{cell:c2}];}}
+  if(!g.cel){const R=ecRng(ecSeed(c.seed+"|cave|"+g.e)),B=g.furn.filter(o=>o.k==="O"),cand=[];
+    B.forEach(o=>[[0,1],[0,-1],[1,0],[-1,0]].forEach(([dx,dy])=>{const X=Math.floor(o.x)+dx+0.5,Y=Math.floor(o.y)+dy+0.5;if(nav.okc(X,Y))cand.push({c:[X,Y],b:[o.x+0.5,o.y+0.5]});}));
+    const L=[];for(let k=0;k<4&&cand.length;k++){const q=cand[Math.floor(R()*cand.length)],ra=nav.route(SC[0].cell,q.c),rb=ra&&nav.route(q.c,SC[0].cell);if(ra&&rb)L.push({ra,rb,q});}
+    g.cel={L,v:0.6,T:70,o:R()*500};}
+  const C=g.cel;if(!C.L.length)return;const cyc=Math.floor((TT+C.o)/C.T),t=((TT+C.o)%C.T),J=C.L[cyc%C.L.length],ta=J.ra.tot/C.v,tw=4,tb=J.rb.tot/C.v;if(t>ta+tw+tb)return;
+  let X,Y,mv=true,carry=false,pose=null;
+  if(t<ta){[X,Y]=navAt(J.ra,t*C.v);}else if(t<ta+tw){[X,Y]=J.q.c;mv=false;pose=t-ta>1.2?"reach":null;carry=t-ta>2.6;}else{[X,Y]=navAt(J.rb,(t-ta-tw)*C.v);carry=true;}
+  // apparaît en haut de l'escalier, y disparaît en remontant
+  const a=Math.min(1,t/0.8,(ta+tw+tb-t)/0.8),flip=t<ta?J.q.c[0]<X-0.01:J.q.c[0]>X+0.01;x.save();x.globalAlpha*=Math.max(0,a);
+  pplDraw(x,X*s,Y*s,s,pplFig("serveuse",0),flip,mv,TT,0.4,null,carry?"carry":pose);
+  if(carry){const T0=x.getTransform(),A0=x.globalAlpha,bx=X,by=Y+0.12;v34Defer(x,(Y+0.34)*s,()=>{x.save();x.setTransform(T0);x.globalAlpha=A0;const r=0.22,Hh=0.46,bot=by,top=bot-Hh-0.18,b=Math.sin(TT*6.9)*(mv?0.015:0);
+      x.translate(0,b*s);x.fillStyle="#6e4a2a";x.beginPath();x.moveTo((bx-r)*s,top*s);x.quadraticCurveTo((bx-r*1.15)*s,(top+Hh/2)*s,(bx-r)*s,(top+Hh)*s);x.ellipse(bx*s,(top+Hh)*s,r*s,r*0.4*s,0,Math.PI,0,true);x.quadraticCurveTo((bx+r*1.15)*s,(top+Hh/2)*s,(bx+r)*s,top*s);x.closePath();x.fill();
+      x.strokeStyle="#4a4640";x.lineWidth=Math.max(1,s*0.03);for(const f of [0.2,0.8]){x.beginPath();x.ellipse(bx*s,(top+Hh*f)*s,r*1.1*s,r*0.4*s,0,0,Math.PI);x.stroke();}
+      x.fillStyle="#8a6038";x.beginPath();x.ellipse(bx*s,top*s,r*s,r*0.4*s,0,0,6.283);x.fill();x.strokeStyle="#3a2a1a";x.stroke();x.restore();});}
+  x.restore();}
 function burUpper(x,g,s,c,TT){burChairs(x,g,s);const nav=burNav(g,c),SC=burStairCells(g,nav),EX=burExhibits(g,nav);if(!SC.length)return;
   const lis=[];g.advPax=[];g.occ=g.occ||[];const occN=[];
   if(!g.upW){const R=ecRng(ecSeed(c.seed+"|visiteurs|"+g.e)),pk=a=>a[Math.floor(R()*a.length)],seats=(g.seats||[]).filter(q=>nav.okc(q.x,q.y)||true),W=[];const n=0;
@@ -5169,7 +5195,7 @@ function burWalkers(x,g,s,c,TT){burChairs(x,g,s);burHouses(x,g,s);burProps(x,g,s
 function dynBureau(x,g,s,t,dt,A,c){const TT=Date.now()/1000;v34Fix(g);
   if(g.e===0&&ecSaison()!=="hiver"){const wet=(X,Y)=>{const px=Math.floor(X)-g.ox,py=Math.floor(Y)-g.oy,cl=(v,m)=>Math.max(0,Math.min(m-1,v));return g.rows[cl(py,g.ph)][cl(px,g.pw)]==="~";};if(g.rows.some(r=>r.indexOf("~")>=0))ecFishSchool(x,s,"bureau|"+g.bid+"|poissons",7,{x0:0,y0:0,x1:c.w,y1:c.h},wet);}
   dynFires(x,g,s,t);
-  if(g.e===0&&g.walk)burWalkers(x,g,s,c,TT);else if(g.e!==0&&c.type==="bureau")burUpper(x,g,s,c,TT);
+  if(g.e===0&&g.walk)burWalkers(x,g,s,c,TT);else if(g.e<0&&c.type==="bureau")burCellar(x,g,s,c,TT);else if(g.e!==0&&c.type==="bureau")burUpper(x,g,s,c,TT);
   burStaff(x,g,s,c,TT);
   burDiners(x,g,s,c,TT);
   // Repas d'un client attablé : commande servie par le cuisinier -> il mange (l'assiette se vide) -> assiette vide -> desservie par le serveur -> table libre jusqu'à sa prochaine commande
