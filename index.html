@@ -3847,6 +3847,138 @@ function ecRoam(k,g,c,TT){if(!g||g.e!==0||!g.people)return null;const nav=burNav
     if(busy)g.hold[key]=1;else if(g.hold[key]&&Math.hypot(m.x-k.x,m.y-k.y)<0.3)delete g.hold[key];
     if(g.hold[key])return {x:k.x,y:k.y,a:S[0].a!=null?S[0].a:k.a,still:true};}
   return m;}
+// ===== Pax en pied (vue de face, comme un personnage qui s'avance vers les joueurs) =====
+// Atlas des poses (kit-personnages/guilde/pax) ; retourné en miroir selon le côté où il va ou vers qui il parle.
+const EC_PAXSP=new Image();EC_PAXSP.src="img/pax_poses.webp";
+const EC_PAXF=["relaxed","cafe_repos","cafe_pas1","cafe_pas3","pas1","pas3","discute","rire","boire"],EC_PAXFW=275,EC_PAXFH=384;
+// Ouverture de la tasse (centre) dans chaque pose, en pixels de l'atlas ; rayons 17,5 × 9,7
+const EC_PAXMUG={cafe_repos:[98.4,199.7],cafe_pas1:[98.9,199.4],cafe_pas3:[99.4,199.7],discute:[98.9,201],rire:[98.4,199.7]};
+// La machine du Maître est en panne tant que sa quête n'est pas terminée : un passage à la machine sur trois échoue alors.
+function ecPaxPanne(){try{return (quetes||[]).some(q=>/machine du ma[iî]tre/i.test(q.titre||"")&&["terminee","archivee","refusee"].indexOf(q.statut)<0);}catch(e){return false;}}
+function ecPaxNewQuests(){try{const now=Date.now();return (quetes||[]).some(q=>q.statut==="ouverte"&&q.creeLe&&q.creeLe.toMillis&&now-q.creeLe.toMillis()<14*864e5);}catch(e){return false;}}
+// Trajet sur la grille, comme sur une grille de combat : lignes droites, peu de virages, au milieu des allées (on ne frôle pas les meubles)
+function ecGridRoute(nav,c,a,b){const W=c.w,H=c.h,ok=(X,Y)=>nav.okc(X+0.5,Y+0.5),sx=Math.floor(a[0]),sy=Math.floor(a[1]),tx=Math.floor(b[0]),ty=Math.floor(b[1]);
+  if(!ok(sx,sy)||!ok(tx,ty))return null;if(sx===tx&&sy===ty)return {P:[[sx+0.5,sy+0.5],[tx+0.5,ty+0.5]],seg:[0],tot:0};
+  const D=[[1,0],[0,1],[-1,0],[0,-1]],N=W*H*4,cost=new Float32Array(N).fill(1e9),prev=new Int32Array(N).fill(-1),pen=new Float32Array(W*H);
+  for(let Y=0;Y<H;Y++)for(let X=0;X<W;X++){if(!ok(X,Y))continue;let n=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if((dx||dy)&&!ok(X+dx,Y+dy))n++;pen[Y*W+X]=n*0.06;}
+  const hp=[],hpush=(f,s)=>{hp.push([f,s]);let i=hp.length-1;while(i>0){const p=(i-1)>>1;if(hp[p][0]<=hp[i][0])break;[hp[p],hp[i]]=[hp[i],hp[p]];i=p;}},
+    hpop=()=>{const r=hp[0],l=hp.pop();if(hp.length){hp[0]=l;let i=0;for(;;){const a2=2*i+1,b2=a2+1;let m=i;if(a2<hp.length&&hp[a2][0]<hp[m][0])m=a2;if(b2<hp.length&&hp[b2][0]<hp[m][0])m=b2;if(m===i)break;[hp[m],hp[i]]=[hp[i],hp[m]];i=m;}}return r;},
+    hf=(X,Y)=>Math.abs(X-tx)+Math.abs(Y-ty);
+  for(let d=0;d<4;d++){const s0=(sy*W+sx)*4+d;cost[s0]=0;hpush(hf(sx,sy),s0);}let end=-1;
+  while(hp.length){const [f,s0]=hpop(),ci=s0>>2,d0=s0&3,X=ci%W,Y=(ci/W)|0;if(f-hf(X,Y)>cost[s0]+1e-4)continue;if(X===tx&&Y===ty){end=s0;break;}
+    for(let d=0;d<4;d++){const nx=X+D[d][0],ny=Y+D[d][1];if(!ok(nx,ny))continue;const ns=((ny*W+nx)<<2)+d,nc=cost[s0]+1+pen[ny*W+nx]+(d!==d0?0.45:0);if(nc<cost[ns]){cost[ns]=nc;prev[ns]=s0;hpush(nc+hf(nx,ny),ns);}}}
+  if(end<0)return null;const cells=[];for(let s0=end;s0>=0;s0=prev[s0]){cells.push(s0>>2);if(cost[s0]===0)break;}cells.reverse();
+  const pt=i=>[i%W+0.5,((i/W)|0)+0.5],P=[pt(cells[0])];for(let i=1;i<cells.length-1;i++){const a1=pt(cells[i-1]),b1=pt(cells[i]),c1=pt(cells[i+1]);if((b1[0]-a1[0])!==(c1[0]-b1[0])||(b1[1]-a1[1])!==(c1[1]-b1[1]))P.push(b1);}P.push(pt(cells[cells.length-1]));
+  const seg=[];let tot=0;for(let i=1;i<P.length;i++){const l=Math.abs(P[i][0]-P[i-1][0])+Math.abs(P[i][1]-P[i-1][1]);seg.push(l);tot+=l;}return {P,seg,tot};}
+// Ce que fait Pax pendant un arrêt : il raconte (bras levé, bulles), écoute, éclate de rire, boit une gorgée
+function ecPaxScript(R,w,cup,board,sip){const L=[{t0:0,t1:0.8,k:"idle"}];let t=0.8,sipAt=sip?1.6+R()*Math.max(0.5,w-5.5):1e9,last="";
+  while(t<w-0.4){let k,d;if(t>=sipAt){k="sip";d=2.6;sipAt=1e9;}else if(last==="talk"&&R()<(board?0.15:0.38)){k="laugh";d=1.9;}else if(R()<(board?0.78:0.6)){k="talk";d=2.4+R()*1.8;}else{k="idle";d=1.2+R()*1.4;}
+    d=Math.min(d,w-t);if(d<0.4)break;L.push({t0:t,t1:t+d,k,seed:Math.floor(R()*1e6)});t+=d;last=k;}return L;}
+// Le plan de Pax : boucle de plusieurs tournées, chacune commence à sa machine à café (même tirage sur la télé et chez le DM)
+function ecPaxPlan(g,c,nav,k){const panne=ecPaxPanne(),neuf=ecPaxNewQuests(),key=[k.id,k.x.toFixed(2),k.y.toFixed(2),panne,neuf,(g.people||[]).length].join("|");
+  if(g.paxPlan&&g.paxPlan.key===key)return g.paxPlan;const R=ecRng(ecSeed(c.seed+"|paxplan|"+(k.n||""))),pk=a=>a[Math.floor(R()*a.length)],ctr=p=>[Math.floor(p[0])+0.5,Math.floor(p[1])+0.5];
+  const face=(p,o)=>Math.atan2(o[1]-p[1],o[0]-p[0]);
+  const spots=(o,n)=>nav.near(o).filter(p=>Math.hypot(p[0]-o.x-o.w/2,p[1]-o.y-o.h/2)<(n||9));
+  const mach=g.furn.filter(o=>o.k==="G").map(o=>{const n=spots(o);if(!n.length)return null;n.sort((a,b)=>Math.hypot(a[0]-o.x-o.w/2,a[1]-o.y-o.h/2)-Math.hypot(b[0]-o.x-o.w/2,b[1]-o.y-o.h/2));return {x:n[0][0],y:n[0][1],a:face(n[0],[o.x+o.w/2,o.y+o.h/2])};}).filter(Boolean);
+  const board=[];g.furn.filter(o=>o.k==="Q").forEach(o=>spots(o).forEach(p=>board.push({x:p[0],y:p[1],a:face(p,[o.x+o.w/2,o.y+o.h/2])+Math.PI})));
+  const groups=[];(g.people||[]).filter(p=>p.eat).forEach(P=>{if(groups.some(q=>Math.hypot(q.px-P.x,q.py-P.y)<2.2))return;let best=null,bd=9;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const X=Math.floor(P.x)+dx+0.5,Y=Math.floor(P.y)+dy+0.5;if(!nav.okc(X,Y))continue;const d=Math.hypot(X-P.x,Y-P.y);if(d>0.7&&d<bd){bd=d;best=[X,Y];}}if(best)groups.push({x:best[0],y:best[1],a:face(best,[P.x,P.y]),px:P.x,py:P.y});});
+  // arrêts libres : le cœur de la grande salle (les 60 % de cases les plus proches de son centre), pas les embrasures ni les annexes
+  let hall=(g.hall||[]).filter(h=>nav.okc(h.x,h.y));if(hall.length){const mx=hall.reduce((a,h)=>a+h.x,0)/hall.length,my=hall.reduce((a,h)=>a+h.y,0)/hall.length;hall=hall.map(h=>[Math.hypot(h.x-mx,h.y-my),h]).sort((a,b)=>a[0]-b[0]).slice(0,Math.max(4,Math.ceil(hall.length*0.6))).map(q=>q[1]);}
+  if(!mach.length&&!hall.length)return null;
+  const home=ctr([k.x,k.y]),S=[];let prev=home;
+  const add=(st)=>{if(S.length&&Math.hypot(st.x-S[S.length-1].x,st.y-S[S.length-1].y)<0.5)return false;S.push(st);prev=[st.x,st.y];return true;};
+  const pickVisit=()=>{for(let tr=0;tr<8;tr++){const r=R();let q=null;if(r<0.6&&groups.length)q=Object.assign({},pk(groups));else if(hall.length){const h=pk(hall);q={x:h.x,y:h.y,a:R()<0.5?0:Math.PI};}else if(groups.length)q=Object.assign({},pk(groups));if(q&&Math.hypot(q.x-prev[0],q.y-prev[1])>2)return q;}return null;};
+  let cupIn=true,lvl=0;
+  for(let cy=0;cy<6;cy++){const broken=panne&&cy%3===1;
+    if(mach.length){const m=pk(mach),w=broken?7:6;add({x:m.x,y:m.y,a:m.a,w,act:broken?"panne":"fill",cup0:cupIn,lvl0:lvl});cupIn=!broken;lvl=broken?0:1;}
+    const n=broken?3:4,bi=board.length&&(neuf||R()<0.5)?Math.floor(R()*n):-1,drop=1/n;
+    for(let j=0;j<n;j++){const isB=j===bi,q=isB?pk(board):pickVisit();if(!q)continue;const w=isB?10+R()*5:12+R()*7;
+      if(add({x:q.x,y:q.y,a:q.a,w,act:isB?"board":"talk",cup0:cupIn,lvl0:lvl,drop:cupIn?drop:0,scr:ecPaxScript(R,w,cupIn,isB,cupIn)}))lvl=Math.max(0,lvl-(cupIn?drop:0));}}
+  if(S.length<2)return null;
+  const v=0.72,L=[];for(let i=0;i<S.length;i++){const a=S[i],b=S[(i+1)%S.length];L.push(ecGridRoute(nav,c,[a.x,a.y],[b.x,b.y])||{P:[[a.x,a.y],[a.x,a.y]],seg:[0],tot:0});}
+  S._legs=L;S._T=L.reduce((s0,r,i)=>s0+r.tot/v+(S[i].w||0),0)||1;const A=[];let acc=0;for(let i=0;i<S.length;i++){A.push(acc);acc+=(S[i].w||0)+L[i].tot/v;}
+  g.paxPlan={key,S,A,v,off:(k.x*13+k.y*7)%50};g.paxTour={S,A,T:S._T,off:g.paxPlan.off};g.walkers=null;return g.paxPlan;}
+// État de Pax à l'instant TT : position, pose, miroir, tasse et niveau de café, bulle
+function ecPaxAt(k,g,c,TT){if(!g||g.e!==0||!g.people)return null;const nav=burNav(g,c),P=ecPaxPlan(g,c,nav,k);if(!P)return null;const S=P.S,T=S._T;let tt=((TT+P.off)%T+T)%T;
+  for(let i=0;i<S.length;i++){const st=S[i],w=st.w||0;
+    if(tt<w){const flip=Math.cos(st.a||0)<-0.15,pr=S._legs[(i-1+S.length)%S.length],la=pr&&pr.P.length>1?Math.atan2(pr.P[pr.P.length-1][1]-pr.P[pr.P.length-2][1],pr.P[pr.P.length-1][0]-pr.P[pr.P.length-2][0]):st.a;
+      let fa=st.a;if(la!=null&&tt<0.45){let d=st.a-la;while(d>Math.PI)d-=6.2832;while(d<-Math.PI)d+=6.2832;fa=la+d*(tt/0.45);}
+      const o={x:st.x,y:st.y,a:fa,still:true,flip,act:st.act,cup:st.cup0,lvl:st.lvl0,pose:"relaxed",seg:null,stop:i};
+      if(st.act==="fill"){o.cup=st.cup0||tt>1.4;o.lvl=st.cup0||tt>1.4?Math.min(1,Math.max(0,(tt-1.6)/(w-2.6))):0;o.pose=o.cup?"cafe_repos":"relaxed";o.fill=tt>1.6&&tt<w-1;}
+      else if(st.act==="panne"){o.cup=st.cup0&&tt<w*0.55;o.lvl=0;o.pose=o.cup?"cafe_repos":"relaxed";o.seg={k:"grr",t0:1,t1:w-1,seed:i};if(tt<1||tt>w-1)o.seg=null;}
+      else{const sc=st.scr||[],sg=sc.find(q=>tt>=q.t0&&tt<q.t1)||{k:"idle",t0:0,t1:w};o.seg=sg;const cup=st.cup0;
+        let l=st.lvl0;const sp=sc.find(q=>q.k==="sip");if(sp&&cup){if(tt>=sp.t1)l-=st.drop;else if(tt>sp.t0+0.8)l-=st.drop*Math.min(1,(tt-sp.t0-0.8)/1.2);}o.lvl=Math.max(0,l);
+        o.pose=!cup?"relaxed":sg.k==="talk"?"discute":sg.k==="laugh"?"rire":sg.k==="sip"?"boire":"cafe_repos";o.tin=tt-sg.t0;}
+      return o;}
+    tt-=w;const r=S._legs[i],d=r.tot/P.v;
+    if(tt<d){const u=tt*P.v;let j=0,uu=u;while(j<r.seg.length-1&&uu>r.seg[j]){uu-=r.seg[j];j++;}const a=r.P[j],b=r.P[j+1]||a,f=r.seg[j]?Math.min(1,uu/r.seg[j]):1,X=a[0]+(b[0]-a[0])*f,Y=a[1]+(b[1]-a[1])*f;
+      let dx=b[0]-a[0];if(!dx){const e=r.P[r.P.length-1],s0=r.P[0];dx=e[0]-s0[0];}const nx=S[(i+1)%S.length],cup=st.act==="panne"?false:st.act==="fill"?true:st.cup0;
+      const ph=Math.floor(u/0.32)%4,pose=cup?["cafe_pas1","cafe_repos","cafe_pas3","cafe_repos"][ph]:["pas1","relaxed","pas3","relaxed"][ph];
+      const lv=st.act==="fill"?1:st.act==="panne"?0:Math.max(0,st.lvl0-(st.drop||0));
+      const ang=(p,q)=>Math.atan2(q[1]-p[1],q[0]-p[0]),mix=(u0,u1,f)=>{let d=u1-u0;while(d>Math.PI)d-=6.2832;while(d<-Math.PI)d+=6.2832;return u0+d*Math.max(0,Math.min(1,f));};
+      let an=ang(a,b);if(j<r.seg.length-1&&r.seg[j]-uu<0.25)an=mix(an,ang(r.P[j+1],r.P[j+2]),(0.25-(r.seg[j]-uu))/0.5);else if(j>0&&uu<0.25)an=mix(ang(r.P[j-1],a),an,0.5+uu/0.5);
+      return {x:X,y:Y,a:an,still:false,flip:dx?dx<0:Math.cos(nx.a||0)<-0.15,cup,lvl:lv,pose,step:ph,act:"walk"};}
+    tt-=d;}
+  return null;}
+// Bulle de parchemin à liseré d'or : des « mots » (traits d'encre) et de petites images d'histoire qui apparaissent au fil de la phrase
+function ecPaxIcon(x,id,u){x.save();x.lineCap="round";x.lineJoin="round";
+  if(id===0){x.rotate(-0.78);x.strokeStyle="#b8c0c8";x.lineWidth=u*0.16;x.beginPath();x.moveTo(0,-u*0.62);x.lineTo(0,u*0.28);x.stroke();x.strokeStyle="#c9a24a";x.lineWidth=u*0.14;x.beginPath();x.moveTo(-u*0.28,u*0.28);x.lineTo(u*0.28,u*0.28);x.stroke();x.strokeStyle="#5a3a1a";x.lineWidth=u*0.12;x.beginPath();x.moveTo(0,u*0.32);x.lineTo(0,u*0.55);x.stroke();}
+  else if(id===1){const g=x.createRadialGradient(-u*0.15,-u*0.15,0,0,0,u*0.5);g.addColorStop(0,"#fff0a0");g.addColorStop(1,"#c9962a");x.fillStyle=g;x.strokeStyle="#7a5410";x.lineWidth=u*0.07;x.beginPath();x.arc(0,0,u*0.45,0,6.283);x.fill();x.stroke();x.beginPath();x.arc(0,0,u*0.28,0,6.283);x.stroke();}
+  else if(id===2){x.fillStyle="#c9a24a";x.strokeStyle="#5a3a10";x.lineWidth=u*0.05;x.beginPath();for(let i=0;i<16;i++){const an=i*Math.PI/8-Math.PI/2,l=u*(i%4===0?0.55:i%2===0?0.32:0.16);x.lineTo(Math.cos(an)*l,Math.sin(an)*l);}x.closePath();x.fill();x.stroke();x.fillStyle="#26355e";x.beginPath();x.arc(0,0,u*0.08,0,6.283);x.fill();}
+  else if(id===3){const g=x.createLinearGradient(0,u*0.5,0,-u*0.6);g.addColorStop(0,"#c0281a");g.addColorStop(0.6,"#f08020");g.addColorStop(1,"#ffd060");x.fillStyle=g;x.beginPath();x.moveTo(0,-u*0.6);x.bezierCurveTo(u*0.5,-u*0.1,u*0.45,u*0.45,0,u*0.5);x.bezierCurveTo(-u*0.45,u*0.45,-u*0.5,-u*0.05,-u*0.12,-u*0.3);x.bezierCurveTo(-u*0.1,-u*0.05,0,-u*0.1,0,-u*0.6);x.fill();}
+  else if(id===4){x.fillStyle="#efe0b8";x.strokeStyle="#6a4a1a";x.lineWidth=u*0.06;x.fillRect(-u*0.35,-u*0.45,u*0.7,u*0.9);x.strokeRect(-u*0.35,-u*0.45,u*0.7,u*0.9);x.strokeStyle="#8a6a3a";x.lineWidth=u*0.05;for(let i=0;i<3;i++){x.beginPath();x.moveTo(-u*0.22,-u*0.22+i*u*0.2);x.lineTo(u*0.22,-u*0.22+i*u*0.2);x.stroke();}x.fillStyle="#a8281e";x.beginPath();x.arc(u*0.18,u*0.3,u*0.11,0,6.283);x.fill();}
+  else if(id===5){x.fillStyle="#b8281e";x.font="900 "+Math.round(u*1.1)+"px Georgia,serif";x.textAlign="center";x.textBaseline="middle";x.fillText("!",0,u*0.05);}
+  else if(id===6){x.strokeStyle="#3a2a1a";x.lineWidth=u*0.1;x.beginPath();for(let i=0;i<=24;i++){const an=i*0.6,r=u*0.12+i*u*0.016;x.lineTo(Math.cos(an)*r,Math.sin(an)*r*0.8);}x.stroke();}
+  x.restore();}
+function ecBubbleBox(x,cx,cy,w,h,tx,ty,s,a){x.save();x.globalAlpha*=a;x.shadowColor="rgba(0,0,0,.35)";x.shadowBlur=s*0.12;x.shadowOffsetY=s*0.04;
+  const g=x.createLinearGradient(0,cy-h/2,0,cy+h/2);g.addColorStop(0,"#fbf2da");g.addColorStop(1,"#ead6a6");x.fillStyle=g;const r=Math.min(h/2,s*0.22);
+  x.beginPath();x.moveTo(cx-w/2+r,cy-h/2);x.arcTo(cx+w/2,cy-h/2,cx+w/2,cy+h/2,r);x.arcTo(cx+w/2,cy+h/2,cx-w/2,cy+h/2,r);
+  const sd=tx<cx?-1:1,bx=cx+sd*w*0.18;x.lineTo(bx+sd*s*0.06,cy+h/2);x.lineTo(tx,ty);x.lineTo(bx-sd*s*0.12,cy+h/2);
+  x.arcTo(cx-w/2,cy+h/2,cx-w/2,cy-h/2,r);x.arcTo(cx-w/2,cy-h/2,cx+w/2,cy-h/2,r);x.closePath();x.fill();x.shadowColor="transparent";
+  x.strokeStyle="#c9a24a";x.lineWidth=Math.max(1.5,s*0.045);x.stroke();x.strokeStyle="rgba(90,58,16,.55)";x.lineWidth=Math.max(0.7,s*0.012);x.stroke();x.restore();}
+function ecPaxBubble(x,X,Y,s,o,TT){const sg=o.seg;if(!sg||(sg.k!=="talk"&&sg.k!=="grr"))return;const tin=o.tin!=null?o.tin:TT%4,dur=sg.t1-sg.t0;
+  const R=ecRng(sg.seed||1),word=0.34,n=Math.max(1,Math.floor(Math.min(tin,dur-0.3)/word)+1),slots=3;
+  const page=Math.floor((n-1)/slots),inPage=(n-1)%slots+1,toks=[];
+  const pool=o.act==="board"?[4,4,5,1,2,0]:sg.k==="grr"?[6,5,6,5]:[0,1,2,3,0,1];
+  for(let i=0;i<(page+1)*slots;i++){const r=R();toks.push(sg.k==="grr"?pool[Math.floor(r*pool.length)]:r<0.62?{w:0.12+R()*0.22}:pool[Math.floor(R()*pool.length)]);}
+  const pop=Math.min(1,tin*5),sd=o.bs||1,h=s*0.52,w=s*1.25,cx=X+sd*s*0.85,cy=Y-s*0.75,tx=X+sd*s*0.15,ty=Y-s*0.2;
+  x.save();x.translate(cx,cy);const sc=0.7+0.3*pop;x.scale(sc,sc);x.translate(-cx,-cy);ecBubbleBox(x,cx,cy,w,h,tx,ty,s,pop);
+  const u=s*0.3;let px=cx-w/2+s*0.16;for(let i=0;i<inPage;i++){const t=toks[page*slots+i],age=(n-1)-(page*slots+i),f=age===0?Math.min(1,((tin%word)/word)*3):1,z=age===0?1+0.35*Math.sin(f*Math.PI):1;
+    if(typeof t==="number"){x.save();x.translate(px+u*0.5,cy);x.scale(z*f,z*f);ecPaxIcon(x,t,u);x.restore();px+=u*1.15;}
+    else{const L=t.w*s*f;x.strokeStyle="#3a2a1a";x.lineCap="round";x.lineWidth=Math.max(1.5,s*0.07);x.beginPath();x.moveTo(px,cy);x.lineTo(px+L,cy);x.stroke();px+=t.w*s+s*0.12;}}
+  x.restore();}
+// Réactions autour de lui : « ha ha » quand il rit, « ! » de temps en temps quand il raconte
+function ecPaxReact(x,g,s,o,TT,ox,oy){const sg=o.seg;if(!sg||!g.paxPos)return;const near=[];(g.people||[]).forEach(p=>{if(Math.hypot(p.x-o.x,p.y-o.y)<2.6)near.push([p.x,p.y]);});(g.advPax||[]).forEach(p=>{if(Math.hypot(p[0]-o.x,p[1]-o.y)<2.6)near.push(p);});
+  near.forEach((p,i)=>{let txt=null,a=0;const tin=o.tin||0;if(sg.k==="laugh"){const t=tin-0.15*i;if(t>0&&t<1.6){txt="ha ha";a=Math.min(1,t*5,(1.6-t)*4);}}
+    else if(sg.k==="talk"&&(sg.seed+i*7)%3===0){const t=tin-1.2-0.3*i;if(t>0&&t<1.1){txt="!";a=Math.min(1,t*6,(1.1-t)*5);}}
+    if(!txt)return;const X0=ox+p[0]*s,Y0=oy+p[1]*s,w=txt==="!"?s*0.36:s*0.72,h=s*0.34,X=0,Y=0,cx=X+s*0.28,cy=Y-s*0.72-(1-a)*s*0.1;x.save();x.translate(X0,Y0);x.rotate((o.persp?o.persp(p[0],p[1]):Math.PI/2)-Math.PI/2);ecBubbleBox(x,cx,cy,w,h,X+s*0.08,Y-s*0.4,s*0.7,a);
+    x.save();x.globalAlpha*=a;x.fillStyle=txt==="!"?"#b8281e":"#5a3a1a";x.font=(txt==="!"?"900 ":"italic 700 ")+Math.round(s*(txt==="!"?0.3:0.22))+"px Georgia,serif";x.textAlign="center";x.textBaseline="middle";x.fillText(txt,cx,cy+s*0.01);x.restore();x.restore();});}
+// Dessin de Pax en pied : ombre, pose (miroir), café dans la tasse (son niveau baisse à chaque gorgée), vapeur
+// Point de perspective (idée de Yannick) : la télé est posée à plat au milieu de la table. Le cadre de la télé est coupé en quatre cadrans par ses diagonales ;
+// dans chaque cadran, un personnage fait face vers l'extérieur, dos au centre, pour que chaque joueur voie de face ceux de son côté. Bascule douce près des diagonales.
+function ecPerspA(st,c,X,Y){const v=st.vue||st.tvv||{cols:c.w,rows:c.h},cam=st.cam||{x:0,y:0},hw=Math.max(1,Math.min(v.cols,c.w)/2),hh=Math.max(1,Math.min(v.rows,c.h)/2),nx=(X-cam.x-hw)/hw,ny=(Y-cam.y-hh)/hh;
+  if(Math.abs(nx)<1e-3&&Math.abs(ny)<1e-3)return Math.PI/2;const th=Math.atan2(ny,nx),Q=Math.PI/2,q=Math.round(th/Q)*Q,d=th-q,w=0.1;
+  if(Math.abs(d)>Math.PI/4-w){const t=(Math.abs(d)-(Math.PI/4-w))/(2*w);return q+Math.sign(d)*Q*t;}return q;}
+// Pax couché sur la carte comme un jeton vu de haut : son devant (le bas du dessin) pointe dans la direction où il va ou vers qui il parle
+const EC_PAXLEN=1.9;
+function ecPaxSprite(x,X,Y,s,o,TT){const fi=Math.max(0,EC_PAXF.indexOf(o.pose)),h=s*EC_PAXLEN,w=h*EC_PAXFW/EC_PAXFH,a=o.a!=null?o.a:Math.PI/2,rot=a-Math.PI/2,
+    bob=o.still?1+Math.sin(TT*1.5)*0.006:1+Math.abs(Math.sin((o.step||0)*Math.PI/2))*0.015;
+  x.save();x.translate(X+s*0.05,Y+s*0.07);x.rotate(rot);const gs=x.createRadialGradient(0,0,0,0,0,h*0.5);gs.addColorStop(0,"rgba(0,0,0,.38)");gs.addColorStop(1,"rgba(0,0,0,0)");x.fillStyle=gs;x.scale(w*0.55/(h*0.5),1);x.beginPath();x.arc(0,0,h*0.5,0,6.283);x.fill();x.restore();
+  const B=x.getTransform();x.save();x.translate(X,Y);x.rotate(rot);x.scale(o.flip?-bob:bob,bob);const k=h/EC_PAXFH,top=-h/2,left=-w/2;
+  x.drawImage(EC_PAXSP,fi*EC_PAXFW,0,EC_PAXFW,EC_PAXFH,left,top,w,h);
+  const m=o.cup&&EC_PAXMUG[o.pose];let steam=null;
+  if(m){const cx=left+m[0]*k,cy=top+m[1]*k,rx=17.5*k,ry=9.7*k;steam=x.getTransform().transformPoint(new DOMPoint(cx,cy));
+    if(o.lvl>0.02){x.save();x.beginPath();x.ellipse(cx,cy+ry*0.06,rx*0.9,ry*0.86,0,0,6.283);x.clip();const dy=(1-o.lvl)*ry*1.25,g=x.createRadialGradient(cx-rx*0.3,cy+dy-ry*0.3,0,cx,cy+dy,rx);g.addColorStop(0,"#7a4a26");g.addColorStop(0.55,"#3e2412");g.addColorStop(1,"#22130a");
+      x.fillStyle=g;x.beginPath();x.ellipse(cx,cy+dy+ry*0.1,rx*0.9,ry*0.82,0,0,6.283);x.fill();x.strokeStyle="rgba(214,170,110,.55)";x.lineWidth=Math.max(0.6,k*1.6);x.beginPath();x.ellipse(cx,cy+dy+ry*0.1,rx*0.82,ry*0.72,0,0,6.283);x.stroke();
+      if(o.fill){x.strokeStyle="rgba(60,34,16,.9)";x.lineWidth=Math.max(1,k*3);x.beginPath();x.moveTo(cx,cy-ry*3);x.lineTo(cx,cy+dy);x.stroke();}x.restore();}}
+  const head=x.getTransform().transformPoint(new DOMPoint(0,top+h*0.1));x.restore();
+  const iv=B.inverse(),hp=iv.transformPoint(head);
+  // vapeur : monte toujours vers le haut de l'écran
+  // vapeur, bulle : dans le repère du personnage (lisibles par le joueur de son côté de la table)
+  if(steam&&o.lvl>0.25){const sp=iv.transformPoint(steam),S=s/60;x.save();x.translate(sp.x,sp.y);x.rotate(rot);for(let i=0;i<5;i++){const u=((TT*0.4+i/5)%1);x.save();x.filter="blur("+((1+u*3)*S).toFixed(2)+"px)";x.fillStyle="rgba(245,245,245,"+(0.45*Math.sin(Math.PI*Math.min(1,u*1.3))*(1-u)*o.lvl).toFixed(3)+")";x.beginPath();x.ellipse(Math.sin(TT*1.7+i*1.3+u*5)*5*S*u,-u*30*S,(2+u*5)*S,(3+u*4)*S,0,0,6.283);x.fill();x.restore();}x.restore();}
+  x.save();x.translate(hp.x,hp.y);x.rotate(rot);o.bs=o.flip?-1:1;ecPaxBubble(x,0,0,s,o,TT);x.restore();}
+// Pax immobile (étage, autres cartes) : debout, café à la main, une gorgée de temps en temps
+function ecPaxIdle(k,TT){const t=(TT+(k.x*13+k.y*7))%30;return {x:k.x,y:k.y,a:k.a!=null?k.a:Math.PI/2,still:true,flip:false,cup:true,lvl:0.35+0.6*(1-((TT/240)%1)),pose:t>24&&t<26.6?"boire":"cafe_repos"};}
 // Employés sans nom : un cuisinier et un serveur qui servent À LA COMMANDE, un marchand derrière ses étals de boutique
 // Service à la commande. Une liste de 50 commandes est tirée une fois (même graine sur la télé et chez le DM) puis jouée en boucle, donc les deux écrans
 // sont identiques sans rien partager. Chaque commande = une place : soit un client déjà attablé, soit un aventurier « repas » qui entre et s'assoit.
@@ -3974,7 +4106,7 @@ function burWalkers(x,g,s,c,TT){const W=c.w,H=c.h,wk=g.walk,ok=(X,Y)=>X>=0&&Y>=0
         const mi=stops.findIndex(q=>q.act==="pax");if(mi>0&&PT){T=Math.ceil(T/PT.T)*PT.T;let B=0;for(let j=0;j<mi;j++)B+=legs[j].tot/v+(j>0?(stops[j].w||0):0);o=B-PT.A[stops[mi].pj]+PT.off;}
         L.push({adv:true,stops,legs,v,dur,T,o,look:advLook(R)});}}
     g.walkers=L;}
-  g.custPos=[];g.walkers.forEach((w,i)=>{
+  g.custPos=[];g.advPax=[];g.walkers.forEach((w,i)=>{
     if(w.adv){let tt=((TT+w.o)%w.T+w.T)%w.T;if(tt>=w.dur)return;let X,Y,an,still=false,st=null;
       for(let j=0;j<w.legs.length;j++){const r=w.legs[j],d=r.tot/w.v;if(tt<d){const q=navAt(r,tt*w.v);X=q[0];Y=q[1];an=q[2];break;}tt-=d;const s2=w.stops[j+1];if(tt<(s2.w||0)){X=s2.x;Y=s2.y;still=true;st=s2;an=s2.a!=null?s2.a:0;break;}tt-=s2.w||0;}
       if(X==null)return;
@@ -3984,8 +4116,8 @@ function burWalkers(x,g,s,c,TT){const W=c.w,H=c.h,wk=g.walk,ok=(X,Y)=>X>=0&&Y>=0
       if(st&&st.act==="eat")burRation(x,s,X+Math.cos(an)*0.6,Y+Math.sin(an)*0.6,an,Math.min(1,tt/(st.w*0.8)));
       x.save();x.translate(X*s,Y*s);x.rotate(an);const sc=1.7*(w.look.sc||1);x.scale(sc,sc);spPerson(x,s,0,0,still?0:TT*8+i*9,Object.assign({move:!still},w.look));x.restore();
       if(st&&st.act==="eat"&&tt<st.w*0.8){const k3=(Math.sin(TT*2.2+i)+1)/2;if(k3>0.5){const f=(k3-0.5)/0.5,hx=X+Math.cos(an)*(0.15+0.4*f)+Math.cos(an+1.57)*0.12,hy=Y+Math.sin(an)*(0.15+0.4*f)+Math.sin(an+1.57)*0.12;x.fillStyle=w.look.skin||"#e2bf96";x.beginPath();x.arc(hx*s,hy*s,s*0.06,0,6.283);x.fill();}}
-      // causette : petite bulle au-dessus des deux
-      if(st&&st.act==="pax"&&g.paxPos&&Math.hypot(g.paxPos[0]-X,g.paxPos[1]-Y)<2.5&&Math.sin(TT*2+i)>0){x.fillStyle="rgba(255,255,255,.9)";x.beginPath();x.ellipse((X+0.35)*s,(Y-0.55)*s,s*0.2,s*0.13,0,0,6.283);x.fill();x.fillStyle="#555";for(let d=-1;d<=1;d++){x.beginPath();x.arc((X+0.35+d*0.08)*s,(Y-0.55)*s,s*0.025,0,6.283);x.fill();}}
+      // causette avec Pax : sa position sert aux réactions (« ha ha », « ! »)
+      if(st&&st.act==="pax")g.advPax.push([X,Y]);
       return;}let u=(TT*w.v+w.o)%(w.tot*2),back=false;if(u>w.tot){u=w.tot*2-u;back=true;}let k=0;while(k<w.seg.length-1&&u>w.seg[k]){u-=w.seg[k];k++;}
     const a=w.P[k],b=w.P[k+1],f=Math.min(1,u/w.seg[k]),X=a[0]+(b[0]-a[0])*f,Y=a[1]+(b[1]-a[1])*f;let an=Math.atan2(b[1]-a[1],b[0]-a[0]);if(back)an+=Math.PI;
     ecWalker(x,w.wo,X,Y,an,s,TT*8+i*9);});}
@@ -4750,6 +4882,15 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),p
       if(k.sp.t==="w")ecWalker(x,k.sp,k.x,k.y,k.a||0,s,0,true);else ecBeast(x,k.sp,k.x,k.y,s,TT,k.a||0,0,0);
       const rc=k.k==="en"?"#c0392b":k.k==="pj"?(k.c||"#d8b45e"):"#4a8ab8";if(r.sel===k.id){x.strokeStyle="#fff";x.lineWidth=Math.max(3,s*0.1);x.beginPath();x.arc(X,Y,s*big+s*0.05,0,6.283);x.stroke();}
       x.strokeStyle=rc;x.lineWidth=Math.max(2,s*0.07);if(dim)x.setLineDash([6,4]);x.beginPath();x.arc(X,Y,s*big,0,6.283);x.stroke();x.setLineDash([]);x.globalAlpha=1;return;}
+    if(k.k==="pnj"&&k.look&&k.look.pax&&EC_PAXSP.complete&&EC_PAXSP.naturalWidth){const TT=Date.now()/1000,gg=c.type==="bureau"?ecGenGeo(c):null;if(gg)gg.pjPos=(st.tokens||[]).filter(q=>q.k==="pj").map(q=>[q.x,q.y]);
+      // Pax en pied : il erre dans la grande salle, raconte, rit, boit son café et va remplir sa tasse (sauf si le DM le tient)
+      const o=(gg&&r.sel!==k.id&&ecPaxAt(k,gg,c,TT))||ecPaxIdle(k,TT);EC_ROAMPOS.set(k,[o.x,o.y]);if(gg)gg.paxPos=[o.x,o.y];
+      if(tv){const i2=Math.floor(o.y)*c.w+Math.floor(o.x);if(st.fog&&st.fog.on&&!(V&&V.vis[i2]))return;}
+      x.save();x.globalAlpha=!tv&&!k.vis?0.55:1;const PX=o.x*s,PY=o.y*s;
+      if(r.sel===k.id){x.strokeStyle="#fff";x.lineWidth=Math.max(3,s*0.08);x.beginPath();x.arc(PX,PY,s*0.95,0,6.283);x.stroke();}
+      x.strokeStyle="rgba(240,208,112,"+(0.55+Math.sin(TT*1.6)*0.2).toFixed(2)+")";x.lineWidth=Math.max(1.5,s*0.045);x.beginPath();x.arc(PX,PY,s*0.9,0,6.283);x.stroke();
+      {const mv=o.a!=null?o.a:Math.PI/2,fa=ecPerspA(st,c,o.x,o.y),rot=fa-Math.PI/2,sd=Math.cos(mv-rot);o.a=fa;o.flip=sd<-0.2;o.persp=(X,Y)=>ecPerspA(st,c,X,Y);}
+      ecPaxSprite(x,PX,PY,s,o,TT);if(gg)ecPaxReact(x,gg,s,o,TT,0,0);x.restore();return;}
     if(k.k==="pnj"&&k.look){const TT=Date.now()/1000;if(c.type==="bureau"){const gg=ecGenGeo(c);gg.pjPos=(st.tokens||[]).filter(q=>q.k==="pj").map(q=>[q.x,q.y]);}let k2=k,X2=X,Y2=Y;if(c.type==="bureau"&&r.sel!==k.id){const m=ecRoam(k,ecGenGeo(c),c,TT);if(m){EC_ROAMPOS.set(k,[m.x,m.y]);k2=Object.assign({},k,{x:m.x,y:m.y,a:m.a!=null?m.a:k.a,walk:!m.still,talk:!!(k.look.pax&&m.still&&m.a!=null)});X2=m.x*s;Y2=m.y*s;}}
       if(tv){if(st.fog&&st.fog.on&&!(V&&V.tokSeen(k2.x,k2.y)))return;}ecNamedTok(x,k2,X2,Y2,s,TT,r.sel===k.id,!tv&&!k.vis);return;}
     x.globalAlpha=(!tv&&k.k!=="pj"&&!k.vis)?0.55:1;x.fillStyle="rgba(0,0,0,.35)";x.beginPath();x.arc(X+s*0.04,Y+s*0.06,s*0.42,0,6.283);x.fill();
