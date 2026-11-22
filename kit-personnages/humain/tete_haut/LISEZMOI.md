@@ -1,4 +1,4 @@
-# Têtes de humains vues de haut (90°)
+# Têtes d'humains vues de haut (90°)
 
 46 têtes en gris, vues du plafond, l'avant (nez) vers le haut de l'image, fond transparent.
 Chaque tête `head_..._top.png` a son calque `head_..._top_calque.png` (mêmes dimensions) :
