@@ -12,4 +12,4 @@ Chaque tête `head_..._top.png` a son calque `head_..._top_calque.png` (mêmes d
 | magenta #FF00FF | plumes, feuilles, fleurs |
 
 Elles correspondent une à une aux têtes de face `head_..._90.png` du dossier `tete/`.
-À reprendre : calques du bonnet de l'aînée (`head_dwarf_f_agee_bonnet`) et du bonnet de marin (`head_dwarf_m_marin`), où le bonnet n'est pas séparé des cheveux.
+Les calques du bonnet de l'aînée (`head_dwarf_f_agee_bonnet`) et du bonnet de marin (`head_dwarf_m_marin`) ont été retracés à la main : bonnet, cheveux, front et oreilles séparés.
