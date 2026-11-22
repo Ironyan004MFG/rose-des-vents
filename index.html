@@ -3585,6 +3585,8 @@ function maisonPlan(c){const key="m|"+c.seed+"|"+c.w+"x"+c.h;if(EC_BURP[key])ret
   const bw=Math.min(W-4,[9,15,21][lvl]+Math.floor(R()*3)),bh=Math.min(H-6,[7,10,13][lvl]+Math.floor(R()*2));
   const streetH=town?3:0,x0=Math.max(2,Math.min(W-bw-2,Math.floor((W-bw)/2)+Math.floor(R()*7)-3)),y1=H-1-streetH-(town?2:3),y0=Math.max(1,y1-bh+1),x1=x0+bw-1;
   const up=lvl===2||(lvl===1&&R()<0.6),cave=lvl>=1&&R()<0.5;
+  // Forme de la maison (vue de dessus) : rectangle, en L (un coin retiré) ou en croix (les quatre coins retirés)
+  const SHP=TOP90&&lvl<2?(()=>{const r=R();return r<0.4?"rect":r<0.72?"L":"croix";})():"rect",CUTS=[];
   // ---------- Rez-de-chaussée ----------
   const A=mk(X.rural?",":CU==="cite"||CU==="naine"?"_":",");
   const set=(M,x,y,ch)=>{if(x>=0&&y>=0&&x<W&&y<H)M[y][x]=ch;},get=(M,x,y)=>x<0||y<0||x>=W||y>=H?"%":M[y][x];
@@ -3593,7 +3595,15 @@ function maisonPlan(c){const key="m|"+c.seed+"|"+c.w+"x"+c.h;if(EC_BURP[key])ret
   const shell=M=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)M[y][x]=(x===x0||x===x1||y===y0||y===y1)?"#":".";};
   shell(A);
   // Porte d'entrée et allée jusqu'à la rue (ou chemin de terre à la campagne)
-  const cxL=x0+1+Math.floor((bw-2)*0.58),ex=lvl===2?x0+Math.floor(bw/2)-1:lvl===1?x0+3+Math.floor(R()*Math.max(1,cxL-x0-4)):x0+2+Math.floor(R()*(bw-5)),wide=lvl===2;A[y1][ex]="E";if(wide)A[y1][ex+1]="E";
+  const cxL=x0+1+Math.floor((bw-2)*0.58),ex0=lvl===2?x0+Math.floor(bw/2)-1:lvl===1?x0+3+Math.floor(R()*Math.max(1,cxL-x0-4)):x0+2+Math.floor(R()*(bw-5)),wide=lvl===2;
+  {const cyM=y0+Math.floor(bh/2);if(SHP==="L"){const bot=R()<0.4;if(lvl===0){const cw=Math.floor(bw*0.45)+1,chh=Math.floor(bh*0.45)+1;CUTS.push(bot?{x0:x1-cw+1,y0:y1-chh+1,x1:x1,y1:y1}:{x0:x1-cw+1,y0:y0,x1:x1,y1:y0+chh-1});}else CUTS.push(bot?{x0:cxL,y0:cyM,x1:x1,y1:y1}:{x0:cxL,y0:y0,x1:x1,y1:cyM});}
+    else if(SHP==="croix"){const cw=lvl===0?Math.max(3,Math.floor(bw*0.3)):3,chh=lvl===0?Math.max(3,Math.floor(bh*0.3)):3;[[x0,y0],[x1-cw+1,y0],[x0,y1-chh+1],[x1-cw+1,y1-chh+1]].forEach(([a,b])=>CUTS.push({x0:a,y0:b,x1:a+cw-1,y1:b+chh-1}));}}
+  const inCut=(x,y)=>CUTS.some(q=>x>=q.x0&&x<=q.x1&&y>=q.y0&&y<=q.y1);
+  // la porte d'entrée reste sur le mur du bas, hors des coins retirés
+  let ex=ex0;if(SHP!=="rect"){const lo=x0+1,hi=x1-1-(wide?1:0);let best=null;for(let d=0;d<bw;d++)for(const e of [ex0+d,ex0-d])if(best==null&&e>=lo&&e<=hi&&!inCut(e,y1)&&!inCut(e-1,y1)&&!inCut(e+1,y1)&&!inCut(e,y1-1)&&!inCut(e+(wide?2:1),y1)&&(lvl!==1||e<cxL))best=e;if(best!=null)ex=best;}
+  // découpe : les coins retirés redeviennent l'extérieur ; les cases intérieures qui les bordent deviennent des murs
+  const carve=(M,outCh)=>{if(!CUTS.length)return;const inB=(x,y)=>x>=x0&&x<=x1&&y>=y0&&y<=y1;
+    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){if(!inCut(x,y))continue;let n=false;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(inB(x+dx,y+dy)&&!inCut(x+dx,y+dy)&&M[y+dy][x+dx]!=="#")n=true;M[y][x]=n?"#":outCh;}};/* le bord intérieur du coin retiré devient le nouveau mur */A[y1][ex]="E";if(wide)A[y1][ex+1]="E";
   const path=X.rural?":":CU==="elfique"||CU==="cite"?"_":lvl===0?":":"_";
   {let px=ex;for(let y=y1+1;y<H;y++){if(get(A,px,y)==="_"||get(A,px,y)===";")break;A[y][px]=path;if(wide)A[y][px+1]=path;if(X.rural&&R()<0.25&&y>y1+1){px+=R()<0.5?-1:1;px=Math.max(1,Math.min(W-3,px));A[y][px]=path;if(wide)A[y][px+1]=path;}}}
   // Pièces : murs intérieurs selon le gabarit
@@ -3602,16 +3612,18 @@ function maisonPlan(c){const key="m|"+c.seed+"|"+c.w+"x"+c.h;if(EC_BURP[key])ret
   let stairs=null;
   if(lvl===0){room("piece",x0+1,y0+1,x1-1,y1-1);}
   else if(lvl===1){const cx=cxL,cy=y0+Math.floor(bh/2);vw(A,cx,y0,y1);hw(A,cy,cx,x1);
-    const topK=R()<0.5,main=room("sejour",x0+1,y0+1,cx-1,y1-1);
-    room(topK?"cuisine":up?"cellier":"chambre",cx+1,y0+1,x1-1,cy-1);room(topK?(up?"cellier":"chambre"):"cuisine",cx+1,cy+1,x1-1,y1-1);
-    door(A,cx,y0+2+Math.floor(R()*Math.max(1,cy-y0-3)));door(A,cx,cy+1+Math.floor(R()*Math.max(1,y1-cy-2)));
-    if(up||cave)stairs={x:x0+1,y:y0+1,ch:up?"^":"v"};}
+    const topK=R()<0.5,Lcut=SHP==="L",cutTop=Lcut&&CUTS[0].y0===y0,main=room(Lcut&&!up?"piece":"sejour",x0+1,y0+1,cx-1,y1-1);
+    if(!(Lcut&&cutTop))room(Lcut?"cuisine":topK?"cuisine":up?"cellier":"chambre",cx+1,y0+1,x1-1,cy-1);if(!(Lcut&&!cutTop))room(Lcut?"cuisine":topK?(up?"cellier":"chambre"):"cuisine",cx+1,cy+1,x1-1,y1-1);
+    const dTop=y0+2+Math.floor(R()*Math.max(1,cy-y0-3))+(SHP==="croix"?1:0),dBot=cy+1+Math.floor(R()*Math.max(1,y1-cy-2))-(SHP==="croix"?1:0);
+    if(!(Lcut&&cutTop))door(A,cx,Math.min(cy-1,dTop));if(!(Lcut&&!cutTop))door(A,cx,Math.max(cy+1,dBot));
+    if(up||cave)stairs={x:x0+1+(SHP==="croix"?2:0),y:y0+1,ch:up?"^":"v"};}
   else{// demeure : vestibule au centre, salon et salle à manger de part et d'autre, cuisine et bureau au fond
     const hx0=ex-2,hx1=ex+3,cy=y0+Math.floor(bh*0.5);vw(A,hx0,y0,y1);vw(A,hx1,y0,y1);hw(A,cy,x0,hx0);hw(A,cy,hx1,x1);
     room("vestibule",hx0+1,y0+1,hx1-1,y1-1);room("salon",x0+1,cy+1,hx0-1,y1-1);room("salle",hx1+1,cy+1,x1-1,y1-1);
     room(R()<0.5?"etude":"chambre",x0+1,y0+1,hx0-1,cy-1);room("cuisine",hx1+1,y0+1,x1-1,cy-1);
     door(A,hx0,cy+2);door(A,hx1,cy+2);door(A,hx0,y0+2);door(A,hx1,y0+2);
     stairs={x:hx0+2,y:y0+1,ch:"^"};}
+  carve(A,A[y0-1]?A[y0-1][x0]:",");
   // Escalier 2×2 dans un coin (même place à chaque étage)
   if(stairs){for(let dy=0;dy<2;dy++)for(let dx=0;dx<2;dx++)A[stairs.y+dy][stairs.x+dx]=stairs.ch;}
   const ring=(M,on)=>{if(!stairs)return;for(let dy=-1;dy<=2;dy++)for(let dx=-1;dx<=2;dx++){const v=get(M,stairs.x+dx,stairs.y+dy);if(on&&v===".")M[stairs.y+dy][stairs.x+dx]="r";else if(!on&&v==="r")M[stairs.y+dy][stairs.x+dx]=".";}};
@@ -3630,10 +3642,16 @@ function maisonPlan(c){const key="m|"+c.seed+"|"+c.w+"x"+c.h;if(EC_BURP[key])ret
     else if(where==="center"){for(let dy=0;dy<=2;dy++)for(let dx=0;dx<=3;dx++){push(cx+dx,cyy+dy);push(cx-dx,cyy-dy);push(cx+dx,cyy-dy);push(cx-dx,cyy+dy);}}
     // à défaut : n'importe quel bout de mur libre
     if(where!=="center")for(let y=r.y0;y<=r.y1;y++)for(let x=r.x0;x<=r.x1;x++)if(y===r.y0||x===r.x0||x+w-1===r.x1||y+h-1===r.y1)push(x,y);
-    for(const [x,y] of cand)if(fits(M,r,x,y,w,h,gap)){for(let j=0;j<h;j++)for(let i=0;i<w;i++)M[y+j][x+i]=ch;return {x,y,w,h};}return null;};
+    // meubles de mur (comptoir, étagères, four, cheminée, casiers) : toujours collés à un mur, jamais au milieu du passage
+    const WALLY="kKSHWY".indexOf(ch)>=0,touchWall=(x,y)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]]){const vx=x+i+a,vy=y+j+b;if(vx>=x&&vx<x+w&&vy>=y&&vy<y+h)continue;if(get(M,vx,vy)==="#")return true;}return false;};
+    for(const [x,y] of cand)if(fits(M,r,x,y,w,h,gap)&&(!TOP90||!WALLY||touchWall(x,y))){for(let j=0;j<h;j++)for(let i=0;i<w;i++)M[y+j][x+i]=ch;
+      if(TOP90&&(ch==="S"||ch==="H"))for(let j=-1;j<=h;j++)for(let i=-1;i<=w;i++){const vx=x+i,vy=y+j;if(get(M,vx,vy)===".")M[vy][vx]="f";}/* on garde libre le devant du four et de la cheminée */
+      return {x,y,w,h};}return null;};
   const rugs={"0":[],"1":[],"-1":[]},deco={"0":[],"1":[],"-1":[]},RUG=["#6a2a2a","#2e3a6a","#5a3a22","#3a5a3a","#6a1e2a"];
   const rug=(e,r,pad,col,mw,mh)=>{let w=r.x1-r.x0+1-2*pad,h=r.y1-r.y0+1-2*pad;if(mw)w=Math.min(w,mw);if(mh)h=Math.min(h,mh);const X0=Math.floor((r.x0+r.x1+1-w)/2),Y0=Math.floor((r.y0+r.y1+1-h)/2);if(w>=2&&h>=2)rugs[e].push([X0,Y0,w,h,col||RUG[Math.floor(R()*RUG.length)]]);};
   const furnish=(M,r,e)=>{const w=r.x1-r.x0+1,h=r.y1-r.y0+1,role=r.role;
+    if((role==="piece"||role==="sejour")&&w>=7&&h>=6&&!(lvl===0&&SHP!=="rect")&&R()<0.45){// variante : foyer central ouvert (cuisine et chaleur), tout le reste réparti autour
+      put(M,r,"¥",2,2,"center",1);put(M,r,"b",1,2,"tl");put(M,r,"b",1,2,"tr");if(role==="piece"||R()<0.5)put(M,r,"b",1,2,"left");put(M,r,"c",1,1,"tr");put(M,r,"k",2,1,"top");put(M,r,"O",1,1,"bl");put(M,r,"O",1,1,"bl");put(M,r,"X",1,1,"br");put(M,r,"X",1,1,"right");put(M,r,"W",1,2,"right");return;}
     if(role==="piece"){// masure : tout dans une pièce
       put(M,r,"H",2,1,"top");put(M,r,"b",1,2,"tr");put(M,r,"b",1,2,"tr");put(M,r,"c",1,1,"br");put(M,r,"T",1,1,"center",1);
       put(M,r,"O",1,1,"bl");put(M,r,"X",1,1,"bl");put(M,r,"k",2,1,"left");put(M,r,"O",1,1,"br");put(M,r,"X",1,1,"right");rugs[e].push([r.x0+2,r.y0+2,Math.max(2,r.x1-r.x0-3),2,"#5a4a32"]);}
@@ -3653,7 +3671,7 @@ function maisonPlan(c){const key="m|"+c.seed+"|"+c.w+"x"+c.h;if(EC_BURP[key])ret
     else if(role==="grenier"){for(let k=0;k<6;k++)put(M,r,R()<0.5?"X":"O",1,1,["tl","tr","bl","br","left","right"][k]);put(M,r,"b",1,2,"top");}};
   ring(A,1);rooms.forEach(r=>furnish(A,r,"0"));ring(A,0);
   // ---------- Étage ----------
-  const floors={"0":A.map(r=>r.join(""))},names={"0":"Rez-de-chaussée"};
+  const unF=M=>M.map(r=>r.join("").replace(/f/g,"."));const floors={"0":unF(A)},names={"0":"Rez-de-chaussée"};
   if(up){const U=mk(" ");shell(U);for(let dy=0;dy<2;dy++)for(let dx=0;dx<2;dx++)U[stairs.y+dy][stairs.x+dx]="v";
     const rs=[];const cx=x0+Math.floor(bw/2);
     if(lvl===1){vw(U,cx,y0,y1);rs.push({role:"chambre_h",x0:x0+1,y0:y0+1,x1:cx-1,y1:y1-1},{role:R()<0.5?"chambre_h":"grenier",x0:cx+1,y0:y0+1,x1:x1-1,y1:y1-1});door(U,cx,y1-2);}
@@ -3661,12 +3679,12 @@ function maisonPlan(c){const key="m|"+c.seed+"|"+c.w+"x"+c.h;if(EC_BURP[key])ret
       for(let y=cy;y<=y1;y++){}const a=x0+Math.floor(bw/3),b=x0+Math.floor(2*bw/3);vw(U,a,cy,y1);vw(U,b,cy,y1);
       rs.push({role:"palier",x0:x0+1,y0:y0+1,x1:x1-1,y1:cy-1},{role:"chambre_h",x0:x0+1,y0:cy+1,x1:a-1,y1:y1-1},{role:"chambre_h",x0:a+1,y0:cy+1,x1:b-1,y1:y1-1},{role:R()<0.5?"chambre_h":"etude",x0:b+1,y0:cy+1,x1:x1-1,y1:y1-1});
       door(U,Math.floor((x0+a)/2),cy);door(U,a+2,cy);door(U,Math.floor((b+x1)/2),cy);}
-    ring(U,1);rs.forEach(r=>{if(r.role!=="palier")furnish(U,r,"1");else{put(U,r,"J",1,1,"tr");put(U,r,"A",1,1,"tl");}});ring(U,0);
-    floors["1"]=U.map(r=>r.join(""));names["1"]="Étage";}
+    carve(U," ");ring(U,1);rs.forEach(r=>{if(r.role!=="palier")furnish(U,r,"1");else{put(U,r,"J",1,1,"tr");put(U,r,"A",1,1,"tl");}});ring(U,0);
+    floors["1"]=unF(U);names["1"]="Étage";}
   // ---------- Cave ----------
-  if(cave&&!up){const C=mk("%");shell(C);for(let dy=0;dy<2;dy++)for(let dx=0;dx<2;dx++)C[stairs.y+dy][stairs.x+dx]="^";
+  if(cave&&!up){const C=mk("%");shell(C);carve(C,"%");for(let dy=0;dy<2;dy++)for(let dx=0;dx<2;dx++)C[stairs.y+dy][stairs.x+dx]="^";
     ring(C,1);const r={role:"cave",x0:x0+1,y0:y0+1,x1:x1-1,y1:y1-1};put(C,r,"Y",Math.min(4,bw-6),1,"top");put(C,r,"Y",Math.min(4,bw-6),1,"bottom");for(let k=0;k<6;k++)put(C,r,R()<0.6?"O":"X",1,1,["tr","br","bl","right","left","center"][k]);
-    ring(C,0);floors["-1"]=C.map(r=>r.join(""));names["-1"]="Cave";}
+    ring(C,0);floors["-1"]=unF(C);names["-1"]="Cave";}
   // ---------- Abords : jardin, arbres, abreuvoir, charrette ----------
   const D0=deco["0"];
   if(X.rural){const tx=[2,W-4,3,W-5];tx.forEach((t,i)=>{if(R()<0.8)D0.push(["tree",t+R()*2,1+i*4+R()*2]);});if(R()<0.6)D0.push(["trough",x1+2,y1-1]);if(R()<0.5)D0.push(["wagon",x0-3,y1+2]);}
@@ -4787,7 +4805,7 @@ function geoBureau(c,R){const bid=EC_BURP[c.bureau]?c.bureau:"waterdeep",B=EC_BU
   const at=(px,py)=>px<0||py<0||px>=pw||py>=ph?" ":rows[py][px];g.at=at;
   for(let py=0;py<ph;py++)for(let px=0;px<pw;px++){const ch=rows[py][px],X=px+ox,Y=py+oy;if(X>=W||Y>=H)continue;G[Y*W+X]=ch==="#"?"W":ch==="+"||ch==="E"?"D":BUR_OUT.indexOf(ch)>=0?".":"F";}
   // Objets : composantes de cases de même lettre (rectangles)
-  const COMP="CQPWKBLTHM^vdVZSkYR/b§¤µçÇßæø",seen=new Uint8Array(pw*ph),F=o=>g.furn.push(o);
+  const COMP="CQPWKBLTHM^vdVZSkYR/b§¤µçÇßæø¥",seen=new Uint8Array(pw*ph),F=o=>g.furn.push(o);
   const wallSide=(x,y,w,h)=>{const row=yy=>{for(let i=0;i<w;i++)if(at(x+i,yy)!=="#")return false;return true;},col=xx=>{for(let i=0;i<h;i++)if(at(xx,y+i)!=="#")return false;return true;};
     if(w>h)return row(y-1)?"n":row(y+h)?"s":null;if(h>w)return col(x-1)?"w":col(x+w)?"e":null;return row(y-1)?"n":row(y+h)?"s":col(x-1)?"w":col(x+w)?"e":null;};
   const dist=(x,y,dx,dy)=>{let n=0;while(n<12){x+=dx;y+=dy;n++;const v=at(x,y);if(v==="#"||BUR_OUT.indexOf(v)>=0)return n;}return 99;};
@@ -4797,6 +4815,7 @@ function geoBureau(c,R){const bid=EC_BURP[c.bureau]?c.bureau:"waterdeep",B=EC_BU
     if(ch==="C"){const cx=x0+Math.floor(w/2),cy=y0+Math.floor(h/2);if(w>=h){const up=dist(cx,y0,0,-1),dn=dist(cx,y1,0,1);o.dir=up<=dn?"s":"n";}else{const lf=dist(x0,cy,-1,0),rt=dist(x1,cy,1,0);o.dir=lf<=rt?"e":"w";}}
     if(ch==="^"||ch==="v"){// sens : on monte depuis un bout de l'escalier et on arrive à l'autre bout à l'étage du dessus
       const lo=ch==="^"?rows:burP(bid).floors[String(e-1)],up=ch==="^"?burP(bid).floors[String(e+1)]:rows,E2=burStairOpen(lo,up,x0,y0,x1,y1);o.open=ch==="^"?E2:E2?{n:"s",s:"n",e:"w",w:"e"}[E2]:null;if(Math.min(w,h)===1)o.orne=1;g.stairs.push({x:o.x,y:o.y,w,h,dir:ch==="^"?"up":"down",open:o.open});}
+    if(ch==="¥"){const cx=o.x+w/2,cy=o.y+h/2;g.fires.push({x:cx,y:cy,r:0.5});g.lights.push({x:cx,y:cy,r:6});g.steam.push({x:cx,y:cy-0.2});[[0,-1],[0,1],[-1,0],[1,0]].forEach(([dx,dy])=>{const px=dx?(dx<0?x0-1:x1+1):x0+(dy<0?0:1),py=dy?(dy<0?y0-1:y1+1):y0+(dx<0?1:0);if(at(px,py)==="."){const sx=px+ox+0.5,sy=py+oy+0.5;F({k:"stool",x:sx,y:sy});g.seats.push({x:sx,y:sy});}});}
     if(ch==="¤"){g.fires.push({x:o.x+o.w/2,y:o.y+o.h/2,r:0.35});g.lights.push({x:o.x+o.w/2,y:o.y+o.h/2,r:4});}
     if(ch==="H"||ch==="S"){const f=ecHug(o,0.45);g.fires.push({x:f.x,y:f.y,r:ch==="H"?0.45:0.25});g.lights.push({x:f.x,y:f.y,r:ch==="H"?5:3});}
     if(ch==="T"){const r=w*h===1?(TOP90?0.5:0.42):Math.min(w,h)/2-0.15,cx=o.x+w/2,cy=o.y+h/2;o.r=r;g.fires.push({x:cx,y:cy,r:0.12,candle:1});
@@ -4931,6 +4950,13 @@ function gFurnB(x,o,s){const k=o.k;
     x.fillStyle=cv;x.fillRect((X+0.14)*s,(Y+0.5)*s,(w-0.28)*s,(h-0.64)*s);x.fillStyle=spMix(cv,0.25);x.fillRect((X+0.14)*s,(Y+0.5)*s,(w-0.28)*s,0.07*s);x.strokeStyle=spMix(cv,-0.3);x.lineWidth=Math.max(1,s*0.015);for(let u=0.16;u<w-0.2;u+=0.22){x.beginPath();x.moveTo((X+u+0.08)*s,(Y+0.6)*s);x.lineTo((X+u+0.08)*s,(Y+h-0.16)*s);x.stroke();}}
   else if(k==="c"&&TOP90){// coffre au pied du lit : couvercle bombé, ferrures, serrure
     const X=o.x,Y=o.y,w=o.w,h=o.h;x.fillStyle="rgba(0,0,0,.28)";x.fillRect((X+0.2)*s,(Y+0.26)*s,(w-0.3)*s,(h-0.4)*s);gRect(x,X+0.14,Y+0.2,w-0.28,h-0.4,s,"#7a5532","#3e2a16");x.fillStyle="#3a3a3e";x.fillRect((X+0.14)*s,(Y+0.3)*s,(w-0.28)*s,0.05*s);x.fillRect((X+0.14)*s,(Y+h-0.35)*s,(w-0.28)*s,0.05*s);x.fillStyle="#c9a24a";x.fillRect((X+w/2-0.05)*s,(Y+h/2-0.06)*s,0.1*s,0.12*s);}
+  else if(k==="¥"){// foyer central vu de dessus : cercle de pierres, braises, bûches, trépied et chaudron qui mijote
+    const cx=o.x+o.w/2,cy=o.y+o.h/2,R0=Math.min(o.w,o.h)/2-0.08;x.fillStyle="rgba(0,0,0,.25)";x.beginPath();x.arc((cx+0.06)*s,(cy+0.08)*s,R0*s,0,6.283);x.fill();
+    for(let i=0;i<14;i++){const a=i/14*6.283;x.fillStyle=i%2?"#8a8478":"#6a645a";x.beginPath();x.ellipse((cx+Math.cos(a)*(R0-0.1))*s,(cy+Math.sin(a)*(R0-0.1))*s,0.13*s,0.1*s,a,0,6.283);x.fill();}
+    const g2=x.createRadialGradient(cx*s,cy*s,0,cx*s,cy*s,(R0-0.2)*s);g2.addColorStop(0,"#ffd27a");g2.addColorStop(0.35,"#e8641e");g2.addColorStop(0.75,"#5a1e0a");g2.addColorStop(1,"#1e120a");x.fillStyle=g2;x.beginPath();x.arc(cx*s,cy*s,(R0-0.2)*s,0,6.283);x.fill();
+    x.strokeStyle="#4a2e16";x.lineWidth=Math.max(2,s*0.08);x.lineCap="round";[[0.3,0.5],[1.9,0.45],[3.6,0.5]].forEach(([a,l])=>{x.beginPath();x.moveTo((cx+Math.cos(a)*0.1)*s,(cy+Math.sin(a)*0.1)*s);x.lineTo((cx+Math.cos(a)*l)*s,(cy+Math.sin(a)*l)*s);x.stroke();});
+    x.strokeStyle="#2a2a2e";x.lineWidth=Math.max(1.5,s*0.035);[0.6,2.7,4.8].forEach(a=>{x.beginPath();x.moveTo(cx*s,cy*s);x.lineTo((cx+Math.cos(a)*(R0+0.05))*s,(cy+Math.sin(a)*(R0+0.05))*s);x.stroke();});
+    x.fillStyle="#1e1e22";x.beginPath();x.arc(cx*s,cy*s,0.3*s,0,6.283);x.fill();x.fillStyle="#6a5a3a";x.beginPath();x.arc(cx*s,cy*s,0.22*s,0,6.283);x.fill();x.fillStyle="rgba(240,230,200,.5)";x.beginPath();x.arc((cx-0.06)*s,(cy-0.05)*s,0.06*s,0,6.283);x.fill();}
   else if(k==="ç"||k==="Ç"){// foudre : gros tonneau couché sur son chevalet, cerclé de fer, robinet de laiton vers la salle
     const X=o.x,Y=o.y,w=o.w,h=o.h,hz=w>=h,L=hz?w:h,cx=X+w/2,cy=Y+h/2;x.save();x.translate(cx*s,cy*s);if(!hz)x.rotate(Math.PI/2);
     x.fillStyle="#3a2414";[-L/2+0.25,L/2-0.25].forEach(u=>x.fillRect((u-0.08)*s,-0.48*s,0.16*s,0.96*s));
