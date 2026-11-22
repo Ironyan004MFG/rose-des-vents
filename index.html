@@ -6441,7 +6441,7 @@ function burCellar(x,g,s,c,TT){burChairs(x,g,s);const nav=burNav(g,c);let SC=bur
 // Étages de chambres (bureaux autres que Waterdeep) : des aventuriers montent à leur chambre, s'y reposent, puis redescendent ;
 // la femme de chambre (la serveuse) va d'un lit à l'autre et fait les lits. Au dernier étage (appartements), seulement elle.
 // Bulle de texte (phrase courte) au-dessus d'un personnage
-function burSay(x,X,Y,s,h,txt,flip){const T=x.getTransform(),A=x.globalAlpha;V34LATE.push(()=>{x.save();x.setTransform(T);x.globalAlpha=A;const fs=Math.max(9,s*0.26);x.font="700 "+fs+"px Georgia,serif";
+function burSay(x,X,Y,s,h,txt,flip){const T=x.getTransform(),A=x.globalAlpha;if(TOP90)h=s*0.55;V34LATE.push(()=>{x.save();x.setTransform(T);x.globalAlpha=A;const fs=Math.max(9,s*0.26);x.font="700 "+fs+"px Georgia,serif";
   const lines=txt.split("\n"),tw=Math.max(...lines.map(l=>x.measureText(l).width)),pw=tw+fs*1.1,ph=lines.length*fs*1.25+fs*0.6,bx=X-pw/2+(flip?-s*0.3:s*0.3),by=Y-h-ph-s*0.1;
   x.fillStyle="rgba(0,0,0,.25)";x.beginPath();x.roundRect(bx+2,by+3,pw,ph,fs*0.5);x.fill();x.fillStyle="#fffaf0";x.strokeStyle="#3a2a1a";x.lineWidth=Math.max(1.5,s*0.03);x.beginPath();x.roundRect(bx,by,pw,ph,fs*0.5);x.fill();x.stroke();
   x.beginPath();x.moveTo(X-s*0.08,by+ph-1);x.lineTo(X,by+ph+s*0.2);x.lineTo(X+s*0.12,by+ph-1);x.closePath();x.fill();x.stroke();x.fillStyle="#fffaf0";x.fillRect(X-s*0.07,by+ph-x.lineWidth-1,s*0.18,x.lineWidth+1.5);
