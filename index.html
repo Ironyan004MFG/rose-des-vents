@@ -4269,6 +4269,8 @@ function ppl90(x,X,Y,s,o,a,ph,mv){const k=s*1.02*(o.sc||1),sw=mv?Math.sin(ph):0,
   const arm=(side,swg)=>{const ax=side*0.36,ay=0.02+swg;E(ax,ay,0.1,0.15,o.sleeve||o.body);x.strokeStyle=dk(o.sleeve||o.body);x.lineWidth=Math.max(1,k*0.025);x.beginPath();x.ellipse(ax*k,ay*k,0.1*k,0.15*k,0,0,6.283);x.stroke();E(ax,ay+0.15,0.065,0.065,o.glove||o.skin);};
   if(o.item==="hand"){// main tendue, paume ouverte (mendier, attraper, servir)
     arm(-1,0.05);const sl=o.sleeve||o.body;x.save();x.translate(0.24*k,0.3*k);x.rotate(0.35);x.fillStyle=sl;x.beginPath();x.ellipse(0,0,0.085*k,0.24*k,0,0,6.283);x.fill();x.strokeStyle=dk(sl);x.lineWidth=Math.max(1,k*0.025);x.stroke();x.restore();const hx=0.15,hy=0.56,hc=o.glove||o.skin;E(hx,hy,0.1,0.09,hc);x.strokeStyle=dk(hc);x.lineWidth=Math.max(1,k*0.02);x.beginPath();x.ellipse(hx*k,hy*k,0.1*k,0.09*k,0,0,6.283);x.stroke();for(let f=-1;f<=2;f++){x.beginPath();x.moveTo((hx+f*0.035)*k,(hy+0.05)*k);x.lineTo((hx+f*0.038)*k,(hy+0.1)*k);x.stroke();}x.fillStyle="rgba(0,0,0,.18)";x.beginPath();x.ellipse(hx*k,(hy-0.01)*k,0.05*k,0.035*k,0,0,6.283);x.fill();}
+  else if(o.item==="rod"){// pêcheur : les deux mains serrent la canne devant lui
+    const sl=o.sleeve||o.body;[[-1,-0.02,0.42],[1,0.14,0.36]].forEach(([d,hx,hy])=>{const sx=d*0.3,sy=0.04,mx=(sx+hx)/2,my=(sy+hy)/2,L=Math.hypot(hx-sx,hy-sy)/2+0.05,an=Math.atan2(hy-sy,hx-sx)-Math.PI/2;x.save();x.translate(mx*k,my*k);x.rotate(an);x.fillStyle=sl;x.beginPath();x.ellipse(0,0,0.085*k,L*k,0,0,6.283);x.fill();x.strokeStyle=dk(sl);x.lineWidth=Math.max(1,k*0.022);x.stroke();x.restore();E(hx,hy,0.065,0.065,o.glove||o.skin);});}/* bras de l'épaule jusqu'aux mains */
   else if(o.item==="tray"){// plateau de service en bois, vide à l'aller, avec l'assiette vide au retour
     arm(-1,0.06);arm(1,0.12);x.fillStyle="rgba(0,0,0,.25)";x.beginPath();x.arc(0.4*k,0.37*k,0.21*k,0,6.283);x.fill();E(0.37,0.33,0.2,0.2,"#7a5230");E(0.37,0.33,0.165,0.165,"#a07448");x.strokeStyle="rgba(60,36,16,.5)";x.lineWidth=Math.max(1,k*0.015);x.beginPath();x.arc(0.37*k,0.33*k,0.165*k,0,6.283);x.stroke();
     if(o._pl){const D=0.3*k;if(PLATE_IMG.complete&&PLATE_IMG.naturalWidth)x.drawImage(PLATE_IMG,0.37*k-D/2,0.33*k-D/2,D,D);else E(0.37,0.33,0.13,0.13,"#e8e0cc");}}
@@ -4352,22 +4354,15 @@ const P90_EMP=[{race:"gnome",sc:0.7,skin:"#f0d0b0",hair:"#e8e4dc",beard:"#e8e4dc
 // Pax vu d'en haut : Giff (tête d'hippopotame) en redingote rouge à épaulettes d'or, baudriers blancs, LUNDI en travers du dos, cicatrice sur l'œil
 const PAXJ=typeof Image!=="undefined"?Object.assign(new Image(),{src:"img/pax_jeton.png"}):{};
 const PAXHEAD=typeof Image!=="undefined"?Object.assign(new Image(),{src:"img/pax_tete_jeton.webp"}):{};
-function paxTop(x,X,Y,s,o,TT){const a=o.a!=null?o.a:Math.PI/2,mv=!o.still,ph=TT*6.2,sw=mv?Math.sin(ph):0,br=mv?1:1+Math.sin(TT*1.5)*0.012,k=s*1.04;/* Pax est un giff de grande taille (entre M et L) : ~30 % plus large que les aventuriers */
+function paxTop(x,X,Y,s,o,TT){const a=o.a!=null?o.a:Math.PI/2,mv=!o.still,ph=TT*6.2,sw=mv?Math.sin(ph):0,br=mv?1:1+Math.sin(TT*1.5)*0.012,k=s*1.2;/* Pax est un giff de grande taille (entre M et L) : il remplit bien sa case */
   const E=(cx,cy,rx,ry,col,rot)=>{x.fillStyle=col;x.beginPath();x.ellipse(cx*k,cy*k,rx*k,ry*k,rot||0,0,6.283);x.fill();},ST=(col,w)=>{x.strokeStyle=col;x.lineWidth=Math.max(1,k*w);};
   const SK="#9a5e5e",SKD="#5e3434",SKL="#c88a88",CO="#9a2a22",COD="#6a1a16",GO="#d8b048";
   x.save();x.translate(X,Y);x.rotate(a-Math.PI/2);x.scale(br,br);
   E(0.07,0.09,0.52,0.46,"rgba(0,0,0,.3)");
   // bottes
   E(-0.17,0.16+sw*0.18,0.1,0.16,"#2a1e16");E(0.17,0.16-sw*0.18,0.1,0.16,"#2a1e16");
-  // redingote : épaules larges, pans qui dépassent derrière
-  x.fillStyle=COD;x.beginPath();x.moveTo(-0.4*k,0);x.quadraticCurveTo(-0.42*k,-0.36*k,0,-0.4*k);x.quadraticCurveTo(0.42*k,-0.36*k,0.4*k,0);x.closePath();x.fill();
-  E(0,0,0.44,0.26,CO);x.save();x.beginPath();x.ellipse(0,0,0.44*k,0.26*k,0,0,6.283);x.clip();E(-0.12,-0.08,0.36,0.17,"#b83a30");E(0,0.14,0.5,0.12,"rgba(0,0,0,.15)");
-    ST("#f0ece0",0.06);x.beginPath();x.moveTo(-0.3*k,-0.18*k);x.lineTo(0.3*k,0.2*k);x.moveTo(0.3*k,-0.18*k);x.lineTo(-0.3*k,0.2*k);x.stroke();E(0,0.01,0.05,0.05,GO);x.restore();
-  ST(COD,0.025);x.beginPath();x.ellipse(0,0,0.44*k,0.26*k,0,0,6.283);x.stroke();
-  // épaulettes d'or à franges
-  [-1,1].forEach(d=>{E(d*0.36,-0.02,0.12,0.09,GO);ST("#a8842a",0.015);for(let i=-3;i<=3;i++){x.beginPath();x.moveTo((d*0.36+i*0.03)*k,0.04*k);x.lineTo((d*0.36+i*0.034)*k,0.1*k);x.stroke();}});
   // bras : la droite tient la tasse de café si besoin
-  const arm=(d,swg,cup)=>{const ax=d*0.47,ay=0.05+swg;E(ax,ay,0.12,0.19,CO);ST(COD,0.02);x.beginPath();x.ellipse(ax*k,ay*k,0.12*k,0.19*k,0,0,6.283);x.stroke();E(ax,ay+0.16,0.09,0.06,GO);E(ax,ay+0.22,0.085,0.085,SK);
+  const arm=(d,swg,cup)=>{const ax=d*0.42,ay=0.12+swg;/* bras sous les épaules : seuls l'avant-bras et la main dépassent devant */E(ax,ay,0.12,0.19,CO);ST(COD,0.02);x.beginPath();x.ellipse(ax*k,ay*k,0.12*k,0.19*k,0,0,6.283);x.stroke();E(ax,ay+0.16,0.09,0.06,GO);E(ax,ay+0.22,0.085,0.085,SK);
     if(cup){// la chope de cuivre emblématique de Pax : bord cuivré, anse de laiton, café qui tourbillonne, vapeur
       const cx=ax-d*0.04,cy=ay+0.34,R=0.13;x.fillStyle="rgba(0,0,0,.3)";x.beginPath();x.arc((cx+0.02)*k,(cy+0.025)*k,R*k,0,6.283);x.fill();
       ST("#1a1008",0.02);x.lineCap="round";x.beginPath();x.arc((cx+d*0.135)*k,cy*k,0.05*k,-1.2,1.2);x.stroke();ST("#c8962a",0.03);x.beginPath();x.arc((cx+d*0.135)*k,cy*k,0.05*k,-1.2,1.2);x.stroke();
@@ -4378,6 +4373,13 @@ function paxTop(x,X,Y,s,o,TT){const a=o.a!=null?o.a:Math.PI/2,mv=!o.still,ph=TT*
         ST("rgba(200,150,100,.5)",0.008);x.beginPath();for(let t=0;t<16;t++){const an=t*0.55+TT*0.8,rr=R*0.6*lv*(1-t/18);t?x.lineTo((cx+Math.cos(an)*rr)*k,(cy+Math.sin(an)*rr)*k):x.moveTo((cx+Math.cos(an)*rr)*k,(cy+Math.sin(an)*rr)*k);}x.stroke();}
       if(lv>0.1)V34LATE.push(()=>{x.save();x.translate(X,Y);x.rotate(a-Math.PI/2);for(let q=0;q<3;q++){const ph=(TT*0.5+q/3)%1,sx=cx+Math.sin(TT*1.3+q*2)*0.03,sy=cy-ph*0.35;x.strokeStyle="rgba(255,255,255,"+(0.45*(1-ph))+")";x.lineWidth=Math.max(1,k*0.03*(1+ph));x.beginPath();x.moveTo(sx*k,sy*k);x.quadraticCurveTo((sx+0.05)*k,(sy-0.08)*k,(sx-0.02)*k,(sy-0.16)*k);x.stroke();}x.restore();});}};
   arm(-1,mv?-sw*0.12:0,false);arm(1,mv?sw*0.12:0,o.cup!==false);
+  // redingote : épaules larges, pans qui dépassent derrière
+  x.fillStyle=COD;x.beginPath();x.moveTo(-0.4*k,0);x.quadraticCurveTo(-0.42*k,-0.36*k,0,-0.4*k);x.quadraticCurveTo(0.42*k,-0.36*k,0.4*k,0);x.closePath();x.fill();
+  E(0,0,0.44,0.26,CO);x.save();x.beginPath();x.ellipse(0,0,0.44*k,0.26*k,0,0,6.283);x.clip();E(-0.12,-0.08,0.36,0.17,"#b83a30");E(0,0.14,0.5,0.12,"rgba(0,0,0,.15)");
+    ST("#f0ece0",0.06);x.beginPath();x.moveTo(-0.3*k,-0.18*k);x.lineTo(0.3*k,0.2*k);x.moveTo(0.3*k,-0.18*k);x.lineTo(-0.3*k,0.2*k);x.stroke();E(0,0.01,0.05,0.05,GO);x.restore();
+  ST(COD,0.025);x.beginPath();x.ellipse(0,0,0.44*k,0.26*k,0,0,6.283);x.stroke();
+  // épaulettes d'or à franges
+  [-1,1].forEach(d=>{E(d*0.36,-0.02,0.12,0.09,GO);ST("#a8842a",0.015);for(let i=-3;i<=3;i++){x.beginPath();x.moveTo((d*0.36+i*0.03)*k,0.04*k);x.lineTo((d*0.36+i*0.034)*k,0.1*k);x.stroke();}});
   // tête de Pax : la tête peinte vue de haut (GPT), museau vers l'avant ; à défaut, la tête dessinée en code
   if(PAXHEAD.complete&&PAXHEAD.naturalWidth){const f=0.64*k/210;x.save();x.translate(0,0.18*k);x.rotate(Math.PI);x.drawImage(PAXHEAD,-105*f,-103.5*f,210*f,207*f);x.restore();}else{
   E(0,0.06,0.26,0.24,SK);E(-0.2,-0.08,0.06,0.045,SKD);E(0.2,-0.08,0.06,0.045,SKD);E(-0.2,-0.085,0.035,0.025,"#c89aa8");E(0.2,-0.085,0.035,0.025,"#c89aa8");
@@ -5152,8 +5154,8 @@ function burFisher(x,f,s,TT,i){if(!FISH.complete||!FISH.naturalWidth)return;cons
     x.fillStyle="#c0392b";x.beginPath();x.ellipse(bx,by-0.03*s,0.04*s,0.03*s,0,Math.PI,0);x.fill();x.fillStyle="#f4f0e8";x.beginPath();x.ellipse(bx,by-0.02*s,0.04*s,0.022*s,0,0,Math.PI);x.fill();}
   x.restore();
   if(TOP90){// pêcheur vu de dessus : assis au bord du quai, face à l'eau, canne tendue vers le bouchon
-    const o=p90Fig(pplFig("villageois",sd+5));PPL_SITQ=1;ppl90(x,X,Y-0.32*s,s,o,Math.PI/2,0,false);PPL_SITQ=0;
-    x.save();x.strokeStyle="#5a3a1a";x.lineWidth=Math.max(2,s*0.035);x.lineCap="round";x.beginPath();x.moveTo(X+0.12*s,Y-0.05*s);x.quadraticCurveTo(X-0.05*s,Y+0.3*s,tx,ty-(reeling?0.06*s:0));x.stroke();x.restore();x.restore();return;}
+    const o=Object.assign({},p90Fig(pplFig("villageois",sd+5)),{item:"rod"});PPL_SITQ=1;ppl90(x,X,Y-0.32*s,s,o,Math.PI/2,0,false);PPL_SITQ=0;const kk=s*1.02*(o.sc||1);
+    x.save();x.strokeStyle="#5a3a1a";x.lineWidth=Math.max(2,s*0.035);x.lineCap="round";x.beginPath();x.moveTo(X+0.0*kk,Y-0.32*s+0.44*kk);x.quadraticCurveTo(X-0.05*s,Y+0.3*s,tx,ty-(reeling?0.06*s:0));x.stroke();x.restore();x.restore();return;}
   v34Defer(x,Y,()=>{x.save();
     // on retire la ligne peinte dans le dessin (elle tombait sur le quai) : on ne garde que le personnage et la canne
     x.beginPath();x.rect(X-M.fx*k,Y-M.fy[v]*k,M.cw*k,M.ch*k);x.rect(X-M.fx*k,Y-M.fy[v]*k+105*k,(Math.max(TIP[0],8)+30)*k,M.ch*k);x.clip("evenodd");
