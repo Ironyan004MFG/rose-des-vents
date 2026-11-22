@@ -4224,6 +4224,8 @@ function wpn90(x,k,o,sw,E,ph2){const it=o.item,steel="#c4c8ce",steelD="#6a6f76",
   return;
   // --- l'arme levée, tenue debout : le fer est juste au-dessus du poing (dessiné après les mains, il les recouvre)
   function wpnTop(){if(!it||WPN_ALL.indexOf(it)<0||["bo","crossbow","rapier","dagger","greatsword","bow"].indexOf(it)>=0||(it==="sword"&&o.sheath))return;
+  if(o.w34){// variante 3/4 : l'arme penchée vers l'avant-dehors, vue de biais (silhouette raccourcie), poing sur le manche
+    const fx=0.36,fy=0.17+sw*0.14,pl=WPN_POLE.indexOf(it)>=0;x.save();x.translate(fx*k,fy*k);x.rotate(-0.55);x.scale(1,0.62);x.translate(-fx*k,-(pl?0.06:fy)*k);wpnProf(x,k,o,0,E,null);x.restore();E(fx,fy,0.065,0.065,o.glove||o.skin);return;}
   const pole=WPN_POLE.indexOf(it)>=0,tx=0.36,ty=0.17+sw*0.14,K=pole?1.3:1.2;
   x.save();x.translate(tx*k,ty*k);x.scale(K,K);x.rotate(0.5);// repère du fer : +x = tranchant vers l'extérieur
   const t=(P)=>P;E(0,0,0.035,0.035,"#3a2414");
@@ -4331,6 +4333,8 @@ function fig90(role,seed,raceF){const R=ecRng(Math.abs(Math.floor(seed))*7919+13
   {const sub=role==="aventurier"?(o.cl==="paladin"?"guerrier":o.cl||"rodeur"):role;
    o.hk=t90Pick(race,sub,R);const steel=/^[mf]_c_/.test(o.hk||"");
    o.hc=[o.skin,o.hair,o.hatc||o.cape||pk(P90_TEINT),steel?pk(["#b8bec8","#a8aeb8","#c8ccd2"]):pk(["#e0b850","#d0a040","#c8c8c0"]),pk(["#f0ece0","#c84030","#5a9a3a","#e8c040","#7a5aa8"]),o.horns||"#3a3028"];}
+  // variété : 3 sur 4 tiennent leur arme debout (vue de dessus), 1 sur 4 penchée en 3/4
+  if(o.item&&WPN_ALL.indexOf(o.item)>=0)o.w34=R()<0.25;
   return o;}
 // Passerelles : les anciens appels (atlas, employés) dessinent maintenant ces figurines vues d'en haut
 let P90_ROLE=null;const P90_CACHE={};
