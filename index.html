@@ -4352,7 +4352,7 @@ const P90_EMP=[{race:"gnome",sc:0.7,skin:"#f0d0b0",hair:"#e8e4dc",beard:"#e8e4dc
 // Pax vu d'en haut : Giff (tête d'hippopotame) en redingote rouge à épaulettes d'or, baudriers blancs, LUNDI en travers du dos, cicatrice sur l'œil
 const PAXJ=typeof Image!=="undefined"?Object.assign(new Image(),{src:"img/pax_jeton.png"}):{};
 const PAXHEAD=typeof Image!=="undefined"?Object.assign(new Image(),{src:"img/pax_tete_jeton.webp"}):{};
-function paxTop(x,X,Y,s,o,TT){const a=o.a!=null?o.a:Math.PI/2,mv=!o.still,ph=TT*6.2,sw=mv?Math.sin(ph):0,br=mv?1:1+Math.sin(TT*1.5)*0.012,k=s*0.8;
+function paxTop(x,X,Y,s,o,TT){const a=o.a!=null?o.a:Math.PI/2,mv=!o.still,ph=TT*6.2,sw=mv?Math.sin(ph):0,br=mv?1:1+Math.sin(TT*1.5)*0.012,k=s*1.04;/* Pax est un giff de grande taille (entre M et L) : ~30 % plus large que les aventuriers */
   const E=(cx,cy,rx,ry,col,rot)=>{x.fillStyle=col;x.beginPath();x.ellipse(cx*k,cy*k,rx*k,ry*k,rot||0,0,6.283);x.fill();},ST=(col,w)=>{x.strokeStyle=col;x.lineWidth=Math.max(1,k*w);};
   const SK="#9a5e5e",SKD="#5e3434",SKL="#c88a88",CO="#9a2a22",COD="#6a1a16",GO="#d8b048";
   x.save();x.translate(X,Y);x.rotate(a-Math.PI/2);x.scale(br,br);
@@ -5091,7 +5091,8 @@ function burSurround(x,g,s,c,OT,SA){const W=c.w,H=c.h,R=ecRng(ecSeed(c.seed+"|ab
   // cases où les passants peuvent marcher (rues, quais, chemins, herbe libre)
   // pêcheurs assis au bord des quais, la ligne dans l'eau
   g.fishers=[];{const cand=[];for(let Y=0;Y<H;Y++)for(let X=0;X<W;X++){const i=Y*W+X;if(OT[i]!=="="||occ[i]||nearDoor(X+0.5,Y+0.5,2.5)||(g.boats||[]).some(b=>b.v?(X>=b.x-1.6&&X<=b.x+1.6&&Y>=b.y-2.5&&Y<=b.y+b.L):(b.k!=="row"&&X>=b.x-1.5&&X<=b.x+b.L+1.5&&Y>=b.y-3&&Y<=b.y+(b.B||1)+1)))continue;// pêcheur « Paper Mario » : il fait face à l'eau, donc l'eau doit être devant lui (au sud), assez large pour la ligne
-    const d=OT[(Y+1)*W+X]==="~"&&Y+1<H&&X-2>=0&&OT[(Y+1)*W+X-1]==="~"&&OT[(Y+1)*W+X-2]==="~"?[0,1]:null;if(d)cand.push([X,Y,d]);}
+    const wat=(xx,yy)=>xx>=0&&yy>=0&&xx<W&&yy<H&&OT[yy*W+xx]==="~";// vue de dessus : face à l'eau dans n'importe quelle direction
+    for(const d of (TOP90?[[0,1],[0,-1],[1,0],[-1,0]]:[[0,1]])){const p=[-d[1],d[0]];if([0,1,2].every(q=>wat(X+d[0]+p[0]*q,Y+d[1]+p[1]*q))){cand.push([X,Y,d]);break;}}}
     const nf=Math.min(cand.length,Math.round(1+D));for(let k=0;k<nf;k++){const j=Math.floor(R()*cand.length),[X,Y,d]=cand.splice(j,1)[0];if(g.fishers.some(f=>Math.hypot(f.x-X,f.y-Y)<3))continue;occ[Y*W+X]=1;// pour repartir : remonter le ponton jusqu'à une rangée qui mène au bord de la carte sans passer sur l'eau
       const dirL=X<W/2?-1:1,okRow=yy=>{for(let xx=X;xx>=0&&xx<W;xx+=dirL){const t=OT[yy*W+xx];if(t!=="="&&t!=="_"&&t!==":"&&t!==";"&&t!==",")return false;}return true;};let uy=Y;while(uy>0&&!okRow(uy)&&OT[(uy-1)*W+X]==="=")uy--;
       g.fishers.push({uy,x:X+0.5+d[0]*0.25,y:Y+0.5+d[1]*0.25,an:Math.atan2(d[1],d[0]),c:EC_COLORS[Math.floor(R()*EC_COLORS.length)],h:["#3a2c22","#6b4a2b","#8a8a8a"][Math.floor(R()*3)],p:R()*6});}}
@@ -5123,14 +5124,15 @@ function burSwim(x,g,s,TT){const OT=g.OT,G=g.G;if(!OT||!G)return;const W=G.W,H=G
   g.swim.forEach(f=>{const t=TT*f.v+f.p,X=f.cx+Math.sin(t)*f.A,Y=f.cy+Math.sin(t*2.3)*0.12,d=Math.cos(t)>=0?1:-1;x.save();x.translate(X*s,Y*s);x.scale(d*f.sz,f.sz);x.fillStyle=f.col;
     x.beginPath();x.ellipse(0,0,0.22*s,0.07*s,0,0,6.283);x.fill();const w=Math.sin(TT*6+f.p)*0.04;x.beginPath();x.moveTo(-0.18*s,0);x.lineTo(-0.32*s,(-0.08+w)*s);x.lineTo(-0.32*s,(0.08+w)*s);x.closePath();x.fill();x.restore();});}
 function burFisher(x,f,s,TT,i){if(!FISH.complete||!FISH.naturalWidth)return;const M=FISH_M,v=i%M.n,hf=M.race[v]==="halfelin",k=s*1.75*PPL2_K/248*(hf?0.75:1);
-  const PL=burFishPlan(f),t=((TT+f.p*37)%PL.T+PL.T)%PL.T,X=f.x*s,Y=(Math.floor(f.y)+0.92)*s,BX=X+0.45*s,BY=Y+0.02*s,sd=Math.floor(f.p*10);
+  const PL=burFishPlan(f),t=((TT+f.p*37)%PL.T+PL.T)%PL.T,X=(TOP90?Math.floor(f.x)+0.5:f.x)*s,Y=(Math.floor(f.y)+0.92)*s,BX=X+0.45*s,BY=Y+0.02*s,sd=Math.floor(f.p*10);
   // panier : nombre de poissons attrapés jusqu'ici
   let n=0;PL.C.forEach(q=>{if(t>=q.end)n++;});if(t>=PL.leave)n=5;
   if(t>=PL.leave){// il repart avec son panier, vers le bord de la carte le plus proche, puis revient
     const W=(f._W||40),dirL=f.x<W/2?-1:1,dist=(dirL<0?f.x+1.5:W-f.x+1.5),u=t-PL.leave,y0=Math.floor(f.y),legV=f.uy==null?0:Math.max(0,y0-f.uy),D=legV+dist,at=d=>d<legV?[f.x,y0-d]:[f.x+dirL*(d-legV),y0-legV];let px,py,mv=true,fl=dirL<0,al=1,carry=true;
     if(u<PL.walk){[px,py]=at(D*(u/PL.walk));al=Math.min(1,(PL.walk-u)/1);}else if(u<PL.walk+PL.away)return;else{const w=u-PL.walk-PL.away;[px,py]=at(D*(1-w/PL.walk));fl=dirL>0;al=Math.min(1,w/1);carry=false;if(w>PL.walk-0.4)mv=false;}
     const fig=pplFig("villageois",sd+5),Yp=py;x.save();x.globalAlpha*=al;pplDraw(x,px*s,(Yp+0.62)*s,s,fig,fl,mv,TT,i,carry?(c2,w2,h2)=>{c2.save();c2.translate(0,-h2*0.38);if(fl)c2.scale(-1,1);burBasket(c2,w2*0.22,0,s,5,sd);c2.restore();}:null);x.restore();return;}
-  // cycle de pêche en cours
+  // cycle de pêche en cours (vue de dessus : on tourne tout autour de la case, face à l'eau)
+  if(TOP90){x.save();const CX=(Math.floor(f.x)+0.5)*s,CY=(Math.floor(f.y)+0.5)*s;x.translate(CX,CY);x.rotate((f.an==null?Math.PI/2:f.an)-Math.PI/2);x.translate(-CX,-CY);}
   const q=PL.C.find(q=>t<q.end)||PL.C[4],biting=t>=q.bite&&t<q.reel,reeling=t>=q.reel&&t<q.end;
   const fr=reeling?2:(Math.floor((TT+f.p)/0.8)%2);
   const TIP=[[6,50],[13,48],[13,48],[0,54],[15,47],[6,50],[6,50],[20,46]][v]||[8,50],tx=TOP90?X-0.24*s:X+(TIP[0]-M.fx)*k,ty=TOP90?Y+0.62*s:Y+(TIP[1]-M.fy[v])*k;
@@ -5151,7 +5153,7 @@ function burFisher(x,f,s,TT,i){if(!FISH.complete||!FISH.naturalWidth)return;cons
   x.restore();
   if(TOP90){// pêcheur vu de dessus : assis au bord du quai, face à l'eau, canne tendue vers le bouchon
     const o=p90Fig(pplFig("villageois",sd+5));PPL_SITQ=1;ppl90(x,X,Y-0.32*s,s,o,Math.PI/2,0,false);PPL_SITQ=0;
-    x.save();x.strokeStyle="#5a3a1a";x.lineWidth=Math.max(2,s*0.035);x.lineCap="round";x.beginPath();x.moveTo(X+0.12*s,Y-0.05*s);x.quadraticCurveTo(X-0.05*s,Y+0.3*s,tx,ty-(reeling?0.06*s:0));x.stroke();x.restore();return;}
+    x.save();x.strokeStyle="#5a3a1a";x.lineWidth=Math.max(2,s*0.035);x.lineCap="round";x.beginPath();x.moveTo(X+0.12*s,Y-0.05*s);x.quadraticCurveTo(X-0.05*s,Y+0.3*s,tx,ty-(reeling?0.06*s:0));x.stroke();x.restore();x.restore();return;}
   v34Defer(x,Y,()=>{x.save();
     // on retire la ligne peinte dans le dessin (elle tombait sur le quai) : on ne garde que le personnage et la canne
     x.beginPath();x.rect(X-M.fx*k,Y-M.fy[v]*k,M.cw*k,M.ch*k);x.rect(X-M.fx*k,Y-M.fy[v]*k+105*k,(Math.max(TIP[0],8)+30)*k,M.ch*k);x.clip("evenodd");
