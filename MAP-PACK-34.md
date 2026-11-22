@@ -1,4 +1,4 @@
-# Map-pack « Vue 3/4 »
+# Map-pack « Vues de 3/4 »
 
 Archive de la version 3/4 des cartes (style « Paper Mario ») : les 8 bureaux, villes, maisons, entrepôts, grottes et ports en vue de trois quarts, avec personnages et animaux debout, navires vus de flanc.
 

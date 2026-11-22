@@ -403,5 +403,9 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+    // Faveurs secrètes des mendiants : le MJ seul (les joueurs n'en voient que le texte révélé par le MJ)
+    match /faveurs/{id} {
+      allow read, write: if isAdmin();
+    }
   }
 }
