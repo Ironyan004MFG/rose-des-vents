@@ -3872,7 +3872,10 @@ function dynVille34(x,g,s,t,dt,A,c){const TT=Date.now()/1000,W=g.W,H=g.H,night=e
       const r=R(),kind=r<0.1?"colporteur":r<0.18?"pelerins":r<0.24&&!L.some(q=>q.kind==="patrouille")?"patrouille":"voyageur";L.push({P,seg,tot,v:EC_WALK[kind].v*(0.8+R()*0.4),o:Math.floor(R()*97),kind,wo:{kind,c:EC_COLORS[Math.floor(R()*EC_COLORS.length)],h:"aa"+String.fromCharCode(33+Math.floor(R()*90))}});}
     g.peds=L;}
   g.peds.forEach((w,i)=>{if(night&&i%3&&w.kind!=="patrouille")return;const L2=w.tot*2,raw=((TT*w.v+w.o*3)%L2+L2)%L2;let u=raw>w.tot?L2-raw:raw;const back=raw>w.tot;let j=0;while(j<w.seg.length-1&&u>w.seg[j]){u-=w.seg[j];j++;}const a=w.P[j],b=w.P[j+1]||a,f=w.seg[j]?Math.min(1,u/w.seg[j]):0;
-    const X=a[0]+(b[0]-a[0])*f,Y=a[1]+(b[1]-a[1])*f,an=Math.atan2(b[1]-a[1],b[0]-a[0])+(back?Math.PI:0);ecWalker(x,Object.assign({},w.wo,{kind:w.kind,o:w.o}),X,Y,an,s,TT*6+i);});
+    const X=a[0]+(b[0]-a[0])*f,Y=a[1]+(b[1]-a[1])*f,an=Math.atan2(b[1]-a[1],b[0]-a[0])+(back?Math.PI:0);
+    // position le long du trajet (même horloge) : chaque garde de la patrouille et le cheval mené suivent le chemin et tournent chacun à leur tour
+    const at=q=>{let v=((q%L2)+L2)%L2,bk=false;if(v>w.tot){v=L2-v;bk=true;}let k=0;while(k<w.seg.length-1&&v>w.seg[k]){v-=w.seg[k];k++;}const A=w.P[k],B=w.P[k+1]||A,ff=w.seg[k]?Math.min(1,v/w.seg[k]):0;return [A[0]+(B[0]-A[0])*ff,A[1]+(B[1]-A[1])*ff,Math.atan2(B[1]-A[1],B[0]-A[0])+(bk?Math.PI:0)];};
+    const P0=TT*w.v+w.o*3;ecWalker(x,Object.assign({},w.wo,{kind:w.kind,o:w.o,_at:at,_p:P0}),X,Y,an,s,TT*6+i);});
   const TP=ecTreePal();V34LATE.push(((T0,A0)=>()=>{x.save();x.setTransform(T0);x.globalAlpha=A0;g.trees.forEach(tr=>{const spr=tr.elf&&ecSaison()!=="hiver"?spTree(tr.r,BUR_ELFTREE[tr.c%BUR_ELFTREE.length],Math.floor(tr.ph*1000)+tr.c,s,"feuillu"):tr.dead?spTree(tr.r,["#3a2a1c"],Math.floor(tr.ph*1000),s,"nu",false):spTree(tr.r,TP[tr.c],Math.floor(tr.ph*1000)+tr.c,s,"feuillu");x.drawImage(spr,tr.x*s-spr.width/2,tr.y*s-spr.height/2);});x.restore();})(x.getTransform(),x.globalAlpha));}
 function geoVille(c,R){const W=c.w,H=c.h,g={roofs:[],stalls:[],lamps:[],lights:[],trees:[],streets:[],smoke:[]};const xs=[0],ys=[0];
   for(let x=6+Math.floor(R()*6);x<W-4;x+=13+Math.floor(R()*7))xs.push(x);for(let y=5+Math.floor(R()*4);y<H-4;y+=11+Math.floor(R()*5))ys.push(y);xs.push(W);ys.push(H);
@@ -7258,7 +7261,11 @@ function pplStreet(x,w,X,Y,a,s,ph,still,i){const k=w.kind,hs=Math.abs(Math.floor
       // jambe du cavalier sur le flanc : cuisse vers l'avant, genou plié, mollet qui descend, botte dans l'étrier
       const hx=X-d*0.08,hy=top+0.02;x.strokeStyle="#3a2c22";x.lineCap="round";x.lineJoin="round";x.lineWidth=0.13*s;x.beginPath();x.moveTo(hx*s,hy*s);x.lineTo((hx+d*0.24)*s,(hy+0.16)*s);x.lineTo((hx+d*0.14)*s,(hy+0.56)*s);x.stroke();
       x.fillStyle="#1e1612";x.beginPath();x.ellipse((hx+d*0.18)*s,(hy+0.62)*s,0.11*s,0.055*s,0,0,6.283);x.fill();});return true;}
-  if(k==="colporteur"){const d=dx>=0?1:-1;if(TOP90){x.save();x.translate(X*s,Y*s);x.rotate(a);peddler90(x,s,{p:(hs%71)/71,mv,fig:pplFig("marchand",hs+5)},TT);x.restore();return true;}v34Defer(x,(Y+0.25)*s,()=>v34Horse(x,X-d*1.0,Y+0.22,s,d,(hs%71)/71,TT,{mv,pack:true,sc:0.95,col:["#7a6a58","#3a2c22"]}));
+  if(k==="colporteur"){const d=dx>=0?1:-1;if(TOP90&&w._at){// le cheval bâté suit le chemin derrière le colporteur : il tourne au coin après lui
+      const q=w._at(w._p-1.55),hx=q[0],hy=q[1],ha=q[2],p0=(hs%71)/71;x.save();x.translate(hx*s,hy*s);x.rotate(ha);horse90(x,s,{p:p0,mv,pack:true,sc:0.95,col:["#7a6a58","#3a2c22"]},TT);x.restore();
+      const nx=hx+Math.cos(ha)*0.95,ny=hy+Math.sin(ha)*0.95,mx=X-Math.cos(a)*0.2+Math.cos(a+1.57)*0.25,my=Y-Math.sin(a)*0.2+Math.sin(a+1.57)*0.25;x.strokeStyle="#5a3a1a";x.lineWidth=Math.max(1,s*0.02);x.beginPath();x.moveTo(mx*s,my*s);x.quadraticCurveTo(((mx+nx)/2)*s,((my+ny)/2+0.12)*s,nx*s,ny*s);x.stroke();
+      x.save();x.translate(X*s,Y*s);x.rotate(a);ppl90(x,0,0,s,p90Fig(pplFig("marchand",hs+5)),0,mv?TT*6.9:0,mv);x.restore();return true;}
+    if(TOP90){x.save();x.translate(X*s,Y*s);x.rotate(a);peddler90(x,s,{p:(hs%71)/71,mv,fig:pplFig("marchand",hs+5)},TT);x.restore();return true;}v34Defer(x,(Y+0.25)*s,()=>v34Horse(x,X-d*1.0,Y+0.22,s,d,(hs%71)/71,TT,{mv,pack:true,sc:0.95,col:["#7a6a58","#3a2c22"]}));
     x.strokeStyle="#3a2414";x.lineWidth=Math.max(1,s*0.015);PPL_AN=a;pplDraw(x,X*s,Y*s,s,pplFig("marchand",hs+5),fl,mv,TT,0);PPL_AN=null;return true;}
   if(k==="voyageur"){PPL_AN=a;pplDraw(x,X*s,Y*s,s,pplFig(hs%4===0?"noble":"villageois",hs),fl,mv,TT,i||0);PPL_AN=null;return true;}
   return false;}
