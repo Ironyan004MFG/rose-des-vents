@@ -949,7 +949,7 @@ label.evset span:last-child{color:var(--ink-soft);font-size:14px}
 .mg-vit .lbl{font-size:12px;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
 .mg-vit .num{font-weight:700;font-size:18px}
 .mg-ca{display:flex;align-items:center;gap:6px}
-.mg-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:8px 0;text-align:center}
+.mg-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin:8px 0;text-align:center}
 .mg-stats div{background:rgba(0,0,0,.06);border-radius:6px;padding:4px 2px}
 .mg-stats dt{font-size:11px;text-transform:uppercase;letter-spacing:.04em;opacity:.8}
 .mg-stats dd{margin:0;font-weight:700;font-size:18px}
@@ -973,6 +973,12 @@ label.evset span:last-child{color:var(--ink-soft);font-size:14px}
 .mg-quest .actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
 .mg-quest .ev{color:var(--ink-soft)}
 .mg-card .mghd{display:flex;gap:10px;align-items:center}
+.mg-port{all:unset;display:block;width:calc(100% + 32px);box-sizing:border-box;cursor:zoom-in;margin:-14px -16px 10px;border-radius:10px 10px 0 0;overflow:hidden;background:#f3ead3}
+.mg-port img{display:block;width:100%;height:260px;object-fit:cover;object-position:50% 18%}
+.mg-port:focus-visible{outline:3px solid var(--gold)}
+img.mg-av{object-fit:cover;object-position:50% 15%;border:2px solid #d8b45e;padding:0;background:#f3ead3}
+.mg-zoom{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px}
+.mg-zoom img{max-width:100%;max-height:82vh;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.6)}
 #minilaunch .pickrow{display:flex;flex-direction:row;align-items:center;gap:12px;text-align:left;padding:8px 10px}
 #minilaunch .pickrow input{width:22px;height:22px;flex:none;margin:0}
 #minilaunch .pickrow strong{text-transform:none;letter-spacing:normal;font-size:17px}
@@ -2548,6 +2554,7 @@ const MINI_STATS=[["force","Force"],["intelligence","Intelligence"],["genial","G
 const MINI_PF=[["nom","Nom","text"],["joueur","Joué par","text"],["classe","Classe","text"],["sousClasse","Sous-classe","text"],["niveau","Niveau","num"],["role","Ce qu'il fait de mieux","text"],["pvMax","PV max","num"],["pv","PV","num"],["ca","CA","num"],["capacites","Pouvoirs et capacités","area"],["equipement","Équipement","area"],["notes","Notes","area"]];
 const MINI_QF=[["titre","Titre","text"],["lieu","Lieu","text"],["badge","Badge gagné","text"],["recompense","Récompense","text"],["pax","Ce que dit Pax (à lire aux enfants)","area"],["objectif","Objectif","area"],["deroule","Déroulement (DM)","area"],["monstres","Créatures (DM)","area"]];
 function miniOf(t){return miniDocs.filter(x=>x.type===t).sort((a,b)=>(a.ordre||0)-(b.ordre||0)||String(a.nom||a.titre).localeCompare(String(b.nom||b.titre)));}
+function miniAv(p){return p.image?'<img class="mg-av" src="'+esc(p.image)+'" alt="">':'<span class="mg-av" aria-hidden="true">'+esc(String(p.nom||"?").charAt(0))+'</span>';}
 function miniNum(x){return typeof x==="number"?String(x):'<span class="muted">?</span>';}
 function miniPaxImg(){const p=aventuriers.find(a=>a.id==="pax-xadi");return p&&p.image?'<img class="mg-pax" src="'+esc(p.image)+'" alt="Pax">':'';}
 function miniForm(id,fields,o,extra){
@@ -2557,14 +2564,14 @@ function miniForm(id,fields,o,extra){
     '<div class="actions"><button class="btn gold" type="submit">Enregistrer</button><button class="btn board" type="button" data-a="mini-cancel">Annuler</button>'+(o.id&&o.id!=="groupe"?(ui.miniDel===o.id?'<button class="btn danger" type="button" data-a="mini-del-yes" data-id="'+esc(o.id)+'">Confirmer la suppression</button>':'<button class="btn board" type="button" data-a="mini-del" data-id="'+esc(o.id)+'">Supprimer</button>'):'')+'</div></form>';
 }
 function miniPerso(p){
-  if(ui.miniEdit===p.id){const st=p.stats||{};return '<article class="mg-card">'+miniForm(p.id,MINI_PF,p,'<fieldset class="mg-statf"><legend>Caractéristiques</legend>'+MINI_STATS.map(s=>'<label for="ms-'+s[0]+'">'+s[1]+'<input id="ms-'+s[0]+'" type="number" step="1" value="'+esc(st[s[0]]==null?"":st[s[0]])+'"></label>').join("")+'</fieldset><label class="pickrow" for="mf-support"><input type="checkbox" id="mf-support"'+(p.support?' checked':'')+'><span>Personnage de soutien (joué par un parent)</span></label>')+'</article>';}
+  if(ui.miniEdit===p.id){const st=p.stats||{};return '<article class="mg-card">'+miniForm(p.id,MINI_PF,p,'<fieldset class="mg-statf"><legend>Caractéristiques</legend>'+MINI_STATS.map(s=>'<label for="ms-'+s[0]+'">'+s[1]+'<input id="ms-'+s[0]+'" type="number" step="1" value="'+esc(st[s[0]]==null?"":st[s[0]])+'"></label>').join("")+'</fieldset><label for="mf-img">Portrait'+(p.image?' (remplacer)':'')+'<input type="file" id="mf-img" accept="image/*"></label>'+(p.image?'<label class="pickrow" for="mf-noimg"><input type="checkbox" id="mf-noimg"><span>Retirer le portrait</span></label>':'')+'<label class="pickrow" for="mf-support"><input type="checkbox" id="mf-support"'+(p.support?' checked':'')+'><span>Personnage de soutien (joué par un parent)</span></label>')+'</article>';}
   const st=p.stats||{},mx=+p.pvMax||0,pv=typeof p.pv==="number"?p.pv:mx,pc=mx?Math.max(0,Math.min(100,Math.round(pv/mx*100))):0;
-  return '<article class="mg-card'+(p.support?' sup':'')+'"><div class="mghd"><span class="mg-av" aria-hidden="true">'+esc(String(p.nom||"?").charAt(0))+'</span><div><h3>'+esc(p.nom||"Sans nom")+'</h3><p class="mg-who">'+esc([p.classe,p.sousClasse,p.niveau?"niveau "+p.niveau:""].filter(Boolean).join(" · ")||"Classe à définir")+(p.joueur?'<br><em>Joué par '+esc(p.joueur)+'</em>':'')+'</p></div></div>'+
+  return '<article class="mg-card'+(p.support?' sup':'')+'">'+(p.image?'<button class="mg-port" data-a="mini-zoom" data-id="'+esc(p.id)+'" aria-label="Agrandir le portrait de '+esc(p.nom||"")+'"><img src="'+esc(p.image)+'" alt=""></button>':'')+'<div class="mghd">'+(p.image?'':miniAv(p))+'<div><h3>'+esc(p.nom||"Sans nom")+'</h3><p class="mg-who">'+esc([p.classe,p.sousClasse,p.niveau?"niveau "+p.niveau:""].filter(Boolean).join(" · ")||"Classe à définir")+(p.joueur?'<br><em>Joué par '+esc(p.joueur)+'</em>':'')+'</p></div></div>'+
     (p.role?'<p class="mg-role">'+esc(p.role)+'</p>':'')+
     '<div class="mg-vit"><div class="mg-pv"><span class="lbl">PV</span>'+(mx?'<div class="bar" role="img" aria-label="'+pv+' PV sur '+mx+'"><i style="width:'+pc+'%"></i></div>':'')+'<span class="num">'+(mx?pv+' / '+mx:'<span class="muted">?</span>')+'</span>'+
       (mx?'<button class="mini" data-a="mini-pv" data-id="'+esc(p.id)+'" data-v="-1" aria-label="Perdre 1 PV">−</button><button class="mini" data-a="mini-pv" data-id="'+esc(p.id)+'" data-v="1" aria-label="Regagner 1 PV">+</button>':'')+'</div>'+
       '<div class="mg-ca"><span class="lbl">CA</span><span class="num">'+miniNum(p.ca)+'</span></div></div>'+
-    '<dl class="mg-stats">'+MINI_STATS.map(s=>'<div><dt>'+s[1]+'</dt><dd>'+miniNum(st[s[0]])+'</dd></div>').join("")+'</dl>'+
+    '<dl class="mg-stats">'+MINI_STATS.map(s=>'<div><dt'+(s[0]==="intelligence"?' title="Intelligence">Intel.':'>'+s[1])+'</dt><dd>'+miniNum(st[s[0]])+'</dd></div>').join("")+'</dl>'+
     (p.capacites?'<h4>Pouvoirs</h4><div class="wikibody">'+md(p.capacites)+'</div>':'')+
     (p.equipement?'<h4>Équipement</h4><div class="wikibody">'+md(p.equipement)+'</div>':'')+
     (p.notes?'<details><summary>Notes</summary><div class="wikibody">'+md(p.notes)+'</div></details>':'')+
@@ -2597,14 +2604,16 @@ function miniView(){
     const lq=ui.miniLaunch&&Q.find(q=>q.id===ui.miniLaunch);
     if(lq){const P=miniOf("perso"),was=lq.presents||null;
       h+='<div class="modal-bg" data-a="mini-launch-no"><form class="modal" id="minilaunch" data-id="'+esc(lq.id)+'" role="dialog" aria-modal="true" aria-labelledby="ml-t"><h2 id="ml-t">Lancer « '+esc(lq.titre)+' »</h2><fieldset class="pick"><legend>Qui est présent aujourd\'hui ?</legend>'+
-        P.map((p,i)=>'<label class="pickrow" for="ml-'+i+'"><input type="checkbox" id="ml-'+i+'" value="'+esc(p.id)+'"'+(!was?(p.support?'':' checked'):was.indexOf(p.id)>=0?' checked':'')+'><span class="mg-av" aria-hidden="true">'+esc(String(p.nom||"?").charAt(0))+'</span><span><strong>'+esc(p.nom)+'</strong>'+(p.joueur?' <em>('+esc(p.joueur)+')</em>':'')+(p.support?'<span class="desc">Soutien</span>':'')+'</span></label>').join("")+
+        P.map((p,i)=>'<label class="pickrow" for="ml-'+i+'"><input type="checkbox" id="ml-'+i+'" value="'+esc(p.id)+'"'+(!was?(p.support?'':' checked'):was.indexOf(p.id)>=0?' checked':'')+'>'+miniAv(p)+'<span><strong>'+esc(p.nom)+'</strong>'+(p.joueur?' <em>('+esc(p.joueur)+')</em>':'')+(p.support?'<span class="desc">Soutien</span>':'')+'</span></label>').join("")+
         '</fieldset><div class="actions"><button class="btn" type="submit">C\'est parti !</button><button class="btn ghost" type="button" data-a="mini-launch-no">Annuler</button></div></form></div>';}
   } else if(tab==="persos"){
     const P=miniOf("perso"),K=P.filter(p=>!p.support),S=P.filter(p=>p.support);
-    if(ui.miniEdit==="new-perso")h+='<article class="mg-card">'+miniForm("new-perso",MINI_PF,{},'<label class="pickrow" for="mf-support"><input type="checkbox" id="mf-support"><span>Personnage de soutien (joué par un parent)</span></label>')+'</article>';
+    if(ui.miniEdit==="new-perso")h+='<article class="mg-card">'+miniForm("new-perso",MINI_PF,{},'<label for="mf-img">Portrait<input type="file" id="mf-img" accept="image/*"></label><label class="pickrow" for="mf-support"><input type="checkbox" id="mf-support"><span>Personnage de soutien (joué par un parent)</span></label>')+'</article>';
     else h+='<div class="actions"><button class="btn gold" data-a="mini-new" data-v="perso">Nouveau personnage</button>'+(K.concat(S).some(p=>p.pvMax)?'<button class="btn board" data-a="mini-heal">Tout le monde se repose (PV au max)</button>':'')+'</div>';
     h+='<h2 class="subh">Les aventuriers</h2><div class="mg-grid">'+K.map(miniPerso).join("")+'</div>';
     if(S.length)h+='<h2 class="subh">Pour les aider</h2><div class="mg-grid">'+S.map(miniPerso).join("")+'</div>';
+    const zp=ui.miniZoom&&P.find(p=>p.id===ui.miniZoom);
+    if(zp&&zp.image)h+='<div class="modal-bg mg-zoom" data-a="mini-zoom-no" role="dialog" aria-modal="true" aria-label="Portrait de '+esc(zp.nom||"")+'"><img src="'+esc(zp.image)+'" alt="Portrait de '+esc(zp.nom||"")+'"><button class="btn gold" data-a="mini-zoom-no">Fermer</button></div>';
   } else {
     const g=miniDocs.find(x=>x.id==="groupe")||{id:"groupe"},badges=miniOf("quete").filter(q=>q.statut==="reussie"&&q.badge);
     if(ui.miniEdit==="groupe")h+=miniForm("groupe",[["tresors","Trésors du groupe","area"],["histoire","L'histoire jusqu'ici","area"],["regles","Règles de la table","area"]],g);
@@ -2624,6 +2633,8 @@ async function miniClick(a,b,id,ev){
   if(a==="mini-tab"){ui.miniTab=vv;ui.miniEdit=null;ui.miniDel=null;render();return true;}
   if(a==="mini-launch"){ui.miniLaunch=id;render();return true;}
   if(a==="mini-launch-no"){if(b.classList.contains("modal-bg")&&ev&&b!==ev.target)return true;ui.miniLaunch=null;render();return true;}
+  if(a==="mini-zoom"){ui.miniZoom=id;render();return true;}
+  if(a==="mini-zoom-no"){ui.miniZoom=null;render();return true;}
   if(a==="mini-edit"){ui.miniEdit=id;ui.miniDel=null;render();return true;}
   if(a==="mini-new"){ui.miniEdit="new-"+vv;render();return true;}
   if(a==="mini-cancel"){ui.miniEdit=null;ui.miniDel=null;render();return true;}
@@ -2646,7 +2657,10 @@ async function miniSubmit(e){
   else{
     const isP=id0==="new-perso"||(miniDocs.find(x=>x.id===id0)||{}).type==="perso",F=isP?MINI_PF:MINI_QF;d={type:isP?"perso":"quete"};
     F.forEach(f=>{d[f[0]]=f[2]==="num"?num("mf-"+f[0]):g("mf-"+f[0]).slice(0,f[2]==="area"?8000:120);});
-    if(isP){d.stats={};MINI_STATS.forEach(s=>{if(document.getElementById("ms-"+s[0]))d.stats[s[0]]=num("ms-"+s[0]);});if(!document.getElementById("ms-force"))delete d.stats;const sp=document.getElementById("mf-support");d.support=!!(sp&&sp.checked);}
+    if(isP){d.stats={};MINI_STATS.forEach(s=>{if(document.getElementById("ms-"+s[0]))d.stats[s[0]]=num("ms-"+s[0]);});if(!document.getElementById("ms-force"))delete d.stats;const sp=document.getElementById("mf-support");d.support=!!(sp&&sp.checked);
+      const fi=document.getElementById("mf-img"),ni=document.getElementById("mf-noimg"),f=fi&&fi.files&&fi.files[0];
+      if(f){const url=await resizeImage(f,800,0.8).then(u=>u.length>300000?resizeImage(f,600,0.75):u).then(u=>u.length>300000?resizeImage(f,450,0.72):u).catch(()=>"");if(url&&url.length<=300000)d.image=url;}
+      else if(ni&&ni.checked)d.image="";}
     if(!(d.nom||d.titre))return true;
     if(id0.indexOf("new-")===0){id=doc(collection(db,"mini")).id;if(!isP)d.statut="dispo";d.ordre=miniOf(d.type).length+1;}
   }
