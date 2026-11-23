@@ -983,6 +983,10 @@ label.evset span:last-child{color:var(--ink-soft);font-size:14px}
 .mg-quest .actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
 .mg-quest .ev{color:var(--ink-soft)}
 .mg-card .mghd{display:flex;gap:10px;align-items:center}
+.ptsearch li{position:relative}.ptsearch li:has(>.pttv){padding-right:46px}
+.pttv{position:absolute;right:4px;top:4px;width:36px;height:32px;border-radius:8px;border:1px solid #b9993f;background:#f3e3b0;cursor:pointer;font-size:16px;line-height:1}
+.pttv:hover,.pttv:focus-visible{background:#e2b64a}
+img.ptth{width:34px;height:34px;border-radius:50%;object-fit:cover;object-position:50% 15%;vertical-align:middle;margin-right:6px;border:1px solid #c9b48a}
 .ptvlist{list-style:none;padding:0;margin:8px 0 18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
 .ptvitem{display:flex;align-items:center;gap:10px;padding:6px 8px;border:1px solid rgba(216,180,94,.3);border-radius:8px}
 .ptvitem img,.ptvitem .ph{width:44px;height:44px;border-radius:50%;object-fit:cover;object-position:50% 15%;flex:none;display:grid;place-items:center;background:rgba(255,255,255,.08)}
@@ -10277,15 +10281,21 @@ function ptCloseModal(){
   return h+'<div class="actions"><button class="btn gold" type="submit">Sauvegarder et fermer</button><button class="btn ghost" type="button" data-a="pt-close-cancel">Revenir au combat</button></div></form></div>';
 }
 function ptSearch(qs){
-  const k=String(qs||"").trim().toLowerCase();if(k.length<2)return '<p class="desc">Tape au moins deux lettres : compendium, bestiaire, PNJ, factions, états et notes du DM.</p>';
-  const hit=(...xs)=>xs.some(x=>String(x||"").toLowerCase().indexOf(k)>=0),out=[];
-  monstres.filter(m=>hit(m.nom,m.type)).forEach(m=>out.push('<li><span class="ccat">Bestiaire</span> <button class="ptlink" data-a="pt-sb" data-id="'+esc(m.id)+'">'+esc(m.nom)+'</button> <span class="desc">FP '+esc(m.fp||"?")+' · CA '+esc(m.ca==null?"—":m.ca)+' · PV '+esc(m.pv||"—")+'</span></li>'));
-  pnjs.filter(p=>hit(p.nom,p.role,p.lieu)).forEach(p=>out.push('<li><details><summary><span class="ccat">PNJ</span> <strong>'+esc(p.nom)+'</strong>'+(p.role?' · '+esc(p.role):'')+'</summary>'+(p.voix?'<p><strong>Voix :</strong> '+esc(p.voix)+'</p>':'')+(p.secrets?'<div class="wikibody">'+md(manLinks(p.secrets))+'</div>':'')+(p.monstre?'<button class="ptadd" data-a="pt-sb" data-id="'+esc(p.monstre)+'">Bloc de stats</button>':'')+'</details></li>'));
-  factions.filter(f=>hit(f.nom,f.type)).forEach(f=>out.push('<li><details><summary><span class="ccat">Faction</span> <strong>'+esc(f.nom)+'</strong></summary>'+(f.presentation?'<div class="wikibody">'+md(manLinks(f.presentation))+'</div>':'')+(f.secrets?'<div class="wikibody"><strong>Secrets :</strong> '+md(manLinks(f.secrets))+'</div>':'')+'</details></li>'));
+  const k=ptNorm(qs).trim();if(k.length<2)return '<p class="desc">Tape au moins deux lettres : personnages, PNJ, bestiaire, objets, factions, compendium, wiki, états et notes du DM. Tout ce qui a une image a un bouton 📺 pour l\'afficher sur l\'écran des joueurs.</p>';
+  const hit=(...xs)=>xs.some(x=>ptNorm(x).indexOf(k)>=0),out=[],
+    tv=(kk,x,n)=>(x.image||(kk==="objets"&&x.texte))?'<button class="pttv" data-a="vit-show" data-k="'+kk+'" data-id="'+esc(x.id)+'" data-n="'+esc(n||x.nom||x.titre||"")+'" title="Afficher sur l\'écran des joueurs" aria-label="Afficher '+esc(n||x.nom||x.titre||"")+' sur l\'écran des joueurs">📺</button>':'',
+    th=(kk,x,n)=>x.image?zimg("ptth",x.image,n||x.nom||x.titre,kk,x.id):'';
+  aventuriers.filter(a=>hit(a.nom,a.joueur,a.classe,a.espece)).forEach(a=>out.push('<li>'+tv("aventuriers",a)+th("aventuriers",a)+'<span class="ccat">'+(a.pnj?'Personnage (PNJ)':'Personnage')+'</span> <strong>'+esc(a.nom)+'</strong> <span class="desc">'+esc([a.espece,a.classe,a.joueur?'joué par '+a.joueur:''].filter(Boolean).join(" · "))+'</span></li>'));
+  miniDocs.filter(m=>m.type==="perso"&&hit(m.nom,m.joueur,m.classe)).forEach(m=>out.push('<li>'+tv("mini",m)+th("mini",m)+'<span class="ccat">Mini Guilde</span> <strong>'+esc(m.nom)+'</strong> <span class="desc">'+esc([m.classe,m.joueur?'joué par '+m.joueur:''].filter(Boolean).join(" · "))+'</span></li>'));
+  pnjs.filter(p=>hit(p.nom,p.role,p.lieu,p.espece)).forEach(p=>out.push('<li>'+tv("pnj",p)+'<details><summary>'+th("pnj",p)+'<span class="ccat">PNJ</span> <strong>'+esc(p.nom)+'</strong>'+(p.role?' · '+esc(p.role):'')+'</summary>'+(p.apparence?'<p>'+esc(p.apparence)+'</p>':'')+(p.voix?'<p><strong>Voix :</strong> '+esc(p.voix)+'</p>':'')+(p.secrets?'<div class="wikibody">'+md(manLinks(p.secrets))+'</div>':'')+(p.monstre?'<button class="ptadd" data-a="pt-sb" data-id="'+esc(p.monstre)+'">Bloc de stats</button>':'')+'</details></li>'));
+  monstres.filter(m=>hit(m.nom,m.type)).forEach(m=>out.push('<li>'+tv("monstres",m)+th("monstres",m)+'<span class="ccat">Bestiaire</span> <button class="ptlink" data-a="pt-sb" data-id="'+esc(m.id)+'">'+esc(m.nom)+'</button> <span class="desc">FP '+esc(m.fp||"?")+' · CA '+esc(m.ca==null?"—":m.ca)+' · PV '+esc(m.pv||"—")+'</span></li>'));
+  objets.filter(o=>hit(o.nom,o.texte)).forEach(o=>out.push('<li>'+tv("objets",o)+'<details><summary>'+th("objets",o)+'<span class="ccat">Objet</span> <strong>'+esc(o.nom)+'</strong></summary>'+(o.texte?'<div class="wikibody">'+md(o.texte)+'</div>':'')+'</details></li>'));
+  factions.filter(f=>hit(f.nom,f.type)).forEach(f=>out.push('<li>'+tv("factions",f)+'<details><summary>'+th("factions",f)+'<span class="ccat">Faction</span> <strong>'+esc(f.nom)+'</strong></summary>'+(f.presentation?'<div class="wikibody">'+md(manLinks(f.presentation))+'</div>':'')+(f.secrets?'<div class="wikibody"><strong>Secrets :</strong> '+md(manLinks(f.secrets))+'</div>':'')+'</details></li>'));
   PT_CONDS.filter(c=>hit(c[1],c[2])).forEach(c=>out.push('<li><span class="ccat">État</span> <strong>'+esc(c[1])+'</strong> <span class="desc">('+esc(c[2])+')</span><p>'+esc(c[3])+'</p></li>'));
-  compAll.filter(e=>e.publiee!==false&&hit(e.titre,e.categorie,e.contenu)).forEach(e=>out.push('<li><details><summary><span class="ccat">Compendium · '+esc(e.categorie)+'</span> <strong>'+esc(e.titre)+'</strong></summary><div class="wikibody">'+md(e.contenu||"")+'</div></details></li>'));
+  compAll.filter(e=>e.publiee!==false&&hit(e.titre,e.categorie,e.contenu)).forEach(e=>out.push('<li>'+tv("compendium",e,e.titre)+'<details><summary>'+th("compendium",e,e.titre)+'<span class="ccat">Compendium · '+esc(e.categorie)+'</span> <strong>'+esc(e.titre)+'</strong></summary><div class="wikibody">'+md(e.contenu||"")+'</div></details></li>'));
+  (wikiPages||[]).filter(w=>hit(w.titre,w.contenu)).forEach(w=>out.push('<li>'+tv("wiki",w,w.titre)+'<details><summary>'+th("wiki",w,w.titre)+'<span class="ccat">Wiki</span> <strong>'+esc(w.titre)+'</strong></summary><div class="wikibody">'+md(w.contenu||"")+'</div></details></li>'));
   notesDm.filter(n=>hit(n.titre,n.contenu)).forEach(n=>out.push('<li><details><summary><span class="ccat">Note DM</span> <strong>'+esc(n.titre)+'</strong></summary><div class="wikibody">'+md(manLinks(n.contenu||""))+'</div></details></li>'));
-  return out.length?'<ul class="ptsearch">'+out.slice(0,30).join("")+'</ul>'+(out.length>30?'<p class="desc">'+(out.length-30)+' autres résultats : précise ta recherche.</p>':''):'<p class="desc">Aucun résultat.</p>';
+  return out.length?'<ul class="ptsearch">'+out.slice(0,40).join("")+'</ul>'+(out.length>40?'<p class="desc">'+(out.length-40)+' autres résultats : précise ta recherche.</p>':''):'<p class="desc">Aucun résultat.</p>';
 }
 /* ---------- Butin ---------- */
 const LOOT_GEMS=[[10,["une agate","un quartz bleu","une hématite","une malachite","un œil-de-tigre","une turquoise"]],[50,["une cornaline","un jaspe","une pierre de lune","un onyx","une calcédoine","un zircon"]],[100,["une améthyste","un grenat","une perle","une tourmaline","du jade","de l'ambre"]],[500,["une aigue-marine","une perle noire","un péridot","une topaze"]],[1000,["une émeraude","une opale de feu","un saphir","un rubis"]]];
@@ -10710,8 +10720,8 @@ document.addEventListener("click",async e=>{
   if(a==="tb-follow"||a==="tb-zoom"){const r=ecRenderers["ec-pl"];if(!r)return;if(a==="tb-follow")r.free=false;else if(r.zoomAt){const bb=r.cv.getBoundingClientRect();r.zoomAt(+b.getAttribute("data-v")||1,bb.left+bb.width/2,bb.top+bb.height/2);}return;}
   if(a==="vit-hide"){await vitHide();return;}
   if(a==="vit-send"){if(!zoomSt)return;const n=document.getElementById("zoom-nom");zoomSt.vn=n?n.value.trim():zoomSt.nom;await vitShow(zoomSt.vn,zoomSt.src);return;}
-  if(a==="vit-show"){const k=b.getAttribute("data-k"),x=(k==="mini"?miniDocs:k==="objets"?objets:k==="monstres"?monstres:k==="pnj"?pnjs:k==="factions"?factions:aventuriers).find(y=>y.id===id);if(!x||!(x.image||(k==="objets"&&x.texte)))return;
-    b.disabled=true;const hd=x.image&&k!=="mini"?await hdGet(k,id):"";await vitShow(b.getAttribute("data-n")||x.nom,hd||x.image||"",k==="objets"?x.texte:"");b.disabled=false;return;}
+  if(a==="vit-show"){const k=b.getAttribute("data-k"),x=(k==="mini"?miniDocs:k==="compendium"?compAll:k==="wiki"?(wikiPages||[]):k==="objets"?objets:k==="monstres"?monstres:k==="pnj"?pnjs:k==="factions"?factions:aventuriers).find(y=>y.id===id);if(!x||!(x.image||(k==="objets"&&x.texte)))return;
+    b.disabled=true;const hd=x.image&&k!=="mini"&&k!=="wiki"?await hdGet(k,id):"";await vitShow(b.getAttribute("data-n")||x.nom||x.titre,hd||x.image||"",k==="objets"?x.texte:"");b.disabled=false;return;}
   if(a.indexOf("pt-")===0){await partyAction(a,id,b,e);return;}
   if(a.indexOf("cart-")===0){cartAct(a,id);render();return;}
   if(a.indexOf("gs-")===0){if(a==="gs-sec"){ui.gsSec=b.getAttribute("data-v");ui.gsConfirm=null;ui.gsMsg="";}else await gsAction(a,id);render();return;}
