@@ -2927,17 +2927,21 @@ function render(){
   {document.querySelectorAll(".partie input[id],.partie select[id],.partie textarea[id],#loot-add input[id],#loot-add select[id]").forEach(el=>{if(el.value!==""&&!el.closest(".ecdm"))ptKeep[el.id]=el.value;});
     const ae=document.activeElement;if(ae&&ae.id&&ae.closest&&ae.closest(".partie")){ptFoc=ae.id;try{ptSel=[ae.selectionStart,ae.selectionEnd];}catch(e){}}}
   // La carte du DM garde sa toile d'un rendu à l'autre : sans ça, chaque clic recréait la toile et redessinait toute la carte (gros pic de calcul, écran qui « coche »).
-  const keepCv=document.getElementById("ec-dm");if(keepCv)keepCv.remove();
+  const keepCv=document.getElementById("ec-dm");
+  // la page ne saute plus : on garde la position de défilement d'un rendu à l'autre sur la même page (la carte est retirée APRÈS avoir noté la position)
+  const scY=window.scrollY,scKey=ui.office+"|"+(ui.ptTab||"")+"|"+(ui.dmTab||""),scSame=render.scKey===scKey;render.scKey=scKey;
+  if(keepCv)keepCv.remove();
   app.innerHTML=h+'</div>';
   if(keepCv){const nv=document.getElementById("ec-dm");if(nv){keepCv.className=nv.className;["aria-label","title","role","tabindex"].forEach(k=>{const v=nv.getAttribute(k);if(v==null)keepCv.removeAttribute(k);else keepCv.setAttribute(k,v);});nv.replaceWith(keepCv);}}
   {Object.keys(ptKeep).forEach(k=>{const el=document.getElementById(k);if(el)el.value=ptKeep[k];});
-    if(ptFoc){const el=document.getElementById(ptFoc);if(el){el.focus();try{if(ptSel&&ptSel[0]!=null)el.setSelectionRange(ptSel[0],ptSel[1]);}catch(e){}}}}
+    if(ptFoc){const el=document.getElementById(ptFoc);if(el){el.focus({preventScroll:true});try{if(ptSel&&ptSel[0]!=null)el.setSelectionRange(ptSel[0],ptSel[1]);}catch(e){}}}}
   // Tableaux du DM : étiquette de colonne sur chaque cellule (affichage en cartes sur mobile)
   app.querySelectorAll("table.dmtable").forEach(t=>{const hs=Array.from(t.querySelectorAll("thead th")).map(th=>th.textContent.trim());
     t.querySelectorAll("tbody tr").forEach(tr=>Array.from(tr.children).forEach((c,i)=>{if(hs[i])c.setAttribute("data-label",hs[i]);}));});
   Object.keys(keep).forEach(id=>{const el=document.getElementById(id);if(el){if(el.type==="checkbox")el.checked=keep[id];else el.value=keep[id];}});
-  if(focusId){const f=document.getElementById(focusId);if(f&&f.focus)f.focus();}
+  if(focusId){const f=document.getElementById(focusId);if(f&&f.focus)f.focus({preventScroll:true});}
   try{ecAfter();}catch(e){console.error(e);}
+  if(scSame&&Math.abs(window.scrollY-scY)>2)window.scrollTo(0,scY);
 }
 
 /* ---------- routing ---------- */
@@ -9868,7 +9872,7 @@ function ecTvReport(){clearTimeout(ecTvT);ecTvT=setTimeout(()=>{if(!isAdmin||!ec
   if(tv.cols!==cols||tv.rows!==rows||tv.sw!==screen.width||tv.sh!==screen.height)setDoc(doc(db,"prive","ecran"),{tv:{cols,rows,sw:screen.width,sh:screen.height}},{merge:true}).catch(()=>{});},800);}
 window.addEventListener("resize",()=>{if(ui.office==="ecran")ecTvReport();});
 /* ----- Contrôle DM (onglet Écran du Mode Partie) ----- */
-function ecP(){const P=ui.pt;P.ecran=P.ecran||{cartes:[],active:null,lum:"jour",fog:true,grid:false,info:"",ordre:{mode:"aucun",parole:"",idx:0}};return P.ecran;}
+function ecP(){const P=ui.pt;P.ecran=P.ecran||{cartes:[],active:null,lum:"jour",fog:true,grid:true,info:"",ordre:{mode:"aucun",parole:"",idx:0}};return P.ecran;}
 // Ouvre (ou crée) la carte d'un étage de bureau ; les préposés sont placés au rez-de-chaussée, Pax au hasard dans la grande salle à chaque visite.
 // Apparence d'un PNJ nommé tirée de sa fiche (espèce, apparence, rôle) : on ne garde que des couleurs et des accessoires, jamais le texte (aucun secret ne part sur la télé)
 function ecLook(p){const T0=((p.espece||"")+" "+(p.apparence||"")+" "+(p.role||"")).toLowerCase(),pax=/^Pax/.test(p.nom||"");
@@ -9951,7 +9955,7 @@ function ecState(){const E=ecP(),c=ecCard(),q=ui.pt;if(!c)return null;
   let ordre=null;if(E.ordre&&E.ordre.mode==="combat"&&q.combat&&q.combat.phase==="combat"){ordre={titre:"Ordre de combat · round "+(q.round||1),liste:ptOrder().filter(x=>!(x.kind!=="pj"&&x.pv<=0)&&!x.cache).map(x=>({n:x.nom,k:x.kind==="pj"?"pj":"en",cur:x.cid===q.cur}))};}
   else if(E.ordre&&E.ordre.mode==="parole"&&ptParActive()){ordre={titre:"Ordre de parole",liste:ptParNames().map(o=>({n:o.n,k:"pj",cur:o.cur}))};}
   else if(E.ordre&&E.ordre.mode==="parole"){const L=String(E.ordre.parole||"").split("\n").map(x=>x.trim()).filter(Boolean),i=(E.ordre.idx||0)%Math.max(1,L.length);ordre={titre:"Ordre de parole",liste:L.map((n,j)=>({n,k:"pj",cur:j===i}))};}
-  return {vie:Date.now(),qid:q.id,carte:{id:c.id,nom:c.nom,type:c.type,seed:c.seed,w:c.w,h:c.h,url:c.url||"",gone:c.gone||[],back:c.back||{},vie:c.vie||"",bureau:c.bureau||"",etage:+c.etage||0,niv:c.niv||null,ouv:c.ouv||[],don:c.don||null,env:c.env||null,kraken:!!c.kraken,off:c.off||[]},cam:ecCam(E,c),tokens:c.tokens||[],fog:{on:E.fog!==false,vu:c.vu||""},lum:E.lum||"jour",meteo:(c.abri||ecIndoor(c.type))?"clair":(E.meteo||"clair"),date:calLabel(calNow()),jour:E.jour||1,grid:!!E.grid,info:E.info||"",ordre,figs:tbFigList(tbQuest(),c),calib:(ecDoc&&ecDoc.calib)||{},ms:Date.now()};}
+  return {vie:Date.now(),qid:q.id,carte:{id:c.id,nom:c.nom,type:c.type,seed:c.seed,w:c.w,h:c.h,url:c.url||"",gone:c.gone||[],back:c.back||{},vie:c.vie||"",bureau:c.bureau||"",etage:+c.etage||0,niv:c.niv||null,ouv:c.ouv||[],don:c.don||null,env:c.env||null,kraken:!!c.kraken,off:c.off||[]},cam:ecCam(E,c),tokens:c.tokens||[],fog:{on:E.fog!==false,vu:c.vu||""},lum:E.lum||"jour",meteo:(c.abri||ecIndoor(c.type))?"clair":(E.meteo||"clair"),date:calLabel(calNow()),jour:E.jour||1,grid:ecGridOn(E),info:E.info||"",ordre,figs:tbFigList(tbQuest(),c),calib:(ecDoc&&ecDoc.calib)||{},ms:Date.now()};}
 /* ---------- Table virtuelle : l'écran de table, ouvert à distance par les inscrits d'une quête en cours ----------
    Comme à la table : chaque joueur à distance pose UNE figurine virtuelle (pion plein, à l'image de son personnage) et la déplace.
    Elle ne donne aucune vision : c'est le DM qui ajuste l'anneau du personnage dessous, comme sous une figurine posée sur l'écran.
@@ -10062,6 +10066,8 @@ function ecCloseScreens(){if(!isAdmin)return;clearTimeout(ecPushT);clearTimeout(
   const blank={carte:null,tokens:[],figs:[],ordre:null,info:"",ms:Date.now()};ecDoc=Object.assign({},ecDoc||{},blank);try{ecBC&&ecBC.postMessage(blank);}catch(e){}
   setDoc(doc(db,"prive","ecran"),blank,{merge:true}).catch(e=>console.error(e));
   if(q)setDoc(doc(db,"table",q.id),{qid:q.id,titre:q.titre,carte:null,ms:Date.now()}).catch(e=>console.error(e));}
+// grille active par défaut tant que le MJ ne l'a pas décochée lui-même
+function ecGridOn(E){return E.gridSet?!!E.grid:true;}
 function ecPush(now){if(ui.ecStopped)return;if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);ecPushT=setTimeout(()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},now?0:250);}
 function ecReveal(c){const E=ecP();const st=ecState();if(!st)return;const V=ecVision(st);let vu=(c.vu||"").padEnd(c.w*c.h,"0").split("");let ch=false;for(let i=0;i<V.vis.length;i++)if(V.vis[i]&&vu[i]!=="1"){vu[i]="1";ch=true;}if(ch)c.vu=vu.join("");}
 function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc.calib)||{};
@@ -10086,7 +10092,7 @@ function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc
     '<label for="ec-lum">Lumière<select id="ec-lum" data-ec="lum">'+Object.keys(EC_LUM).map(k=>'<option value="'+k+'"'+(k===(E.lum||"jour")?' selected':'')+'>'+EC_LUM[k].l+'</option>').join("")+'</select></label>'+
     '<span class="ecdate">📅 '+esc(calLabel(calNow()))+' · '+esc(EC_SAISON[ecSaison()].l)+'</span>'+
     '<label for="ec-met">Météo<select id="ec-met" data-ec="meteo">'+EC_OK[ecSaison()].map(k=>'<option value="'+k+'"'+(k===(E.meteo||"clair")?' selected':'')+'>'+EC_METEO[k].i+' '+EC_METEO[k].l+'</option>').join("")+'</select></label>'+
-    '<button class="mini" data-a="pt-ec-center" title="Place le cadre télé sur le groupe, une seule fois">📍 Centrer la télé sur le groupe</button><label class="ecck"><input type="checkbox" data-ec="fog"'+(E.fog!==false?' checked':'')+'> Brouillard</label><label class="ecck"><input type="checkbox" data-ec="grid"'+(E.grid?' checked':'')+'> Grille</label></div>';
+    '<button class="mini" data-a="pt-ec-center" title="Place le cadre télé sur le groupe, une seule fois">📍 Centrer la télé sur le groupe</button><label class="ecck"><input type="checkbox" data-ec="fog"'+(E.fog!==false?' checked':'')+'> Brouillard</label><label class="ecck"><input type="checkbox" data-ec="grid"'+(ecGridOn(E)?' checked':'')+'> Grille</label></div>';
   {const fl=ecFloors(c);if(fl.length>1||(EC_GEN[c.type]||{}).floors){const cur=+c.etage||0;h+='<div class="eccards ecfloors"><strong>Étages :</strong> '+fl.slice().reverse().map(n=>'<button class="chip'+(n===cur?' on':'')+'" data-a="pt-ec-floor" data-v="'+n+'" aria-pressed="'+(n===cur)+'" title="'+esc(ecFloorName(c,n))+'">'+(n>cur?'▲ ':n<cur?'▼ ':'')+esc(ecFloorShort(n))+'</button>').join(" ")+
     ' <span class="desc">'+esc(ecFloorName(c,cur))+'</span> <button class="mini" data-a="pt-ec-follow" aria-pressed="'+(ui.ecFollow!==false)+'">'+(ui.ecFollow!==false?'☑':'☐')+' Le groupe suit</button>'+(c.type!=="bureau"&&(EC_GEN[c.type]||{}).floors?' <button class="mini" data-a="pt-ec-niv" data-v="haut">+ étage</button><button class="mini" data-a="pt-ec-niv" data-v="bas">+ sous-sol</button>':'')+'</div>';}}
   if(c.type==="navire"||c.type==="abordage")h+='<div class="eccards"><label class="ecck"><input type="checkbox" data-ec="kraken"'+(c.kraken?' checked':'')+'> 🐙 Kraken : des tentacules géants surgissent autour du navire</label></div>';
@@ -10290,7 +10296,7 @@ function ecChange(el){const E=ecP(),c=ecCard(),k=el.getAttribute("data-ec"),sel=
   if(k==="meteo"){E.meteo=el.value;ui.ecMetRoll=null;ptSave();ecPush(true);render();return;}if(k==="saison"){const sa=el.value;monde=Object.assign({},monde||{},{saison:sa});setDoc(doc(db,"prive","monde"),{saison:sa},{merge:true}).catch(e=>console.error(e));if((EC_OK[sa]||[]).indexOf(E.meteo||"clair")<0){E.meteo=ecMeteoRoll(sa).k;ptSave();ecPush(true);}render();return;}
   if(k==="kraken"){if(c){c.kraken=el.checked;ecReveal(c);ptSave();ecPush(true);render();}return;}
   if(k==="mtaille"||k==="mcult"||k==="mdecor"){if(c&&c.type==="maison"){c.env=Object.assign(maisonEnvDef(c),c.env||{});if(k==="mdecor")c.env.decor=el.checked;else c.env[k==="mtaille"?"taille":"cult"]=el.value;if(ecFloors(c).indexOf(+c.etage||0)<0)c.etage=0;c.vie=ptUid();c.gone=[];ecReveal(c);ptSave();ecPush(true);render();}return;}
-  if(k==="lum")E.lum=el.value;else if(k==="fog")E.fog=el.checked;else if(k==="grid")E.grid=el.checked;else if(k==="follow")E.follow=el.checked;else if(k==="info")E.info=el.value.slice(0,400);
+  if(k==="lum")E.lum=el.value;else if(k==="fog")E.fog=el.checked;else if(k==="grid"){E.grid=el.checked;E.gridSet=1;}else if(k==="follow")E.follow=el.checked;else if(k==="info")E.info=el.value.slice(0,400);
   else if(k==="omode"){E.ordre=Object.assign({mode:"aucun",parole:"",idx:0},E.ordre||{},{mode:el.value});ptSave();ecPush(true);render();return;}
   else if(k==="parole"){E.ordre.parole=el.value.slice(0,400);E.ordre.idx=0;}
   else if(sel){if(k==="sn")sel.n=el.value.slice(0,30);else if(k==="torche")sel.torche=el.checked;else if(k==="dv")sel.dv=Math.max(0,Math.min(24,+el.value||0));else if(k==="r")sel.r=Math.max(1,Math.min(20,+el.value||4));else if(k==="vis")sel.vis=el.checked;else if(k==="magie")sel.flamme=!el.checked;}
@@ -10975,10 +10981,9 @@ async function partyAction(a,id,b,e){
   else if(a==="pt-atkto"&&c){const A=ui.ptA;if(!A||A.res)return;A.to=A.to===v?null:v;ch=false;}
   else if(a==="pt-paropen"){ui.ptParOpen=true;{const E=ecP();if(!E.ordre||!E.ordre.mode||E.ordre.mode==="aucun"){E.ordre=Object.assign({},E.ordre||{},{mode:"parole"});}}ecPush(true);}
   else if(a==="pt-parclose"){ui.ptParOpen=false;ecPush(true);}
-  else if(a==="pt-parup"||a==="pt-pardn"){const o=(P.parole||{}).ordre||[],i=o.indexOf(id),j=a==="pt-parup"?i-1:i+1;if(i<0||j<0||j>=o.length)return;o.splice(i,1);o.splice(j,0,id);}
-  else if(a==="pt-parnext"){const pr=P.parole||{ordre:[]},o=pr.ordre;if(!o.length)return;const i=o.indexOf(pr.cur);pr.cur=o[(i+1)%o.length];}
-  else if(a==="pt-parstop"){if(P.parole)P.parole.cur=null;}
-  if(a==="pt-parup"||a==="pt-pardn"||a==="pt-parnext"||a==="pt-parstop")setTimeout(()=>ecPush(true),0);
+  else if(a==="pt-parup"||a==="pt-pardn"){const o=(P.parole||{}).ordre||[],i=o.indexOf(id),j=a==="pt-parup"?i-1:i+1;if(i<0||j<0||j>=o.length)return;o.splice(i,1);o.splice(j,0,id);setTimeout(()=>ecPush(true),0);}
+  else if(a==="pt-parnext"){const pr=P.parole||{ordre:[]},o=pr.ordre;if(!o.length)return;const i=o.indexOf(pr.cur);pr.cur=o[(i+1)%o.length];setTimeout(()=>ecPush(true),0);}
+  else if(a==="pt-parstop"){if(P.parole)P.parole.cur=null;setTimeout(()=>ecPush(true),0);}
   else if(a==="pt-launch"){if(P.combat){ui.ptAlert="Clos d'abord la rencontre « "+P.combat.nom+" ».";ch=false;}else{ptStartEnc(q,id,"",true);ui.ptTab=ui.ptTab||"scenario";render();window.scrollTo({top:0,behavior:"smooth"});ptSave();return;}}
   else if(a==="pt-time"){const n=+v;(P.liste||[]).forEach(x=>{const keep=[];(x.effets||[]).forEach(e=>{if(e.type==="rounds"){e.r-=n;if(e.r<=0){ptEffExpire(x,e);return;}}else if(e.type==="debut"||e.type==="fin"){ptEffExpire(x,e);return;}keep.push(e);});x.effets=keep;});ptLog("⏩ "+(n>=100?n/10+" minutes passent":n/10+" minute passe")+".");}
   else if(a==="pt-roll1"&&c){c.init=ptD(20)+(+c.dex||0);}
