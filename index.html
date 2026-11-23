@@ -987,6 +987,7 @@ img.mg-av{object-fit:cover;object-position:50% 15%;border:2px solid #d8b45e;padd
 #minilaunch .mg-av{width:36px;height:36px;font-size:18px}
 #minilaunch .desc{display:block;font-size:13px;opacity:.75}
 .mg-quest .linkbtn{color:var(--ink-soft);text-decoration:underline}
+.homelogo{display:inline-flex;border-radius:50%;transition:transform .2s}.homelogo:hover{transform:rotate(12deg) scale(1.05)}.homelogo:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 footer .who{display:inline-flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
 footer .who a{color:var(--gold)}
 .plink{color:inherit;text-decoration:underline;text-decoration-color:rgba(0,0,0,.25);text-underline-offset:3px}
@@ -2792,7 +2793,7 @@ function render(){
   const comp=ui.office==="compendium",compE=!!ui.office&&ui.office.indexOf("compendium-")===0;
   const b=ui.office&&!reg?office(ui.office):null;
   let h='<div class="wrap">';
-  h+='<header><svg width="72" height="72" viewBox="-110 -110 220 220" aria-hidden="true"><circle r="80" fill="none" stroke="#d8b45e" stroke-width="3" opacity=".6"></circle>'+rose(104,'#0e1b20')+'</svg>';
+  h+='<header><a class="homelogo" href="#carte" aria-label="Accueil : la carte" title="Accueil"><svg width="72" height="72" viewBox="-110 -110 220 220" aria-hidden="true"><circle r="80" fill="none" stroke="#d8b45e" stroke-width="3" opacity=".6"></circle>'+rose(104,'#0e1b20')+'</svg></a>';
   h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(pty?'Mode Partie':mini?'La Mini Guilde':dms?'Espace DM':gsh?'Boutique de la Guilde':comp||compE?'Compendium de la Guilde':gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':exp?'Expéditions en préparation':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(mini?'Les petites quêtes de Pax, à Waterdeep':dms?'Le bureau secret du Maître de la Guilde':gsh?'Intendance, services, dépôt et Trésor de la Rose':comp||compE?'Le savoir partagé des aventuriers':gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions en cours et accomplies par les aventuriers':exp?'Les groupes qui se forment sur la Sword Coast':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+dmPill()+statusPill()+'</header>';
   if(pty){const pq=ptQuest();h+=pq&&pq.libre?'<a class="back" href="#dm"><span aria-hidden="true">←</span> Cartes de l\'Espace DM</a>':'<a class="back" href="#'+(pq?esc(pq.bureau):'carte')+'"><span aria-hidden="true">←</span> Retour au babillard</a>';}
   else if(mini)h+='<a class="back" href="#dm"><span aria-hidden="true">←</span> Espace DM</a>';
