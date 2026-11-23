@@ -8602,7 +8602,7 @@ function v34Quad(x,kind,X,Y,s,d,o){if(kind==="loup"){if(!v34WolfSp(x,X,Y,s,d,o||
   if(F.antler){x.strokeStyle="#d8c8a8";x.lineWidth=0.035;for(const sg of [0,1]){x.save();x.translate(H*0.1+sg*0.05,-H*0.55);x.globalAlpha=sg?1:0.75;x.beginPath();x.moveTo(0,0);x.quadraticCurveTo(-0.15,-0.25,-0.05,-0.5);x.moveTo(-0.08,-0.15);x.lineTo(0.08,-0.28);x.moveTo(-0.1,-0.3);x.lineTo(0.04,-0.45);x.moveTo(-0.07,-0.42);x.lineTo(-0.2,-0.55);x.stroke();x.restore();}}
   x.restore();x.restore();return true;}
 function ecBeast(x,b,X,Y,s,t,a,v,ph){const k=b.kind;
-  if(TOP90&&k==="loup"&&(V34FAUNA[k]||k==="rat"||k==="souris")){x.save();x.translate(X*s,Y*s);x.rotate(a||0);
+  if(TOP90&&k!=="berger"&&(V34FAUNA[k]||k==="rat"||k==="souris")){x.save();x.translate(X*s,Y*s);x.rotate(a||0);
     if(k==="rat"||k==="souris")rat90(x,s,{p:b.p||0,dead:b.dead,sc:k==="souris"?0.6:1,col:k==="souris"?"#8a7a6a":null},t);
     else fauna90(x,s,k,{p:b.p||0,mv:!b.dead&&v>0.05,graze:v<0.06&&["vache","mouton","biche","cerf","lievre"].indexOf(k)>=0,col:b.c||null,dead:b.dead,eaten:b.eaten,eat:b.eat,collar:k==="chien"?"#a83228":null},t);
     x.restore();return;}if(k==="loup"&&V34FAUNA[k]){const d=Math.cos(a)>0.05?1:Math.cos(a)<-0.05?-1:((b.p||0)*7%2>1?1:-1);if(v34Quad(x,k,X,Y,s,d,{mv:v>0.05,ph:ph||0,t,p:b.p||0,c:b.c}))return;}if(k==="cerf"||k==="biche"){ecDeer(x,{x:X,y:Y,c:b.c||(k==="cerf"?"#7a5230":"#8b6238"),bois:k==="cerf",p:b.p},s,t,a,v,ph);return;}
