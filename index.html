@@ -4145,6 +4145,14 @@ function portShip90(x,b,s,t,layer){const T=SHIP_T[b.ty]||SHIP_T.cl,L=b.L,gh=b.gh
     {const p=at(0.3,0.15);x.fillStyle="#6a4a2a";x.beginPath();x.arc(p[0],p[1],s*0.22,0,6.283);x.fill();x.fillStyle="#4a3018";x.beginPath();x.arc(p[0],p[1],s*0.1,0,6.283);x.fill();}
     [[0.47,-0.55],[0.7,0.5],[0.25,-0.5]].forEach(([u,v])=>{const p=at(u,v);x.strokeStyle="#a89068";x.lineWidth=Math.max(1,s*0.035);for(let r=0.05;r<0.2;r+=0.05){x.beginPath();x.arc(p[0],p[1],r*s,0,6.283);x.stroke();}});
     [[0.78,-0.4],[0.8,0.3]].forEach(([u,v])=>burProp90(x,{t:"barrel",x:at(u,v)[0]/s,y:at(u,v)[1]/s,r:0.24},s,t));
+    // canons sur affût, bouche vers l'extérieur le long des deux bordages (entre les châteaux) ; plus nombreux sur les grands navires
+    {const nC=b.ty==="ga"?4:b.ty==="br"||b.ty==="cr"?3:b.ty==="co"?2:1,u0=(T.aft?T.aft[0]:0.22)+0.06,u1=1-(T.fore?T.fore[0]:0.1)-0.12;
+      for(let j=0;j<nC;j++){const u=nC===1?(u0+u1)/2:u0+(u1-u0)*j/(nC-1);if(Math.abs(u-0.4)<0.035||Math.abs(u-0.58)<0.035)continue;for(const sd of [-1,1]){const p=at(u,sd*0.62),out=sd;x.save();x.translate(p[0],p[1]);x.rotate(out>0?Math.PI/2:-Math.PI/2);
+        x.fillStyle="rgba(0,0,0,.3)";x.fillRect(-s*0.22+s*0.05,-s*0.2+s*0.06,s*0.44,s*0.42);x.fillStyle="#6a4626";x.fillRect(-s*0.22,-s*0.2,s*0.44,s*0.42);x.fillStyle="#2a1e14";for(const wx of [-0.25,0.21])for(const wy of [-0.14,0.14]){x.fillRect((wx)*s,(wy-0.05)*s,s*0.05,s*0.1);}
+        const gr=x.createLinearGradient(-s*0.1,0,s*0.1,0);gr.addColorStop(0,"#2a2c30");gr.addColorStop(0.45,"#5a5e66");gr.addColorStop(1,"#1a1c20");x.fillStyle=gr;x.beginPath();x.moveTo(-s*0.12,-s*0.28);x.lineTo(s*0.12,-s*0.28);x.lineTo(s*0.08,s*0.42);x.lineTo(-s*0.08,s*0.42);x.closePath();x.fill();
+        x.fillStyle="#141518";x.beginPath();x.arc(0,s*0.44,s*0.085,0,6.283);x.fill();x.fillStyle="#2e3036";x.beginPath();x.arc(0,-s*0.3,s*0.08,0,6.283);x.fill();x.restore();}
+        // boulets empilés près du premier canon
+        if(j===0){const q=at(u+0.035,0.35);[[0,0],[0.17,0],[0.085,-0.14]].forEach(([dx,dy])=>{x.fillStyle="#1e2024";x.beginPath();x.arc(q[0]+dx*s,q[1]+dy*s,s*0.085,0,6.283);x.fill();x.fillStyle="rgba(255,255,255,.25)";x.beginPath();x.arc(q[0]+dx*s-s*0.03,q[1]+dy*s-s*0.03,s*0.025,0,6.283);x.fill();});}}}
     // beaupré
     {const p=at(1,0),d=flip?-1:1;x.strokeStyle="#5a3a1e";x.lineWidth=Math.max(2,s*0.12);x.lineCap="round";x.beginPath();x.moveTo(p[0]-d*s*0.4,p[1]);x.lineTo(p[0]+d*(T.bs||1)*0.7*s,p[1]);x.stroke();}
     // passerelle jusqu'au quai
@@ -4169,10 +4177,10 @@ function portShip90(x,b,s,t,layer){const T=SHIP_T[b.ty]||SHIP_T.cl,L=b.L,gh=b.gh
   x.restore();}
 // Équipage : des marins s'affairent sur le pont (frotter le pont, lover les cordages, haler aux mâts, monter des tonneaux de la cale
 // et les descendre au quai par la passerelle) ; une vigie dans la hune. Sur une barge, des débardeurs portent les sacs au quai.
-function portCrew90(x,b,s,TT){if(b.ghost)return;const R=ecRng(ecSeed("crew|"+b.x.toFixed(2)+"|"+b.L)),L=b.L,flip=b.dir<0,bar=b.k==="barge",Bh=bar?Math.max(b.B,2.6)/2:Math.max(1.8,L*0.135),MY=b.y+Bh,T=SHIP_T[b.ty]||SHIP_T.cl;
+function portCrew90(x,b,s,TT){const GH=!!b.ghost,gdraw=f=>{if(!GH)return f();x.save();const fl=0.32+0.14*Math.sin(TT*3.1+b.ph)+0.06*Math.sin(TT*11.3);x.globalAlpha*=fl;x.filter="grayscale(1) brightness(1.5) sepia(1) hue-rotate(95deg) saturate(1.6)";f();x.filter="none";x.restore();};const R=ecRng(ecSeed("crew|"+b.x.toFixed(2)+"|"+b.L)),L=b.L,flip=b.dir<0,bar=b.k==="barge",Bh=bar?Math.max(b.B,2.6)/2:Math.max(1.8,L*0.135),MY=b.y+Bh,T=SHIP_T[b.ty]||SHIP_T.cl;
   const hw=u=>u<0.05?0.78+u/0.05*0.22:u<0.6?1:Math.sqrt(Math.max(0,1-Math.pow((u-0.6)/0.4,1.6))),at=(u,v)=>[b.x+(flip&&!bar?1-u:u)*L,MY+v*Bh*(bar?0.8:hw(u))*0.7];
   const gang=at(0.45,-1),quay=[gang[0]+(R()<0.5?-1:1)*(1.5+R()),b.y-1.6],hatch=at(0.4,0.1),n=bar?2:Math.max(3,Math.round(L/3.2));
-  const crew=[];for(let i=0;i<n;i++){const job=bar||i===0?"porte":["frotte","love","hale","porte","frotte","hale"][i%6];let S;
+  const crew=[];for(let i=0;i<n;i++){const job=GH?["frotte","love","hale"][i%3]:bar||i===0?"porte":["frotte","love","hale","porte","frotte","hale"][i%6];/* les spectres ne quittent jamais leur navire */let S;
     if(job==="porte")S=[{p:bar?at(0.3+R()*0.4,R()-0.5):hatch,w:2,pose:"reach",it:1},{p:[gang[0],gang[1]+0.3],w:0,it:1},{p:[gang[0],b.y-0.9],w:0,it:1},{p:quay,w:2,pose:"reach",it:1},{p:[gang[0],b.y-0.9],w:0},{p:[gang[0],gang[1]+0.3],w:0}];
     else if(job==="frotte"){const u0=0.25+R()*0.45;S=[{p:at(u0,-0.6+R()*1.2),w:6,pose:"push"},{p:at(u0+0.08,-0.6+R()*1.2),w:6,pose:"push"},{p:at(u0-0.06,-0.6+R()*1.2),w:5,pose:"push"}];}
     else if(job==="love"){S=[{p:at(0.47,-0.75),w:7,pose:"reach"},{p:at(0.7,0.7),w:7,pose:"reach"},{p:at(0.25,-0.7),w:6,pose:"reach"}];}
@@ -4181,16 +4189,19 @@ function portCrew90(x,b,s,TT){if(b.ghost)return;const R=ecRng(ecSeed("crew|"+b.x
     crew.push({S,legs,tot,o:R()*tot,f:p90Fig(pplFig(R()<0.5?"villageois":"fermier",Math.floor(R()*999))),ph:R()*6});}
   crew.forEach(c=>{let t0=(TT+c.o)%c.tot,X=0,Y=0,a=0,mv=false,pose=null,carry=false;for(let j=0;j<c.S.length;j++){const q=c.S[j],nx=c.S[(j+1)%c.S.length];if(t0<q.w){[X,Y]=q.p;pose=q.pose;carry=q.it;const tg=q.to||nx.p;a=Math.atan2(tg[1]-Y,tg[0]-X);break;}t0-=q.w;const d=c.legs[j]/0.8;if(t0<d){const f=t0/d;X=q.p[0]+(nx.p[0]-q.p[0])*f;Y=q.p[1]+(nx.p[1]-q.p[1])*f;a=Math.atan2(nx.p[1]-q.p[1],nx.p[0]-q.p[0]);mv=true;carry=q.it&&nx.it;break;}t0-=d;}
     // les porteurs tiennent un tonneau (ou un sac) entre la cale et le quai
-    const o=Object.assign({},c.f,{item:carry?"keg":pose==="push"?"push":pose==="reach"?"hand":null});v34Defer(x,(Y+0.3)*s,()=>ppl90(x,X*s,Y*s,s,o,a,TT*6.9+c.ph,mv));});
+    const o=Object.assign({},c.f,{item:GH?null:carry?"keg":pose==="push"?"push":pose==="reach"?"hand":null});
+    // équipage spectral : ils refont sans fin leurs gestes d'autrefois, translucides et verdâtres, flottant sans un bruit, une lueur froide autour d'eux
+    if(GH){Y+=Math.sin(TT*1.3+c.ph)*0.06;v34Defer(x,(Y+0.3)*s,()=>{const gr=x.createRadialGradient(X*s,Y*s,0,X*s,Y*s,s*0.8);gr.addColorStop(0,"rgba(150,255,200,.22)");gr.addColorStop(1,"rgba(150,255,200,0)");x.fillStyle=gr;x.fillRect((X-0.8)*s,(Y-0.8)*s,1.6*s,1.6*s);gdraw(()=>ppl90(x,X*s,Y*s,s,o,a,0,false));});}
+    else v34Defer(x,(Y+0.3)*s,()=>ppl90(x,X*s,Y*s,s,o,a,TT*6.9+c.ph,mv));});
   // le capitaine : tricorne et long manteau, il arpente le château arrière près de la barre et montre du doigt la manœuvre
   if(!bar){const A1=at(0.07,-0.45),A2=at(0.15,0.45),per=22,tc=(TT+b.ph*7)%per,k=tc<7?0:tc<11?tc-7:tc<18?4:tc<22?4-(tc-18):0,f=Math.min(1,k/4),X=A1[0]+(A2[0]-A1[0])*f,Y=A1[1]+(A2[1]-A1[1])*f,mv=(tc>=7&&tc<11)||tc>=18,
-      a=mv?Math.atan2((A2[1]-A1[1])*(tc<11?1:-1),(A2[0]-A1[0])*(tc<11?1:-1)):Math.atan2(MY-Y,(flip?-1:1)*3),cf=Object.assign({},p90Fig(pplFig("noble",3)),{coat:"#1e2a4a",item:!mv&&tc<5?"point":null});
-    v34Defer(x,(Y+0.3)*s,()=>{ppl90(x,X*s,Y*s,s,cf,a,TT*6.9,mv);x.save();x.translate(X*s,Y*s);x.rotate(a+Math.PI/2);const r=s*0.26;
+      a=mv?Math.atan2((A2[1]-A1[1])*(tc<11?1:-1),(A2[0]-A1[0])*(tc<11?1:-1)):Math.atan2(MY-Y,(flip?-1:1)*3),CC=["#1e2a4a","#6a1e24","#1e4a32","#1a1a1e","#5a3a1e","#1e4a5a","#4a2a5a"][Math.floor((b.x*7+b.L*3+(b.pal||0))%7)],cf=Object.assign({},p90Fig(pplFig("noble",3+Math.floor(b.x)%5)),{body:CC,sleeve:spMix(CC,-0.12),cape:CC,trim:"#d8b040",item:!mv&&tc<5?"point":null});
+    v34Defer(x,(Y+0.3)*s,()=>gdraw(()=>{ppl90(x,X*s,Y*s,s,cf,a,GH?0:TT*6.9,mv&&!GH);x.save();x.translate(X*s,Y*s);x.rotate(a+Math.PI/2);const r=s*0.26;
       x.fillStyle="rgba(0,0,0,.3)";x.beginPath();x.moveTo(-r+s*0.04,-r*0.55+s*0.05);x.lineTo(r+s*0.04,-r*0.55+s*0.05);x.lineTo(s*0.04,r*0.75+s*0.05);x.closePath();x.fill();
       x.fillStyle="#1a1a22";x.beginPath();x.moveTo(-r,-r*0.55);x.quadraticCurveTo(0,-r*0.85,r,-r*0.55);x.lineTo(0,r*0.75);x.closePath();x.fill();x.strokeStyle="#d8b040";x.lineWidth=Math.max(1,s*0.03);x.stroke();
-      x.fillStyle="#2a2a36";x.beginPath();x.arc(0,0,r*0.42,0,6.283);x.fill();x.fillStyle="#f4f0e8";x.beginPath();x.moveTo(r*0.55,-r*0.45);x.quadraticCurveTo(r*1.1,-r*0.9,r*0.85,-r*0.2);x.closePath();x.fill();x.restore();});}
+      x.fillStyle="#2a2a36";x.beginPath();x.arc(0,0,r*0.42,0,6.283);x.fill();x.fillStyle="#f4f0e8";x.beginPath();x.moveTo(r*0.55,-r*0.45);x.quadraticCurveTo(r*1.1,-r*0.9,r*0.85,-r*0.2);x.closePath();x.fill();x.restore();}));}
   // vigie dans la grande hune
-  if(!bar){const m=T.masts.filter(q=>q.top).sort((a,c)=>c.h-a.h)[0];if(m){const p=at(m.u,0),f=p90Fig(pplFig("villageois",7));V34LATE.push(()=>{x.save();ppl90(x,p[0]*s,p[1]*s,s*0.7,f,TT*0.15%6.283,0,false);x.restore();});}}}
+  if(!bar){const m=T.masts.filter(q=>q.top).sort((a,c)=>c.h-a.h)[0];if(m){const p=at(m.u,0),f=p90Fig(pplFig("villageois",7));V34LATE.push(()=>gdraw(()=>{x.save();ppl90(x,p[0]*s,p[1]*s,s*0.7,f,TT*0.15%6.283,0,false);x.restore();}));}}}
 function portBarge90(x,b,s,t){const bob=Math.sin(t*0.9+b.ph)*0.03,X0=b.x*s,Y0=(b.y+bob)*s,L=b.L*s,B=Math.max(b.B,2.6)*s;
   const hull=k=>{x.beginPath();x.moveTo(X0+L*0.04,Y0+B*(1-k)/2);x.lineTo(X0+L*0.94,Y0+B*(1-k)/2);x.quadraticCurveTo(X0+L,Y0+B*0.5,X0+L*0.94,Y0+B*(1+k)/2);x.lineTo(X0+L*0.04,Y0+B*(1+k)/2);x.quadraticCurveTo(X0,Y0+B*0.5,X0+L*0.04,Y0+B*(1-k)/2);x.closePath();};
   x.save();x.translate(s*0.25,s*0.35);hull(1);x.fillStyle="rgba(5,20,30,.4)";x.fill();x.restore();hull(1);x.fillStyle="#4a3622";x.fill();hull(0.84);x.fillStyle="#8a6a44";x.fill();
