@@ -319,11 +319,12 @@ service cloud.firestore {
     // ---------- Phase 2 : renommée (lecture publique, écriture admin) ----------
     function validAdv(d) {
       return d.keys().hasOnly(['nom', 'joueur', 'niveaux', 'proprietaire', 'espece', 'classe', 'description',
-                               'background', 'image', 'don', 'pnj', 'rangGuilde', 'etoiles', 'xp', 'xpLog', 'creeLe', 'majLe'])
+                               'background', 'image', 'token', 'tokenCadre', 'don', 'pnj', 'rangGuilde', 'etoiles', 'xp', 'xpLog', 'creeLe', 'majLe'])
         && str(d.nom, 1, 60)
         && optStr(d, 'joueur', 60) && optStr(d, 'espece', 60) && optStr(d, 'classe', 60)
         && optStr(d, 'description', 2000) && optStr(d, 'background', 7000) && optStr(d, 'don', 500)
-        && optStr(d, 'image', 400000)
+        && optStr(d, 'image', 400000) && optStr(d, 'token', 150000)
+        && (!('tokenCadre' in d) || (d.tokenCadre is map && d.tokenCadre.keys().hasOnly(['x', 'y', 'z'])))
         && (!('pnj' in d) || d.pnj is bool)
         && (!('rangGuilde' in d) || d.rangGuilde in ['bois', 'cuivre', 'fer', 'argent', 'or', 'mithral', 'rose'])
         && (!('etoiles' in d) || (d.etoiles is int && d.etoiles >= 0 && d.etoiles <= 3))
@@ -344,7 +345,7 @@ service cloud.firestore {
       allow update: if realAccount() && validAdv(request.resource.data)
         && resource.data.proprietaire == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['nom', 'espece', 'classe', 'description', 'background', 'image', 'majLe']);
+             .hasOnly(['nom', 'espece', 'classe', 'description', 'background', 'image', 'token', 'tokenCadre', 'majLe']);
       allow delete: if isAdmin();
     }
     // Points de renommée : réservés au DM (les joueurs ne voient que les rangs)
