@@ -973,6 +973,12 @@ label.evset span:last-child{color:var(--ink-soft);font-size:14px}
 .mg-quest .actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
 .mg-quest .ev{color:var(--ink-soft)}
 .mg-card .mghd{display:flex;gap:10px;align-items:center}
+#minilaunch .pickrow{display:flex;flex-direction:row;align-items:center;gap:12px;text-align:left;padding:8px 10px}
+#minilaunch .pickrow input{width:22px;height:22px;flex:none;margin:0}
+#minilaunch .pickrow strong{text-transform:none;letter-spacing:normal;font-size:17px}
+#minilaunch .mg-av{width:36px;height:36px;font-size:18px}
+#minilaunch .desc{display:block;font-size:13px;opacity:.75}
+.mg-quest .linkbtn{color:var(--ink-soft);text-decoration:underline}
 footer .who{display:inline-flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
 footer .who a{color:var(--gold)}
 .plink{color:inherit;text-decoration:underline;text-decoration-color:rgba(0,0,0,.25);text-underline-offset:3px}
@@ -2573,7 +2579,8 @@ function miniQuete(q){
     (q.objectif?'<p><strong>Objectif :</strong> '+mdInline(q.objectif)+'</p>':'')+
     ((q.recompense||q.badge)?'<p><strong>Récompense :</strong> '+mdInline([q.recompense,q.badge?'badge « '+q.badge+' »':''].filter(Boolean).join(" + "))+'</p>':'')+
     ((q.deroule||q.monstres)?'<details class="mg-dm"><summary>Pour le DM</summary>'+(q.deroule?'<div class="wikibody">'+md(q.deroule)+'</div>':'')+(q.monstres?'<h4>Créatures</h4><div class="wikibody">'+md(q.monstres)+'</div>':'')+'</details>':'')+
-    '<div class="actions"><div class="chips" role="group" aria-label="Statut">'+Object.keys(MINI_ST).map(k=>'<button class="chip" data-a="mini-st" data-id="'+esc(q.id)+'" data-v="'+k+'" aria-pressed="'+(s===k)+'">'+MINI_ST[k]+'</button>').join("")+'</div><button class="btn board sm" data-a="mini-edit" data-id="'+esc(q.id)+'">Modifier</button></div></article>';
+    (s!=="dispo"&&(q.presents||[]).length?'<p><strong>Présents :</strong> '+esc(q.presents.map(i=>(miniDocs.find(x=>x.id===i)||{}).nom).filter(Boolean).join(", "))+(s==="encours"?' <button class="linkbtn" data-a="mini-launch" data-id="'+esc(q.id)+'">changer</button>':'')+'</p>':'')+
+    '<div class="actions">'+(s==="dispo"?'<button class="btn gold sm" data-a="mini-launch" data-id="'+esc(q.id)+'">Lancer la quête</button>':'')+'<div class="chips" role="group" aria-label="Statut">'+Object.keys(MINI_ST).map(k=>'<button class="chip" data-a="'+(k==="encours"&&s!=="encours"?'mini-launch':'mini-st')+'" data-id="'+esc(q.id)+'" data-v="'+k+'" aria-pressed="'+(s===k)+'">'+MINI_ST[k]+'</button>').join("")+'</div><button class="btn board sm" data-a="mini-edit" data-id="'+esc(q.id)+'">Modifier</button></div></article>';
 }
 function miniView(){
   if(!isAdmin)return '<p class="empty">Cette page est réservée au DM.</p>';
@@ -2587,6 +2594,11 @@ function miniView(){
     else h+='<div class="actions"><button class="btn gold" data-a="mini-new" data-v="quete">Nouvelle quête</button></div>';
     ord.forEach(k=>{const L=Q.filter(q=>(q.statut||"dispo")===k);if(L.length)h+='<h2 class="subh">'+MINI_ST[k]+'</h2><div class="mg-qgrid">'+L.map(miniQuete).join("")+'</div>';});
     if(!Q.length)h+='<p class="hint">Aucune quête pour l\'instant.</p>';
+    const lq=ui.miniLaunch&&Q.find(q=>q.id===ui.miniLaunch);
+    if(lq){const P=miniOf("perso"),was=lq.presents||null;
+      h+='<div class="modal-bg" data-a="mini-launch-no"><form class="modal" id="minilaunch" data-id="'+esc(lq.id)+'" role="dialog" aria-modal="true" aria-labelledby="ml-t"><h2 id="ml-t">Lancer « '+esc(lq.titre)+' »</h2><fieldset class="pick"><legend>Qui est présent aujourd\'hui ?</legend>'+
+        P.map((p,i)=>'<label class="pickrow" for="ml-'+i+'"><input type="checkbox" id="ml-'+i+'" value="'+esc(p.id)+'"'+(!was?(p.support?'':' checked'):was.indexOf(p.id)>=0?' checked':'')+'><span class="mg-av" aria-hidden="true">'+esc(String(p.nom||"?").charAt(0))+'</span><span><strong>'+esc(p.nom)+'</strong>'+(p.joueur?' <em>('+esc(p.joueur)+')</em>':'')+(p.support?'<span class="desc">Soutien</span>':'')+'</span></label>').join("")+
+        '</fieldset><div class="actions"><button class="btn" type="submit">C\'est parti !</button><button class="btn ghost" type="button" data-a="mini-launch-no">Annuler</button></div></form></div>';}
   } else if(tab==="persos"){
     const P=miniOf("perso"),K=P.filter(p=>!p.support),S=P.filter(p=>p.support);
     if(ui.miniEdit==="new-perso")h+='<article class="mg-card">'+miniForm("new-perso",MINI_PF,{},'<label class="pickrow" for="mf-support"><input type="checkbox" id="mf-support"><span>Personnage de soutien (joué par un parent)</span></label>')+'</article>';
@@ -2606,10 +2618,12 @@ function miniView(){
   }
   return h+'</div>';
 }
-async function miniClick(a,b,id){
+async function miniClick(a,b,id,ev){
   if(a.indexOf("mini-")!==0)return false;
   const vv=b.getAttribute("data-v");
   if(a==="mini-tab"){ui.miniTab=vv;ui.miniEdit=null;ui.miniDel=null;render();return true;}
+  if(a==="mini-launch"){ui.miniLaunch=id;render();return true;}
+  if(a==="mini-launch-no"){if(b.classList.contains("modal-bg")&&ev&&b!==ev.target)return true;ui.miniLaunch=null;render();return true;}
   if(a==="mini-edit"){ui.miniEdit=id;ui.miniDel=null;render();return true;}
   if(a==="mini-new"){ui.miniEdit="new-"+vv;render();return true;}
   if(a==="mini-cancel"){ui.miniEdit=null;ui.miniDel=null;render();return true;}
@@ -2622,6 +2636,8 @@ async function miniClick(a,b,id){
   return false;
 }
 async function miniSubmit(e){
+  if(e.target.id==="minilaunch"){e.preventDefault();const id=e.target.getAttribute("data-id"),pr=Array.from(e.target.querySelectorAll("input[type=checkbox]:checked")).map(x=>x.value);if(!pr.length)return true;ui.miniLaunch=null;
+    await run("Quête lancée",()=>setDoc(doc(db,"mini",id),{statut:"encours",presents:pr,lanceeLe:serverTimestamp(),majLe:serverTimestamp()},{merge:true}));return true;}
   if(e.target.id!=="miniform")return false;
   e.preventDefault();
   const id0=e.target.getAttribute("data-id"),g=k=>{const el=document.getElementById(k);return el?el.value.trim():"";},num=k=>{const s=g(k);return s===""||isNaN(+s)?null:Math.round(+s);};
@@ -10507,7 +10523,7 @@ document.addEventListener("click",async e=>{
   if(e.target.id==="zoomov"||(e.target.tagName==="FIGURE"&&e.target.parentNode&&e.target.parentNode.id==="zoomov")){zoomClose();return;}
   const b=e.target.closest("[data-a]");if(!b)return;
   const a=b.getAttribute("data-a"),id=b.getAttribute("data-id");
-  if(await miniClick(a,b,id))return;
+  if(await miniClick(a,b,id,e))return;
   if(a==="zoom-close"){zoomClose();return;}
   if(a==="tb-figdel"){if(!isAdmin)return;const q=tbQuest();if(q)await run("Figurine retirée",()=>deleteDoc(doc(db,"table",q.id,"figs",id)));return;}
   if(a==="tb-follow"||a==="tb-zoom"){const r=ecRenderers["ec-pl"];if(!r)return;if(a==="tb-follow")r.free=false;else if(r.zoomAt){const bb=r.cv.getBoundingClientRect();r.zoomAt(+b.getAttribute("data-v")||1,bb.left+bb.width/2,bb.top+bb.height/2);}return;}
