@@ -983,6 +983,7 @@ label.evset span:last-child{color:var(--ink-soft);font-size:14px}
 .mg-quest .actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
 .mg-quest .ev{color:var(--ink-soft)}
 .mg-card .mghd{display:flex;gap:10px;align-items:center}
+.ptmini{position:relative}.ptmini>.ptvit{position:absolute;right:6px;top:50%;transform:translateY(-50%)}.ptmini:has(>.ptvit) .ptmname{padding-right:44px}
 .ptsearch li{position:relative}.ptsearch .ccat.joueur{background:#2e6a8a;color:#fff}.ptsearch .ccat.pnj{background:#6a5a2e;color:#fff}.ptsearch .ccat.ennemi{background:#8a2e2e;color:#fff}.ptsearch li:has(>.pttv){padding-right:46px}
 .pttv{position:absolute;right:4px;top:4px;width:36px;height:32px;border-radius:8px;border:1px solid #b9993f;background:#f3e3b0;cursor:pointer;font-size:16px;line-height:1}
 .pttv:hover,.pttv:focus-visible{background:#e2b64a}
@@ -9962,7 +9963,7 @@ function ptRow(c){
   let h='<li class="ptrow'+(cur&&fight?' cur':'')+(dead?' dead':'')+(down?' down':'')+' k-'+c.kind+' c-'+camp+'" id="pt-'+c.cid+'">';
   h+='<label class="ptinit"><span>Init.</span><input type="number" inputmode="numeric" class="pt-in" data-id="'+c.cid+'" data-f="init" value="'+esc(c.init===""||c.init==null?"":c.init)+'" aria-label="Initiative de '+esc(c.nom)+'"></label>';
   h+='<div class="ptmain"><div class="ptname">'+(cur&&fight?'<span class="ptturn" aria-label="Tour actuel">▶</span>':'')+(c.kind==="monstre"&&monstres.some(m=>m.id===c.ref)?'<button class="ptlink" data-a="pt-sb" data-id="'+esc(c.ref)+'">'+esc(c.nom)+'</button>':'<strong>'+esc(c.nom)+'</strong>')+(c.kind==="pj"&&c.ref&&isAdmin&&favFor(c.ref).length?'<button class="mini ptfav" data-a="pt-fav" data-id="'+c.cid+'" title="Faveur des mendiants en attente (secret)">🪙 '+favFor(c.ref).length+'</button>':'')+ptVitBtn(c)+
-    '<span class="ptcamp '+camp+'">'+(camp==="allie"?'Allié':'Ennemi')+'</span><span class="ptca" title="Classe d\'armure">🛡 '+esc(c.ca===""?"—":c.ca)+'</span>'+(c.kind==="pj"&&c.pp!==""&&c.pp!=null?'<span class="ptca" title="Perception passive">👁 '+esc(c.pp)+'</span>':'')+(c.conc?'<span class="ptconc">Concentration</span>':'')+(dead?'<span class="ptdead">Vaincu</span>':'')+
+    '<span class="ptcamp '+camp+'">'+(camp==="allie"?(c.kind==="pj"?'Joueur':'Allié'):'Ennemi')+'</span><span class="ptca" title="Classe d\'armure">🛡 '+esc(c.ca===""?"—":c.ca)+'</span>'+(c.kind==="pj"&&c.pp!==""&&c.pp!=null?'<span class="ptca" title="Perception passive">👁 '+esc(c.pp)+'</span>':'')+(c.conc?'<span class="ptconc">Concentration</span>':'')+(dead?'<span class="ptdead">Vaincu</span>':'')+
     '<button class="ptmod" data-a="pt-edit" data-id="'+c.cid+'">✎ Modifier</button></div>';
   h+='<div class="pthp"><span class="bar"><span class="'+hc+'" style="width:'+pct+'%"></span></span><span class="num">'+c.pv+' / '+(c.pvMax||"?")+' PV'+(c.tmp>0?' <em>+'+c.tmp+' temp.</em>':'')+'</span></div>';
   if(ui.ptFav===c.cid&&c.ref){const L=favFor(c.ref);h+='<div class="ptpick ptfavs"><strong>🪙 Faveurs des mendiants pour '+esc(c.nom)+'</strong>'+(L.length?L.map(f=>'<div class="ptfavi"><p><strong>'+esc(f.type)+'</strong> <span class="desc">('+esc(f.montant)+(f.lieu?' · '+esc(f.lieu):'')+')</span><br>'+esc(f.dm)+'</p><p class="desc">À l\'écran : « '+esc(f.pj)+' »</p><button class="mini gold" data-a="pt-fav-go" data-id="'+c.cid+'" data-v="'+esc(f.id)+'">▶ Déclencher maintenant</button><button class="mini" data-a="pt-fav-roll" data-id="'+c.cid+'" data-v="'+esc(f.id)+'">⟳ Retirer</button><button class="mini" data-a="pt-fav-drop" data-id="'+c.cid+'" data-v="'+esc(f.id)+'">✕ Oublier</button></div>').join(""):'<p class="desc">Aucune faveur en attente.</p>')+'</div>';}
@@ -10183,7 +10184,7 @@ function ptMini(c,phase){
   if(phase==="init")h+='<label class="ptminit"><span class="sr">Initiative de '+esc(c.nom)+'</span><input type="number" inputmode="numeric" class="pt-in" data-id="'+c.cid+'" data-f="init" value="'+esc(c.init===""||c.init==null?"":c.init)+'" placeholder="—"></label>'+(c.kind!=="pj"?'<button class="ptdie" data-a="pt-roll1" data-id="'+c.cid+'" title="Lancer d20'+((+c.dex||0)>=0?'+':'')+(+c.dex||0)+'" aria-label="Lancer l\'initiative de '+esc(c.nom)+'">🎲</button>':'<span class="ptdie ph"></span>');
   else h+='<span class="ptminit-v">'+esc(c.init===""||c.init==null?"—":c.init)+'</span>';
   h+='<button class="ptmname" data-a="pt-sel" data-id="'+c.cid+'"><span class="nm">'+(cur?'▶ ':'')+esc(c.nom)+(c.conc?' <span class="ptconc">C</span>':'')+'</span><span class="minibar"><span class="'+hc+'" style="width:'+pct+'%"></span></span><span class="mhp">'+c.pv+'/'+(c.pvMax||"?")+(c.tmp>0?' +'+c.tmp:'')+' · 🛡 '+esc(c.ca===""?"—":c.ca)+'</span>'+
-    ((c.effets||[]).length?'<span class="meffs">'+c.effets.map(e=>'✨ '+esc(e.nom)+(ptDurTxt(e)?' ('+esc(ptDurTxt(e))+')':'')).join(" · ")+'</span>':'')+((c.conds||[]).length?'<span class="mconds">'+c.conds.map(x=>esc((PT_COND[x.k]||[,""])[1])+(x.k==="exhaustion"?" "+(x.n||1):"")+(x.d>0?" ("+x.d+")":"")).join(" · ")+'</span>':'')+'</button></li>';
+    ((c.effets||[]).length?'<span class="meffs">'+c.effets.map(e=>'✨ '+esc(e.nom)+(ptDurTxt(e)?' ('+esc(ptDurTxt(e))+')':'')).join(" · ")+'</span>':'')+((c.conds||[]).length?'<span class="mconds">'+c.conds.map(x=>esc((PT_COND[x.k]||[,""])[1])+(x.k==="exhaustion"?" "+(x.n||1):"")+(x.d>0?" ("+x.d+")":"")).join(" · ")+'</span>':'')+'</button>'+ptVitBtn(c)+'</li>';
   return h;
 }
 function ptStartBox(q){
@@ -10233,7 +10234,7 @@ function ptAddBox(q,open){
   return h+'</details>';
 }
 function ptNotesBox(){const C=ui.pt.combat;if(!C)return "";return '<label class="ptnotes" for="pt-cnotes">📝 Notes de combat<textarea id="pt-cnotes" rows="3" maxlength="5000" placeholder="Ce qui se passe, décisions des joueurs, idées…">'+esc(C.notes||"")+'</textarea></label>';}
-function ptVitBtn(c){const k=c.kind==="monstre"?"monstres":c.kind==="pj"?"aventuriers":c.kind==="pnj"?"pnj":"",x=k&&c.ref?(k==="monstres"?monstres:k==="pnj"?pnjs:aventuriers).find(y=>y.id===c.ref):null;
+function ptVitBtn(c){const mi=c.kind==="pj"&&c.ref&&miniDocs.some(m=>m.id===c.ref),k=mi?"mini":c.kind==="monstre"?"monstres":c.kind==="pj"?"aventuriers":c.kind==="pnj"?"pnj":"",x=k&&c.ref?(k==="mini"?miniDocs:k==="monstres"?monstres:k==="pnj"?pnjs:aventuriers).find(y=>y.id===c.ref):null;
   return x&&x.image?'<button class="ptvit" data-a="vit-show" data-k="'+k+'" data-id="'+esc(c.ref)+'" data-n="'+esc(c.nom)+'" title="Montrer son image sur l\'écran des joueurs" aria-label="Montrer '+esc(c.nom)+' sur l\'écran des joueurs">📺</button>':'';}
 function ptCombatCol(q){
   const P=ui.pt,C=P.combat,o=ptOrder();let h='';
