@@ -4147,12 +4147,17 @@ function portShip90(x,b,s,t,layer){const T=SHIP_T[b.ty]||SHIP_T.cl,L=b.L,gh=b.gh
     [[0.78,-0.4],[0.8,0.3]].forEach(([u,v])=>burProp90(x,{t:"barrel",x:at(u,v)[0]/s,y:at(u,v)[1]/s,r:0.24},s,t));
     // canons sur affût, bouche vers l'extérieur le long des deux bordages (entre les châteaux) ; plus nombreux sur les grands navires
     {const nC=b.ty==="ga"?4:b.ty==="br"||b.ty==="cr"?3:b.ty==="co"?2:1,u0=(T.aft?T.aft[0]:0.22)+0.06,u1=1-(T.fore?T.fore[0]:0.1)-0.12;
-      for(let j=0;j<nC;j++){const u=nC===1?(u0+u1)/2:u0+(u1-u0)*j/(nC-1);if(Math.abs(u-0.4)<0.035||Math.abs(u-0.58)<0.035)continue;for(const sd of [-1,1]){const p=at(u,sd*0.62),out=sd;x.save();x.translate(p[0],p[1]);x.rotate(out>0?Math.PI/2:-Math.PI/2);
-        x.fillStyle="rgba(0,0,0,.3)";x.fillRect(-s*0.22+s*0.05,-s*0.2+s*0.06,s*0.44,s*0.42);x.fillStyle="#6a4626";x.fillRect(-s*0.22,-s*0.2,s*0.44,s*0.42);x.fillStyle="#2a1e14";for(const wx of [-0.25,0.21])for(const wy of [-0.14,0.14]){x.fillRect((wx)*s,(wy-0.05)*s,s*0.05,s*0.1);}
-        const gr=x.createLinearGradient(-s*0.1,0,s*0.1,0);gr.addColorStop(0,"#2a2c30");gr.addColorStop(0.45,"#5a5e66");gr.addColorStop(1,"#1a1c20");x.fillStyle=gr;x.beginPath();x.moveTo(-s*0.12,-s*0.28);x.lineTo(s*0.12,-s*0.28);x.lineTo(s*0.08,s*0.42);x.lineTo(-s*0.08,s*0.42);x.closePath();x.fill();
-        x.fillStyle="#141518";x.beginPath();x.arc(0,s*0.44,s*0.085,0,6.283);x.fill();x.fillStyle="#2e3036";x.beginPath();x.arc(0,-s*0.3,s*0.08,0,6.283);x.fill();x.restore();}
+      for(let j=0;j<nC;j++){const u=nC===1?(u0+u1)/2:u0+(u1-u0)*j/(nC-1);if(Math.abs(u-0.4)<0.035||Math.abs(u-0.58)<0.035)continue;for(const sd of [-1,1]){const pe=at(u,sd),p=[pe[0],pe[1]-sd*s*0.3],out=sd;
+        // sabord : une encoche sombre dans le bordage, par où passe la bouche du canon
+        x.fillStyle="#1a120a";x.fillRect(pe[0]-s*0.17,pe[1]-s*0.09,s*0.34,s*0.18);
+        x.save();x.translate(p[0],p[1]);x.rotate(out>0?0:Math.PI);
+        x.fillStyle="rgba(0,0,0,.3)";x.fillRect(-s*0.2+s*0.05,-s*0.34+s*0.06,s*0.4,s*0.46);x.fillStyle="#6a4626";x.fillRect(-s*0.2,-s*0.34,s*0.4,s*0.46);x.strokeStyle="#3a2412";x.lineWidth=Math.max(1,s*0.025);x.strokeRect(-s*0.2,-s*0.34,s*0.4,s*0.46);x.fillStyle="#2a1e14";for(const wx of [-0.25,0.2])for(const wy of [-0.26,0.02]){x.fillRect((wx)*s,(wy)*s,s*0.05,s*0.1);}
+        // palan de brague : cordage qui retient le canon au bordage
+        x.strokeStyle="#a89068";x.lineWidth=Math.max(1,s*0.025);x.beginPath();x.moveTo(-s*0.2,0);x.lineTo(-s*0.42,s*0.24);x.moveTo(s*0.2,0);x.lineTo(s*0.42,s*0.24);x.stroke();
+        const gr=x.createLinearGradient(-s*0.1,0,s*0.1,0);gr.addColorStop(0,"#2a2c30");gr.addColorStop(0.45,"#5a5e66");gr.addColorStop(1,"#1a1c20");x.fillStyle=gr;x.beginPath();x.moveTo(-s*0.11,-s*0.4);x.lineTo(s*0.11,-s*0.4);x.lineTo(s*0.075,s*0.62);x.lineTo(-s*0.075,s*0.62);x.closePath();x.fill();
+        x.fillStyle="#3a3c42";x.fillRect(-s*0.095,s*0.5,s*0.19,s*0.05);x.fillStyle="#141518";x.beginPath();x.arc(0,s*0.62,s*0.07,0,6.283);x.fill();x.fillStyle="#2e3036";x.beginPath();x.arc(0,-s*0.42,s*0.075,0,6.283);x.fill();x.restore();}
         // boulets empilés près du premier canon
-        if(j===0){const q=at(u+0.035,0.35);[[0,0],[0.17,0],[0.085,-0.14]].forEach(([dx,dy])=>{x.fillStyle="#1e2024";x.beginPath();x.arc(q[0]+dx*s,q[1]+dy*s,s*0.085,0,6.283);x.fill();x.fillStyle="rgba(255,255,255,.25)";x.beginPath();x.arc(q[0]+dx*s-s*0.03,q[1]+dy*s-s*0.03,s*0.025,0,6.283);x.fill();});}}}
+        if(j===0){const q=at(u+0.045,0.45);[[0,0],[0.17,0],[0.085,-0.14]].forEach(([dx,dy])=>{x.fillStyle="#1e2024";x.beginPath();x.arc(q[0]+dx*s,q[1]+dy*s,s*0.085,0,6.283);x.fill();x.fillStyle="rgba(255,255,255,.25)";x.beginPath();x.arc(q[0]+dx*s-s*0.03,q[1]+dy*s-s*0.03,s*0.025,0,6.283);x.fill();});}}}
     // beaupré
     {const p=at(1,0),d=flip?-1:1;x.strokeStyle="#5a3a1e";x.lineWidth=Math.max(2,s*0.12);x.lineCap="round";x.beginPath();x.moveTo(p[0]-d*s*0.4,p[1]);x.lineTo(p[0]+d*(T.bs||1)*0.7*s,p[1]);x.stroke();}
     // passerelle jusqu'au quai
