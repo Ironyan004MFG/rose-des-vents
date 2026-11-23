@@ -7495,7 +7495,7 @@ function ecPaxSprite(x,X,Y,s,o,TT){if(TOP90){paxTop(x,X,Y+s*0.05,s,o,TT);{const 
   if(steam&&o.lvl>0.25){const sp=iv.transformPoint(steam),S=s/60;x.save();x.translate(sp.x,sp.y);x.rotate(rot);for(let i=0;i<5;i++){const u=((TT*0.4+i/5)%1);x.save();x.filter="blur("+((1+u*3)*S).toFixed(2)+"px)";x.fillStyle="rgba(245,245,245,"+(0.45*Math.sin(Math.PI*Math.min(1,u*1.3))*(1-u)*o.lvl).toFixed(3)+")";x.beginPath();x.ellipse(Math.sin(TT*1.7+i*1.3+u*5)*5*S*u,-u*30*S,(2+u*5)*S,(3+u*4)*S,0,0,6.283);x.fill();x.restore();}x.restore();}
   if(!o._nob){x.save();x.translate(hp.x,hp.y);o.bs=o.flip?-1:1;ecPaxBubble(x,0,0,s,o,TT);x.restore();}}
 // bulle de Pax seule (dessinée après tout le monde), à la même place qu'avec le sprite
-function ecPaxBubbleAt(x,X,Y,s,o,TT){const h=s*EC_PAXLEN;x.save();x.translate(X,Y-s*0.62-h/2+h*0.1);o.bs=o.flip?-1:1;ecPaxBubble(x,0,0,s,o,TT);x.restore();}
+function ecPaxBubbleAt(x,X,Y,s,o,TT){const h=s*EC_PAXLEN;x.save();x.translate(X,TOP90?Y-s*0.15:Y-s*0.62-h/2+h*0.1);o.bs=o.flip?-1:1;ecPaxBubble(x,0,0,s,o,TT);x.restore();}
 // Pax immobile (étage, autres cartes) : debout, café à la main, une gorgée de temps en temps
 function ecPaxIdle(k,TT){const t=(TT+(k.x*13+k.y*7))%30;return {x:k.x,y:k.y,a:k.a!=null?k.a:Math.PI/2,still:true,flip:false,cup:true,lvl:0.35+0.6*(1-((TT/240)%1)),pose:t>24&&t<26.6?"boire":"cafe_repos"};}
 // Employés sans nom : un cuisinier et un serveur qui servent À LA COMMANDE, un marchand derrière ses étals de boutique
