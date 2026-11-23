@@ -3510,7 +3510,7 @@ function gFurn(x,o,s){const k=o.k;
   else if(k==="bed"){gRect(x,o.x,o.y,o.w,o.h,s,"#6b4a2b");x.fillStyle="#d9cfb8";x.fillRect((o.x+0.08)*s,(o.y+0.08)*s,(o.w-0.16)*s,(o.h-0.16)*s);x.fillStyle=o.c||"#7a2e2a";x.fillRect((o.x+0.08)*s,(o.y+o.h*0.35)*s,(o.w-0.16)*s,(o.h*0.57)*s);x.fillStyle="#f1ead8";x.fillRect((o.x+0.15)*s,(o.y+0.12)*s,(o.w-0.3)*s,0.25*s);}
   else if(k==="chest"){gRect(x,o.x,o.y,0.8,0.5,s,"#7a5532","#3e2a16");x.fillStyle="#c9a24a";x.fillRect((o.x+0.35)*s,(o.y+0.18)*s,0.1*s,0.14*s);}
   else if(k==="shelf")gRect(x,o.x,o.y,o.w,o.h,s,"#4e3420","#2e1d0e");
-  else if(k==="books"){gRect(x,o.x,o.y,o.w,o.h,s,"#4e3420");for(let i=0;i<o.w*6;i++){x.fillStyle=["#8a2f2a","#2f5a8a","#3e7a3a","#c9a24a"][i%4];x.fillRect((o.x+0.05+i/6)*s,(o.y+0.05)*s,0.12*s,(o.h-0.1)*s);}}
+  else if(k==="books"){gRect(x,o.x,o.y,o.w,o.h,s,"#4e3420");const vt=o.h>o.w;for(let i=0;i<(vt?o.h:o.w)*6;i++){x.fillStyle=["#8a2f2a","#2f5a8a","#3e7a3a","#c9a24a"][i%4];if(vt)x.fillRect((o.x+0.05)*s,(o.y+0.05+i/6)*s,(o.w-0.1)*s,0.12*s);else x.fillRect((o.x+0.05+i/6)*s,(o.y+0.05)*s,0.12*s,(o.h-0.1)*s);}}
   else if(k==="rug"){x.fillStyle=o.c||"#7a2e2a";x.fillRect(o.x*s,o.y*s,o.w*s,o.h*s);x.strokeStyle="rgba(230,200,120,.6)";x.lineWidth=Math.max(1,s*0.06);x.strokeRect((o.x+0.15)*s,(o.y+0.15)*s,(o.w-0.3)*s,(o.h-0.3)*s);}
   else if(k==="hearth"){gRect(x,o.x,o.y,o.w,o.h,s,"#5f5a54","#2e2b28");x.fillStyle="#1b1612";x.fillRect((o.x+0.2)*s,(o.y+0.2)*s,(o.w-0.4)*s,(o.h-0.4)*s);}
   else if(k==="crate")gCrate(x,o.x,o.y,s);else if(k==="barrel")gBarrel(x,o.x,o.y,s);
@@ -3548,9 +3548,13 @@ function geoInt(c,R){const W=c.w,H=c.h,G=gGrid(W,H,"."),t=c.type,g={G,furn:[],fi
   else if(t==="temple"){const m=main,cx=(m.x0+m.x1)/2;F({k:"rug",x:cx-0.8,y:m.y0+2,w:1.6,h:m.y1-m.y0-2,c:"#7a2228"});F({k:"altar",x:cx-1.5,y:m.y0+0.6,w:3,h:1.2});
     [[-1.2,0.2],[1.2,0.2]].forEach(d=>g.fires.push({x:cx+d[0],y:m.y0+0.8+d[1],r:0.12,candle:1}));g.lights.push({x:cx,y:m.y0+1.2,r:4});
     for(let y=m.y0+3;y<m.y1-1;y+=1.4){F({k:"pew",x:m.x0+1.2,y,w:cx-1.2-m.x0-1.2});F({k:"pew",x:cx+1.2,y,w:m.x1-1.2-cx-1.2});}
-    for(let y=m.y0+2;y<m.y1-1;y+=3){F({k:"column",x:m.x0+0.7,y});F({k:"column",x:m.x1-0.7,y});}
+    const nearD=(x,y,d)=>{for(let v=Math.floor(y-d);v<=Math.floor(y+d);v++)for(let u=Math.floor(x-d);u<=Math.floor(x+d);u++)if(gAt(G,u,v)==="D")return true;return false;};
+    for(let y=m.y0+2;y<m.y1-1;y+=3){if(!nearD(m.x0+0.7,y,1.3))F({k:"column",x:m.x0+0.7,y});if(!nearD(m.x1-0.7,y,1.3))F({k:"column",x:m.x1-0.7,y});}
     [[m.x0+1,m.y0+1],[m.x1-1,m.y0+1]].forEach(p=>{F({k:"brazier",x:p[0],y:p[1]});g.fires.push({x:p[0],y:p[1],r:0.3});g.lights.push({x:p[0],y:p[1],r:4});});
-    rooms.filter(r=>r.side).forEach(r=>{F({k:"books",x:r.x0+0.2,y:r.y0+0.2,w:Math.max(1,r.x1-r.x0-0.4),h:0.6});F({k:"chest",x:r.x0+0.5,y:r.y1-1});F({k:"ltable",x:r.x0+1,y:r.y0+1.5,w:Math.max(1,(r.x1-r.x0)/2),h:1});});}
+    // sacristies : la bibliothèque contre le mur extérieur (jamais de porte), le coffre et la table loin des portes
+    rooms.filter(r=>r.side).forEach(r=>{const rw=r.x1-r.x0,rh=r.y1-r.y0;F({k:"books",x:r.x1-0.8,y:r.y0+0.2,w:0.6,h:Math.max(1,rh-0.4)});
+      const ch=[[r.x0+0.5,r.y1-1],[r.x0+0.5,r.y0+0.3],[r.x1-1.9,r.y1-1],[r.x1-1.9,r.y0+0.3]].find(p=>!nearD(p[0]+0.4,p[1]+0.35,1.3));if(ch)F({k:"chest",x:ch[0],y:ch[1]});
+      const tw=Math.max(1,Math.min(rw-2.6,rw/2)),tx=r.x0+(rw-0.8-tw)/2,ty=r.y0+rh/2-0.5;if(!nearD(tx+tw/2,ty+0.5,Math.max(1.4,tw/2+0.9)))F({k:"ltable",x:tx,y:ty,w:tw,h:1});});}
   else if(t==="entrepot"){const m=main;for(let y=m.y0+1;y<m.y1-1;y+=3)for(let x=m.x0+1;x<m.x1-2;x+=4){if(R()<0.8){const n=2+Math.floor(R()*3);for(let i=0;i<n;i++)F({k:R()<0.7?"crate":"barrel",x:x+(i%2)*1.0+(R()<0.5?0:0.1),y:y+Math.floor(i/2)*1.0});}}
     F({k:"cart",x:m.x0+1,y:m.y1-2});g.lights.push({x:(m.x0+m.x1)/2,y:(m.y0+m.y1)/2,r:3});rooms.filter(r=>r.side).forEach((r,i)=>{F({k:"ltable",x:r.x0+0.6,y:r.y0+0.6,w:1.6,h:1});F({k:"chair",x:r.x0+1.4,y:r.y0+2});F({k:"shelf",x:r.x1-1,y:r.y0+0.2,w:0.8,h:Math.max(1,r.y1-r.y0-0.4)});g.fires.push({x:r.x0+1.4,y:r.y0+1.1,r:0.1,candle:1});});}
   else{rooms.forEach((r,i)=>{const w=r.x1-r.x0,h=r.y1-r.y0;
@@ -6996,10 +7000,10 @@ function pplScrolls(x,w,h){const cx=w*0.3,cy=-h*0.47,u=w/192;x.save();x.translat
 // Rues : patrouilles en cohorte (deux files, lances), colporteurs, pèlerins, voyageurs
 function pplStreet(x,w,X,Y,a,s,ph,still,i){const k=w.kind,hs=Math.abs(Math.floor((w.wo&&w.wo.h?w.wo.h.charCodeAt(2):7)*13+(w.o||0)*7)),fl=Math.cos(a)<-0.1,mv=!still,TT=Date.now()/1000,dx=Math.cos(a),dy=Math.sin(a),px=-dy,py=dx;
   // patrouille : chaque garde suit le même chemin, à sa distance derrière le chef de file ; il tourne quand il arrive au coin (pas de pivot « d'un bloc »), sa file reste du même côté de sa marche
-  if(k==="patrouille"){const n=4+(hs%3);for(let j=0;j<n;j++){const row=Math.floor(j/2),col=j%2?1:-1;let ox,oy,f2=fl;
-      if(w._at){const q=w._at(w._p-row*0.95-(j%2)*0.12-Math.sin(j*2.1)*0.05),qa=q[2],qx=-Math.sin(qa),qy=Math.cos(qa);ox=q[0]+qx*col*0.42;oy=q[1]+qy*col*0.42;f2=Math.cos(qa)<-0.1;const cl=TOP90?0.95:0.62;if(w._ok&&!(w._ok(ox,oy)&&w._ok(q[0]+qx*col*cl,q[1]+qy*col*cl)&&(!TOP90||w._ok(ox+Math.cos(qa)*0.5,oy+Math.sin(qa)*0.5)))){const q2=w._at(w._p-j*0.85);ox=q2[0];oy=q2[1];f2=Math.cos(q2[2])<-0.1;}}
+  if(k==="patrouille"){const n=4+(hs%3);for(let j=0;j<n;j++){const row=Math.floor(j/2),col=j%2?1:-1;let ox,oy,f2=fl,fa2=a;
+      if(w._at){const q=w._at(w._p-row*0.95-(j%2)*0.12-Math.sin(j*2.1)*0.05),qa=q[2],qx=-Math.sin(qa),qy=Math.cos(qa);ox=q[0]+qx*col*0.42;oy=q[1]+qy*col*0.42;f2=Math.cos(qa)<-0.1;fa2=qa;const cl=TOP90?0.95:0.62;if(w._ok&&!(w._ok(ox,oy)&&w._ok(q[0]+qx*col*cl,q[1]+qy*col*cl)&&(!TOP90||w._ok(ox+Math.cos(qa)*0.5,oy+Math.sin(qa)*0.5)))){const q2=w._at(w._p-j*0.85);ox=q2[0];oy=q2[1];f2=Math.cos(q2[2])<-0.1;fa2=q2[2];}}
       else{ox=X-dx*row*0.95+px*col*0.42;oy=Y-dy*row*0.95+py*col*0.42;}
-      pplDraw(x,ox*s,oy*s,s,pplFig("garde",hs+j),f2,mv,TT,j*0.9,null,"grip");}
+      PPL_AN=fa2;pplDraw(x,ox*s,oy*s,s,pplFig("garde",hs+j),f2,mv,TT,j*0.9,null,"grip");PPL_AN=null;}
     // de temps en temps, la patrouille interpelle un passant : questions, avis WANTED montré, il répond, puis chacun repart
     if(w._at&&w._stop!=null){const st=w._stop,L=w._at(w._p),la=L[2],fx=Math.cos(la),fy=Math.sin(la),side=[-fy,fx],P0=[L[0]+fx*1.1,L[1]+fy*1.1];let PX,PY,mv2=true,fa=la+Math.PI;
       if(st<0){const f=(st+4)/4,F=[L[0]+fx*4.5,L[1]+fy*4.5];PX=F[0]+(P0[0]-F[0])*f;PY=F[1]+(P0[1]-F[1])*f;}else if(st<11){PX=P0[0];PY=P0[1];mv2=false;}
@@ -7011,7 +7015,7 @@ function pplStreet(x,w,X,Y,a,s,ph,still,i){const k=w.kind,hs=Math.abs(Math.floor
         const win=(t0,t1)=>st>t0&&st<t1?Math.min(1,(st-t0)*5,(t1-st)*4):0;
         let a=win(0.4,2.6);if(a)bub(L[0],L[1],a,"?");a=win(2.8,5.4);if(a)bub(L[0],L[1],a,null,1);a=win(5.6,8.2);if(a)bub(PX,PY,a,Math.floor(st*3)%2?"…":"Non !");a=win(8.4,10.4);if(a)bub(L[0],L[1],a,"Bien.");}}
     return true;}
-  if(k==="pelerins"){const n=2+(hs%2);for(let j=0;j<n;j++){const ox=X-dx*j*0.9,oy=Y-dy*j*0.9;pplDraw(x,ox*s,oy*s,s,pplFig("villageois",hs+j*3),fl,mv,TT,j*1.3);}return true;}
+  if(k==="pelerins"){const n=2+(hs%2);for(let j=0;j<n;j++){const ox=X-dx*j*0.9,oy=Y-dy*j*0.9;PPL_AN=a;pplDraw(x,ox*s,oy*s,s,pplFig("villageois",hs+j*3),fl,mv,TT,j*1.3);PPL_AN=null;}return true;}
   if(k==="charrette"){const d=dx>=0?1:-1,v=w.veh||["caravane","charrette","cariole","foin","caravane","charrette","roulotte","diligence","foin","carrosse"][hs%10];if(TOP90){const C=VEH90[v]||VEH90.charrette;x.save();x.translate(X*s,Y*s);x.rotate(a);x.translate(-(C.L/2+0.3)*s,0);wagon90(x,s,v,{mv,p:(hs%97)/97,driver:pplFig(v==="carrosse"?"garde":"villageois",hs+2),mate:hs%3===0?pplFig("villageois",hs+7):null},TT);x.restore();return true;}v34Defer(x,(Y+0.45)*s,()=>v34Wagon(x,X-d*(v==="cariole"?0.5:0.8),Y+0.3,s,d,(hs%97)/97,{mv,TT,horse:true,kind:v,driver:["foin","cariole","charrette","caravane"].indexOf(v)>=0?pplFig("villageois",hs+2):null,pass:[pplFig(v==="roulotte"?"villageois":"noble",hs+7),pplFig("noble",hs+13)]}));return true;}
   if(k==="cavalier"){const d=dx>=0?1:-1,K=1.25,fig=pplFig(hs%3===0?"garde":hs%3===1?"noble":"villageois",hs+4);if(TOP90){x.save();x.translate(X*s,Y*s);x.rotate(a);rider90(x,s,{p:(hs%89)/89,mv,fig,blanket:["#2a3a6a","#7a2a22","#4a5a2a"][hs%3]},TT);x.restore();return true;}
     v34Defer(x,(Y+0.42)*s,()=>{const Y0=Y+0.3;v34Horse(x,X,Y0,s,d,(hs%89)/89,TT,{mv,saddle:true});const bob=mv?Math.abs(Math.sin(TT*5.5+(hs%89)/89))*0.02*K:0,top=Y0-1.06*K-bob;
@@ -7020,8 +7024,8 @@ function pplStreet(x,w,X,Y,a,s,ph,still,i){const k=w.kind,hs=Math.abs(Math.floor
       const hx=X-d*0.08,hy=top+0.02;x.strokeStyle="#3a2c22";x.lineCap="round";x.lineJoin="round";x.lineWidth=0.13*s;x.beginPath();x.moveTo(hx*s,hy*s);x.lineTo((hx+d*0.24)*s,(hy+0.16)*s);x.lineTo((hx+d*0.14)*s,(hy+0.56)*s);x.stroke();
       x.fillStyle="#1e1612";x.beginPath();x.ellipse((hx+d*0.18)*s,(hy+0.62)*s,0.11*s,0.055*s,0,0,6.283);x.fill();});return true;}
   if(k==="colporteur"){const d=dx>=0?1:-1;if(TOP90){x.save();x.translate(X*s,Y*s);x.rotate(a);peddler90(x,s,{p:(hs%71)/71,mv,fig:pplFig("marchand",hs+5)},TT);x.restore();return true;}v34Defer(x,(Y+0.25)*s,()=>v34Horse(x,X-d*1.0,Y+0.22,s,d,(hs%71)/71,TT,{mv,pack:true,sc:0.95,col:["#7a6a58","#3a2c22"]}));
-    x.strokeStyle="#3a2414";x.lineWidth=Math.max(1,s*0.015);pplDraw(x,X*s,Y*s,s,pplFig("marchand",hs+5),fl,mv,TT,0);return true;}
-  if(k==="voyageur"){pplDraw(x,X*s,Y*s,s,pplFig(hs%4===0?"noble":"villageois",hs),fl,mv,TT,i||0);return true;}
+    x.strokeStyle="#3a2414";x.lineWidth=Math.max(1,s*0.015);PPL_AN=a;pplDraw(x,X*s,Y*s,s,pplFig("marchand",hs+5),fl,mv,TT,0);PPL_AN=null;return true;}
+  if(k==="voyageur"){PPL_AN=a;pplDraw(x,X*s,Y*s,s,pplFig(hs%4===0?"noble":"villageois",hs),fl,mv,TT,i||0);PPL_AN=null;return true;}
   return false;}
 // Barde de passage : entre, s'installe au milieu de la grande salle, joue, puis repart ; un attroupement se forme
 function burBard(g,c,nav,border,route){if(g.bard!==undefined)return g.bard;g.bard=null;const PB=burPublic(g,c),hall=(g.hall||[]).filter(h=>nav.okc(h.x,h.y)&&PB[Math.floor(h.y)*c.w+Math.floor(h.x)]);if(!hall.length||!border.length)return null;
@@ -9315,6 +9319,10 @@ function ecVision(st){const c=st.carte,W=c.w,H=c.h,vis=new Uint8Array(W*H),lit=n
   if(G&&(c.type==="bureau"||c.type==="maison"||c.type==="entrepot")&&!(+c.etage)&&L0.dark<0.5)for(let i=0;i<W*H;i++)if(G[i]==="."){vis[i]=1;forced[i]=1;}
   // Bureaux de la Guilde : à l'intérieur, tout est toujours éclairé et en vue (intergames, débuts et fins de partie)
   if(G&&c.type==="bureau")for(let i=0;i<W*H;i++)if(G[i]!=="."){vis[i]=1;lit[i]=1;forced[i]=1;}
+  // Lieu sombre (grotte, cave, mine…) : ce qui est dehors prend la lumière du ciel, et elle entre de quelques cases par l'ouverture
+  if(G&&dp){const sky=(EC_LUM[st.lum]||EC_LUM.jour).dark,f=Math.max(0,1-sky/0.7);if(f>0){const OUT=ecGenGeo(c).OUT||[],isO=i=>!!OUT[i],D=new Int16Array(W*H).fill(-1),q=[];
+    for(let i=0;i<W*H;i++)if(isO(i)){D[i]=0;q.push(i);lit[i]=Math.max(lit[i],f);if(sky<0.5){vis[i]=1;forced[i]=1;}}
+    for(let h=0;h<q.length;h++){const i=q[h],d=D[i];if(d>=5)continue;const X=i%W,Y=(i/W)|0;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([a,b])=>{const u=X+a,v=Y+b;if(u<0||v<0||u>=W||v>=H)return;const j=v*W+u;if(D[j]>=0||G[j]==="W")return;D[j]=d+1;q.push(j);lit[j]=Math.max(lit[j],f*(1-(d+1)/6));});}}}
   // Maison de jour : les fenêtres éclairent les pièces (la vue reste celle des jetons, le brouillard décide)
   if(G&&(c.type==="maison"||c.type==="entrepot")&&L0.dark<0.5)for(let i=0;i<W*H;i++)if(G[i]!==".")lit[i]=1;
   // Zones cachées à la main par le DM (« Cacher ») : restent cachées tant qu'il ne les révèle pas
@@ -9333,7 +9341,9 @@ function ecVision(st){const c=st.carte,W=c.w,H=c.h,vis=new Uint8Array(W*H),lit=n
 function ecFogCanvas(st,V,forDm){const c=st.carte,W=c.w,H=c.h,cv=document.createElement("canvas"),K=4;cv.width=W*K;cv.height=H*K;const x=cv.getContext("2d"),im=x.createImageData(W*K,H*K),vu=(st.fog&&st.fog.vu)||"",fogOn=!!(st.fog&&st.fog.on);
   const out=!V.ind&&!V.dp,ld=V.L0.dark,vl=out?EC_VEIL[st.meteo]:null;
   const px=(i,seen,lv)=>{const mem=vu[i]==="1",hid=vu[i]==="2",d=V.dark*(1-(lv==null?V.lit[i]:lv)*0.92);let a=d,va=0;
-    if(!seen){
+    // Brouillard coupé (figurines sur la table, pas de jetons PJ) : seule la lumière compte — le jour et les torches éclairent, le noir reste noir.
+    if(!seen&&!fogOn){a=d;if(out&&vl)va=vl[1];}
+    else if(!seen){
       if(hid&&fogOn)a=1;
       else if(out){if(ld<=0.01)a=d;else if(ld<0.5)a=Math.min(0.85,d+0.22);else a=fogOn?(mem?0.86:1):Math.max(d,0.8);if(vl)va=vl[1];}
       else a=fogOn?(mem?(V.dp?0.82:0.72):1):Math.max(d,c.type==="bureau"&&!V.dp&&V.L0.dark<0.5?0.18:0.6);}
@@ -9374,7 +9384,7 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),p
   if(M.snow>=1){x.fillStyle="rgba(244,247,251,.42)";x.fillRect(0,0,c.w*s,c.h*s);}
   if(M.fog)ecMist(x,c,s,t,M.fog,r);
   // Brouillard et obscurité (adoucis par l'agrandissement)
-  const fk=JSON.stringify([st.tokens,st.lum,st.fog,st.meteo,c.w,c.h,tv,c.ouv||[]]);if(r.fogKey!==fk){r.fogKey=fk;r.V=ecVision(st);r.fog=ecFogCanvas(st,r.V,!tv);}
+  const fk=JSON.stringify([c.id,c.type,c.seed,c.etage||0,st.tokens,st.lum,st.fog,st.meteo,c.w,c.h,tv,c.ouv||[]]);if(r.fogKey!==fk){r.fogKey=fk;r.V=ecVision(st);r.fog=ecFogCanvas(st,r.V,!tv);}
   {const V=r.V;(st.tokens||[]).forEach(k=>{const X=k.x*s,Y=k.y*s;
     if(k.sp){ecTokMove(k);const seen=(V&&V.tokSeen(k.x,k.y))||!(st.fog&&st.fog.on);if(tv&&(!k.vis||!seen))return;x.save();x.globalAlpha=!tv&&!k.vis?0.55:1;if(k.sp.t==="w")ecWalker(x,k.sp,k.x,k.y,k.a||0,s,0,true);else{const TT=Date.now()/1000,mvT=EC_TOKMV&&EC_TOKMV.get(k.id),mv=mvT&&TT-mvT[0]<0.6;v34Defer(x,(k.y+0.05)*s,()=>ecBeast(x,k.mort?Object.assign({},k.sp,{dead:1}):k.sp,k.x,k.y,s,TT,mvT?mvT[1]:(k.a||0),mv&&!k.mort?1:0,TT*8));}x.restore();return;}
     if(k.k==="pnj"&&k.look&&k.look.pax&&EC_PAXSP.complete&&EC_PAXSP.naturalWidth){const TT=Date.now()/1000,gg=c.type==="bureau"?ecGenGeo(c):null;if(gg)gg.pjPos=(st.tokens||[]).filter(q=>q.k==="pj").map(q=>[q.x,q.y]);
