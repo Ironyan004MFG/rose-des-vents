@@ -5089,7 +5089,7 @@ const BUR_ELFTREE=[["#c9a3bd","#ecd2e2","#fff6fb"],["#5f8577","#93b8aa","#dff0e8
 // plates-bandes et arbres, caisses, tonneaux, charrettes, étals à auvent rayé et lanternes. Rien ne bloque les portes.
 function burSurround(x,g,s,c,OT,SA){const W=c.w,H=c.h,R=ecRng(ecSeed(c.seed+"|abords|"+g.bid)),G=g.G,occ=new Uint8Array(W*H),dist=new Float32Array(W*H).fill(1e9),q=[];
   // maison aux abords choisis : les rues et chemins tracés restent libres (ni maison, ni caisse, ni potager dessus)
-  const ENV=maisonEnv(c),NOD=ENV&&!ENV.decor,RD=new Uint8Array(W*H),HMAX=ENV?{cite:null,ville:32,village:6,hameau:3,isole:2}[ENV.taille]:null;
+  const ENV=maisonEnv(c),ENT=c.type==="entrepot",NOD=ENV&&!ENV.decor,RD=new Uint8Array(W*H),HMAX=ENV?{cite:null,ville:32,village:6,hameau:3,isole:2}[ENV.taille]:null;
   if(ENV)((EC_BURP[g.bid]||{}).roads||[]).forEach(([a,b,w,h])=>{for(let y=b+(g.oy||0);y<b+(g.oy||0)+h;y++)for(let x=a+(g.ox||0);x<a+(g.ox||0)+w;x++)if(x>=0&&y>=0&&x<W&&y<H)RD[y*W+x]=1;});
   const street=v=>v===" "||v==="_"||v===";"||((g.bid==="daggerford"||(TOP90&&g.bid==="triboar")||ENV)&&v===":"),out=i=>OT[i]!=null&&OT[i]!=="%";
   for(let i=0;i<W*H;i++)if(OT[i]==null){dist[i]=0;q.push(i);}
@@ -5140,7 +5140,7 @@ function burSurround(x,g,s,c,OT,SA){const W=c.w,H=c.h,R=ecRng(ecSeed(c.seed+"|ab
   // dans une cité, les maisons se touchent (rangées), mordent sur les bords de la carte et ne laissent que des rues étroites autour du bureau
   // cité : maisons serrées en rangées ; ville : un peu plus d'espace ; village : quelques chaumières
   const hOk=v=>ENV&&ENV.taille==="ville"&&DAG?v===","||v===":":ELF||DAG?v===",":street(v)||v===",",RUR=ENV&&vill,pad=ENV&&!city?(DAG&&!(ENV.taille==="ville")?2:1):city||ELF||DAG?0:vill?2:1,ring=city?2:vill?4:3;
-  for(let k=0;k<(NOD?0:city||ELF||DAG||ENV?900:vill?60:260);k++){if(HMAX!=null&&g.houses.length>=HMAX)break;const w=ENV?(city?5+Math.floor(R()*5):6+Math.floor(R()*5)):3+Math.floor(R()*(city?4:vill?2:3)),h=ENV?5+Math.floor(R()*3):3+Math.floor(R()*(vill?2:3)),X=Math.floor(R()*(W+4))-2,Y=Math.floor(R()*(H+4))-2;if(!free(X-pad,Y-pad,w+pad*2,h+pad*2,ring,hOk,true))continue;
+  for(let k=0;k<(NOD?0:city||ELF||DAG||ENV?900:vill?60:260);k++){if(HMAX!=null&&g.houses.length>=HMAX)break;const w=ENV||ENT?(city?5+Math.floor(R()*5):6+Math.floor(R()*5)):3+Math.floor(R()*(city?4:vill?2:3)),h=ENV||ENT?5+Math.floor(R()*3):3+Math.floor(R()*(vill?2:3)),X=Math.floor(R()*(W+4))-2,Y=Math.floor(R()*(H+4))-2;if(!free(X-pad,Y-pad,w+pad*2,h+pad*2,ring,hOk,true))continue;
     if(city&&R()<0.25){// ruelle : on laisse parfois une case libre d'un côté
       if(!free(X-1,Y,1,h,ring,hOk,true))continue;}
     take(X-pad,Y-pad,w+pad*2,h+pad*2);for(let yy=Y;yy<Y+h;yy++)for(let xx=X;xx<X+w;xx++)if(xx>=0&&yy>=0&&xx<W&&yy<H)HS[yy*W+xx]=1;
@@ -5237,7 +5237,7 @@ function burSurround(x,g,s,c,OT,SA){const W=c.w,H=c.h,R=ecRng(ecSeed(c.seed+"|ab
     const nf=Math.min(cand.length,Math.round(1+D));for(let k=0;k<nf;k++){const j=Math.floor(R()*cand.length),[X,Y,d]=cand.splice(j,1)[0];if(g.fishers.some(f=>Math.hypot(f.x-X,f.y-Y)<3))continue;occ[Y*W+X]=1;// pour repartir : remonter le ponton jusqu'à une rangée qui mène au bord de la carte sans passer sur l'eau
       const dirL=X<W/2?-1:1,okRow=yy=>{for(let xx=X;xx>=0&&xx<W;xx+=dirL){const t=OT[yy*W+xx];if(t!=="="&&t!=="_"&&t!==":"&&t!==";"&&t!==",")return false;}return true;};let uy=Y;while(uy>0&&!okRow(uy)&&OT[(uy-1)*W+X]==="=")uy--;
       g.fishers.push({uy,x:X+0.5+d[0]*0.25,y:Y+0.5+d[1]*0.25,an:Math.atan2(d[1],d[0]),c:EC_COLORS[Math.floor(R()*EC_COLORS.length)],h:["#3a2c22","#6b4a2b","#8a8a8a"][Math.floor(R()*3)],p:R()*6});}}
-  const wk=new Uint8Array(W*H),bx=g.box;for(let i=0;i<W*H;i++){const X=i%W,Y=(i/W)|0,inside=bx&&!ENV&&X>=bx.x0&&X<bx.x1&&Y>=bx.y0&&Y<bx.y1;wk[i]=out(i)&&!occ[i]&&OT[i]!=="~"?(inside||NOD?2:1):0;/* 2 = cour du Bureau : aventuriers et personnel seulement */}g.walk=wk;g.OT=OT;g.occ=occ;g.walkD=D;g.walkers=null;}
+  const wk=new Uint8Array(W*H),bx=g.box;for(let i=0;i<W*H;i++){const X=i%W,Y=(i/W)|0,inside=bx&&!ENV&&!ENT&&X>=bx.x0&&X<bx.x1&&Y>=bx.y0&&Y<bx.y1;wk[i]=out(i)&&!occ[i]&&OT[i]!=="~"?(inside||NOD?2:1):0;/* 2 = cour du Bureau : aventuriers et personnel seulement */}g.walk=wk;g.OT=OT;g.occ=occ;g.walkD=D;g.walkers=null;}
 // Pêcheur : assis face à l'eau, canne tendue, ligne et bouchon qui dansent ; de temps en temps une prise qui frétille
 const FISH=new Image();FISH.src="img/fish_waterdeep.webp";const WOLF=new Image();WOLF.src="img/loup.webp";const WOLF_M={cw:460,ch:400,foot:392};const FISH_M={"cw": 192, "ch": 300, "fx": 96.0, "fy": [264.0, 263.6, 266.6, 275.2, 263.6, 264.0, 264.0, 263.6], "n": 8, "frames": 3, "race": ["humain", "halfelin", "elfe", "demi-orc", "humain", "tieffelin", "humain", "halfelin"]};
 // Pêcheur assis au bord du quai (pose « canne » de l'atlas) : bouchon calme, il danse, et de temps en temps une touche (la canne plie)
