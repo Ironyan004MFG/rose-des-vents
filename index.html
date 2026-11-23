@@ -1241,7 +1241,7 @@ function openCount(id){return quetes.filter(q=>q.bureau===id&&q.statut==="ouvert
 function expeSignups(q){return signupsFor(q.id).filter(x=>x.statut!=="refusee");}
 function signedCount(id){return quetes.filter(q=>q.bureau===id&&q.statut==="ouverte").reduce((n,q)=>n+expeSignups(q).length,0);}
 const PMODE={virtuel:"Virtuel",presentiel:"Présentiel"};
-function pmodeTag(p){return p&&PMODE[p.mode]?'<span class="pmode">'+PMODE[p.mode]+'</span>':'';}
+function pmodeTag(p){return '';}
 // Expéditions en préparation : quêtes ouvertes ayant au moins un inscrit, la plus suivie en premier.
 function expeList(){return quetes.filter(q=>q.statut==="ouverte").map(q=>({q,s:expeSignups(q)})).filter(x=>x.s.length).sort((a,b)=>b.s.length-a.s.length||b.s[b.s.length-1].creeMs-a.s[a.s.length-1].creeMs);}
 // Accueil : un seul bloc résumé, qui mène à la page des expéditions.
@@ -1261,7 +1261,6 @@ function expeditionsView(){
     const b=office(q.bureau),best=planBest(q),rows=planRows(q),yes=best?rows.filter(r=>(best.dispo||{})[r.uid]==="oui").length:0,nd=planDates(q.id).length;
     return '<article class="note expn"><p class="ctags">'+rankSeal(q.rang)+'</p><h2><a href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">'+esc(q.titre)+'</a></h2>'+(b?'<p class="ev">Comptoir de '+esc(b.nom)+'</p>':'')+
       '<dl class="facts"><dt>Démarrée par</dt><dd><strong>'+nm(s[0])+'</strong></dd>'+
-      '<dt>Format</dt><dd>'+(best&&PMODE[best.mode]?PMODE[best.mode]:'<span class="muted">À décider</span>')+'</dd>'+
       '<dt>Date suggérée</dt><dd>'+(best?'<strong>'+esc(fmtPlan(best))+'</strong> ('+yes+'/'+rows.length+' disponible'+(yes>1?'s':'')+')':nd?nd+' date'+(nd>1?'s':'')+' proposée'+(nd>1?'s':''):'<span class="muted">Aucune pour l\'instant</span>')+'</dd>'+
       '<dt>Participants</dt><dd>'+(s.length>1?'<ul class="exppl">'+s.slice(1).map(x=>'<li>'+nm(x)+'</li>').join("")+'</ul>':'<span class="muted">Personne d\'autre encore</span>')+'</dd></dl>'+
       '<div class="actions"><a class="btn" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">'+(user&&s.some(x=>x.uid===user.uid)?'Voir la quête':'Voir la quête et m\'inscrire')+' <span aria-hidden="true">→</span></a></div></article>';}).join("")+'</div>';
@@ -1504,12 +1503,12 @@ function planModal(q){
   if(!ds.length)h+='<p class="empty">Aucune date proposée pour l\'instant.</p>';
   else{
     h+='<div class="tablewrap"><table class="plantable"><thead><tr><th scope="col">Aventurier</th>'+ds.map(p=>{const del=open&&(ui.dm||(p.par&&p.par.uid===me));
-      return '<th scope="col" class="'+(best&&best.id===p.id?'best':'')+(p.dm==="non"?' dmno':'')+'">'+esc(fmtPlan(p))+(PMODE[p.mode]?'<span class="tag">'+PMODE[p.mode]+'</span>':'')+(best&&best.id===p.id?'<span class="tag">Meilleure</span>':'')+(p.dm==="non"?'<span class="tag">DM pas libre</span>':'')+(del?'<button class="rm" data-a="plan-del" data-id="'+esc(p.id)+'" aria-label="Retirer la date '+esc(fmtPlan(p))+'" title="Retirer cette date">✕</button>':'')+'</th>';}).join("")+'</tr></thead><tbody>';
+      return '<th scope="col" class="'+(best&&best.id===p.id?'best':'')+(p.dm==="non"?' dmno':'')+'">'+esc(fmtPlan(p))+(best&&best.id===p.id?'<span class="tag">Meilleure</span>':'')+(p.dm==="non"?'<span class="tag">DM pas libre</span>':'')+(del?'<button class="rm" data-a="plan-del" data-id="'+esc(p.id)+'" aria-label="Retirer la date '+esc(fmtPlan(p))+'" title="Retirer cette date">✕</button>':'')+'</th>';}).join("")+'</tr></thead><tbody>';
     h+='<tr class="dmrow"><th scope="row">Le DM</th>'+ds.map(p=>cell(p,null,true)).join("")+'</tr>';
     h+=rows.slice().sort((x,y)=>(y.uid===me)-(x.uid===me)).map(r=>'<tr'+(r.uid===me?' class="merow"':'')+'><th scope="row">'+esc(r.nom)+(r.uid===me?' <em>(toi)</em>':'')+'</th>'+ds.map(p=>cell(p,r.uid,false)).join("")+'</tr>').join("");
     h+='<tr class="tot"><th scope="row">Total</th>'+ds.map(p=>{const y=rows.filter(r=>(p.dispo||{})[r.uid]==="oui").length,m=rows.filter(r=>(p.dispo||{})[r.uid]==="peut").length;return '<td>'+y+' ✓'+(m?' · '+m+' ?':'')+'</td>';}).join("")+'</tr></tbody></table></div>';
   }
-  if(open&&ds.length<6)h+='<form class="inline planadd" id="planform"><label for="pl-date">Proposer une date<input id="pl-date" type="date" required min="'+todayIso()+'"></label><label for="pl-heure">Heure (facultatif)<input id="pl-heure" maxlength="30" placeholder="ex. 19 h"></label><div class="pmodes" role="radiogroup" aria-labelledby="pl-m-t"><span id="pl-m-t">Format</span><div class="opts"><label for="pl-m-p"><input type="radio" name="pl-mode" id="pl-m-p" value="presentiel" required>Présentiel</label><label for="pl-m-v"><input type="radio" name="pl-mode" id="pl-m-v" value="virtuel">Virtuel</label></div></div><button class="btn" type="submit">Proposer</button></form>';
+  if(open&&ds.length<6)h+='<form class="inline planadd" id="planform"><label for="pl-date">Proposer une date<input id="pl-date" type="date" required min="'+todayIso()+'"></label><label for="pl-heure">Heure (facultatif)<input id="pl-heure" maxlength="30" placeholder="ex. 19 h"></label><button class="btn" type="submit">Proposer</button></form>';
   else if(!open)h+='<p class="hint">'+(user&&!user.isAnonymous?'Inscris-toi à la quête pour proposer des dates et répondre.':'Connecte-toi et inscris-toi à la quête pour participer.')+'</p>';
   return h+'<div class="actions"><button class="btn ghost" type="button" data-a="plan-close">Fermer</button></div></div></div>';
 }
@@ -10809,10 +10808,9 @@ document.addEventListener("submit",async e=>{
   if(e.target.id==="planform"){
     const q=questById(ui.plan);if(!q)return;const date=v("pl-date"),heure=v("pl-heure").slice(0,30);
     if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date<todayIso())return;
-    const mEl=document.querySelector('input[name="pl-mode"]:checked'),mode=mEl&&PMODE[mEl.value]?mEl.value:"";if(!mode)return;
-    if(planDates(q.id).some(p=>p.date===date&&(p.heure||"")===heure&&(p.mode||"")===mode)){save={state:"error",msg:"Cette date est déjà proposée."};render();return;}
+    if(planDates(q.id).some(p=>p.date===date&&(p.heure||"")===heure)){save={state:"error",msg:"Cette date est déjà proposée."};render();return;}
     const by={uid:user.uid,nom:String(ui.dm?"Le DM":((signupsFor(q.id).find(x=>x.uid===user.uid)||{}).nom||user.displayName||"Aventurier")).slice(0,60)};
-    const ref=doc(collection(db,"planif"));const d={quete:q.id,date,heure,mode,par:by,dispo:{},creeLe:serverTimestamp()};
+    const ref=doc(collection(db,"planif"));const d={quete:q.id,date,heure,par:by,dispo:{},creeLe:serverTimestamp()};
     if(ui.dm)d.dm="oui";else d.dispo[user.uid]="oui";
     const f1=document.getElementById("pl-date");if(f1)f1.value="";const f2=document.getElementById("pl-heure");if(f2)f2.value="";
     await run("Date proposée",()=>setDoc(ref,d));return;
