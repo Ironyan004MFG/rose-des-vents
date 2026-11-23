@@ -578,7 +578,7 @@ ul.objsub input:checked+span{text-decoration:line-through;opacity:.65}
 .ptsec.done .wikibody{text-decoration:line-through;opacity:.5}
 .ptsecchk{position:absolute;left:4px;top:18px}
 .ptsecchk input{width:22px;height:22px;cursor:pointer}
-.ptlaunch{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}
+.ptlaunch{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}.ptmap{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:2px 0 10px}
 @media (max-width:560px){.ptact{width:auto}.pteco{grid-template-columns:1fr}.ptmod{margin-left:0}}
 /* Mode Partie */
 .partie{background:var(--parch);color:var(--ink);border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:16px}
@@ -10728,11 +10728,15 @@ function ptScenario(q){
   const parts=txt.split(/\n(?=##\s)/);let h='';
   const kept=bgKept(q),heads=parts.map(p=>/^##\s/.test(p)?bgSceneKey(p.split("\n")[0]):""),where=kept.map(e=>bgSceneOf(e,heads)),cueAt=i=>bgCue(kept.filter((e,k)=>where[k]===i));
   {const loose=kept.filter((e,k)=>where[k]<0);if(loose.length)h+='<div class="bgloose"><span class="desc">À glisser où tu veux dans cette partie :</span>'+bgCue(loose)+'</div>';}
+  // carte de la scène : « 🗺️ Nom de la carte » dans le titre (ou le nom d'une carte du scénario) → bouton qui l'envoie à l'écran
+  const SM=scMaps(q),actv=(ecP()||{}).active,norm=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ").trim();
+  const mapOf=hd=>{const m=hd.match(/🗺️?\s*(?:carte\s*:?\s*)?(?:\d+\.\s*)?([^·|()]+)/i),k=m?norm(m[1]):"";let i=k?SM.findIndex(x=>norm(x.nom)===k||norm(x.nom).indexOf(k)===0||k.indexOf(norm(x.nom))===0):-1;if(i<0&&!m){const H=norm(hd);i=SM.findIndex(x=>norm(x.nom).length>3&&H.indexOf(norm(x.nom))>=0);}return i;};
+  const mapBtn=i=>{const m=SM[i],on=m.id===actv;return '<p class="ptmap"><button class="btn sm'+(on?'':' gold')+'" data-a="pt-ec-scene" data-v="'+i+'">'+(on?'✓ À l\'écran : ':'📺 Afficher la carte : ')+esc(m.nom)+'</button> <span class="desc">'+esc(ecMapLbl(m.type))+' · '+esc((EC_LUM[m.lum]||{}).l||m.lum)+'</span></p>';};
   const encBtn=r=>'<button class="btn gold sm" data-a="pt-launch" data-id="'+esc(r.id)+'">⚔ Lancer le combat : '+esc(r.nom)+'</button>';
   parts.forEach((sec,i)=>{const isH=/^##\s/.test(sec);const here=encs.filter(r=>sec.indexOf(r.nom)>=0);here.forEach(r=>{used[r.id]=1;});
     if(!isH){if(sec.trim())h+='<div class="wikibody">'+md(manLinks(sec))+'</div>'+(here.length?'<p class="ptlaunch">'+here.map(encBtn).join("")+'</p>':'');return;}
     const done=faits.indexOf(i)>=0;
-    h+='<section class="ptsec'+(done?' done':'')+'"><label class="ptsecchk"><input type="checkbox" class="pt-sec" data-i="'+i+'"'+(done?' checked':'')+'><span class="sr">Marquer cette étape comme faite</span></label><div class="wikibody">'+md(manLinks(sec.split("\n")[0]))+'</div>'+cueAt(i)+'<div class="wikibody">'+md(manLinks(sec.split("\n").slice(1).join("\n")))+'</div>'+(here.length?'<p class="ptlaunch">'+here.map(encBtn).join("")+'</p>':'')+'</section>';});
+    h+='<section class="ptsec'+(done?' done':'')+'"><label class="ptsecchk"><input type="checkbox" class="pt-sec" data-i="'+i+'"'+(done?' checked':'')+'><span class="sr">Marquer cette étape comme faite</span></label><div class="wikibody">'+md(manLinks(sec.split("\n")[0]))+'</div>'+(()=>{const mi=mapOf(sec.split("\n")[0]);return mi>=0?mapBtn(mi):'';})()+cueAt(i)+'<div class="wikibody">'+md(manLinks(sec.split("\n").slice(1).join("\n")))+'</div>'+(here.length?'<p class="ptlaunch">'+here.map(encBtn).join("")+'</p>':'')+'</section>';});
   const rest=encs.filter(r=>!used[r.id]);
   if(rest.length)h+='<h3>Combats de la quête</h3><p class="ptlaunch">'+rest.map(encBtn).join("")+'</p>';
   return h;
