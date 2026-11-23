@@ -9944,8 +9944,12 @@ function ecCard(){const E=ecP();return (E.cartes||[]).find(c=>c.id===E.active)||
 // Carte défilante : la télé suit le groupe (centre des PJ), sinon le cadre placé par le DM.
 function ecCam(E,c){const tv=(ecDoc&&ecDoc.tv)||{cols:40,rows:22},pj=(c.tokens||[]).filter(k=>k.k==="pj");if(E.follow!==true||!pj.length)return c.cam||{x:0,y:0};
   const cx=pj.reduce((a,k)=>a+k.x,0)/pj.length,cy=pj.reduce((a,k)=>a+k.y,0)/pj.length;return {x:Math.max(0,Math.min(Math.max(0,c.w-tv.cols),Math.round(cx-tv.cols/2))),y:Math.max(0,Math.min(Math.max(0,c.h-tv.rows),Math.round(cy-tv.rows/2)))};}
+// Ordre de parole généré par la partie (panneau de gauche ouvert) : c'est lui que l'écran affiche
+function ptParActive(){const P=ui.pt,pr=P&&P.parole;return !!(ui.ptParOpen&&pr&&pr.ordre&&pr.ordre.length);}
+function ptParNames(){const pr=ui.pt.parole;return pr.ordre.map(id=>{const c=ptC(id);return {n:c?c.nom:"?",cur:pr.cur===id};});}
 function ecState(){const E=ecP(),c=ecCard(),q=ui.pt;if(!c)return null;
   let ordre=null;if(E.ordre&&E.ordre.mode==="combat"&&q.combat&&q.combat.phase==="combat"){ordre={titre:"Ordre de combat · round "+(q.round||1),liste:ptOrder().filter(x=>!(x.kind!=="pj"&&x.pv<=0)&&!x.cache).map(x=>({n:x.nom,k:x.kind==="pj"?"pj":"en",cur:x.cid===q.cur}))};}
+  else if(E.ordre&&E.ordre.mode==="parole"&&ptParActive()){ordre={titre:"Ordre de parole",liste:ptParNames().map(o=>({n:o.n,k:"pj",cur:o.cur}))};}
   else if(E.ordre&&E.ordre.mode==="parole"){const L=String(E.ordre.parole||"").split("\n").map(x=>x.trim()).filter(Boolean),i=(E.ordre.idx||0)%Math.max(1,L.length);ordre={titre:"Ordre de parole",liste:L.map((n,j)=>({n,k:"pj",cur:j===i}))};}
   return {vie:Date.now(),qid:q.id,carte:{id:c.id,nom:c.nom,type:c.type,seed:c.seed,w:c.w,h:c.h,url:c.url||"",gone:c.gone||[],back:c.back||{},vie:c.vie||"",bureau:c.bureau||"",etage:+c.etage||0,niv:c.niv||null,ouv:c.ouv||[],don:c.don||null,env:c.env||null,kraken:!!c.kraken,off:c.off||[]},cam:ecCam(E,c),tokens:c.tokens||[],fog:{on:E.fog!==false,vu:c.vu||""},lum:E.lum||"jour",meteo:(c.abri||ecIndoor(c.type))?"clair":(E.meteo||"clair"),date:calLabel(calNow()),jour:E.jour||1,grid:!!E.grid,info:E.info||"",ordre,figs:tbFigList(tbQuest(),c),calib:(ecDoc&&ecDoc.calib)||{},ms:Date.now()};}
 /* ---------- Table virtuelle : l'écran de table, ouvert à distance par les inscrits d'une quête en cours ----------
@@ -10100,7 +10104,8 @@ function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc
     '<span class="ecsp"></span><span>Cadre télé :</span>'+[["←",-5,0],["↑",0,-5],["↓",0,5],["→",5,0]].map(a=>'<button class="mini" data-a="pt-ec-cam" data-v="'+a[1]+','+a[2]+'" aria-label="Déplacer le cadre télé">'+a[0]+'</button>').join("")+'<button class="mini'+(ui.ecPv?' gold':'')+'" data-a="pt-ec-pv" aria-pressed="'+!!ui.ecPv+'">👁 '+(ui.ecPv?'Retour à la vue DM':'Vue joueurs')+'</button><button class="mini" data-a="pt-ec-fogreset">Tout recacher</button><button class="mini" data-a="pt-ec-vie">🦌 Renouveler la vie</button><button class="mini" data-a="pt-ec-seed">Nouvelle graine</button><button class="mini" data-a="pt-ec-del">Supprimer la carte</button></div>';
   h+='<div class="ecrow ectext"><label for="ec-info">Infos affichées sur l\'écran<textarea id="ec-info" rows="2" maxlength="400" data-ec="info">'+esc(E.info||"")+'</textarea></label>'+
     '<label for="ec-om">Ordre affiché<select id="ec-om" data-ec="omode">'+[["aucun","Aucun"],["parole","Ordre de parole"],["combat","Ordre de combat (Mode Partie)"]].map(o=>'<option value="'+o[0]+'"'+(((E.ordre||{}).mode||"aucun")===o[0]?' selected':'')+'>'+o[1]+'</option>').join("")+'</select></label>'+
-    (((E.ordre||{}).mode)==="parole"?'<label for="ec-par">Ordre de parole (un nom par ligne)<textarea id="ec-par" rows="3" maxlength="400" data-ec="parole">'+esc((E.ordre||{}).parole||"")+'</textarea></label><button class="mini gold" data-a="pt-ec-next">Au suivant ▸</button>':'')+'</div>';
+    (((E.ordre||{}).mode)==="parole"&&ptParActive()?'<p class="desc ecparauto">🗣 Ordre de la partie (à gauche) : '+ptParNames().map(o=>o.cur?'<strong>'+esc(o.n)+'</strong>':esc(o.n)).join(" → ")+'<br>Pour l\'écrire à la main, ferme l\'ordre de parole à gauche.</p>':'')+
+    (((E.ordre||{}).mode)==="parole"&&!ptParActive()?'<label for="ec-par">Ordre de parole (un nom par ligne)<textarea id="ec-par" rows="3" maxlength="400" data-ec="parole">'+esc((E.ordre||{}).parole||"")+'</textarea></label><button class="mini gold" data-a="pt-ec-next">Au suivant ▸</button>':'')+'</div>';
   return h+'</div>';}
 // Après chaque rendu : rattache les canvas (DM et télé) et les interactions.
 function ecAfter(){if(ui.office==="ecran")return;const cv=document.getElementById("ec-dm");if(!cv||!ui.pt)return;const r=ecBind("ec-dm","dm");if(!r)return;const st=ecState();if(!st)return;st.tvv=ecDoc&&ecDoc.tv;r.sel=ui.ecSel;ecSet(r,st);
@@ -10968,11 +10973,12 @@ async function partyAction(a,id,b,e){
     else if(A.res==="crit"){const k=txt("atk-desc");ptLog("✨ Coup critique de "+f.nom+" contre "+t.nom+dm+(k?". "+k:"")+".");if(C){C.crits=C.crits||{};C.crits[f.nom]=(C.crits[f.nom]||0)+1;}}
     ui.ptA=null;ui.ptAtkOpen=null;}
   else if(a==="pt-atkto"&&c){const A=ui.ptA;if(!A||A.res)return;A.to=A.to===v?null:v;ch=false;}
-  else if(a==="pt-paropen"){ui.ptParOpen=true;ch=false;}
-  else if(a==="pt-parclose"){ui.ptParOpen=false;ch=false;}
+  else if(a==="pt-paropen"){ui.ptParOpen=true;{const E=ecP();if(!E.ordre||!E.ordre.mode||E.ordre.mode==="aucun"){E.ordre=Object.assign({},E.ordre||{},{mode:"parole"});}}ecPush(true);}
+  else if(a==="pt-parclose"){ui.ptParOpen=false;ecPush(true);}
   else if(a==="pt-parup"||a==="pt-pardn"){const o=(P.parole||{}).ordre||[],i=o.indexOf(id),j=a==="pt-parup"?i-1:i+1;if(i<0||j<0||j>=o.length)return;o.splice(i,1);o.splice(j,0,id);}
   else if(a==="pt-parnext"){const pr=P.parole||{ordre:[]},o=pr.ordre;if(!o.length)return;const i=o.indexOf(pr.cur);pr.cur=o[(i+1)%o.length];}
   else if(a==="pt-parstop"){if(P.parole)P.parole.cur=null;}
+  if(a==="pt-parup"||a==="pt-pardn"||a==="pt-parnext"||a==="pt-parstop")setTimeout(()=>ecPush(true),0);
   else if(a==="pt-launch"){if(P.combat){ui.ptAlert="Clos d'abord la rencontre « "+P.combat.nom+" ».";ch=false;}else{ptStartEnc(q,id,"",true);ui.ptTab=ui.ptTab||"scenario";render();window.scrollTo({top:0,behavior:"smooth"});ptSave();return;}}
   else if(a==="pt-time"){const n=+v;(P.liste||[]).forEach(x=>{const keep=[];(x.effets||[]).forEach(e=>{if(e.type==="rounds"){e.r-=n;if(e.r<=0){ptEffExpire(x,e);return;}}else if(e.type==="debut"||e.type==="fin"){ptEffExpire(x,e);return;}keep.push(e);});x.effets=keep;});ptLog("⏩ "+(n>=100?n/10+" minutes passent":n/10+" minute passe")+".");}
   else if(a==="pt-roll1"&&c){c.init=ptD(20)+(+c.dex||0);}
