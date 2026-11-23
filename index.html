@@ -2933,6 +2933,7 @@ function route(){
   const next=id&&id!=="carte"?id:null;
   if(next!==ui.office){const wasPt=!!ui.office&&ui.office.indexOf("partie-")===0,isPt=!!next&&next.indexOf("partie-")===0;
     {const disp=o=>!!o&&(o.indexOf("partie-")===0||o==="dm"||o==="mini"||o==="ecran");// quitter le Mode Partie, ou aller ailleurs que l'Espace DM / la Mini Guilde, ferme l'écran des joueurs
+     if(isPt&&!wasPt)ui.ecStopped=false;
      if(isPt&&isAdmin)setTimeout(hbBeat,800);
      if((wasPt&&!isPt)||(isAdmin&&disp(ui.office)&&!disp(next)&&(vitOn()||(ecDoc&&ecDoc.carte))))ecCloseScreens();}
     if(isPt&&!wasPt)setTimeout(()=>{if(ui.pt&&ui.office==="partie-"+ui.pt.id&&ui.pt.id!=="libre")ecPush(true);},400);
@@ -9664,10 +9665,10 @@ function ecCloseScreens(){if(!isAdmin)return;clearTimeout(ecPushT);clearTimeout(
   const blank={carte:null,tokens:[],figs:[],ordre:null,info:"",ms:Date.now()};ecDoc=Object.assign({},ecDoc||{},blank);try{ecBC&&ecBC.postMessage(blank);}catch(e){}
   setDoc(doc(db,"prive","ecran"),blank,{merge:true}).catch(e=>console.error(e));
   if(q)setDoc(doc(db,"table",q.id),{qid:q.id,titre:q.titre,carte:null,ms:Date.now()}).catch(e=>console.error(e));}
-function ecPush(now){if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);ecPushT=setTimeout(()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},now?0:250);}
+function ecPush(now){if(ui.ecStopped)return;if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);ecPushT=setTimeout(()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},now?0:250);}
 function ecReveal(c){const E=ecP();const st=ecState();if(!st)return;const V=ecVision(st);let vu=(c.vu||"").padEnd(c.w*c.h,"0").split("");let ch=false;for(let i=0;i<V.vis.length;i++)if(V.vis[i]&&vu[i]!=="1"){vu[i]="1";ch=true;}if(ch)c.vu=vu.join("");}
 function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc.calib)||{};
-  let h='<div class="ecdm"><p class="ecopen"><a class="btn gold sm" href="#ecran" target="_blank" rel="noopener">Ouvrir l\'écran joueurs ↗</a> <button class="btn ghost sm" data-a="ec-copylink">'+(ui.ecCopied?'✓ Lien copié':'Copier le lien')+'</button> <span class="desc">Ouvre-le sur l\'écran de table, puis F11 pour le plein écran. Sur un autre ordinateur : colle le lien et connecte-toi avec ton compte de DM.'+(tvv?' Écran détecté : '+tvv.cols+' × '+tvv.rows+' cases.':'')+'</span></p>';
+  let h='<div class="ecdm"><p class="ecopen"><a class="btn gold sm" href="#ecran" target="_blank" rel="noopener">Ouvrir l\'écran joueurs ↗</a> '+(ecDoc&&ecDoc.carte?'<button class="btn ghost sm" data-a="ec-stop">■ Arrêter l\'écran joueur</button>':'<button class="btn gold sm" data-a="ec-start"'+(ecState()?'':' disabled title="Ouvre d\'abord une carte ci-dessous"')+'>▶ Démarrer l\'écran joueur</button>')+' <button class="btn ghost sm" data-a="ec-copylink">'+(ui.ecCopied?'✓ Lien copié':'Copier le lien')+'</button> <span class="desc">Ouvre-le sur l\'écran de table, puis F11 pour le plein écran. Sur un autre ordinateur : colle le lien et connecte-toi avec ton compte de DM.'+(tvv?' Écran détecté : '+tvv.cols+' × '+tvv.rows+' cases.':'')+'</span></p>';
   h+='<details class="eccal"><summary>Calibrage de l\'écran (1 case = 1 pouce)</summary><label for="ec-diag">Diagonale de l\'écran (pouces)<input id="ec-diag" type="number" min="10" max="120" step="0.5" value="'+(cal.diag||"")+'"></label><span class="ecfine">Ajustement fin : <button class="mini" data-a="pt-ec-k" data-v="-0.01">−</button> '+Math.round(((+cal.k)||1)*100)+' % <button class="mini" data-a="pt-ec-k" data-v="0.01">+</button></span><button class="mini" data-a="pt-ec-calshow">'+(cal.show?'Masquer la règle':'Afficher la règle de 5 pouces')+'</button><button class="mini gold" data-a="pt-ec-cal">Enregistrer</button><button class="mini" data-a="pt-ec-mir" aria-pressed="'+(cal.miroir!==false)+'">'+(cal.miroir!==false?'☑':'☐')+' Écran à plat : fiches en double, tête-bêche</button></details>';
   if(q.libre){const sa=ecSaison(),Q=quetes.filter(x=>scMaps(x).length).sort((a,b)=>String(a.titre).localeCompare(String(b.titre),"fr"));
     if(ui.office==="dm"){const sh=!!E.tv&&!!c;const favHere=c&&c.bureau?(ui.pt&&ui.pt.liste||[]).filter(x=>x.kind==="pj"&&x.ref&&favFor(x.ref).some(f=>f.ville===c.bureau)):[];
@@ -10747,6 +10748,8 @@ document.addEventListener("click",async e=>{
   if(await miniClick(a,b,id,e))return;
   if(a==="zoom-close"){zoomClose();return;}
   if(a==="tb-figdel"){if(!isAdmin)return;const q=tbQuest();if(q)await run("Figurine retirée",()=>deleteDoc(doc(db,"table",q.id,"figs",id)));return;}
+  if(a==="ec-start"){ui.ecStopped=false;const st=ecState();if(st){ecDoc=Object.assign({},ecDoc||{},st);ecPush(true);hbBeat();}render();return;}
+  if(a==="ec-stop"){ui.ecStopped=true;ecCloseScreens();render();return;}
   if(a==="ec-copylink"){copyText(ecLink());ui.ecCopied=true;render();setTimeout(()=>{ui.ecCopied=false;render();},2500);return;}
   if(a==="tv-follow"){const r=ecRenderers["ec-tv"];if(r)r.free=false;return;}
   if(a==="tb-follow"||a==="tb-zoom"){const r=ecRenderers["ec-pl"];if(!r)return;if(a==="tb-follow")r.free=false;else if(r.zoomAt){const bb=r.cv.getBoundingClientRect();r.zoomAt(+b.getAttribute("data-v")||1,bb.left+bb.width/2,bb.top+bb.height/2);}return;}
