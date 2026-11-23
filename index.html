@@ -933,6 +933,46 @@ label.evset span:last-child{color:var(--ink-soft);font-size:14px}
 .mefset label{display:flex;flex-direction:column;gap:4px;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--on-board-muted)}
 .mefset input{width:100px}
 /* fiches de personnage */
+.mgwrap .mg-grid,.mgwrap .mg-qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin:10px 0 22px}
+.mg-card,.mg-quest{background:var(--parch);color:var(--ink,#2a1d14);border:1px solid #c9b48a;border-radius:10px;padding:14px 16px;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.mg-card .mghd,.mg-quest .mghd{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.mg-card .mghd{justify-content:flex-start}
+.mg-card h3,.mg-quest h3{margin:0;font-size:22px}
+.mg-card.sup{background:#e3e8dc}
+.mg-av{width:46px;height:46px;border-radius:50%;background:#7a2f2a;color:#fff;display:grid;place-items:center;font-size:24px;font-weight:700;flex:none}
+.mg-who{margin:2px 0 0;font-size:14px;opacity:.85}
+.mg-role{font-style:italic;margin:8px 0}
+.mg-vit{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.mg-pv{display:flex;align-items:center;gap:6px;flex:1;min-width:200px}
+.mg-pv .bar{flex:1;height:12px;background:#d6c7a5;border-radius:6px;overflow:hidden}
+.mg-pv .bar i{display:block;height:100%;background:#3f7a3a}
+.mg-vit .lbl{font-size:12px;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
+.mg-vit .num{font-weight:700;font-size:18px}
+.mg-ca{display:flex;align-items:center;gap:6px}
+.mg-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:8px 0;text-align:center}
+.mg-stats div{background:rgba(0,0,0,.06);border-radius:6px;padding:4px 2px}
+.mg-stats dt{font-size:11px;text-transform:uppercase;letter-spacing:.04em;opacity:.8}
+.mg-stats dd{margin:0;font-weight:700;font-size:18px}
+.mg-card h4,.mg-quest h4{margin:10px 0 2px;font-size:15px}
+.mg-st{font-size:12px;text-transform:uppercase;letter-spacing:.08em;padding:3px 8px;border-radius:12px;background:#d6c7a5;white-space:nowrap}
+.mg-quest.st-encours .mg-st{background:#e2b64a}.mg-quest.st-reussie .mg-st{background:#7fb06f}
+.mg-quest.st-reussie{opacity:.85}
+.mg-bubble{display:flex;gap:10px;align-items:flex-start;background:#fff8e6;border:1px solid #d8b45e;border-radius:12px;padding:10px;margin:10px 0;font-size:17px}
+.mg-bubble .wikibody p:first-child{margin-top:0}.mg-bubble .wikibody p:last-child{margin-bottom:0}
+.mg-pax{width:54px;height:54px;border-radius:50%;object-fit:cover;object-position:top;flex:none;border:2px solid #d8b45e}
+.mg-dm{margin-top:8px;border-top:1px dashed #b8a37a;padding-top:6px}
+.mg-dm summary{cursor:pointer;font-weight:700}
+.mg-badges{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.mg-badges li{background:#d8b45e;color:#2a1d14;border-radius:16px;padding:6px 12px;font-weight:700}
+.mg-form{display:grid;gap:8px}.mg-form label{display:grid;gap:3px}
+.mg-statf{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;border:1px solid #c9b48a;border-radius:8px}
+@media(max-width:520px){.mg-statf{grid-template-columns:repeat(3,1fr)}.mg-stats dt{font-size:10px}}
+.mgwrap .mini{color:var(--ink)}
+.mg-card .btn.board,.mg-quest .btn.board{color:var(--ink);border-color:#8a7a5a;background:transparent}
+.mg-quest .chip{color:var(--ink);border-color:#a8946a;background:transparent}.mg-quest .chip[aria-pressed="true"]{background:var(--gold);border-color:var(--gold)}
+.mg-quest .actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.mg-quest .ev{color:var(--ink-soft)}
+.mg-card .mghd{display:flex;gap:10px;align-items:center}
 footer .who{display:inline-flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
 footer .who a{color:var(--gold)}
 .plink{color:inherit;text-decoration:underline;text-decoration-color:rgba(0,0,0,.25);text-underline-offset:3px}
@@ -1334,7 +1374,7 @@ function listenPrivate(on){
   privUnsubs.push(onSnapshot(doc(db,"prive","renommee"),snap=>{priv=snap.exists()?snap.data():null;render();},err));
   const arr=(c,set)=>privUnsubs.push(onSnapshot(collection(db,c),snap=>{set(snap.docs.map(d=>Object.assign({id:d.id},d.data())));render();},err));
   arr("dossiers",l=>{dossiers={};l.forEach(x=>{dossiers[x.id]=x;});syncDons();});arr("dons",l=>{donsAll={};l.forEach(x=>{donsAll[x.id]=x;});syncDons();});arr("scenarios",l=>{scenarios={};l.forEach(x=>{scenarios[x.id]=x;});});
-  arr("pnj",l=>{pnjs=l;});arr("objets",l=>{objets=l;});arr("factions",l=>{factions=l;});arr("parties",l=>{parties=l;});arr("modules",l=>{modules=l;});arr("butins",l=>{butins=l;});arr("relations",l=>{relations=l;});arr("faveurs",l=>{faveurs=l;});arr("monstres",l=>{monstres=l;});arr("rencontres",l=>{rencontres=l;});
+  arr("mini",l=>{miniDocs=l;});arr("pnj",l=>{pnjs=l;});arr("objets",l=>{objets=l;});arr("factions",l=>{factions=l;});arr("parties",l=>{parties=l;});arr("modules",l=>{modules=l;});arr("butins",l=>{butins=l;});arr("relations",l=>{relations=l;});arr("faveurs",l=>{faveurs=l;});arr("monstres",l=>{monstres=l;});arr("rencontres",l=>{rencontres=l;});
   privUnsubs.push(onSnapshot(collection(db,"notesdm"),snap=>{notesDm=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(collection(db,"evolutions"),snap=>{evols=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","monde"),snap=>{monde=snap.exists()?snap.data():null;render();},err));
@@ -2495,6 +2535,109 @@ function dmSpaceView(){
   return h;
 }
 
+let miniDocs=[];
+/* ---------- Mini Guilde : la table des enfants (DM seulement, hors de l'accueil) ---------- */
+const MINI_ST={dispo:"À faire",encours:"En cours",reussie:"Réussie"};
+const MINI_STATS=[["force","Force"],["intelligence","Intelligence"],["genial","Génial"],["magie","Magie"],["agilite","Agilité"]];
+const MINI_PF=[["nom","Nom","text"],["joueur","Joué par","text"],["classe","Classe","text"],["sousClasse","Sous-classe","text"],["niveau","Niveau","num"],["role","Ce qu'il fait de mieux","text"],["pvMax","PV max","num"],["pv","PV","num"],["ca","CA","num"],["capacites","Pouvoirs et capacités","area"],["equipement","Équipement","area"],["notes","Notes","area"]];
+const MINI_QF=[["titre","Titre","text"],["lieu","Lieu","text"],["badge","Badge gagné","text"],["recompense","Récompense","text"],["pax","Ce que dit Pax (à lire aux enfants)","area"],["objectif","Objectif","area"],["deroule","Déroulement (DM)","area"],["monstres","Créatures (DM)","area"]];
+function miniOf(t){return miniDocs.filter(x=>x.type===t).sort((a,b)=>(a.ordre||0)-(b.ordre||0)||String(a.nom||a.titre).localeCompare(String(b.nom||b.titre)));}
+function miniNum(x){return typeof x==="number"?String(x):'<span class="muted">?</span>';}
+function miniPaxImg(){const p=aventuriers.find(a=>a.id==="pax-xadi");return p&&p.image?'<img class="mg-pax" src="'+esc(p.image)+'" alt="Pax">':'';}
+function miniForm(id,fields,o,extra){
+  return '<form class="mg-form" id="miniform" data-id="'+esc(id)+'">'+fields.map(f=>{const k=f[0],val=o[k]==null?"":o[k],fid="mf-"+k;
+    return f[2]==="area"?'<label for="'+fid+'">'+esc(f[1])+'<textarea id="'+fid+'" rows="'+(k==="deroule"?10:4)+'" maxlength="8000">'+esc(val)+'</textarea></label>'
+      :'<label for="'+fid+'">'+esc(f[1])+'<input id="'+fid+'" '+(f[2]==="num"?'type="number" step="1"':'maxlength="120"')+' value="'+esc(val)+'"></label>';}).join("")+(extra||"")+
+    '<div class="actions"><button class="btn gold" type="submit">Enregistrer</button><button class="btn board" type="button" data-a="mini-cancel">Annuler</button>'+(o.id&&o.id!=="groupe"?(ui.miniDel===o.id?'<button class="btn danger" type="button" data-a="mini-del-yes" data-id="'+esc(o.id)+'">Confirmer la suppression</button>':'<button class="btn board" type="button" data-a="mini-del" data-id="'+esc(o.id)+'">Supprimer</button>'):'')+'</div></form>';
+}
+function miniPerso(p){
+  if(ui.miniEdit===p.id){const st=p.stats||{};return '<article class="mg-card">'+miniForm(p.id,MINI_PF,p,'<fieldset class="mg-statf"><legend>Caractéristiques</legend>'+MINI_STATS.map(s=>'<label for="ms-'+s[0]+'">'+s[1]+'<input id="ms-'+s[0]+'" type="number" step="1" value="'+esc(st[s[0]]==null?"":st[s[0]])+'"></label>').join("")+'</fieldset><label class="pickrow" for="mf-support"><input type="checkbox" id="mf-support"'+(p.support?' checked':'')+'><span>Personnage de soutien (joué par un parent)</span></label>')+'</article>';}
+  const st=p.stats||{},mx=+p.pvMax||0,pv=typeof p.pv==="number"?p.pv:mx,pc=mx?Math.max(0,Math.min(100,Math.round(pv/mx*100))):0;
+  return '<article class="mg-card'+(p.support?' sup':'')+'"><div class="mghd"><span class="mg-av" aria-hidden="true">'+esc(String(p.nom||"?").charAt(0))+'</span><div><h3>'+esc(p.nom||"Sans nom")+'</h3><p class="mg-who">'+esc([p.classe,p.sousClasse,p.niveau?"niveau "+p.niveau:""].filter(Boolean).join(" · ")||"Classe à définir")+(p.joueur?'<br><em>Joué par '+esc(p.joueur)+'</em>':'')+'</p></div></div>'+
+    (p.role?'<p class="mg-role">'+esc(p.role)+'</p>':'')+
+    '<div class="mg-vit"><div class="mg-pv"><span class="lbl">PV</span>'+(mx?'<div class="bar" role="img" aria-label="'+pv+' PV sur '+mx+'"><i style="width:'+pc+'%"></i></div>':'')+'<span class="num">'+(mx?pv+' / '+mx:'<span class="muted">?</span>')+'</span>'+
+      (mx?'<button class="mini" data-a="mini-pv" data-id="'+esc(p.id)+'" data-v="-1" aria-label="Perdre 1 PV">−</button><button class="mini" data-a="mini-pv" data-id="'+esc(p.id)+'" data-v="1" aria-label="Regagner 1 PV">+</button>':'')+'</div>'+
+      '<div class="mg-ca"><span class="lbl">CA</span><span class="num">'+miniNum(p.ca)+'</span></div></div>'+
+    '<dl class="mg-stats">'+MINI_STATS.map(s=>'<div><dt>'+s[1]+'</dt><dd>'+miniNum(st[s[0]])+'</dd></div>').join("")+'</dl>'+
+    (p.capacites?'<h4>Pouvoirs</h4><div class="wikibody">'+md(p.capacites)+'</div>':'')+
+    (p.equipement?'<h4>Équipement</h4><div class="wikibody">'+md(p.equipement)+'</div>':'')+
+    (p.notes?'<details><summary>Notes</summary><div class="wikibody">'+md(p.notes)+'</div></details>':'')+
+    '<div class="actions"><button class="btn board sm" data-a="mini-edit" data-id="'+esc(p.id)+'">Modifier</button></div></article>';
+}
+function miniQuete(q){
+  if(ui.miniEdit===q.id)return '<article class="mg-quest">'+miniForm(q.id,MINI_QF,q)+'</article>';
+  const s=q.statut||"dispo";
+  return '<article class="mg-quest st-'+esc(s)+'"><div class="mghd"><h3>'+esc(q.titre||"Quête")+'</h3><span class="mg-st">'+esc(MINI_ST[s]||s)+'</span></div>'+
+    (q.lieu?'<p class="ev">'+esc(q.lieu)+'</p>':'')+
+    (q.pax?'<div class="mg-bubble">'+miniPaxImg()+'<div class="wikibody">'+md(q.pax)+'</div></div>':'')+
+    (q.objectif?'<p><strong>Objectif :</strong> '+mdInline(q.objectif)+'</p>':'')+
+    ((q.recompense||q.badge)?'<p><strong>Récompense :</strong> '+mdInline([q.recompense,q.badge?'badge « '+q.badge+' »':''].filter(Boolean).join(" + "))+'</p>':'')+
+    ((q.deroule||q.monstres)?'<details class="mg-dm"><summary>Pour le DM</summary>'+(q.deroule?'<div class="wikibody">'+md(q.deroule)+'</div>':'')+(q.monstres?'<h4>Créatures</h4><div class="wikibody">'+md(q.monstres)+'</div>':'')+'</details>':'')+
+    '<div class="actions"><div class="chips" role="group" aria-label="Statut">'+Object.keys(MINI_ST).map(k=>'<button class="chip" data-a="mini-st" data-id="'+esc(q.id)+'" data-v="'+k+'" aria-pressed="'+(s===k)+'">'+MINI_ST[k]+'</button>').join("")+'</div><button class="btn board sm" data-a="mini-edit" data-id="'+esc(q.id)+'">Modifier</button></div></article>';
+}
+function miniView(){
+  if(!isAdmin)return '<p class="empty">Cette page est réservée au DM.</p>';
+  const tab=ui.miniTab||"quetes";
+  const tabs=[["quetes","Le babillard de Pax"],["persos","Les aventuriers"],["groupe","Le groupe"]];
+  let h='<div class="chips dmtabs" role="tablist" aria-label="Mini Guilde">'+tabs.map(t=>'<button class="chip" role="tab" data-a="mini-tab" data-v="'+t[0]+'" aria-selected="'+(tab===t[0])+'" aria-pressed="'+(tab===t[0])+'">'+t[1]+'</button>').join("")+'</div><div class="mgwrap">';
+  if(tab==="quetes"){
+    const Q=miniOf("quete"),ord=["encours","dispo","reussie"];
+    h+='<p class="hint">Les petites quêtes que Pax confie à la Mini Guilde, à Waterdeep. Lis la bulle de Pax aux enfants ; le déroulement est caché sous « Pour le DM ».</p>';
+    if(ui.miniEdit==="new-quete")h+='<article class="mg-quest">'+miniForm("new-quete",MINI_QF,{})+'</article>';
+    else h+='<div class="actions"><button class="btn gold" data-a="mini-new" data-v="quete">Nouvelle quête</button></div>';
+    ord.forEach(k=>{const L=Q.filter(q=>(q.statut||"dispo")===k);if(L.length)h+='<h2 class="subh">'+MINI_ST[k]+'</h2><div class="mg-qgrid">'+L.map(miniQuete).join("")+'</div>';});
+    if(!Q.length)h+='<p class="hint">Aucune quête pour l\'instant.</p>';
+  } else if(tab==="persos"){
+    const P=miniOf("perso"),K=P.filter(p=>!p.support),S=P.filter(p=>p.support);
+    if(ui.miniEdit==="new-perso")h+='<article class="mg-card">'+miniForm("new-perso",MINI_PF,{},'<label class="pickrow" for="mf-support"><input type="checkbox" id="mf-support"><span>Personnage de soutien (joué par un parent)</span></label>')+'</article>';
+    else h+='<div class="actions"><button class="btn gold" data-a="mini-new" data-v="perso">Nouveau personnage</button>'+(K.concat(S).some(p=>p.pvMax)?'<button class="btn board" data-a="mini-heal">Tout le monde se repose (PV au max)</button>':'')+'</div>';
+    h+='<h2 class="subh">Les aventuriers</h2><div class="mg-grid">'+K.map(miniPerso).join("")+'</div>';
+    if(S.length)h+='<h2 class="subh">Pour les aider</h2><div class="mg-grid">'+S.map(miniPerso).join("")+'</div>';
+  } else {
+    const g=miniDocs.find(x=>x.id==="groupe")||{id:"groupe"},badges=miniOf("quete").filter(q=>q.statut==="reussie"&&q.badge);
+    if(ui.miniEdit==="groupe")h+=miniForm("groupe",[["tresors","Trésors du groupe","area"],["histoire","L'histoire jusqu'ici","area"],["regles","Règles de la table","area"]],g);
+    else{
+      h+='<section class="reg"><h2>Les badges de la Mini Guilde</h2>'+(badges.length?'<ul class="mg-badges">'+badges.map(q=>'<li><span aria-hidden="true">★</span> '+esc(q.badge)+'</li>').join("")+'</ul>':'<p class="hint">Chaque quête réussie donne un badge. Aucun pour l\'instant… à vous de jouer !</p>')+'</section>';
+      if(g.tresors)h+='<section class="reg"><h2>Trésors du groupe</h2><div class="wikibody">'+md(g.tresors)+'</div></section>';
+      if(g.histoire)h+='<section class="reg"><h2>L\'histoire jusqu\'ici</h2><div class="wikibody">'+md(g.histoire)+'</div></section>';
+      if(g.regles)h+='<section class="reg"><h2>Règles de la table</h2><div class="wikibody">'+md(g.regles)+'</div></section>';
+      h+='<div class="actions"><button class="btn board" data-a="mini-edit" data-id="groupe">Modifier</button></div>';
+    }
+  }
+  return h+'</div>';
+}
+async function miniClick(a,b,id){
+  if(a.indexOf("mini-")!==0)return false;
+  const vv=b.getAttribute("data-v");
+  if(a==="mini-tab"){ui.miniTab=vv;ui.miniEdit=null;ui.miniDel=null;render();return true;}
+  if(a==="mini-edit"){ui.miniEdit=id;ui.miniDel=null;render();return true;}
+  if(a==="mini-new"){ui.miniEdit="new-"+vv;render();return true;}
+  if(a==="mini-cancel"){ui.miniEdit=null;ui.miniDel=null;render();return true;}
+  if(a==="mini-del"){ui.miniDel=id;render();return true;}
+  if(a==="mini-del-yes"){ui.miniDel=null;ui.miniEdit=null;await run("Supprimé",()=>deleteDoc(doc(db,"mini",id)));return true;}
+  if(a==="mini-st"){await run("Statut",()=>setDoc(doc(db,"mini",id),{statut:vv,majLe:serverTimestamp()},{merge:true}));return true;}
+  if(a==="mini-pv"){const p=miniDocs.find(x=>x.id===id);if(!p)return true;const mx=+p.pvMax||0,cur=typeof p.pv==="number"?p.pv:mx,n=Math.max(0,Math.min(mx||999,cur+(+vv||0)));p.pv=n;render();
+    await run("PV",()=>setDoc(doc(db,"mini",id),{pv:n},{merge:true}));return true;}
+  if(a==="mini-heal"){const L=miniOf("perso").filter(p=>p.pvMax);await run("Repos",()=>Promise.all(L.map(p=>setDoc(doc(db,"mini",p.id),{pv:+p.pvMax},{merge:true}))));return true;}
+  return false;
+}
+async function miniSubmit(e){
+  if(e.target.id!=="miniform")return false;
+  e.preventDefault();
+  const id0=e.target.getAttribute("data-id"),g=k=>{const el=document.getElementById(k);return el?el.value.trim():"";},num=k=>{const s=g(k);return s===""||isNaN(+s)?null:Math.round(+s);};
+  let d,id=id0;
+  if(id0==="groupe")d={type:"groupe",tresors:g("mf-tresors").slice(0,8000),histoire:g("mf-histoire").slice(0,8000),regles:g("mf-regles").slice(0,8000)};
+  else{
+    const isP=id0==="new-perso"||(miniDocs.find(x=>x.id===id0)||{}).type==="perso",F=isP?MINI_PF:MINI_QF;d={type:isP?"perso":"quete"};
+    F.forEach(f=>{d[f[0]]=f[2]==="num"?num("mf-"+f[0]):g("mf-"+f[0]).slice(0,f[2]==="area"?8000:120);});
+    if(isP){d.stats={};MINI_STATS.forEach(s=>{if(document.getElementById("ms-"+s[0]))d.stats[s[0]]=num("ms-"+s[0]);});if(!document.getElementById("ms-force"))delete d.stats;const sp=document.getElementById("mf-support");d.support=!!(sp&&sp.checked);}
+    if(!(d.nom||d.titre))return true;
+    if(id0.indexOf("new-")===0){id=doc(collection(db,"mini")).id;if(!isP)d.statut="dispo";d.ordre=miniOf(d.type).length+1;}
+  }
+  d.majLe=serverTimestamp();ui.miniEdit=null;ui.miniDel=null;
+  await run("Mini Guilde",()=>setDoc(doc(db,"mini",id),d,{merge:true}));return true;
+}
+
 /* ---------- galerie ---------- */
 function galleryView(){
   if(!loaded.a)return '<p class="hint">Chargement…</p>';
@@ -2602,33 +2745,34 @@ function render(){
   if(ui.office==="ecran"){document.body.classList.add("ecmode");ecTvUpdate();return;}
   document.body.classList.remove("ecmode");
   const wk=!!ui.office&&(ui.office==="wiki"||ui.office.indexOf("wiki-")===0);
-  if(ui.office&&ui.office!=="renommee"&&ui.office!=="chroniques"&&ui.office!=="expeditions"&&ui.office!=="personnages"&&ui.office!=="aventuriers"&&ui.office!=="dm"&&ui.office!=="compendium"&&ui.office!=="boutique"&&ui.office!=="ecran"&&ui.office.indexOf("compendium-")!==0&&ui.office.indexOf("perso-")!==0&&ui.office.indexOf("partie-")!==0&&!wk&&loaded.b&&!office(ui.office))ui.office=null;
+  if(ui.office&&ui.office!=="renommee"&&ui.office!=="chroniques"&&ui.office!=="expeditions"&&ui.office!=="personnages"&&ui.office!=="aventuriers"&&ui.office!=="dm"&&ui.office!=="mini"&&ui.office!=="compendium"&&ui.office!=="boutique"&&ui.office!=="ecran"&&ui.office.indexOf("compendium-")!==0&&ui.office.indexOf("perso-")!==0&&ui.office.indexOf("partie-")!==0&&!wk&&loaded.b&&!office(ui.office))ui.office=null;
   const reg=ui.office==="renommee";
   const chr=ui.office==="chroniques",exp=ui.office==="expeditions";
   const perso=!!ui.office&&ui.office.indexOf("perso-")===0;
   const mes=ui.office==="personnages";
   const gal=ui.office==="aventuriers";
-  const dms=ui.office==="dm";
+  const dms=ui.office==="dm",mini=ui.office==="mini";
   const pty=!!ui.office&&ui.office.indexOf("partie-")===0;
   const gsh=ui.office==="boutique";
   const comp=ui.office==="compendium",compE=!!ui.office&&ui.office.indexOf("compendium-")===0;
   const b=ui.office&&!reg?office(ui.office):null;
   let h='<div class="wrap">';
   h+='<header><svg width="72" height="72" viewBox="-110 -110 220 220" aria-hidden="true"><circle r="80" fill="none" stroke="#d8b45e" stroke-width="3" opacity=".6"></circle>'+rose(104,'#0e1b20')+'</svg>';
-  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(pty?'Mode Partie':dms?'Espace DM':gsh?'Boutique de la Guilde':comp||compE?'Compendium de la Guilde':gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':exp?'Expéditions en préparation':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(dms?'Le bureau secret du Maître de la Guilde':gsh?'Intendance, services, dépôt et Trésor de la Rose':comp||compE?'Le savoir partagé des aventuriers':gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions en cours et accomplies par les aventuriers':exp?'Les groupes qui se forment sur la Sword Coast':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+dmPill()+statusPill()+'</header>';
+  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(pty?'Mode Partie':mini?'La Mini Guilde':dms?'Espace DM':gsh?'Boutique de la Guilde':comp||compE?'Compendium de la Guilde':gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':exp?'Expéditions en préparation':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(mini?'Les petites quêtes de Pax, à Waterdeep':dms?'Le bureau secret du Maître de la Guilde':gsh?'Intendance, services, dépôt et Trésor de la Rose':comp||compE?'Le savoir partagé des aventuriers':gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions en cours et accomplies par les aventuriers':exp?'Les groupes qui se forment sur la Sword Coast':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+dmPill()+statusPill()+'</header>';
   if(pty){const pq=ptQuest();h+=pq&&pq.libre?'<a class="back" href="#dm"><span aria-hidden="true">←</span> Cartes de l\'Espace DM</a>':'<a class="back" href="#'+(pq?esc(pq.bureau):'carte')+'"><span aria-hidden="true">←</span> Retour au babillard</a>';}
+  else if(mini)h+='<a class="back" href="#dm"><span aria-hidden="true">←</span> Espace DM</a>';
   else if(compE)h+='<a class="back" href="#compendium"><span aria-hidden="true">←</span> Compendium</a>';
   else if(perso){// Retour vers la page d'où l'on vient (aventuriers, mes personnages, un comptoir…), sinon le registre de renommée.
     const fr=ui.persoFrom||"",bo=fr&&office(fr),L={aventuriers:"Les aventuriers de la Guilde",personnages:"Mes personnages",renommee:"Registre de renommée",expeditions:"Expéditions en préparation",chroniques:"Chroniques de la Guilde",dm:"Espace DM"},lb=L[fr]||(bo?bo.nom:fr==="partie-libre"||fr.indexOf("partie-")===0?"Mode Partie":"");
     h+=lb?'<a class="back" href="#'+esc(fr)+'"><span aria-hidden="true">←</span> '+esc(lb)+'</a>':'<a class="back" href="#renommee"><span aria-hidden="true">←</span> Registre de renommée</a>';}
   else if(b||reg||wk||chr||exp||mes||gal||comp||dms||gsh)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
   if(ui.authMsg)h+='<div class="dmbar"><span class="msg">'+esc(ui.authMsg)+'</span><button class="btn board" data-a="auth-ok">OK</button>'+(user&&!user.isAnonymous&&!isAdmin?'<button class="btn board" data-a="logout">Déconnexion</button>':'')+'</div>';
-  if(ui.dm&&!pty)h+=dmPanel(b);
-  h+=pty?partyView():dms?dmSpaceView():gsh?gsView():comp?compendiumView():compE?compEntryView(ui.office.slice(11)):gal?galleryView():mes?myCharsView():perso?sheetView(ui.office.slice(6)):chr?chroniclesView():exp?expeditionsView():wk?wikiView():reg?renownView():b?boardView()+boardNews(b.id)+reputationSection(b.id,b.nom):mapView();
+  if(ui.dm&&!pty&&!mini)h+=dmPanel(b);
+  h+=pty?partyView():mini?miniView():dms?dmSpaceView():gsh?gsView():comp?compendiumView():compE?compEntryView(ui.office.slice(11)):gal?galleryView():mes?myCharsView():perso?sheetView(ui.office.slice(6)):chr?chroniclesView():exp?expeditionsView():wk?wikiView():reg?renownView():b?boardView()+boardNews(b.id)+reputationSection(b.id,b.nom):mapView();
   const signed=user&&!user.isAnonymous;
   h+='<footer><span>Pour partir en mission : choisis une quête, appuie sur « Je veux y aller » et choisis ton personnage. Le DM confirme les inscriptions.</span>'+
     '<span class="who">'+(signed?'Connecté : '+esc(user.displayName||user.email||"aventurier")+' · <a href="#personnages">Mes personnages</a> · <button class="linkbtn" data-a="logout">Déconnexion</button>':'<button class="linkbtn" data-a="login">Se connecter</button>')+
-    (isAdmin?' · <a href="#dm">Espace DM</a>':'')+' · <button class="linkbtn" data-a="dm">'+(ui.dm?"Quitter le mode DM":"Mode DM")+'</button></span></footer>';
+    (isAdmin?' · <a href="#dm">Espace DM</a>'+(dms||mini?' · <a href="#mini">Mini Guilde</a>':''):'')+' · <button class="linkbtn" data-a="dm">'+(ui.dm?"Quitter le mode DM":"Mode DM")+'</button></span></footer>';
   if(ui.signup){const sq=questById(ui.signup),mine=myChars();
     if(sq)h+='<div class="modal-bg" data-a="sign-cancel"><form class="modal" id="signform" role="dialog" aria-modal="true" aria-labelledby="sg-t"><h2 id="sg-t">S\'inscrire à « '+esc(sq.titre)+' »</h2>'+
       (mine.length?'<fieldset class="pick"><legend>Quel personnage part en mission ?</legend>'+mine.map((a,i)=>{const jc=joinCheck(a,sq),first=mine.findIndex(x=>joinCheck(x,sq).ok);return '<label class="pickrow'+(jc.ok?'':' off')+'" for="pk-'+i+'"><input type="radio" name="perso" id="pk-'+i+'" value="'+esc(a.id)+'"'+(i===first?' checked':'')+(jc.ok?'':' disabled')+'>'+(a.image?'<img class="av" src="'+esc(a.image)+'" alt="">':'<span class="av ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+'<span><strong>'+esc(a.nom)+'</strong> '+gChip(a)+' <em>'+esc([a.espece,a.classe].filter(Boolean).join(" · "))+'</em>'+(jc.chap?'<span class="desc">Chaperon : '+esc(jc.chap.nom)+' ('+esc(GRANK_LBL[grank(jc.chap)])+')</span>':'')+(jc.ok?'':'<span class="why">'+esc(jc.why)+'</span>')+'</span></label>';}).join("")+'</fieldset>'+
@@ -10363,6 +10507,7 @@ document.addEventListener("click",async e=>{
   if(e.target.id==="zoomov"||(e.target.tagName==="FIGURE"&&e.target.parentNode&&e.target.parentNode.id==="zoomov")){zoomClose();return;}
   const b=e.target.closest("[data-a]");if(!b)return;
   const a=b.getAttribute("data-a"),id=b.getAttribute("data-id");
+  if(await miniClick(a,b,id))return;
   if(a==="zoom-close"){zoomClose();return;}
   if(a==="tb-figdel"){if(!isAdmin)return;const q=tbQuest();if(q)await run("Figurine retirée",()=>deleteDoc(doc(db,"table",q.id,"figs",id)));return;}
   if(a==="tb-follow"||a==="tb-zoom"){const r=ecRenderers["ec-pl"];if(!r)return;if(a==="tb-follow")r.free=false;else if(r.zoomAt){const bb=r.cv.getBoundingClientRect();r.zoomAt(+b.getAttribute("data-v")||1,bb.left+bb.width/2,bb.top+bb.height/2);}return;}
@@ -10653,6 +10798,7 @@ document.addEventListener("submit",async e=>{
   if(e.target.id==="loot-add"){e.preventDefault();const g=k=>document.getElementById(k).value,nom=g("la-nom").trim().slice(0,120);if(!nom)return;const a=aventuriers.find(x=>x.id===g("la-p")),val=Math.max(0,+g("la-val")||0),qq=g("la-q");["la-nom","la-val"].forEach(k=>{document.getElementById(k).value="";});
     await run("Butin ajouté",()=>lootSave([{nom:nom,valeur:val,quete:qq,rencontre:"",source:"",pour:a?a.id:"",pourNom:a?a.nom:""}]));return;}
   if(partySubmit(e))return;
+  if(await miniSubmit(e))return;
   e.preventDefault();
   const v=id=>{const el=document.getElementById(id);return el?el.value.trim():"";};
   if(e.target.id==="signform"){
