@@ -983,6 +983,10 @@ label.evset span:last-child{color:var(--ink-soft);font-size:14px}
 .mg-quest .actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
 .mg-quest .ev{color:var(--ink-soft)}
 .mg-card .mghd{display:flex;gap:10px;align-items:center}
+.ptvlist{list-style:none;padding:0;margin:8px 0 18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.ptvitem{display:flex;align-items:center;gap:10px;padding:6px 8px;border:1px solid rgba(216,180,94,.3);border-radius:8px}
+.ptvitem img,.ptvitem .ph{width:44px;height:44px;border-radius:50%;object-fit:cover;object-position:50% 15%;flex:none;display:grid;place-items:center;background:rgba(255,255,255,.08)}
+.ptvitem .nm{flex:1;min-width:0}.ptvitem>.desc{flex:none;font-size:13px}
 .mg-res{margin:18px 0}.mg-res>summary{cursor:pointer;color:var(--on-board-muted,#c9bfa6);font-size:15px}
 .mg-quest.st-reserve{opacity:.8}
 .mg-port{all:unset;display:block;width:calc(100% + 32px);box-sizing:border-box;cursor:zoom-in;margin:-14px -16px 10px;border-radius:10px 10px 0 0;overflow:hidden;background:#f3ead3}
@@ -2589,7 +2593,7 @@ function miniPerso(p){
     (p.capacites?'<h4>Pouvoirs</h4><div class="wikibody">'+md(p.capacites)+'</div>':'')+
     (p.equipement?'<h4>Équipement</h4><div class="wikibody">'+md(p.equipement)+'</div>':'')+
     (p.notes?'<details><summary>Notes</summary><div class="wikibody">'+md(p.notes)+'</div></details>':'')+
-    '<div class="actions"><button class="btn board sm" data-a="mini-edit" data-id="'+esc(p.id)+'">Modifier</button></div></article>';
+    '<div class="actions">'+(p.image?'<button class="btn board sm" data-a="vit-show" data-k="mini" data-id="'+esc(p.id)+'">📺 Montrer</button>':'')+'<button class="btn board sm" data-a="mini-edit" data-id="'+esc(p.id)+'">Modifier</button></div></article>';
 }
 function miniQuete(q){
   if(ui.miniEdit===q.id)return '<article class="mg-quest">'+miniForm(q.id,MINI_QF,q)+'</article>';
@@ -9862,6 +9866,7 @@ function ptSide(q){
     h+=q.libre?'<p class="desc">Partie libre, hors quête : pas de scénario.</p>':s.scenario?ptScenario(q):'<p class="desc">Aucun scénario pour cette quête. <a href="#man/quetes/'+encodeURIComponent(q.id)+'">L\'écrire dans le manuel</a></p>';
     const ps=(s.pnj||[]).map(id=>pnjs.find(p=>p.id===id)).filter(Boolean).concat(pnjs.filter(p=>(p.quetes||[]).indexOf(q.id)>=0&&(s.pnj||[]).indexOf(p.id)<0));
     if(ps.length)h+='<h3>PNJ de la quête</h3>'+ps.map(p=>'<details class="ptpnj"><summary>'+(p.image?zimg("",p.image,p.nom,"pnj",p.id):'')+'<strong>'+esc(p.nom)+'</strong>'+(p.role?' · '+esc(p.role):'')+'</summary>'+(p.image?'<button class="ptadd" data-a="vit-show" data-k="pnj" data-id="'+esc(p.id)+'">📺 Montrer aux joueurs</button>':'')+(p.voix?'<p><strong>Voix :</strong> '+esc(p.voix)+'</p>':'')+(p.apparence?'<p><strong>Apparence :</strong> '+esc(p.apparence)+'</p>':'')+(p.secrets?'<div class="wikibody"><strong>Secrets :</strong> '+md(manLinks(p.secrets))+'</div>':'')+(p.monstre?'<button class="ptadd" data-a="pt-sb" data-id="'+esc(p.monstre)+'">Bloc de stats</button>':'')+'</details>').join("");
+    if(q.mini)h+=ptMiniShow(q,s);
     h+=ptObjets(q);
     if(s.notes)h+=mdBlock("Notes",s.notes);
   }else if(tab==="tests"){
@@ -10185,6 +10190,15 @@ function ptStartBox(q){
     '<p class="desc">Les monstres de la rencontre sont ajoutés, puis tu inscris l\'initiative de chacun avant de lancer le combat.</p></div>';
   return h;
 }
+// Mini Guilde : tout ce qu'on peut montrer aux enfants sur l'écran des joueurs (leurs personnages, Pax, PNJ, créatures).
+function ptMiniShow(q,s){const pr=q.presents||[],P=miniOf("perso").slice().sort((a,b)=>(pr.indexOf(b.id)>=0)-(pr.indexOf(a.id)>=0)),pax=aventuriers.find(a=>a.id==="pax-xadi"),
+    ps=(s.pnj||[]).map(id=>pnjs.find(p=>p.id===id)).filter(Boolean),ms=(s.monstres||[]).map(id=>monstres.find(m=>m.id===id)).filter(Boolean);
+  const it=(k,x,sub)=>'<li class="ptvitem">'+(x.image?'<img src="'+esc(x.image)+'" alt="">':'<span class="ph" aria-hidden="true">?</span>')+'<span class="nm"><strong>'+esc(x.nom||"")+'</strong>'+(sub?'<span class="desc"> · '+esc(sub)+'</span>':'')+'</span>'+(x.image?'<button class="ptadd" data-a="vit-show" data-k="'+k+'" data-id="'+esc(x.id)+'">📺 Montrer</button>':'<span class="desc">pas d\'image</span>')+'</li>';
+  let h='<h3>📺 Montrer aux enfants</h3><p class="desc">L\'image s\'affiche sur l\'écran des joueurs (onglet Écran ouvert sur la télé).</p><ul class="ptvlist">';
+  h+=P.map(p=>it("mini",p,(pr.indexOf(p.id)>=0?"présent":p.support?"soutien":"absent"))).join("");
+  if(pax)h+=it("aventuriers",pax,"Maître de la Guilde");
+  h+=ps.map(p=>it("pnj",p,p.role||"PNJ")).join("")+ms.map(m=>it("monstres",m,"créature")).join("");
+  return h+'</ul>';}
 function ptNorm(x){return String(x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");}
 // Objets à montrer : ceux liés à la quête, et une recherche dans tous les objets du Manuel.
 function ptObjets(q){const mine=q.libre?[]:objets.filter(o=>(o.quetes||[]).indexOf(q.id)>=0),k=ptNorm(ui.ptObjQ||"").trim(),found=k.length>=2?objets.filter(o=>mine.indexOf(o)<0&&(ptNorm(o.nom).indexOf(k)>=0||ptNorm(o.texte).indexOf(k)>=0)).slice(0,8):[];
@@ -10696,8 +10710,8 @@ document.addEventListener("click",async e=>{
   if(a==="tb-follow"||a==="tb-zoom"){const r=ecRenderers["ec-pl"];if(!r)return;if(a==="tb-follow")r.free=false;else if(r.zoomAt){const bb=r.cv.getBoundingClientRect();r.zoomAt(+b.getAttribute("data-v")||1,bb.left+bb.width/2,bb.top+bb.height/2);}return;}
   if(a==="vit-hide"){await vitHide();return;}
   if(a==="vit-send"){if(!zoomSt)return;const n=document.getElementById("zoom-nom");zoomSt.vn=n?n.value.trim():zoomSt.nom;await vitShow(zoomSt.vn,zoomSt.src);return;}
-  if(a==="vit-show"){const k=b.getAttribute("data-k"),x=(k==="objets"?objets:k==="monstres"?monstres:k==="pnj"?pnjs:k==="factions"?factions:aventuriers).find(y=>y.id===id);if(!x||!(x.image||(k==="objets"&&x.texte)))return;
-    b.disabled=true;const hd=x.image?await hdGet(k,id):"";await vitShow(b.getAttribute("data-n")||x.nom,hd||x.image||"",k==="objets"?x.texte:"");b.disabled=false;return;}
+  if(a==="vit-show"){const k=b.getAttribute("data-k"),x=(k==="mini"?miniDocs:k==="objets"?objets:k==="monstres"?monstres:k==="pnj"?pnjs:k==="factions"?factions:aventuriers).find(y=>y.id===id);if(!x||!(x.image||(k==="objets"&&x.texte)))return;
+    b.disabled=true;const hd=x.image&&k!=="mini"?await hdGet(k,id):"";await vitShow(b.getAttribute("data-n")||x.nom,hd||x.image||"",k==="objets"?x.texte:"");b.disabled=false;return;}
   if(a.indexOf("pt-")===0){await partyAction(a,id,b,e);return;}
   if(a.indexOf("cart-")===0){cartAct(a,id);render();return;}
   if(a.indexOf("gs-")===0){if(a==="gs-sec"){ui.gsSec=b.getAttribute("data-v");ui.gsConfirm=null;ui.gsMsg="";}else await gsAction(a,id);render();return;}
