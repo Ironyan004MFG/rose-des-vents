@@ -118,6 +118,8 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .calform{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:6px 0}.calform label{display:flex;flex-direction:column;font-size:13px}.calform input{max-width:110px}
 .ectv-met .dt{display:block;font-family:var(--display);font-size:.9em;letter-spacing:.05em;color:#e9dfc6;margin-bottom:2px}
 .ecdm .chip.here{border-color:#d8b45e;border-width:2px}.ecdm .ecday{font-family:var(--display);font-size:13px;letter-spacing:.08em;padding:0 4px}.ecdm .ecmet{background:#efe4c6;border-radius:6px;padding:8px 12px;margin:8px 0;font-size:14px}.ecdm .ecmet ul{margin:4px 0 0;padding-left:18px}.ecdm .ecmet p{margin:4px 0 0}
+.ecopenbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0 0 16px;padding:10px 14px;border:1px solid rgba(216,180,94,.35);border-radius:10px;background:rgba(216,180,94,.06)}
+.ecopenbar .t{font-family:var(--display);color:var(--gold);letter-spacing:.06em}.ecopenbar .desc{flex-basis:100%;font-size:14px}
 .ectv-follow{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:6;background:#d8b45e;color:#1b130b;border:0;border-radius:20px;padding:10px 18px;font:inherit;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.6)}
 .ectv canvas#ec-tv{cursor:grab;touch-action:none}.ectv canvas#ec-tv:active{cursor:grabbing}
 .ectv-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#d8b45e;font-family:var(--display);font-size:22px;text-align:center;padding:20px;pointer-events:none}.ectv-msg:empty{display:none}
@@ -2436,6 +2438,10 @@ function secAtelier(){
 async function artSave(target,file){const [coll,id]=target.split("|");if(!file||!/^image\//.test(file.type)){save={state:"error",msg:"Ce n'est pas une image."};render();return;}
   try{const url=await resizeImage(file,640);if(url.length>390000){save={state:"error",msg:"Image trop lourde."};render();return;}
     await run("Image",()=>setDoc(doc(db,coll,id),{image:url,majLe:serverTimestamp()},{merge:true}));hdSave(coll,id,file);}catch(err){save={state:"error",msg:err.message};render();}}
+// Écran des joueurs : l'ouvrir ici (nouvel onglet) ou copier son lien pour l'ouvrir et le caster depuis un autre ordinateur.
+function ecLink(){return location.origin+location.pathname+"#ecran";}
+function ecOpenBar(){return '<div class="ecopenbar"><span class="t">📺 Écran des joueurs</span><a class="btn gold sm" href="#ecran" target="_blank" rel="noopener">Ouvrir l\'écran ↗</a><button class="btn board sm" data-a="ec-copylink">'+(ui.ecCopied?'✓ Lien copié':'Copier le lien')+'</button>'+
+  '<span class="desc">Sur un autre ordinateur (pour caster ou brancher la télé) : ouvre le lien, connecte-toi avec ton compte de DM, puis caste l\'onglet ou mets-le en plein écran (F11). Tu gardes la partie ici.</span></div>';}
 function copyText(t){return (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject()).catch(()=>{const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}ta.remove();});}
 
 function dmManual(){
@@ -2567,7 +2573,7 @@ function dmSpaceView(){
   if(!isAdmin)return '<p class="empty">L\'Espace DM est réservé au Maître de la Guilde.</p>'+(user&&!user.isAnonymous?'':'<p><button class="btn board" data-a="dm">Mode DM</button></p>');
   const n=todoItems().length;
   const tabs=[["todo","À traiter"+(n?' <span class="n">'+n+'</span>':'')],["evol","Évolution du monde"+(dueRegions().length?' <span class="n warn">!</span>':'')],["manuel","Manuel du DM"],["cartes","Cartes"],["stats","Vue d'ensemble"],["outils","Outils"]];
-  let h='<div class="chips dmtabs" role="tablist" aria-label="Espace DM">'+tabs.map(t=>'<button class="chip" role="tab" data-a="dmtab" data-v="'+t[0]+'" aria-selected="'+(ui.dmTab===t[0])+'" aria-pressed="'+(ui.dmTab===t[0])+'">'+t[1]+'</button>').join("")+'</div>';
+  let h=ecOpenBar()+'<div class="chips dmtabs" role="tablist" aria-label="Espace DM">'+tabs.map(t=>'<button class="chip" role="tab" data-a="dmtab" data-v="'+t[0]+'" aria-selected="'+(ui.dmTab===t[0])+'" aria-pressed="'+(ui.dmTab===t[0])+'">'+t[1]+'</button>').join("")+'</div>';
   h+='<div class="dmspace" role="tabpanel">'+(ui.dmTab==="cartes"?dmCartes():ui.dmTab==="evol"?dmEvol():ui.dmTab==="manuel"?dmManual():ui.dmTab==="notes"?dmNotes():ui.dmTab==="stats"?dmStats():ui.dmTab==="outils"?dmTools():dmTodo())+'</div>';
   return h;
 }
@@ -2927,6 +2933,7 @@ function route(){
   const next=id&&id!=="carte"?id:null;
   if(next!==ui.office){const wasPt=!!ui.office&&ui.office.indexOf("partie-")===0,isPt=!!next&&next.indexOf("partie-")===0;
     {const disp=o=>!!o&&(o.indexOf("partie-")===0||o==="dm"||o==="mini"||o==="ecran");// quitter le Mode Partie, ou aller ailleurs que l'Espace DM / la Mini Guilde, ferme l'écran des joueurs
+     if(isPt&&!wasPt)ui.ecStopped=false;
      if(isPt&&isAdmin)setTimeout(hbBeat,800);
      if((wasPt&&!isPt)||(isAdmin&&disp(ui.office)&&!disp(next)&&(vitOn()||(ecDoc&&ecDoc.carte))))ecCloseScreens();}
     if(isPt&&!wasPt)setTimeout(()=>{if(ui.pt&&ui.office==="partie-"+ui.pt.id&&ui.pt.id!=="libre")ecPush(true);},400);
@@ -9658,10 +9665,10 @@ function ecCloseScreens(){if(!isAdmin)return;clearTimeout(ecPushT);clearTimeout(
   const blank={carte:null,tokens:[],figs:[],ordre:null,info:"",ms:Date.now()};ecDoc=Object.assign({},ecDoc||{},blank);try{ecBC&&ecBC.postMessage(blank);}catch(e){}
   setDoc(doc(db,"prive","ecran"),blank,{merge:true}).catch(e=>console.error(e));
   if(q)setDoc(doc(db,"table",q.id),{qid:q.id,titre:q.titre,carte:null,ms:Date.now()}).catch(e=>console.error(e));}
-function ecPush(now){if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);ecPushT=setTimeout(()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},now?0:250);}
+function ecPush(now){if(ui.ecStopped)return;if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);ecPushT=setTimeout(()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},now?0:250);}
 function ecReveal(c){const E=ecP();const st=ecState();if(!st)return;const V=ecVision(st);let vu=(c.vu||"").padEnd(c.w*c.h,"0").split("");let ch=false;for(let i=0;i<V.vis.length;i++)if(V.vis[i]&&vu[i]!=="1"){vu[i]="1";ch=true;}if(ch)c.vu=vu.join("");}
 function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc.calib)||{};
-  let h='<div class="ecdm"><p class="ecopen"><a class="btn gold sm" href="#ecran" target="_blank" rel="noopener">Ouvrir l\'écran joueurs ↗</a> <span class="desc">Ouvre-le sur l\'écran de table, puis F11 pour le plein écran.'+(tvv?' Écran détecté : '+tvv.cols+' × '+tvv.rows+' cases.':'')+'</span></p>';
+  let h='<div class="ecdm"><p class="ecopen"><a class="btn gold sm" href="#ecran" target="_blank" rel="noopener">Ouvrir l\'écran joueurs ↗</a> '+(ecDoc&&ecDoc.carte?'<button class="btn ghost sm" data-a="ec-stop">■ Arrêter l\'écran joueur</button>':'<button class="btn gold sm" data-a="ec-start"'+(ecState()?'':' disabled title="Ouvre d\'abord une carte ci-dessous"')+'>▶ Démarrer l\'écran joueur</button>')+' <button class="btn ghost sm" data-a="ec-copylink">'+(ui.ecCopied?'✓ Lien copié':'Copier le lien')+'</button> <span class="desc">Ouvre-le sur l\'écran de table, puis F11 pour le plein écran. Sur un autre ordinateur : colle le lien et connecte-toi avec ton compte de DM.'+(tvv?' Écran détecté : '+tvv.cols+' × '+tvv.rows+' cases.':'')+'</span></p>';
   h+='<details class="eccal"><summary>Calibrage de l\'écran (1 case = 1 pouce)</summary><label for="ec-diag">Diagonale de l\'écran (pouces)<input id="ec-diag" type="number" min="10" max="120" step="0.5" value="'+(cal.diag||"")+'"></label><span class="ecfine">Ajustement fin : <button class="mini" data-a="pt-ec-k" data-v="-0.01">−</button> '+Math.round(((+cal.k)||1)*100)+' % <button class="mini" data-a="pt-ec-k" data-v="0.01">+</button></span><button class="mini" data-a="pt-ec-calshow">'+(cal.show?'Masquer la règle':'Afficher la règle de 5 pouces')+'</button><button class="mini gold" data-a="pt-ec-cal">Enregistrer</button><button class="mini" data-a="pt-ec-mir" aria-pressed="'+(cal.miroir!==false)+'">'+(cal.miroir!==false?'☑':'☐')+' Écran à plat : fiches en double, tête-bêche</button></details>';
   if(q.libre){const sa=ecSaison(),Q=quetes.filter(x=>scMaps(x).length).sort((a,b)=>String(a.titre).localeCompare(String(b.titre),"fr"));
     if(ui.office==="dm"){const sh=!!E.tv&&!!c;const favHere=c&&c.bureau?(ui.pt&&ui.pt.liste||[]).filter(x=>x.kind==="pj"&&x.ref&&favFor(x.ref).some(f=>f.ville===c.bureau)):[];
@@ -10741,6 +10748,9 @@ document.addEventListener("click",async e=>{
   if(await miniClick(a,b,id,e))return;
   if(a==="zoom-close"){zoomClose();return;}
   if(a==="tb-figdel"){if(!isAdmin)return;const q=tbQuest();if(q)await run("Figurine retirée",()=>deleteDoc(doc(db,"table",q.id,"figs",id)));return;}
+  if(a==="ec-start"){ui.ecStopped=false;const st=ecState();if(st){ecDoc=Object.assign({},ecDoc||{},st);ecPush(true);hbBeat();}render();return;}
+  if(a==="ec-stop"){ui.ecStopped=true;ecCloseScreens();render();return;}
+  if(a==="ec-copylink"){copyText(ecLink());ui.ecCopied=true;render();setTimeout(()=>{ui.ecCopied=false;render();},2500);return;}
   if(a==="tv-follow"){const r=ecRenderers["ec-tv"];if(r)r.free=false;return;}
   if(a==="tb-follow"||a==="tb-zoom"){const r=ecRenderers["ec-pl"];if(!r)return;if(a==="tb-follow")r.free=false;else if(r.zoomAt){const bb=r.cv.getBoundingClientRect();r.zoomAt(+b.getAttribute("data-v")||1,bb.left+bb.width/2,bb.top+bb.height/2);}return;}
   if(a==="vit-hide"){await vitHide();return;}
