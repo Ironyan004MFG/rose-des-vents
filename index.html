@@ -593,7 +593,9 @@ ul.objsub input:checked+span{text-decoration:line-through;opacity:.65}
 .ptround strong{font-family:var(--display);font-size:30px;line-height:1}
 .ptalert{display:flex;gap:12px;align-items:center;justify-content:space-between;background:#7a1f14;color:#fff;border-radius:6px;padding:10px 14px;font-weight:600;position:sticky;top:8px;z-index:5}
 .ptalert button{background:#fff;color:#7a1f14;border:none;border-radius:4px;padding:6px 14px;min-height:36px;font-weight:700;cursor:pointer}
-.ptgrid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+.ptgrid{display:grid;grid-template-columns:minmax(0,var(--ptl,.47fr)) minmax(0,var(--ptr,.53fr));gap:20px;align-items:start;position:relative}
+.ptsplit{position:absolute;top:0;bottom:0;width:20px;margin-left:-10px;cursor:col-resize;z-index:5;touch-action:none}.ptsplit::after{content:"";position:absolute;left:9px;top:0;bottom:0;width:2px;border-radius:2px;background:transparent;transition:background .15s}.ptsplit:hover::after,.ptsplit.on::after{background:var(--gold,#c9a24a)}
+@media (max-width:900px){.ptsplit{display:none}}
 .ptbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .ptlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 .ptrow{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:10px;align-items:start;background:#f6efdb;border:1px solid var(--parch-3);border-left:5px solid #8a7a5c;border-radius:6px;padding:10px}
@@ -1927,6 +1929,11 @@ function tokDraw(){const cv=document.getElementById("tok-cv");if(!cv)return;cons
 function tokMake(src,c){const im=tokImg(src);if(!im)return "";const cv=document.createElement("canvas");cv.width=cv.height=256;tokPaint(cv.getContext("2d"),256,im,c,true);let u=cv.toDataURL("image/webp",0.9);if(u.indexOf("data:image/webp")!==0||u.length>140000)u=cv.toDataURL("image/png");return u;}
 setInterval(()=>{const cv=document.getElementById("tok-cv");if(cv&&cv._v!==tokVer)tokDraw();},120);
 {let drag=null;const clamp=v=>Math.max(-0.2,Math.min(1.2,v));
+  // séparation entre les deux colonnes du Mode Partie : on la glisse, elle est mémorisée sur cet appareil
+  document.addEventListener("pointerdown",e=>{const sp=e.target.closest&&e.target.closest(".ptsplit");if(!sp)return;e.preventDefault();const g=sp.parentNode;sp.classList.add("on");
+    const mv=ev=>{const b=g.getBoundingClientRect(),f=Math.max(0.28,Math.min(0.72,(ev.clientX-b.left)/b.width));ptSplitSet(f,true);},up=()=>{sp.classList.remove("on");document.removeEventListener("pointermove",mv);document.removeEventListener("pointerup",up);};
+    document.addEventListener("pointermove",mv);document.addEventListener("pointerup",up);});
+  document.addEventListener("dblclick",e=>{if(e.target.closest&&e.target.closest(".ptsplit"))ptSplitSet(0.47,true);});
   document.addEventListener("pointerdown",e=>{if(e.target.id!=="tok-cv")return;const c=ui.tokCadre;if(!c)return;drag={x:e.clientX,y:e.clientY,c0:Object.assign({},c)};try{e.target.setPointerCapture(e.pointerId);}catch(er){}e.preventDefault();});
   document.addEventListener("pointermove",e=>{if(!drag)return;const cv=document.getElementById("tok-cv"),im=tokImg(tokSrc().src);if(!cv||!im)return;
     const sc=cv.getBoundingClientRect().width/cv.width,k=(cv.width*drag.c0.z)/Math.min(im.naturalWidth,im.naturalHeight)*sc;ui.tokCadre.x=clamp(drag.c0.x-(e.clientX-drag.x)/(im.naturalWidth*k));ui.tokCadre.y=clamp(drag.c0.y-(e.clientY-drag.y)/(im.naturalHeight*k));tokVer++;});
@@ -2943,7 +2950,7 @@ function render(){
   Object.keys(keep).forEach(id=>{const el=document.getElementById(id);if(el){if(el.type==="checkbox")el.checked=keep[id];else el.value=keep[id];}});
   if(focusId){const f=document.getElementById(focusId);if(f&&f.focus)f.focus({preventScroll:true});}
   try{ecAfter();}catch(e){console.error(e);}
-  if(scSame&&Math.abs(window.scrollY-scY)>2)window.scrollTo(0,scY);
+  ptSplitSet();if(scSame&&Math.abs(window.scrollY-scY)>2)window.scrollTo(0,scY);
   // et le panneau de droite (onglets Scénario, Écran…) garde aussi sa position
   if(scSame)document.querySelectorAll(".ptpanel").forEach((e,i)=>{if(inSc[i]!=null&&Math.abs(e.scrollTop-inSc[i])>2)e.scrollTop=inSc[i];});
 }
@@ -10090,7 +10097,7 @@ function ecFigs(x,st,s,r,pl){(st.figs||[]).forEach(f=>{const X=f.x*s,Y=f.y*s,R=s
   if(mine||s>=46){const fs=Math.max(11,Math.round(s*0.24)),lb=String(f.n||"").split(" ")[0];x.font="600 "+fs+"px sans-serif";x.textAlign="center";x.textBaseline="top";x.lineWidth=3;x.strokeStyle="rgba(0,0,0,.8)";x.strokeText(lb,X,Y+R+2);x.fillStyle=mine?"#ffe9a8":"#f6ecd0";x.fillText(lb,X,Y+R+2);}});}
 // Ligne d'état dans l'onglet Écran du DM.
 function tbDmLine(q){const c=ecCard();if(!c||q.libre)return "";const F=tbFigList(q,c);
-  return '<div class="tbdm">🌐 <strong>Table virtuelle</strong> <button class="btn board sm" data-a="tb-copylink" data-id="'+esc(q.id)+'">'+(ui.tbCopied?'✓ Lien copié':'Copier le lien des joueurs à distance')+'</button> : '+(q.statut==="encours"?'les inscrits à distance ouvrent cette carte depuis la quête (« Ouvrir la carte ») et y posent leur figurine virtuelle. Coche « Virtuel » pour un joueur à distance : en posant son anneau, sa figurine virtuelle est posée au même endroit ; lui seul la déplace, sans effet sur la vision. Ajuste ensuite l\'anneau dessous, comme pour une figurine sur la table.':'s\'ouvrira aux inscrits quand la quête sera en cours.')+
+  return '<div class="tbdm">🌐 <strong>Table virtuelle</strong> <button class="btn gold sm" data-a="tb-copylink" data-id="'+esc(q.id)+'">'+(ui.tbCopied?'✓ Lien copié':'Copier le lien des joueurs à distance')+'</button> : '+(q.statut==="encours"?'les inscrits à distance ouvrent cette carte depuis la quête (« Ouvrir la carte ») et y posent leur figurine virtuelle. Coche « Virtuel » pour un joueur à distance : en posant son anneau, sa figurine virtuelle est posée au même endroit ; lui seul la déplace, sans effet sur la vision. Ajuste ensuite l\'anneau dessous, comme pour une figurine sur la table.':'s\'ouvrira aux inscrits quand la quête sera en cours.')+
     (F.length?'<div class="tbfigs">Figurines posées : '+F.map(f=>'<span class="tbfig">'+esc(f.n)+' <button class="mini" data-a="tb-figdel" data-id="'+esc(f.u)+'" aria-label="Retirer la figurine de '+esc(f.n)+'">Retirer</button></span>').join(" ")+'</div>':'')+'</div>';}
 /* ----- Vue du joueur (#table-{quête}) ----- */
 let tbDoc=null,tbVit=null,tbSubQ=null,tbSubs=[],tbErr="",tbMine=null;
@@ -10730,6 +10737,10 @@ function ptObjectifs(q){const ob=objsOf(q),P=ui.pt,od=P.objectifs||[],sd=P.objSu
   return '<p class="desc">Secrets : les joueurs ne les voient pas. Ils déterminent le résultat en fin de quête (tous = Réussite, certains = Réussite partielle, aucun = Échec).</p>'+ob.map(o=>{const on=od.indexOf(o.i)>=0,ss=sd[o.i]||[];
     return '<section class="ptobj'+(on?' done':'')+'"><label class="ptobjrow" for="pobj-'+o.i+'"><input type="checkbox" class="pt-obj" id="pobj-'+o.i+'" data-i="'+o.i+'"'+(on?' checked':'')+'><span><strong>'+esc(o.txt)+'</strong>'+(o.sub.length?' <span class="desc">('+ss.filter(k=>k<o.sub.length).length+' / '+o.sub.length+')</span>':'')+'</span></label>'+
       (o.sub.length?'<ul class="objsub">'+o.sub.map((x,k)=>'<li><label for="psub-'+o.i+'-'+k+'"><input type="checkbox" class="pt-osub" id="psub-'+o.i+'-'+k+'" data-i="'+o.i+'" data-k="'+k+'"'+(ss.indexOf(k)>=0?' checked':'')+'><span>'+esc(x)+'</span></label></li>').join("")+'</ul>':'')+'</section>';}).join("");}
+function ptSplitSet(f,save){if(f==null){try{f=parseFloat(localStorage.getItem("rdv-ptsplit"));}catch(e){}if(!(f>=0.28&&f<=0.72))f=0.47;}else if(save){try{localStorage.setItem("rdv-ptsplit",String(f));}catch(e){}}
+  const g=document.querySelector(".ptgrid");if(!g)return;g.style.setProperty("--ptl",f+"fr");g.style.setProperty("--ptr",(1-f)+"fr");
+  const sp=g.querySelector(".ptsplit"),a=g.querySelector(".ptcombat");if(sp&&a)sp.style.left=(a.offsetWidth+10)+"px";if(save)try{ecAfter();}catch(e){}}
+window.addEventListener("resize",()=>ptSplitSet());
 function ptScenario(q){
   const s=scenarios[q.id]||{},txt=String(s.scenario||""),P=ui.pt,faits=P.faits||[],encs=ptEncounters(q),used={};
   const parts=txt.split(/\n(?=##\s)/);let h='';
@@ -11016,7 +11027,7 @@ function partyView(){
   const xp=P.liste.filter(c=>c.kind==="monstre"&&c.pv<=0).reduce((t,c)=>t+(+c.xp||0),0),npj=P.liste.filter(c=>c.kind==="pj").length;
   let h='<section class="partie"><div class="pthead"><div><p class="ctags">'+(q.libre?'<span class="creg">Hors quête</span>':q.mini?'<span class="creg">Mini Guilde · Waterdeep</span>':rankSeal(q.rang)+'<span class="creg">'+esc(b.nom||"")+'</span>')+'</p><h2>'+esc(q.titre)+'</h2>'+(function(){if(q.mini)return (q.presents||[]).length?'<p class="desc">Présents : '+esc(q.presents.map(i=>(miniDocs.find(x=>x.id===i)||{}).nom).filter(Boolean).join(", "))+'</p>':'';if(q.libre)return '<p class="desc">Pas de scénario, pas d\'XP ni d\'avance du calendrier : pour les visites à la Guilde, le roleplay en ville, les achats et les rencontres improvisées.</p>';const t=ptXpTotal(q.id),n=signupsFor(q.id).filter(x=>x.statut==="confirmee").length||P.liste.filter(c=>c.kind==="pj").length;return t?'<p class="ptxpgain">✦ '+t.toLocaleString("fr-CA")+' XP gagnés'+(n?' · '+xpShare(t,n).toLocaleString("fr-CA")+' par aventurier ('+n+')':'')+'</p>':'';})()+'</div><div class="ptround">'+(P.combat&&P.combat.phase==="combat"?'<span>Round</span><strong>'+P.round+'</strong>':P.combat?'<span>Initiative</span><strong>🎲</strong>':'<span>Hors combat</span>')+'</div></div>';
   if(ui.ptAlert)h+='<div class="ptalert" role="alert"><span>⚠ '+esc(ui.ptAlert)+'</span><button data-a="pt-aok" aria-label="Fermer l\'alerte">OK</button></div>';
-  h+='<div class="ptgrid"><div class="ptcombat">'+ptCombatCol(q);
+  h+='<div class="ptgrid"><div class="ptsplit" role="separator" aria-orientation="vertical" aria-label="Glisser pour élargir une colonne ou l\'autre" title="Glisser pour ajuster · double-clic pour revenir"></div><div class="ptcombat">'+ptCombatCol(q);
   h+='</div><div class="ptside">'+ptSide(q)+'</div></div>';
   if(q.libre)h+='<div class="ptfoot"><button class="btn ghost" data-a="pt-libre-reset">'+(ui.libreReset?'Confirmer : tout remettre à zéro':'Remettre la partie libre à zéro')+'</button></div>';
   else if(q.mini)h+='<div class="ptfoot"><a class="btn ghost" href="#mini">Retour à la Mini Guilde</a>'+(q.statut==="mini-encours"?'<button class="btn gold" data-a="mini-st" data-id="'+esc(q.id)+'" data-v="reussie">Quête réussie !</button>':'')+'</div>';
