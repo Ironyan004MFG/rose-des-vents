@@ -159,6 +159,15 @@ img.zoomable{cursor:zoom-in}img.zoomable:focus-visible{outline:3px solid #2a6fb0
 .objtxt{margin-bottom:14px;background:#f1e4c3;border:1px solid #c9b07a;border-radius:6px;padding:12px 16px;font-family:Georgia,serif;line-height:1.5;color:#2b1d0e}
 .ptobjs{list-style:none;margin:6px 0 10px;padding:0;display:flex;flex-direction:column;gap:6px}.ptobj{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.ptobj img,.ptobj .ph{width:44px;height:44px;object-fit:cover;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;background:#efe3c4}.ptobj>span{flex:1;min-width:10em}
 .ptobjq{display:block;margin-top:4px}
+.ectv-fiche .vbody{display:flex;align-items:center;justify-content:center;gap:3vw;max-width:94vw;max-height:88vh;min-height:0}
+.ectv-fiche .vbody img{max-width:46vw;max-height:84vh}.ectv-fiche .vcol{display:flex;flex-direction:column;align-items:center;gap:2vh;min-width:0;max-width:42vw}
+.ectv-fiche .vcol .vtxt{max-width:42vw;max-height:66vh}
+.ectv-fiche .vtxt.long{font-size:clamp(14px,1.3vw,24px)}.ectv-fiche .vtxt.xlong{font-size:clamp(12px,1.05vw,20px)}
+.ectv-fiche.mir .vbody{gap:1.5vw;max-width:48vw;max-height:47vh}.ectv-fiche.mir .vbody img{max-width:22vw;max-height:44vh}
+.ectv-fiche.mir .vcol{gap:1vh;max-width:24vw}.ectv-fiche.mir .vcol .vtxt{max-width:24vw;max-height:34vh;padding:8px 12px;font-size:clamp(12px,1.05vw,20px)}
+.ectv-fiche.mir .vcol .vtxt.long{font-size:clamp(11px,.9vw,17px)}.ectv-fiche.mir .vcol .vtxt.xlong{font-size:clamp(10px,.75vw,14px)}
+.ectv-fiche.mir .vcol h2{font-size:clamp(16px,2vw,36px)}
+.ectv-fiche.mir .fc>.vtxt{max-height:40vh}.ectv-fiche.mir .fc>.vtxt.long{font-size:clamp(11px,1vw,18px)}.ectv-fiche.mir .fc>.vtxt.xlong{font-size:clamp(10px,.8vw,15px)}
 .ectv-fiche.mir{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:0;padding:2vh 2vw;background:rgba(5,10,12,.45)}
 .ectv-fiche.mir .fc{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1vh;min-width:0;min-height:0}
 .ectv-fiche.mir .fa{grid-area:1/1;transform:rotate(180deg)}.ectv-fiche.mir .fb{grid-area:2/2}
@@ -9441,7 +9450,9 @@ function ecPpi(st){const k=(st.calib&&+st.calib.k)||1,d=st.calib&&+st.calib.diag
 function ecTvShell(){return '<div class="ectv"><canvas id="ec-tv" aria-label="Carte : glisse pour te promener, molette pour zoomer, double-clic pour revenir à la vue du DM"></canvas><button class="ectv-follow" id="ec-follow" data-a="tv-follow" hidden>🎯 Revenir à la vue du DM</button><div class="ectv-met" id="ec-met"></div><div class="ectv-info" id="ec-info"></div><div class="ectv-ord" id="ec-ord"></div><div class="ectv-msg" id="ec-msg"></div><div class="ectv-fiche" id="ec-fiche"></div></div>';}
 // Écran posé à plat : la fiche est montrée deux fois, tête-bêche, pour les deux bords de la table (réglable dans le calibrage).
 function ecMirror(){return !(ecDoc&&ecDoc.calib&&ecDoc.calib.miroir===false);}
-function ecFicheHtml(v){return (v.image?'<img src="'+esc(v.image)+'" alt="'+esc(v.nom||"Image")+'">':'')+(v.nom?'<h2>'+esc(v.nom)+'</h2>':'')+(v.texte?'<div class="vtxt">'+esc(v.texte).replace(/\n/g,"<br>")+'</div>':'');}
+// Fiche montrée aux joueurs. Image + texte : côte à côte (l'image à gauche, le nom et le texte à droite) pour que tout tienne, même en double tête-bêche.
+function ecFicheHtml(v){const n=String(v.texte||"").length,tx=v.texte?'<div class="vtxt'+(n>700?' xlong':n>350?' long':'')+'">'+esc(v.texte).replace(/\n/g,"<br>")+'</div>':'',h2=v.nom?'<h2>'+esc(v.nom)+'</h2>':'',im=v.image?'<img src="'+esc(v.image)+'" alt="'+esc(v.nom||"Image")+'">':'';
+  return v.image&&v.texte?'<div class="vbody">'+im+'<div class="vcol">'+h2+tx+'</div></div>':im+h2+tx;}
 function ecTvFiche(){const f=document.getElementById("ec-fiche");if(!f)return;const on=vitOn()&&hbLive("ec"),mir=ecMirror(),key=on?vitrine.ms+"|"+vitrine.nom+"|"+mir:"";if(f.getAttribute("data-k")===key)return;f.setAttribute("data-k",key);
   if(on){f.innerHTML=mir?'<div class="fc fa">'+ecFicheHtml(vitrine)+'</div><div class="fc fb" aria-hidden="true">'+ecFicheHtml(vitrine)+'</div>':ecFicheHtml(vitrine);f.classList.toggle("mir",mir);f.classList.add("on");}
   else{f.classList.remove("on");setTimeout(()=>{if(!vitOn())f.innerHTML="";},400);}
