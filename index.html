@@ -7517,9 +7517,11 @@ function burOrders(g,c){if(g.orders!==undefined)return g.orders;g.orders=null;co
   const tg=[];(g.people||[]).filter(p=>p.eat).forEach(p=>tg.push({o:{p},px:p.x,py:p.y}));if(AN&&AN.border.length)burMealSeats(g).forEach(m=>tg.push({o:{seat:m.q,an:m.an},px:m.q.x,py:m.q.y}));
   tg.forEach(t=>{t.b=spot(t.px,t.py);});
   // poste du cuisinier : la case près des fourneaux d'où l'on rejoint le plus de tables (certaines cases autour d'un meuble sont dans un recoin sans issue)
-  let home=null,cand=[];for(const h of posts){const cs=[];tg.forEach(t=>{if(!t.b)return;const go=rt([h.x,h.y],t.b);if(!go)return;const back=rt(t.b,[h.x,h.y]);if(!back)return;cs.push(Object.assign({},t.o,{go,back,b:t.b,d:Math.max(go.tot,back.tot)/v+0.01,sa:Math.atan2(t.py-t.b[1],t.px-t.b[0]),end:-1e9,first:null}));});if(cs.length>cand.length){cand=cs;home=h;}if(cand.length===tg.length)break;}
+  // d'abord par l'intérieur seulement (jamais au travers d'un mur ni en faisant le tour dehors) ; la cour seulement si la cuisine est vraiment dans un bâtiment à part
+  let home=null,cand=[];const pick=R2=>{for(const h of posts){const cs=[];tg.forEach(t=>{if(!t.b)return;const go=R2([h.x,h.y],t.b);if(!go)return;const back=R2(t.b,[h.x,h.y]);if(!back)return;cs.push(Object.assign({},t.o,{go,back,b:t.b,d:Math.max(go.tot,back.tot)/v+0.01,sa:Math.atan2(t.py-t.b[1],t.px-t.b[0]),end:-1e9,first:null}));});if(cs.length>cand.length){cand=cs;home=h;}if(cand.length===tg.length)break;}};
+  pick(nav.route);let inside=true;if(!cand.length){inside=false;pick(rt);}
   if(!cand.length)return null;
-  const home2=posts.filter(p=>p!==home&&rt([p.x,p.y],[home.x,home.y])).sort((p,q)=>Math.hypot(p.x-home.x,p.y-home.y)-Math.hypot(q.x-home.x,q.y-home.y))[0]||home;
+  const home2=posts.filter(p=>p!==home&&(inside?nav.route:rt)([p.x,p.y],[home.x,home.y])).sort((p,q)=>Math.hypot(p.x-home.x,p.y-home.y)-Math.hypot(q.x-home.x,q.y-home.y))[0]||home;
   const N=BUR_MEAL.N,R=ecRng(ecSeed(c.seed+"|repas")),list=[];let PRE=2,pa=0,pd=null;
   // les commandes s'enchaînent : la suivante part dès que le cuisinier est rentré (et assez tard pour que le serveur ait fini la desserte précédente)
   for(let i=0;i<N;i++){const ord=cand.map((o,k)=>[R(),k]).sort((u,w)=>u[0]-w[0]).map(u=>cand[u[1]]);let done=false;
