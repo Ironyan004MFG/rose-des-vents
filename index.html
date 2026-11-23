@@ -123,7 +123,7 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .ecchip{display:inline-flex;align-items:center;gap:0;margin:2px 0}.ecchip .ecx{border:0;background:none;color:var(--ink-soft);font-size:18px;line-height:1;padding:0 6px;cursor:pointer}.ecchip .ecx:hover{color:#a33}
 .ectv-follow{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:6;background:#d8b45e;color:#1b130b;border:0;border-radius:20px;padding:10px 18px;font:inherit;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.6)}
 .ectv canvas#ec-tv{cursor:grab;touch-action:none}.ectv canvas#ec-tv:active{cursor:grabbing}
-.ectv-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#d8b45e;font-family:var(--display);font-size:22px;text-align:center;padding:20px;pointer-events:none}.ectv-msg:empty{display:none}
+.ectv-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#d8b45e;font-family:var(--display);font-size:22px;text-align:center;padding:20px;pointer-events:none}.ectv-msg .btn,.ectv-msg a{pointer-events:auto}.ectv-msg{flex-direction:column}.ectv-msg:empty{display:none}
 .ecselbox{border:2px solid #d8b45e;border-radius:10px;background:rgba(216,180,94,.12);padding:6px 10px;margin:8px 0}.ecselbox h4{margin:2px 0;font-size:14px}.ecselbox .ecsel{margin:4px 0}.ecdm .ecbar,.ecdm .ecrow,.ecdm .ecsel{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:8px 0}.ecdm label{display:flex;flex-direction:column;font-size:13px}.ecdm label.ecck{flex-direction:row;align-items:center;gap:5px}.ecdm .ecsp{flex:1}
 /* Agrandir une image de fiche ; la montrer sur l'écran des joueurs */
 img.zoomable{cursor:zoom-in}img.zoomable:focus-visible{outline:3px solid #2a6fb0;outline-offset:2px}
@@ -9930,7 +9930,12 @@ function ecTvFiche(){const f=document.getElementById("ec-fiche");if(!f)return;co
   {const w=f.closest(".ectv");if(w)w.classList.toggle("fon",on);}}
 function ecTvUpdate(){if(ui.office!=="ecran")return;const app=document.getElementById("app");if(!document.getElementById("ec-tv"))app.innerHTML=ecTvShell();
   const m=document.getElementById("ec-msg"),st=ecDoc;
-  if(!isAdmin){m.textContent="Écran de table : connecte-toi avec le compte du Maître de la Guilde, puis recharge.";return;}
+  if(!isAdmin){// un joueur qui ouvre le lien de la télé : on l'envoie vers la carte de sa quête en cours (table virtuelle)
+    const mineQ=user&&!user.isAnonymous?quetes.filter(q=>q.statut==="encours"&&signupsFor(q.id).some(x=>x.uid===user.uid&&x.statut!=="refusee")):[];
+    if(mineQ.length===1){location.hash="#table-"+mineQ[0].id;return;}
+    m.innerHTML=!user||user.isAnonymous?'Ce lien est celui de la télé du Maître de la Guilde.<br>Pour jouer à distance, connecte-toi avec ton compte Google : ta carte s\'ouvrira toute seule.<br><br><button class="btn gold" data-a="login">Se connecter avec Google</button>':
+      mineQ.length?'Choisis ta partie :<br><br>'+mineQ.map(q=>'<a class="btn gold" href="#table-'+esc(q.id)+'">🗺 '+esc(q.titre)+'</a>').join(" "):
+      'Ce lien est celui de la télé du Maître de la Guilde.<br>Pour jouer à distance, il faut être inscrit (et accepté) à une quête en cours. Ta carte s\'ouvrira alors depuis la quête (« 🗺 Ouvrir la carte »).';return;}
   ecTvFiche();
   if(st&&st.carte&&!hbLive("ec")){["ec-met","ec-info","ec-ord"].forEach(k=>{const el=document.getElementById(k);if(el)el.innerHTML="";});m.textContent="Le Maître de la Guilde s'est déconnecté. L'écran reviendra dès qu'il rouvrira la partie.";const r=ecBind("ec-tv","tv");if(r)r.st=null;return;}
   if(!st||!st.carte){["ec-met","ec-info","ec-ord"].forEach(k=>{const el=document.getElementById(k);if(el)el.innerHTML="";});m.textContent=vitOn()?"":"En attente d'une carte… Ouvre une carte dans le Mode Partie (onglet Écran) ou dans l'Espace DM → Cartes (« Montrer aux joueurs »).";const r=ecBind("ec-tv","tv");if(r)r.st=null;return;}
@@ -10083,7 +10088,7 @@ function ecFigs(x,st,s,r,pl){(st.figs||[]).forEach(f=>{const X=f.x*s,Y=f.y*s,R=s
   if(mine||s>=46){const fs=Math.max(11,Math.round(s*0.24)),lb=String(f.n||"").split(" ")[0];x.font="600 "+fs+"px sans-serif";x.textAlign="center";x.textBaseline="top";x.lineWidth=3;x.strokeStyle="rgba(0,0,0,.8)";x.strokeText(lb,X,Y+R+2);x.fillStyle=mine?"#ffe9a8":"#f6ecd0";x.fillText(lb,X,Y+R+2);}});}
 // Ligne d'état dans l'onglet Écran du DM.
 function tbDmLine(q){const c=ecCard();if(!c||q.libre)return "";const F=tbFigList(q,c);
-  return '<div class="tbdm">🌐 <strong>Table virtuelle</strong> : '+(q.statut==="encours"?'les inscrits à distance ouvrent cette carte depuis la quête (« Ouvrir la carte ») et y posent leur figurine virtuelle. Coche « Virtuel » pour un joueur à distance : en posant son anneau, sa figurine virtuelle est posée au même endroit ; lui seul la déplace, sans effet sur la vision. Ajuste ensuite l\'anneau dessous, comme pour une figurine sur la table.':'s\'ouvrira aux inscrits quand la quête sera en cours.')+
+  return '<div class="tbdm">🌐 <strong>Table virtuelle</strong> <button class="btn board sm" data-a="tb-copylink" data-id="'+esc(q.id)+'">'+(ui.tbCopied?'✓ Lien copié':'Copier le lien des joueurs à distance')+'</button> : '+(q.statut==="encours"?'les inscrits à distance ouvrent cette carte depuis la quête (« Ouvrir la carte ») et y posent leur figurine virtuelle. Coche « Virtuel » pour un joueur à distance : en posant son anneau, sa figurine virtuelle est posée au même endroit ; lui seul la déplace, sans effet sur la vision. Ajuste ensuite l\'anneau dessous, comme pour une figurine sur la table.':'s\'ouvrira aux inscrits quand la quête sera en cours.')+
     (F.length?'<div class="tbfigs">Figurines posées : '+F.map(f=>'<span class="tbfig">'+esc(f.n)+' <button class="mini" data-a="tb-figdel" data-id="'+esc(f.u)+'" aria-label="Retirer la figurine de '+esc(f.n)+'">Retirer</button></span>').join(" ")+'</div>':'')+'</div>';}
 /* ----- Vue du joueur (#table-{quête}) ----- */
 let tbDoc=null,tbVit=null,tbSubQ=null,tbSubs=[],tbErr="",tbMine=null;
@@ -11286,6 +11291,7 @@ document.addEventListener("click",async e=>{
   if(a==="tb-figdel"){if(!isAdmin)return;const q=tbQuest();if(q)await run("Figurine retirée",()=>deleteDoc(doc(db,"table",q.id,"figs",id)));return;}
   if(a==="ec-start"){ui.ecStopped=false;const st=ecState();if(st){ecDoc=Object.assign({},ecDoc||{},st);ecPush(true);hbBeat();}render();return;}
   if(a==="ec-stop"){ui.ecStopped=true;ecCloseScreens();render();return;}
+  if(a==="tb-copylink"){copyText(location.origin+location.pathname+"#table-"+id);ui.tbCopied=true;render();setTimeout(()=>{ui.tbCopied=false;render();},2500);return;}
   if(a==="ec-copylink"){copyText(ecLink());ui.ecCopied=true;render();setTimeout(()=>{ui.ecCopied=false;render();},2500);return;}
   if(a==="vit-loot"){const n=b.getAttribute("data-n")||"",rr=b.getAttribute("data-r")||"",o=objets.find(y=>ptNorm(y.nom)===ptNorm(n));b.disabled=true;
     if(o&&(o.image||o.texte)){const hd=o.image?await hdGet("objets",o.id):"";await vitShow(o.nom,hd||o.image||"",o.texte||"");}
