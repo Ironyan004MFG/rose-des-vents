@@ -3158,7 +3158,7 @@ const EC_GRP={ext:"Extérieur",int:"Intérieur",abri:"Abri"};
 function ecMapLbl(t){const m=EC_MAPS[t==="chemin"?"route":t];return m?EC_GRP[m.g]+" – "+m.l:t;}
 function ecIndoor(t){const m=EC_MAPS[t==="chemin"?"route":t];return !!m&&m.g!=="ext";}
 const ecGenCache={};
-function ecGenGeo(c){const e=+c.etage||0,nv=c.niv?(c.niv.min+":"+c.niv.max):"",key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h+"|"+(c.bureau||"")+"|"+e+"|"+nv;if(!ecGenCache[key]){const G=EC_GEN[c.type];ecGenCache[key]=ecAutoLights(c,G.geo(c,ecRng(ecSeed(c.seed+(e?"|e"+e:"")))));}return ecGenCache[key];}
+function ecGenGeo(c){const e=+c.etage||0,nv=c.niv?(c.niv.min+":"+c.niv.max):"",key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h+"|"+(c.bureau||"")+"|"+e+"|"+nv+maisonEnvK(c);if(!ecGenCache[key]){const G=EC_GEN[c.type];ecGenCache[key]=ecAutoLights(c,G.geo(c,ecRng(ecSeed(c.seed+(e?"|e"+e:"")))));}return ecGenCache[key];}
 // Éclairage des intérieurs : chaque chandelle et chaque petite flamme éclaire un peu ; puis on pose des appliques murales
 // (torche ou lampe fixée au mur) là où il fait encore noir, jusqu'à la part de la pièce qu'un lieu habité éclaire d'ordinaire.
 // Les lieux sombres par nature (donjon, grotte, mine, égouts, cave) gardent leur obscurité, et les appliques s'éteignent quand le DM choisit « Ténèbres »
@@ -3574,23 +3574,57 @@ function dynMarais(x,g,s,t,dt,A,c,st){x.strokeStyle="#7d8a4a";x.lineWidth=Math.m
   if(st&&(st.lum==="nuit"||st.lum==="crepuscule")){A.ff=A.ff||Array.from({length:Math.round(c.w*c.h/25)},()=>({x:Math.random()*c.w,y:Math.random()*c.h,p:Math.random()*6}));A.ff.forEach(f=>{f.x+=Math.sin(t*0.7+f.p)*dt*0.4;f.y+=Math.cos(t*0.5+f.p)*dt*0.4;const a=Math.max(0,Math.sin(t*2.2+f.p));x.fillStyle="rgba(230,255,120,"+a+")";x.beginPath();x.arc(f.x*s,f.y*s,0.07*s,0,6.283);x.fill();});}}
 /* ---------- Maisons de scénario en 3/4 : plan généré au format des bureaux (mêmes meubles, mêmes murs, mêmes abords) ---------- */
 // Le contexte vient de la quête : culture (naine, elfique, cité, ville), richesse (masure, maison, demeure), ville ou campagne
+// Abords choisis par le DM (carte libre ou sélecteur de la carte ouverte) : taille de l'agglomération, type de quartier, décor autour ou non
+const MAISON_TAILLES=[["cite","Cité"],["ville","Ville"],["village","Village"],["hameau","Hameau"],["isole","Isolée (campagne)"]],MAISON_CULTS=[["standard","Standard"],["naine","Naine"],["elfique","Elfique"],["portuaire","Portuaire"]];
+function maisonEnv(c){const e=c&&c.type==="maison"&&c.env;if(!e)return null;const T=MAISON_TAILLES.some(t=>t[0]===e.taille)?e.taille:"ville",C=MAISON_CULTS.some(t=>t[0]===e.cult)?e.cult:"standard";return {taille:T,cult:C,decor:e.decor!==false,port:C==="portuaire"};}
+function maisonEnvK(c){const e=maisonEnv(c);return e?"|"+e.taille+"|"+e.cult+"|"+(e.decor?1:0):"";}
+function maisonEnvDef(c){const e=maisonEnv(c);if(e)return {taille:e.taille,cult:e.cult,decor:e.decor};const X=maisonCtx(Object.assign({},c,{env:null}));return {taille:X.rural?"village":X.cult==="cite"?"cite":"ville",cult:X.cult==="naine"||X.cult==="elfique"?X.cult:"standard",decor:true};}
 function maisonCtx(c){const nom=String(c.nom||"").replace(/ · .*$/,""),n=(nom+" "+(c.seed||"")).toLowerCase(),R=ecRng(ecSeed(String(c.seed)+"|ctx"));
   const st=vilStyle({nom,seed:c.seed},R),rural=/ferme|chaumi|hameau|campagne|cabane|moulin|for[eê]t|bois|clairi|lisi[eè]re|village|longsaddle/.test(n);
   const poor=/masure|taudis|cabane|bicoque|pauvre|ruelle|docks?/.test(n)||(st.wealth==="pauvre"&&!/marchand|riche|noble/.test(n)),rich=/riche|noble|villa|h[oô]tel|demeure|marchand|haute|sages/.test(n)||(st.wealth==="riche"&&!poor);
+  const EV=maisonEnv(c);if(EV){const T=EV.taille;const lv0=poor?0:rich?2:1;/* plus la maison est isolée, moins elle est luxueuse */return {cult:EV.cult==="naine"||EV.cult==="elfique"?EV.cult:T==="cite"?"cite":"ville",wealth:st.wealth,rural:T==="village"||T==="hameau"||T==="isole",lvl:T==="isole"||T==="hameau"?0:T==="village"?Math.min(1,lv0):lv0,ruine:st.wealth==="ruine",port:EV.port,taille:T};}
   return {cult:st.cult,wealth:st.wealth,rural,lvl:poor?0:rich?2:1,ruine:st.wealth==="ruine"};}
-function maisonPlan(c){const key="m|"+c.seed+"|"+c.w+"x"+c.h;if(EC_BURP[key])return key;
-  const R=ecRng(ecSeed(String(c.seed)+"|plan")),X=maisonCtx(c),W=c.w,H=c.h,lvl=X.lvl,town=!X.rural,CU=X.cult;
+function maisonPlan(c){const key="m|"+c.seed+"|"+c.w+"x"+c.h+maisonEnvK(c);if(EC_BURP[key])return key;
+  const R=ecRng(ecSeed(String(c.seed)+"|plan")),X=maisonCtx(c),W=c.w,H=c.h,lvl=X.lvl,town=!X.rural,CU=X.cult,EV=maisonEnv(c),ND=EV&&!EV.decor;
+  // bande devant la maison : rue (ville), chemin de terre (village), quai et eau (port), rien (maison isolée ou sans décor)
+  const SH=EV?(ND?0:EV.port?6:EV.taille==="hameau"?2:3):(town?3:0);
   const mk=fill=>Array.from({length:H},()=>Array(W).fill(fill));
   // Gabarit de la maison
-  const bw=Math.min(W-4,[9,15,21][lvl]+Math.floor(R()*3)),bh=Math.min(H-6,[7,10,13][lvl]+Math.floor(R()*2));
-  const streetH=town?3:0,x0=Math.max(2,Math.min(W-bw-2,Math.floor((W-bw)/2)+Math.floor(R()*7)-3)),y1=H-1-streetH-(town?2:3),y0=Math.max(1,y1-bh+1),x1=x0+bw-1;
+  const bw=Math.min(W-4,[9,15,21][lvl]+Math.floor(R()*3)),bh=Math.min(H-6-Math.max(0,SH-3),[7,10,13][lvl]+Math.floor(R()*2));
+  const streetH=SH,x0=Math.max(2,Math.min(W-bw-2,Math.floor((W-bw)/2)+Math.floor(R()*7)-3)),y1=H-1-streetH-(EV?(SH?2:3):town?2:3),y0=Math.max(1,y1-bh+1),x1=x0+bw-1;
   const up=lvl===2||(lvl===1&&R()<0.6),cave=lvl>=1&&R()<0.5;
   // Forme de la maison (vue de dessus) : rectangle, en L (un coin retiré) ou en croix (les quatre coins retirés)
   const SHP=TOP90&&lvl<2?(()=>{const r=R();return r<0.4?"rect":r<0.72?"L":"croix";})():"rect",CUTS=[];
   // ---------- Rez-de-chaussée ----------
   const A=mk(X.rural?",":CU==="cite"||CU==="naine"?"_":",");
   const set=(M,x,y,ch)=>{if(x>=0&&y>=0&&x<W&&y<H)M[y][x]=ch;},get=(M,x,y)=>x<0||y<0||x>=W||y>=H?"%":M[y][x];
-  if(town){for(let y=H-streetH;y<H;y++)for(let x=0;x<W;x++)A[y][x]="_";
+  const ROADS=[],BOATS=[],ROCK=[],PARK=[];
+  if(EV){if(!ND){const T=EV.taille,dirt=T==="village"||T==="hameau"||T==="isole",DGV=T==="ville"&&CU==="ville",rd=dirt?":":" ",fy=H-SH;
+    const road=(ax,ay,w,h,ch)=>{for(let y=ay;y<ay+h;y++)for(let x=ax;x<ax+w;x++)if(x>=0&&y>=0&&x<W&&y<H)A[y][x]=ch;ROADS.push([ax,ay,w,h]);};
+    // quartier nain : la paroi de la montagne ferme le haut de la carte
+    if(CU==="naine"&&y0>=4){let d=4;for(let x=0;x<W;x++){d=Math.max(2,Math.min(Math.min(5,y0-2),d+(R()<0.3?-1:R()<0.6?1:0)));ROCK.push(d);}}
+    if(EV.port){road(0,fy,W,2," ");for(let x=0;x<W;x++){A[fy+2][x]="=";for(let y=fy+3;y<H;y++)A[y][x]="~";}ROADS.push([0,fy+2,W,1]);
+      // barques amarrées le long du quai, une autre au large
+      for(let k=0;k<2;k++){const bx=1+R()*(W-5);if(BOATS.some(b=>Math.abs(b.x-bx)<5))continue;BOATS.push({k:k?"row":R()<0.5?"fish":"row",x:bx,y:fy+3.15+(k?1.4:0),L:k?2.4:2.8,ph:R()*6,v:0,col:Math.floor(R()*4)});}}
+    else if(SH)road(0,fy,W,SH,DGV?" ":rd);
+    if(SH&&(T==="cite"||CU==="elfique"||CU==="naine"))for(let x=0;x<W;x++)if(A[fy-1][x]!=="#")A[fy-1][x]=";";
+    // rue transversale (ou chemin) d'un côté de la maison, ruelle de derrière dans une cité
+    const lft=x0-1,rgt=W-2-x1,cw=T==="cite"?3:2;
+    if(SH&&T!=="hameau"&&T!=="isole"&&Math.max(lft,rgt)>=cw+4){const L=lft>=rgt,cx=L?Math.max(0,Math.floor((x0-cw)/2)):x1+1+Math.floor((W-1-x1-cw)/2);road(cx,0,cw,fy,rd);for(let xx=cx;xx<cx+cw;xx++)if(ROCK[xx])ROCK[xx]=0;/* la rue perce la paroi */
+      if(T==="cite"||CU==="elfique"||CU==="naine")for(let y=0;y<fy;y++)for(const xx of [cx-1,cx+cw])if(xx>=0&&xx<W&&(A[y][xx]==="_"||A[y][xx]===","))A[y][xx]=";";}
+    if(DGV&&y0>=7)road(0,Math.max(1,Math.floor(y0/2)-1),W,2," ");/* rue de derrière */
+    if(T==="cite"&&y0>=7){const by=Math.max(CU==="naine"?3:0,Math.floor(y0/2)-1);road(0,by,W,2,rd);}
+    // ville (comme Daggerford) : pavés usés qui laissent voir la terre, terre battue le long des rues et autour de la maison, prés plus loin ;
+    // village (comme Triboar) : chemin de terre autour de la maison, prés partout ailleurs
+    if(DGV||T==="village"){const isR=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&ROADS.some(r=>x>=r[0]&&x<r[0]+r[2]&&y>=r[1]&&y<r[1]+r[3]),nearH=(x,y,d)=>x>=x0-d&&x<=x1+d&&y>=y0-d&&y<=y1+d;
+      if(DGV)for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(A[y][x]===" "&&isR(x,y)){const edge=!isR(x,y-1)||!isR(x,y+1);if(R()<(edge?0.28:0.1))A[y][x]=":";}/* pavé mal entretenu : la terre perce */
+      // ville : le sol est pavé partout (cours et places), sauf un petit parc arboré
+      if(DGV){for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(A[y][x]===",")A[y][x]="_";
+        for(let k=0;k<300;k++){const pw=6+Math.floor(R()*3),ph=5+Math.floor(R()*2),px=Math.floor(R()*(W-pw)),py=Math.floor(R()*(H-ph));let ok=true;for(let y=py-1;y<=py+ph&&ok;y++)for(let x=px-1;x<=px+pw&&ok;x++)if(isR(x,y)||nearH(x,y,2)||(ROCK[x]&&y<ROCK[x]))ok=false;if(!ok)continue;
+          for(let y=py;y<py+ph;y++)for(let x=px;x<px+pw;x++)A[y][x]=",";PARK.push([px,py,pw,ph]);break;}}
+      else for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(A[y][x]!==",")continue;let dr=9;for(let b=-2;b<=2;b++)for(let a=-2;a<=2;a++)if(isR(x+a,y+b))dr=Math.min(dr,Math.max(Math.abs(a),Math.abs(b)));
+        if(nearH(x,y,1))A[y][x]=":";}}}}
+  else if(town){for(let y=H-streetH;y<H;y++)for(let x=0;x<W;x++)A[y][x]="_";
     if(CU==="cite"||CU==="elfique")for(let x=0;x<W;x++)A[H-streetH-1][x]=";";}
   const shell=M=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)M[y][x]=(x===x0||x===x1||y===y0||y===y1)?"#":".";};
   shell(A);
@@ -3605,7 +3639,7 @@ function maisonPlan(c){const key="m|"+c.seed+"|"+c.w+"x"+c.h;if(EC_BURP[key])ret
   const carve=(M,outCh)=>{if(!CUTS.length)return;const inB=(x,y)=>x>=x0&&x<=x1&&y>=y0&&y<=y1;
     for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){if(!inCut(x,y))continue;let n=false;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(inB(x+dx,y+dy)&&!inCut(x+dx,y+dy)&&M[y+dy][x+dx]!=="#")n=true;M[y][x]=n?"#":outCh;}};/* le bord intérieur du coin retiré devient le nouveau mur */A[y1][ex]="E";if(wide)A[y1][ex+1]="E";
   const path=X.rural?":":CU==="elfique"||CU==="cite"?"_":lvl===0?":":"_";
-  {let px=ex;for(let y=y1+1;y<H;y++){if(get(A,px,y)==="_"||get(A,px,y)===";")break;A[y][px]=path;if(wide)A[y][px+1]=path;if(X.rural&&R()<0.25&&y>y1+1){px+=R()<0.5?-1:1;px=Math.max(1,Math.min(W-3,px));A[y][px]=path;if(wide)A[y][px+1]=path;}}}
+  {let px=ex;for(let y=y1+1;y<H;y++){if("_; :=~".indexOf(get(A,px,y))>=0)break;A[y][px]=path;if(wide)A[y][px+1]=path;if(X.rural&&R()<0.25&&y>y1+1){px+=R()<0.5?-1:1;px=Math.max(1,Math.min(W-3,px));A[y][px]=path;if(wide)A[y][px+1]=path;}}}
   // Pièces : murs intérieurs selon le gabarit
   const rooms=[],door=(M,x,y)=>{M[y][x]="+";},vw=(M,x,a,b)=>{for(let y=a;y<=b;y++)M[y][x]="#";},hw=(M,y,a,b)=>{for(let x=a;x<=b;x++)M[y][x]="#";};
   const room=(role,ax,ay,bx,by)=>{const r={role,x0:ax,y0:ay,x1:bx,y1:by};rooms.push(r);return r;};
@@ -3688,11 +3722,16 @@ function maisonPlan(c){const key="m|"+c.seed+"|"+c.w+"x"+c.h;if(EC_BURP[key])ret
   // ---------- Abords : jardin, arbres, abreuvoir, charrette ----------
   const D0=deco["0"];
   if(X.rural){const tx=[2,W-4,3,W-5];tx.forEach((t,i)=>{if(R()<0.8)D0.push(["tree",t+R()*2,1+i*4+R()*2]);});if(R()<0.6)D0.push(["trough",x1+2,y1-1]);if(R()<0.5)D0.push(["wagon",x0-3,y1+2]);}
+  else if(CU==="elfique"&&EV){/* grands arbres elfiques en fleurs */D0.push(["tree",x0-3.5,y0+1.5,"fleur",2.6]);D0.push(["tree",x1+3.5,y0+2.5,"fleur",2.4]);D0.push(["bush",x0-1,y1]);D0.push(["bush",x1+1,y1]);}
   else if(CU==="elfique"||lvl===2){D0.push(["tree",x0-2,y0+1,CU==="elfique"?"fleur":undefined]);D0.push(["tree",x1+2,y0+2,CU==="elfique"?"fleur":undefined]);D0.push(["bush",x0-1,y1]);D0.push(["bush",x1+1,y1]);}
   if(lvl===2){deco["0"].push(["tapestry",x0+3,y0+0.95]);}
-  EC_BURP[key]={floors,names,rugs,deco};
+  PARK.forEach(([px,py,pw,ph])=>{D0.push(["fountain",px+pw/2,py+ph/2-0.6]);D0.push(["tree",px+1,py+1]);D0.push(["tree",px+pw-1,py+ph-1]);if(pw>=7)D0.push(["bush",px+pw-1,py+1]);});
+  // rien de planté sur une rue, un quai, l'eau ou la roche
+  if(EV)deco["0"]=deco["0"].filter(d=>{if(d[0]==="tapestry")return true;const xx=Math.floor(d[1]),yy=Math.floor(d[2]);return !(xx>=0&&yy>=0&&xx<W&&yy<H)||!ROADS.some(r=>xx>=r[0]-1&&xx<r[0]+r[2]+1&&yy>=r[1]-1&&yy<r[1]+r[3]+1)&&"%~=".indexOf(A[yy][xx])<0;});
+  EC_BURP[key]={floors,names,rugs,deco,roads:ROADS,boats:BOATS,rock:ROCK};
   EC_BUR[key]={n:"Maison",floor:CU==="naine"?"pierre":lvl===2?(CU==="elfique"?"pierre":"damier"):CU==="naine"?"pierre":"bois",wall:CU==="elfique"?["#c9c3b4","#e8e3d6"]:CU==="naine"||lvl===0?["#58606a","#7a848f"]:["#8a6a48","#b08c64"],out:town&&CU!=="elfique"?"pave":"herbe"};
-  BUR_TIER[key]=X.rural?"village":CU==="cite"?"cite":"ville";BUR_DENSE[key]=X.rural?0.6:CU==="cite"?2.5:1.2;
+  if(EV){const T=EV.taille;BUR_TIER[key]=T==="cite"?"cite":T==="ville"?"ville":"village";BUR_DENSE[key]=ND?0:{cite:2.5,ville:1.5,village:0.8,hameau:0.4,isole:0.2}[T];}
+  else{BUR_TIER[key]=X.rural?"village":CU==="cite"?"cite":"ville";BUR_DENSE[key]=X.rural?0.6:CU==="cite"?2.5:1.2;}
   return key;}
 // Étage d'une maison : au-dessus de la porte d'entrée, on voit l'auvent du rez-de-chaussée
 function maisonUpVeil(x,g,s,c){
@@ -3703,7 +3742,8 @@ function maisonUpVeil(x,g,s,c){
   for(let r=0;r<3;r++){const yy=Y0+r*h/3;x.fillStyle=r%2?"#8a4a34":"#6e3626";x.fillRect(xa*s,yy*s,(xb-xa)*s,h/3*s*0.55);
     x.strokeStyle="rgba(40,18,10,.55)";x.lineWidth=Math.max(1,s*0.025);for(let t=xa+(r%2?0.2:0);t<xb;t+=0.4){x.beginPath();x.moveTo(t*s,yy*s);x.lineTo(t*s,(yy+h/3)*s);x.stroke();}}
   x.fillStyle="rgba(255,220,180,.25)";x.fillRect(xa*s,Y0*s,(xb-xa)*s,Math.max(1,s*0.05));}
-function geoMaison34(c,R){const k=maisonPlan(c),g=geoBureau(Object.assign({},c,{bureau:k}),R);g.people=[];g.seats=[];g.hall=[];g.spots={p:[]};g.cult=maisonCtx(c).cult;return g;}
+function geoMaison34(c,R){const k=maisonPlan(c),g=geoBureau(Object.assign({},c,{bureau:k}),R);g.people=[];g.seats=[];g.hall=[];g.spots={p:[]};g.cult=maisonCtx(c).cult;const P=EC_BURP[k];if(P.boats&&P.boats.length)g.boats=P.boats;if(P.rock&&P.rock.length)g.rockD=P.rock;return g;}
+function dynMaison34(x,g,s,t,dt,A,c){if(g.boats){const TT=Date.now()/1000;g.boats.forEach(b=>portBoat(x,b,s,TT));}dynBureau(x,g,s,t,dt,A,c);}
 /* ---------- Entrepôts de scénario en 3/4 : plan au format des bureaux, passerelle à l'étage ---------- */
 // Port (quai et eau devant les grandes portes), ville (rue pavée) ou campagne (grange) ; allées de caisses et de tonneaux, bureau du contremaître,
 // et souvent une passerelle à 10 pi du sol : à l'étage, on voit l'entrepôt en contrebas entre les planches.
@@ -4628,7 +4668,7 @@ function empHD(x,cx,cy,S,a,ph,mv,E){S*=1.4*(EMP_FIT[EMP_KEYS.find(k=>EMP_HD[k]==
 
 const EMP_KEYS=["oswin","tamsin","corisande","hrolf","durgan","seraphine","elenwe","bert","jiwoo"];
 const EC_GEN={
-  taverne:{geo:geoInt,stat:statInt,dyn:(x,g,s,t)=>dynFires(x,g,s,t)},temple:{geo:geoInt,stat:statInt,dyn:(x,g,s,t)=>dynFires(x,g,s,t)},maison:{geo:geoMaison34,stat:statBureau,dyn:dynBureau},
+  taverne:{geo:geoInt,stat:statInt,dyn:(x,g,s,t)=>dynFires(x,g,s,t)},temple:{geo:geoInt,stat:statInt,dyn:(x,g,s,t)=>dynFires(x,g,s,t)},maison:{geo:geoMaison34,stat:statBureau,dyn:dynMaison34},
   entrepot:{geo:geoEntrepot34,stat:statBureau,dyn:(x,g,s,t,dt,A,c,st)=>{dynBureau(x,g,s,t,dt,A,c,st);ecRats(x,g,s,t,dt,A);}},manoir:{geo:geoInt,stat:statInt,dyn:(x,g,s,t)=>dynFires(x,g,s,t)},
   donjon:{geo:geoDonjon,stat:statDonjon,dm:dmDonjon,dyn:(x,g,s,t,dt,A)=>{dynFires(x,g,s,t);ecRats(x,g,s,t,dt,A);}},
   grotte:{geo:geoGrotte34,stat:statGrotte34,dyn:dynGrotte34},mine:{geo:geoMine,stat:statMine,dyn:dynMine},egouts:{geo:geoEgouts,stat:statEgouts,dyn:dynEgouts},
@@ -5028,7 +5068,7 @@ function gDecoB(x,d,s,ox,oy,R){const k=d[0],X=d[1]+ox,Y=d[2]+oy;
   else if(k==="mine"){// entrée de galerie dans la falaise : bouche sombre étayée de poutres
     const g2=x.createRadialGradient((X+0.3)*s,(Y+0.5)*s,0,(X+0.3)*s,(Y+0.5)*s,1.2*s);g2.addColorStop(0,"#050403");g2.addColorStop(0.7,"#1a1612");g2.addColorStop(1,"rgba(26,22,18,0)");x.fillStyle=g2;x.fillRect((X-0.2)*s,(Y-0.7)*s,1.8*s,2.4*s);x.fillStyle="#0a0806";x.fillRect(X*s,(Y-0.3)*s,1.3*s,1.6*s);x.fillStyle="#5a3a1e";x.fillRect((X-0.1)*s,(Y-0.45)*s,0.22*s,1.9*s);x.fillRect((X-0.1)*s,(Y-0.45)*s,1.4*s,0.2*s);x.fillRect((X-0.1)*s,(Y+1.25)*s,1.4*s,0.2*s);x.fillStyle="#7a5430";x.fillRect((X-0.1)*s,(Y-0.45)*s,0.08*s,1.9*s);}
   else if(k==="rails"){x.strokeStyle="#5a5550";x.lineWidth=Math.max(1,s*0.05);x.beginPath();x.moveTo((X+0.25)*s,Y*s);x.lineTo((X+0.25)*s,(Y+4)*s);x.moveTo((X+0.75)*s,Y*s);x.lineTo((X+0.75)*s,(Y+4)*s);x.stroke();x.fillStyle="#6b4a2b";for(let i=0;i<8;i++)x.fillRect((X+0.1)*s,(Y+i*0.5+0.1)*s,0.8*s,0.08*s);}
-  else if(k==="tree"||k==="bush"){const r=k==="tree"?1.3:0.6,TP=d[3]==="fleur"&&ecSaison()!=="hiver"?BUR_ELFTREE:ecTreePal(),col=TP[Math.floor(X*7+Y*3)%TP.length],sd=Math.floor(X*131+Y*17);x.fillStyle="rgba(15,45,20,.38)";x.beginPath();x.ellipse((X+r*0.35)*s,(Y+r*0.45)*s,r*s,r*0.85*s,0,0,6.283);x.fill();
+  else if(k==="tree"||k==="bush"){const r=d[4]||(k==="tree"?1.3:0.6),TP=d[3]==="fleur"&&ecSaison()!=="hiver"?BUR_ELFTREE:ecTreePal(),col=TP[Math.floor(X*7+Y*3)%TP.length],sd=Math.floor(X*131+Y*17);x.fillStyle="rgba(15,45,20,.38)";x.beginPath();x.ellipse((X+r*0.35)*s,(Y+r*0.45)*s,r*s,r*0.85*s,0,0,6.283);x.fill();
     const spr=col.bare?spTree(r,["#3a2a1c"],sd,s,"nu",!!col.snow):spTree(r,k==="bush"?["#3f6a34","#4f8a44","#e8a8c8"]:col,sd,s,"feuillu");x.drawImage(spr,X*s-spr.width/2,Y*s-spr.height/2);}
   else if(k==="fountain"){// fontaine en 3/4 : margelle de pierre (dessus et face), eau, colonne et vasque d'où l'eau retombe
     const Yc=Y+0.95,R1=1.1,K=0.55,Hf=0.38,Ys=Yc-0.35;x.fillStyle="rgba(0,0,0,.25)";x.beginPath();x.ellipse((X+0.1)*s,(Ys+Hf+0.05)*s,(R1+0.1)*s,(R1*K+0.1)*s,0,0,6.283);x.fill();
@@ -5048,13 +5088,16 @@ const BUR_ELFTREE=[["#c9a3bd","#ecd2e2","#fff6fb"],["#5f8577","#93b8aa","#dff0e8
 // Abords vivants du bureau : ombre portée du bâtiment, plaques de terre et de mousse entre les pavés, toits des maisons voisines,
 // plates-bandes et arbres, caisses, tonneaux, charrettes, étals à auvent rayé et lanternes. Rien ne bloque les portes.
 function burSurround(x,g,s,c,OT,SA){const W=c.w,H=c.h,R=ecRng(ecSeed(c.seed+"|abords|"+g.bid)),G=g.G,occ=new Uint8Array(W*H),dist=new Float32Array(W*H).fill(1e9),q=[];
-  const street=v=>v===" "||v==="_"||v===";"||((g.bid==="daggerford"||(TOP90&&g.bid==="triboar"))&&v===":"),out=i=>OT[i]!=null&&OT[i]!=="%";
+  // maison aux abords choisis : les rues et chemins tracés restent libres (ni maison, ni caisse, ni potager dessus)
+  const ENV=maisonEnv(c),NOD=ENV&&!ENV.decor,RD=new Uint8Array(W*H),HMAX=ENV?{cite:null,ville:32,village:6,hameau:3,isole:2}[ENV.taille]:null;
+  if(ENV)((EC_BURP[g.bid]||{}).roads||[]).forEach(([a,b,w,h])=>{for(let y=b+(g.oy||0);y<b+(g.oy||0)+h;y++)for(let x=a+(g.ox||0);x<a+(g.ox||0)+w;x++)if(x>=0&&y>=0&&x<W&&y<H)RD[y*W+x]=1;});
+  const street=v=>v===" "||v==="_"||v===";"||((g.bid==="daggerford"||(TOP90&&g.bid==="triboar")||ENV)&&v===":"),out=i=>OT[i]!=null&&OT[i]!=="%";
   for(let i=0;i<W*H;i++)if(OT[i]==null){dist[i]=0;q.push(i);}
   for(let h=0;h<q.length;h++){const i=q[h],X=i%W,Y=(i/W)|0;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([a,b])=>{const n=(Y+b)*W+X+a;if(X+a<0||Y+b<0||X+a>=W||Y+b>=H)return;if(dist[n]>dist[i]+1){dist[n]=dist[i]+1;q.push(n);}});}
   const doors=[];if(g.mup)g.r0.forEach((row,py)=>{for(let px=0;px<row.length;px++)if(row[px]==="+"||row[px]==="E")doors.push([px+g.ox+0.5,py+g.oy+0.5]);});else for(let Y=0;Y<H;Y++)for(let X=0;X<W;X++)if(gAt(G,X,Y)==="D")doors.push([X+0.5,Y+0.5]);
   const nearDoor=(X,Y,r)=>doors.some(d=>Math.hypot(d[0]-X,d[1]-Y)<r);
   const D=BUR_DENSE[g.bid]||1.5,TIER=BUR_TIER[g.bid]||(D>=2?"cite":D>=1?"ville":"village"),city=TIER==="cite",vill=TIER==="village";g.tier=TIER;
-  const free=(X0,Y0,w,h,dmin,ok,offOk)=>{for(let Y=Y0;Y<Y0+h;Y++)for(let X=X0;X<X0+w;X++){if(X<0||Y<0||X>=W||Y>=H){if(offOk)continue;return false;}const i=Y*W+X;if(occ[i]||!out(i)||dist[i]<dmin||(ok&&!ok(OT[i])))return false;}return !nearDoor(X0+w/2,Y0+h/2,Math.max(w,h)/2+2.2);};
+  const free=(X0,Y0,w,h,dmin,ok,offOk)=>{for(let Y=Y0;Y<Y0+h;Y++)for(let X=X0;X<X0+w;X++){if(X<0||Y<0||X>=W||Y>=H){if(offOk)continue;return false;}const i=Y*W+X;if(occ[i]||RD[i]||!out(i)||dist[i]<dmin||(ok&&!ok(OT[i])))return false;}return !nearDoor(X0+w/2,Y0+h/2,Math.max(w,h)/2+2.2);};
   const take=(X0,Y0,w,h)=>{for(let Y=Y0;Y<Y0+h;Y++)for(let X=X0;X<X0+w;X++)if(X>=0&&Y>=0&&X<W&&Y<H)occ[Y*W+X]=1;};
   // plaques de terre et de mousse entre les pavés
   for(let k=0;k<(g.bid==="silverymoon"?0:W*H/14);k++){const X=Math.floor(R()*W),Y=Math.floor(R()*H),i=Y*W+X;if(OT[i]!==" "&&OT[i]!=="_")continue;const moss=R()<(SA==="hiver"?0:0.35),n=4+Math.floor(R()*7);x.fillStyle=SA==="hiver"?"rgba(240,244,248,.45)":moss?"rgba(105,140,55,.38)":"rgba(140,105,65,.38)";
@@ -5064,8 +5107,8 @@ function burSurround(x,g,s,c,OT,SA){const W=c.w,H=c.h,R=ecRng(ecSeed(c.seed+"|ab
   for(let i=0;i<W*H;i++)if(OT[i]==null)occ[i]=1;
   // arbres, buissons et fontaine du plan : aucune maison ni décor posé dessus
   {const PD=((EC_BURP[g.bid]||{}).deco||{})["0"]||[];PD.forEach(d=>{if(d[0]==="fence"){const fy=Math.floor(d[2]+(g.oy||0)),fx=Math.floor(d[1]+(g.ox||0));for(let xx=fx;xx<fx+(d[3]||18);xx++)if(xx>=0&&fy>=0&&xx<W&&fy<H)occ[fy*W+xx]=1;return;}/* clôture : comme un mur */if(d[0]==="wagon"||d[0]==="horse"||d[0]==="trough"){const cx=d[1]+(g.ox||0),cy=d[2]+(g.oy||0),a=d[0]==="wagon"?[-2.3,-1.2,2.3,0.6]:d[0]==="horse"?[-1,-0.6,1.1,0.5]:[-0.4,-0.5,1.6,0.8];for(let yy=Math.floor(cy+a[1]);yy<=Math.floor(cy+a[3]);yy++)for(let xx=Math.floor(cx+a[0]);xx<=Math.floor(cx+a[2]);xx++)if(xx>=0&&yy>=0&&xx<W&&yy<H)occ[yy*W+xx]=1;return;}
-    const rr=d[0]==="tree"?2:d[0]==="fountain"?2:d[0]==="bush"?1:0;if(!rr)return;const cx=d[1]+(g.ox||0),cy=d[2]+(g.oy||0)+(d[0]==="fountain"?0.6:0);for(let yy=Math.floor(cy-rr);yy<=Math.ceil(cy+rr);yy++)for(let xx=Math.floor(cx-rr);xx<=Math.ceil(cx+rr);xx++)if(xx>=0&&yy>=0&&xx<W&&yy<H)occ[yy*W+xx]=1;});}
-  const ELF=g.bid==="silverymoon"||g.cult==="elfique",DAG=g.bid==="daggerford"||(TOP90&&g.bid==="triboar");/* Triboar : village de terre battue et de prés, comme Daggerford */
+    const rr=d[0]==="tree"?(d[4]?Math.ceil(d[4]):2):d[0]==="fountain"?2:d[0]==="bush"?1:0;if(!rr)return;const cx=d[1]+(g.ox||0),cy=d[2]+(g.oy||0)+(d[0]==="fountain"?0.6:0);for(let yy=Math.floor(cy-rr);yy<=Math.ceil(cy+rr);yy++)for(let xx=Math.floor(cx-rr);xx<=Math.ceil(cx+rr);xx++)if(xx>=0&&yy>=0&&xx<W&&yy<H)occ[yy*W+xx]=1;});}
+  const ELF=g.bid==="silverymoon"||g.cult==="elfique",DAG=g.bid==="daggerford"||(TOP90&&g.bid==="triboar")||(ENV&&ENV.decor&&(ENV.taille==="village"||ENV.taille==="hameau"||ENV.taille==="isole"));/* Triboar : village de terre battue et de prés, comme Daggerford */
   const HS=g.hs=new Uint8Array(W*H);g.houses=[];g.props=[];g.beds=null;g.hcache=null;
   // Silverymoon : esprit elfique. Jardin d'entrée (2 rangs entre la façade et le trottoir) : arche fleurie sur l'allée, statue au croissant de lune,
   // massifs espacés, bancs ; lampadaires d'argent le long des trottoirs ; feux follets dans les jardins.
@@ -5096,8 +5139,8 @@ function burSurround(x,g,s,c,OT,SA){const W=c.w,H=c.h,R=ecRng(ecSeed(c.seed+"|ab
   // maisons voisines (toits vus du dessus) dans les grands espaces libres
   // dans une cité, les maisons se touchent (rangées), mordent sur les bords de la carte et ne laissent que des rues étroites autour du bureau
   // cité : maisons serrées en rangées ; ville : un peu plus d'espace ; village : quelques chaumières
-  const hOk=v=>ELF||DAG?v===",":street(v)||v===",",pad=city||ELF||DAG?0:vill?2:1,ring=city?2:vill?4:3;
-  for(let k=0;k<(city||ELF||DAG?900:vill?60:260);k++){const w=3+Math.floor(R()*(city?4:vill?2:3)),h=3+Math.floor(R()*(vill?2:3)),X=Math.floor(R()*(W+4))-2,Y=Math.floor(R()*(H+4))-2;if(!free(X-pad,Y-pad,w+pad*2,h+pad*2,ring,hOk,true))continue;
+  const hOk=v=>ENV&&ENV.taille==="ville"&&DAG?v===","||v===":":ELF||DAG?v===",":street(v)||v===",",RUR=ENV&&vill,pad=ENV&&!city?(DAG&&!(ENV.taille==="ville")?2:1):city||ELF||DAG?0:vill?2:1,ring=city?2:vill?4:3;
+  for(let k=0;k<(NOD?0:city||ELF||DAG||ENV?900:vill?60:260);k++){if(HMAX!=null&&g.houses.length>=HMAX)break;const w=ENV?(city?5+Math.floor(R()*5):6+Math.floor(R()*5)):3+Math.floor(R()*(city?4:vill?2:3)),h=ENV?5+Math.floor(R()*3):3+Math.floor(R()*(vill?2:3)),X=Math.floor(R()*(W+4))-2,Y=Math.floor(R()*(H+4))-2;if(!free(X-pad,Y-pad,w+pad*2,h+pad*2,ring,hOk,true))continue;
     if(city&&R()<0.25){// ruelle : on laisse parfois une case libre d'un côté
       if(!free(X-1,Y,1,h,ring,hOk,true))continue;}
     take(X-pad,Y-pad,w+pad*2,h+pad*2);for(let yy=Y;yy<Y+h;yy++)for(let xx=X;xx<X+w;xx++)if(xx>=0&&yy>=0&&xx<W&&yy<H)HS[yy*W+xx]=1;
@@ -5105,11 +5148,20 @@ function burSurround(x,g,s,c,OT,SA){const W=c.w,H=c.h,R=ecRng(ecSeed(c.seed+"|ab
     // maison en vue 3/4 : dessinée avec les personnages (burHouses), triée par profondeur ; ici on ne garde que son ombre au sol
     let ch=null;if(R()<0.7){ch=0.2+R()*0.6;}const nb=Math.max(1,Math.round(w/1.6)),dr=street(OT[Math.min(H-1,Y+h)*W+Math.max(0,Math.min(W-1,X+1))]||"")&&Y+h<H?Math.floor(gHash(X,Y,5)*nb):null;
     const sd0=(X*131+Y*71+k)>>>0,ty0=vill?(gHash(X,Y,17)<0.7?"chaumiere":gHash(X,Y,19)<0.5?"pierre":"colombage"):HS_TYPES[Math.floor(gHash(X,Y,17)*HS_TYPES.length)],hz0=ty0==="pignon"?false:hz,nb0=Math.max(1,Math.round(w/1.15)),dr0=dr!=null?Math.min(nb0-1,dr):null;
-    (g.houses=g.houses||[]).push({_L:g.houses,X,Y,w,h,col,hz:hz0,ch,sd:sd0,type:ty0,F:vill?1.15:h>=4&&ty0!=="pierre"?1.55:1.3,mat:vill?"chaume":ty0==="pierre"||gHash(X,Y,21)<0.25?"ardoise":gHash(X,Y,23)<0.2?"bardeau":"tuile",dorm:gHash(X,Y,29)<0.45,door:dr0,sign:dr!=null&&gHash(X,Y,9)<0.35?["#b03a2e","#2e6ab0","#3a8a4a","#c08a2a"][Math.floor(gHash(X,Y,11)*4)]:null});if(DAG){const q=g.houses[g.houses.length-1];q.dag=1;q.mat=gHash(X,Y,31)<0.6?"bardeau":"ardoise";if(["brique","pierre","chaumiere","rondins","etable","bergerie","arche"].indexOf(q.type)>=0)q.type=["colombage","encorbellement","pignon","colombage"][sd0%4];}if(ELF){const q=g.houses[g.houses.length-1];q.elf=1;q.mat="elfe";if(["brique","chaumiere","rondins","etable","bergerie","arche"].indexOf(q.type)>=0)q.type=["colombage","encorbellement","pierre","pignon"][sd0%4];if(q.sign)q.sign=["#5f8496","#6c9a88","#c9a24a","#8a7ab0"][sd0%4];}}
+    (g.houses=g.houses||[]).push({_L:g.houses,X,Y,w,h,col,hz:hz0,ch,sd:sd0,type:ty0,F:vill?1.15:h>=4&&ty0!=="pierre"?1.55:1.3,mat:vill?"chaume":ty0==="pierre"||gHash(X,Y,21)<0.25?"ardoise":gHash(X,Y,23)<0.2?"bardeau":"tuile",dorm:gHash(X,Y,29)<0.45,door:dr0,sign:dr!=null&&gHash(X,Y,9)<0.35?["#b03a2e","#2e6ab0","#3a8a4a","#c08a2a"][Math.floor(gHash(X,Y,11)*4)]:null});if(DAG){const q=g.houses[g.houses.length-1];q.dag=1;q.mat=gHash(X,Y,31)<0.6?"bardeau":"ardoise";if(["brique","pierre","chaumiere","rondins","etable","bergerie","arche"].indexOf(q.type)>=0)q.type=["colombage","encorbellement","pignon","colombage"][sd0%4];}if(ELF){const q=g.houses[g.houses.length-1];q.elf=1;q.mat="elfe";if(["brique","chaumiere","rondins","etable","bergerie","arche"].indexOf(q.type)>=0)q.type=["colombage","encorbellement","pierre","pignon"][sd0%4];if(q.sign)q.sign=["#5f8496","#6c9a88","#c9a24a","#8a7ab0"][sd0%4];}
+    // à la campagne : chaumières et étables à l'échelle de la maison, en moyen état
+    if(RUR){const q=g.houses[g.houses.length-1],hh=gHash(X,Y,17),T=ENV.taille;if(T==="village"&&hh>=0.55){q.worn=gHash(X,Y,31)<0.4;}else{q.type=T==="isole"?"etable":T==="village"?(hh<0.4?"chaumiere":"etable"):hh<0.6?"chaumiere":"etable";q.mat=q.type==="chaumiere"?"chaume":"bardeau";q.worn=gHash(X,Y,31)<0.55;q.F=1.3;q.hz=w>=h;q.sign=null;q.dag=0;}}}
+  // champs cultivés autour des fermes (hameau, maison isolée, un peu au village) : sillons et rangs de cultures
+  if(ENV&&!NOD&&vill){const nF={isole:4,hameau:3,village:1}[ENV.taille]||0,crop={printemps:["#7fae4a","#5e8a34"],ete:["#c9b052","#a8903a"],automne:["#b07a3a","#8a6030"],hiver:["#e8ecee","#cfd6da"]}[SA];let nf=0;
+    for(let k=0;k<600&&nf<nF;k++){const hz=R()<0.5,w=hz?6+Math.floor(R()*4):4+Math.floor(R()*2),h=hz?4+Math.floor(R()*2):6+Math.floor(R()*4),X=Math.floor(R()*(W-w)),Y=Math.floor(R()*(H-h));if(!free(X-1,Y-1,w+2,h+2,3,v=>v===",",false))continue;take(X-1,Y-1,w+2,h+2);nf++;
+      x.fillStyle=SA==="hiver"?"#dfe4e6":"#6e5236";x.fillRect(X*s,Y*s,w*s,h*s);const n=Math.round((hz?h:w)*2.5);for(let r=0;r<n;r++){const t=(r+0.5)/n;x.strokeStyle=r%2?crop[1]:crop[0];x.lineWidth=s*0.22;x.lineCap="round";x.beginPath();if(hz){x.moveTo((X+0.2)*s,(Y+t*h)*s);x.lineTo((X+w-0.2)*s,(Y+t*h)*s);}else{x.moveTo((X+t*w)*s,(Y+0.2)*s);x.lineTo((X+t*w)*s,(Y+h-0.2)*s);}x.stroke();}
+      for(let j=0;j<w*h*3;j++){x.fillStyle=R()<0.5?"rgba(40,25,10,.18)":"rgba(255,240,200,.12)";x.fillRect((X+R()*w)*s,(Y+R()*h)*s,s*0.08,s*0.08);}
+      // clôture de perches autour du champ
+      x.strokeStyle="#6a4a2a";x.lineWidth=Math.max(1,s*0.05);x.strokeRect((X-0.15)*s,(Y-0.15)*s,(w+0.3)*s,(h+0.3)*s);x.fillStyle="#4a3018";for(let a=0;a<=w;a+=2)for(const b of [Y-0.15,Y+h+0.15]){x.fillRect((X+a-0.06)*s,(b-0.06)*s,s*0.12,s*0.12);}for(let b=0;b<=h;b+=2)for(const a of [X-0.15,X+w+0.15]){x.fillRect((a-0.06)*s,(Y+b-0.06)*s,s*0.12,s*0.12);}}}
   // arches : un bâtiment-pont enjambe une ruelle (1 ou 2 cases) entre deux maisons ; on passe dessous
   {const L=g.houses,A=[],isH=(xx,yy)=>xx>=0&&yy>=0&&xx<W&&yy<H&&HS[yy*W+xx],stc2=(xx,yy)=>xx>=0&&yy>=0&&xx<W&&yy<H&&street(OT[yy*W+xx])&&!HS[yy*W+xx];
     const near=(xx,yy)=>L.find(q=>xx>=q.X&&xx<q.X+q.w&&yy>=q.Y&&yy<q.Y+q.h);
-    const nA=city?3:vill?0:2;for(let yy=1;yy<H-3&&A.length<nA;yy++)for(let xx=1;xx<W-2&&A.length<nA;xx++)for(const gw of [1,2]){let ok=true;
+    const nA=NOD?0:city?3:vill?0:2;for(let yy=1;yy<H-3&&A.length<nA;yy++)for(let xx=1;xx<W-2&&A.length<nA;xx++)for(const gw of [1,2]){let ok=true;
       for(let r=0;r<3&&ok;r++){if(!isH(xx-1,yy+r)||!isH(xx+gw,yy+r))ok=false;for(let c=0;c<gw&&ok;c++)if(!stc2(xx+c,yy+r))ok=false;}
       // la ruelle doit continuer de chaque côté (on y passe vraiment)
       if(ok){let open=false;for(let c=0;c<gw;c++)if(stc2(xx+c,yy-1)&&stc2(xx+c,yy+3))open=true;ok=open;}
@@ -5138,7 +5190,7 @@ function burSurround(x,g,s,c,OT,SA){const W=c.w,H=c.h,R=ecRng(ecSeed(c.seed+"|ab
     if(onGrass&&!win){const gb=spMix({ete:"#6fa23a",automne:"#949446"}[SA]||"#6aa53b",-0.05);for(let k=0;k<q.w*5;k++){const t=rr(),side=rr();let bx,by;if(side<0.7){bx=X0-0.3+t*(q.w+0.6);by=Y1+0.48+(rr()-0.5)*0.12;}else if(side<0.85){bx=X0-0.3+(rr()-0.5)*0.08;by=Y0+0.1+t*0.6;}else{bx=X1+0.3+(rr()-0.5)*0.08;by=Y0+0.1+t*0.6;}
       const sz=(0.12+rr()*0.12)*s,nb=3+Math.floor(rr()*3);x.strokeStyle=rr()<0.5?spMix(gb,0.15):spMix(gb,-0.15);x.lineWidth=Math.max(1,s*0.03);x.beginPath();for(let b=0;b<nb;b++){const a=-1.57+(b/(nb-1)-0.5)*1.4;x.moveTo(bx*s,by*s);x.quadraticCurveTo(bx*s+Math.cos(a)*sz*0.5,by*s+Math.sin(a)*sz*0.6,bx*s+Math.cos(a)*sz,by*s+Math.sin(a)*sz);}x.stroke();}}
   });
-  if(DAG){const mud=v=>v===":";
+  if(DAG&&!NOD){const mud=v=>v===":";
     for(let k=0;k<W*H/10;k++){const X=Math.floor(R()*W),Y=Math.floor(R()*H);if(!mud(OT[Y*W+X])||occ[Y*W+X])continue;const cx=(X+R())*s,cy=(Y+R())*s,rx=s*(0.25+R()*0.45),ry=rx*(0.35+R()*0.15);
       if(R()<0.45){x.fillStyle="rgba(70,55,40,.35)";x.beginPath();x.ellipse(cx,cy,rx*1.15,ry*1.25,0,0,6.283);x.fill();x.fillStyle=SA==="hiver"?"rgba(200,215,225,.8)":"rgba(95,110,120,.75)";x.beginPath();x.ellipse(cx,cy,rx,ry,0,0,6.283);x.fill();x.fillStyle="rgba(220,235,245,.35)";x.beginPath();x.ellipse(cx-rx*0.3,cy-ry*0.3,rx*0.45,ry*0.3,0,0,6.283);x.fill();}
       else{x.strokeStyle="rgba(60,45,30,.35)";x.lineWidth=Math.max(1,s*0.05);for(const o2 of [-0.16,0.16]){x.beginPath();x.moveTo(X*s,(Y+0.5+o2)*s+cy*0);x.quadraticCurveTo((X+0.5)*s,(Y+0.5+o2+(R()-0.5)*0.1)*s,(X+1)*s,(Y+0.5+o2)*s);x.stroke();}}}
@@ -5148,18 +5200,18 @@ function burSurround(x,g,s,c,OT,SA){const W=c.w,H=c.h,R=ecRng(ecSeed(c.seed+"|ab
   // plates-bandes, buissons et arbres
   const bush=(X,Y,r)=>{const col=ELF&&R()<0.6?BUR_ELFTREE[Math.floor(R()*BUR_ELFTREE.length)]:[["#2f5a2a","#3f7434","#6aa850"],["#26472f","#335f3b","#4a7c4c"],["#3b5a22","#4e7a2c","#7cb048"]][Math.floor(R()*3)],spr=spTree(r,SA==="hiver"?["#22392b","#2f4a3a","#e9eef1"]:col,Math.floor(R()*1e4),s,"feuillu");x.fillStyle="rgba(15,40,15,.35)";x.beginPath();x.ellipse((X+r*0.35)*s,(Y+r*0.45)*s,r*s,r*0.85*s,0,0,6.283);x.fill();x.drawImage(spr,X*s-spr.width/2,Y*s-spr.height/2);};
   const besideHouse=(X,Y,w,h)=>{for(let yy=Y-1;yy<=Y+h;yy++)for(let xx=X-1;xx<=X+w;xx++)if(xx>=0&&yy>=0&&xx<W&&yy<H&&HS[yy*W+xx])return true;return false;},inPlan=(X,Y,w,h)=>g.ox!=null&&X+w>g.ox&&X<g.ox+g.pw&&Y+h>g.oy&&Y<g.oy+g.ph;
-  for(let k=0;k<(city?12:ELF?30:DAG&&TOP90?300:40);k++){const w=2+Math.floor(R()*3),h=1+Math.floor(R()*2),X=Math.floor(R()*(W-w)),Y=Math.floor(R()*(H-h));if(DAG&&TOP90&&(!besideHouse(X,Y,w,h)||inPlan(X,Y,w,h)))continue;/* potagers : contre une maison, jamais dans la cour */if(!free(X-1,Y-1,w+2,h+2,DAG&&TOP90?1:2,ELF?v=>v===",":DAG&&TOP90?v=>v===","||street(v):street,true))continue;take(X,Y,w,h);
+  for(let k=0;k<(NOD?0:city?12:ELF?30:DAG&&TOP90?300:40);k++){const w=2+Math.floor(R()*3),h=1+Math.floor(R()*2),X=Math.floor(R()*(W-w)),Y=Math.floor(R()*(H-h));if(DAG&&TOP90&&(!besideHouse(X,Y,w,h)||inPlan(X,Y,w,h)))continue;/* potagers : contre une maison, jamais dans la cour */if(!free(X-1,Y-1,w+2,h+2,DAG&&TOP90?1:2,ELF?v=>v===",":DAG&&TOP90?v=>v===","||street(v):street,true))continue;take(X,Y,w,h);
     if(ELF&&SA!=="hiver"){flowerBed(X,Y,w,h);continue;}
     x.fillStyle="#6a6458";x.fillRect((X-0.08)*s,(Y-0.08)*s,(w+0.16)*s,(h+0.16)*s);x.fillStyle=SA==="hiver"?"#e4e9ec":"#5a4632";x.fillRect(X*s,Y*s,w*s,h*s);x.strokeStyle="rgba(30,25,20,.6)";x.lineWidth=Math.max(1,s*0.04);x.strokeRect((X-0.08)*s,(Y-0.08)*s,(w+0.16)*s,(h+0.16)*s);
     for(let j=0;j<w*h*1.5;j++)bush(X+0.3+R()*(w-0.6),Y+0.3+R()*(h-0.6),0.35+R()*0.25);}
-  for(let k=0;k<(city?8:30);k++){const X=Math.floor(R()*(W-2)),Y=Math.floor(R()*(H-2));if(!free(X,Y,2,2,3,v=>v!=="~"&&v!=="="))continue;if(g.box&&X+2>g.box.x0&&X<g.box.x1&&Y+2>g.box.y0&&Y<g.box.y1)continue;take(X,Y,2,2);bush(X+1,Y+1,1.0+R()*0.5);}
+  const BIGE=ENV&&ELF;for(let k=0;k<(NOD?0:ENV&&(ENV.taille==="hameau"||ENV.taille==="isole")?70:city?8:30);k++){const X=Math.floor(R()*(W-2)),Y=Math.floor(R()*(H-2));if(BIGE){if(!free(X-1,Y-1,4,4,3,v=>v===","))continue;take(X-1,Y-1,4,4);bush(X+1,Y+1,2.0+R()*0.8);continue;}if(!free(X,Y,2,2,3,v=>v!=="~"&&v!=="="))continue;if(g.box&&X+2>g.box.x0&&X<g.box.x1&&Y+2>g.box.y0&&Y<g.box.y1)continue;take(X,Y,2,2);bush(X+1,Y+1,1.0+R()*0.5);}
   // caisses, tonneaux, sacs, charrettes, étals et lanternes
   const crate=(X,Y,z,a)=>{g.props.push({t:"crate",x:X,y:Y,z});return;x.save();x.translate(X*s,Y*s);x.rotate(a);x.fillStyle="rgba(0,0,0,.3)";x.fillRect(-z*s/2+s*0.1,-z*s/2+s*0.12,z*s,z*s);x.fillStyle="#9a7448";x.fillRect(-z*s/2,-z*s/2,z*s,z*s);x.strokeStyle="#4a3018";x.lineWidth=Math.max(1,s*0.04);x.strokeRect(-z*s/2,-z*s/2,z*s,z*s);x.strokeStyle="rgba(60,38,18,.7)";x.beginPath();x.moveTo(-z*s/2,-z*s/2);x.lineTo(z*s/2,z*s/2);x.moveTo(z*s/2,-z*s/2);x.lineTo(-z*s/2,z*s/2);x.stroke();x.strokeStyle="rgba(255,230,190,.25)";x.strokeRect(-z*s/2+s*0.05,-z*s/2+s*0.05,z*s-s*0.1,z*s-s*0.1);x.restore();};
   const barrel=(X,Y,r)=>{g.props.push({t:"barrel",x:X,y:Y,r});return;x.fillStyle="rgba(0,0,0,.3)";x.beginPath();x.arc((X+0.08)*s,(Y+0.1)*s,r*s,0,6.283);x.fill();x.fillStyle="#7a5432";x.beginPath();x.arc(X*s,Y*s,r*s,0,6.283);x.fill();x.strokeStyle="#3a2a1a";x.lineWidth=Math.max(1,s*0.04);x.stroke();x.strokeStyle="#5a5650";x.lineWidth=Math.max(1,s*0.035);x.beginPath();x.arc(X*s,Y*s,r*0.7*s,0,6.283);x.stroke();x.fillStyle="rgba(255,225,180,.2)";x.beginPath();x.arc((X-r*0.25)*s,(Y-r*0.25)*s,r*0.35*s,0,6.283);x.fill();};
   const sack=(X,Y)=>{R();g.props.push({t:"sack",x:X,y:Y});return;x.fillStyle="rgba(0,0,0,.25)";x.beginPath();x.ellipse((X+0.06)*s,(Y+0.08)*s,0.28*s,0.22*s,0,0,6.283);x.fill();x.fillStyle="#c2a878";x.beginPath();x.ellipse(X*s,Y*s,0.28*s,0.22*s,R(),0,6.283);x.fill();x.strokeStyle="#6a5232";x.lineWidth=Math.max(1,s*0.03);x.stroke();};
-  for(let k=0;k<W*H/30;k++){const X=Math.floor(R()*W),Y=Math.floor(R()*H),i=Y*W+X;if(occ[i]||!out(i)||OT[i]==="~"||dist[i]>3.5||nearDoor(X+0.5,Y+0.5,2.4)||(g.box&&X>=g.box.x0&&X<g.box.x1&&Y>=g.box.y0&&Y<g.box.y1)||(Y+1<H&&OT[(Y+1)*W+X]==null)||(Y+2<H&&OT[(Y+2)*W+X]==null))continue;occ[i]=1;const r=R(),cx=X+0.5,cy=Y+0.5;
+  for(let k=0;k<(NOD?0:W*H/30);k++){const X=Math.floor(R()*W),Y=Math.floor(R()*H),i=Y*W+X;if(occ[i]||RD[i]||!out(i)||OT[i]==="~"||dist[i]>3.5||nearDoor(X+0.5,Y+0.5,2.4)||(g.box&&X>=g.box.x0&&X<g.box.x1&&Y>=g.box.y0&&Y<g.box.y1)||(Y+1<H&&OT[(Y+1)*W+X]==null)||(Y+2<H&&OT[(Y+2)*W+X]==null))continue;occ[i]=1;const r=R(),cx=X+0.5,cy=Y+0.5;
     if(r<0.4){crate(cx,cy,0.7,(R()-0.5)*0.4);if(R()<0.4)crate(cx+0.2,cy-0.15,0.45,(R()-0.5)*0.6);}else if(r<0.75){barrel(cx-0.15,cy,0.3);if(R()<0.6)barrel(cx+0.3,cy+0.2,0.26);}else{sack(cx,cy);sack(cx+0.3,cy+0.15);}}
-  for(let k=0;k<20;k++){const hz=R()<0.5,w=hz?3:2,h=hz?2:3,X=Math.floor(R()*(W-w)),Y=Math.floor(R()*(H-h));if(!free(X,Y,w,h,2,street))continue;take(X,Y,w,h);const r=R();
+  for(let k=0;k<(NOD?0:20);k++){const hz=R()<0.5,w=hz?3:2,h=hz?2:3,X=Math.floor(R()*(W-w)),Y=Math.floor(R()*(H-h));if(!free(X,Y,w,h,2,street))continue;take(X,Y,w,h);const r=R();
     if(r<0.5){// (les vrais étals vivants sont posés par burStreetPlan) : ici, marchandises en attente
       R();g.props.push({t:"crate",x:X+0.5,y:Y+0.6,z:0.7});g.props.push({t:"barrel",x:X+(hz?1.6:1.4),y:Y+0.55,r:0.28});if(R()<0.6)g.props.push({t:"sack",x:X+(hz?2.4:0.6),y:Y+(hz?0.7:1.8)});}
     else{// charrette à bras, vue de 3/4
@@ -5172,8 +5224,11 @@ function burSurround(x,g,s,c,OT,SA){const W=c.w,H=c.h,R=ecRng(ecSeed(c.seed+"|ab
       let edge=false;for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]]){const xx=X+a,yy=Y+b;if(xx<0||yy<0||xx>=W||yy>=H||!yard(OT[yy*W+xx]))edge=true;}if(!edge&&R()<0.85)continue;
       take(X,Y,1,1);const r=R();if(r<0.4){g.props.push({t:"hay",x:X+0.5,y:Y+0.6,sd:k});if(R()<0.4)g.props.push({t:"hay",x:X+0.5,y:Y+0.25,sd:k+1,up:1});}else if(r<0.65){g.props.push({t:"crate",x:X+0.5,y:Y+0.55,z:0.6});if(R()<0.5)g.props.push({t:"crate",x:X+0.5,y:Y+0.2,z:0.5});}else if(r<0.85)g.props.push({t:"barrel",x:X+0.5,y:Y+0.6});else g.props.push({t:"sack",x:X+0.5,y:Y+0.6});n++;}}
   // lanternes sur poteau le long de la rue
-  for(let k=0;k<(ELF?0:W*H/120);k++){const X=Math.floor(R()*W),Y=Math.floor(R()*H),i=Y*W+X;if(occ[i]||!street(OT[i])||dist[i]<1||dist[i]>2.5||nearDoor(X+0.5,Y+0.5,1.6)||(Y+1<H&&OT[(Y+1)*W+X]==null)||(Y+2<H&&OT[(Y+2)*W+X]==null))continue;occ[i]=1;const cx=(X+0.5)*s,cy=(Y+0.5)*s;
+  for(let k=0;k<(ELF||NOD?0:W*H/120);k++){const X=Math.floor(R()*W),Y=Math.floor(R()*H),i=Y*W+X;if(occ[i]||!street(OT[i])||dist[i]<1||dist[i]>2.5||nearDoor(X+0.5,Y+0.5,1.6)||(Y+1<H&&OT[(Y+1)*W+X]==null)||(Y+2<H&&OT[(Y+2)*W+X]==null))continue;occ[i]=1;const cx=(X+0.5)*s,cy=(Y+0.5)*s;
     const gr=x.createRadialGradient(cx,cy,0,cx,cy,s*2.2);gr.addColorStop(0,"rgba(255,200,120,.28)");gr.addColorStop(1,"rgba(255,200,120,0)");x.fillStyle=gr;x.fillRect(cx-s*2.2,cy-s*2.2,s*4.4,s*4.4);g.props.push({t:ELF?"elflamp":"lantern",x:X+0.5,y:Y+0.55});}
+  // ville et cité choisies : réverbères le long des rues tracées (une ville a ses services)
+  if(ENV&&!NOD&&(ENV.taille==="ville"||ENV.taille==="cite")&&!ELF){for(let k=0;k<W*H/6;k++){const X=Math.floor(R()*W),Y=Math.floor(R()*H),i=Y*W+X;if(occ[i]||RD[i]||!out(i)||OT[i]==="~"||OT[i]==="="||nearDoor(X+0.5,Y+0.5,1.6))continue;let adj=false;for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]]){const xx=X+a,yy=Y+b;if(xx>=0&&yy>=0&&xx<W&&yy<H&&RD[yy*W+xx])adj=true;}if(!adj)continue;
+    if(g.props.some(p=>p.t==="lantern"&&Math.hypot(p.x-X-0.5,p.y-Y-0.5)<7))continue;occ[i]=1;const cx=(X+0.5)*s,cy=(Y+0.5)*s,gr=x.createRadialGradient(cx,cy,0,cx,cy,s*2.2);gr.addColorStop(0,"rgba(255,200,120,.22)");gr.addColorStop(1,"rgba(255,200,120,0)");x.fillStyle=gr;x.fillRect(cx-s*2.2,cy-s*2.2,s*4.4,s*4.4);g.props.push({t:"lantern",x:X+0.5,y:Y+0.55});}}
   // cases où les passants peuvent marcher (rues, quais, chemins, herbe libre)
   // pêcheurs assis au bord des quais, la ligne dans l'eau
   g.fishers=[];{const cand=[];for(let Y=0;Y<H;Y++)for(let X=0;X<W;X++){const i=Y*W+X;if(OT[i]!=="="||occ[i]||nearDoor(X+0.5,Y+0.5,2.5)||(g.boats||[]).some(b=>b.v?(X>=b.x-1.6&&X<=b.x+1.6&&Y>=b.y-2.5&&Y<=b.y+b.L):(b.k!=="row"&&X>=b.x-1.5&&X<=b.x+b.L+1.5&&Y>=b.y-3&&Y<=b.y+(b.B||1)+1)))continue;// pêcheur « Paper Mario » : il fait face à l'eau, donc l'eau doit être devant lui (au sud), assez large pour la ligne
@@ -5182,7 +5237,7 @@ function burSurround(x,g,s,c,OT,SA){const W=c.w,H=c.h,R=ecRng(ecSeed(c.seed+"|ab
     const nf=Math.min(cand.length,Math.round(1+D));for(let k=0;k<nf;k++){const j=Math.floor(R()*cand.length),[X,Y,d]=cand.splice(j,1)[0];if(g.fishers.some(f=>Math.hypot(f.x-X,f.y-Y)<3))continue;occ[Y*W+X]=1;// pour repartir : remonter le ponton jusqu'à une rangée qui mène au bord de la carte sans passer sur l'eau
       const dirL=X<W/2?-1:1,okRow=yy=>{for(let xx=X;xx>=0&&xx<W;xx+=dirL){const t=OT[yy*W+xx];if(t!=="="&&t!=="_"&&t!==":"&&t!==";"&&t!==",")return false;}return true;};let uy=Y;while(uy>0&&!okRow(uy)&&OT[(uy-1)*W+X]==="=")uy--;
       g.fishers.push({uy,x:X+0.5+d[0]*0.25,y:Y+0.5+d[1]*0.25,an:Math.atan2(d[1],d[0]),c:EC_COLORS[Math.floor(R()*EC_COLORS.length)],h:["#3a2c22","#6b4a2b","#8a8a8a"][Math.floor(R()*3)],p:R()*6});}}
-  const wk=new Uint8Array(W*H),bx=g.box;for(let i=0;i<W*H;i++){const X=i%W,Y=(i/W)|0,inside=bx&&X>=bx.x0&&X<bx.x1&&Y>=bx.y0&&Y<bx.y1;wk[i]=out(i)&&!occ[i]&&OT[i]!=="~"?(inside?2:1):0;/* 2 = cour du Bureau : aventuriers et personnel seulement */}g.walk=wk;g.OT=OT;g.occ=occ;g.walkD=D;g.walkers=null;}
+  const wk=new Uint8Array(W*H),bx=g.box;for(let i=0;i<W*H;i++){const X=i%W,Y=(i/W)|0,inside=bx&&!ENV&&X>=bx.x0&&X<bx.x1&&Y>=bx.y0&&Y<bx.y1;wk[i]=out(i)&&!occ[i]&&OT[i]!=="~"?(inside||NOD?2:1):0;/* 2 = cour du Bureau : aventuriers et personnel seulement */}g.walk=wk;g.OT=OT;g.occ=occ;g.walkD=D;g.walkers=null;}
 // Pêcheur : assis face à l'eau, canne tendue, ligne et bouchon qui dansent ; de temps en temps une prise qui frétille
 const FISH=new Image();FISH.src="img/fish_waterdeep.webp";const WOLF=new Image();WOLF.src="img/loup.webp";const WOLF_M={cw:460,ch:400,foot:392};const FISH_M={"cw": 192, "ch": 300, "fx": 96.0, "fy": [264.0, 263.6, 266.6, 275.2, 263.6, 264.0, 264.0, 263.6], "n": 8, "frames": 3, "race": ["humain", "halfelin", "elfe", "demi-orc", "humain", "tieffelin", "humain", "halfelin"]};
 // Pêcheur assis au bord du quai (pose « canne » de l'atlas) : bouchon calme, il danse, et de temps en temps une touche (la canne plie)
@@ -5277,7 +5332,7 @@ function statBureau(x,g,s,c){if(TOP90&&g.furn)v34Fix(g);const B=EC_BUR[g.bid],SA
       return (X,Y,t)=>{const dd=D[Y*W+X];if(dd===0)return t;if(g.bid==="triboar"&&inP0(X,Y)&&t===":")return t;/* la cour des caravanes reste en terre battue */if(g.bid==="triboar"){// comme sur les cartes de Triboar : une Long Road en terre devant le comptoir, un chemin autour, des prés partout ailleurs
         if(t==="_")return "_";if(Y>bot&&Y-bot<=3)return ":";if(Y>bot+3)return ",";return dd<=1?":":",";}
         if(DAG){if(t==="_")return "_";if(Y>bot)return Y-bot<=3?":":",";return dd<=3?":":",";}if(Y>bot&&X>=bx0&&X<=bx1){const dy=Y-bot;return dy<=2?(t==="_"?"_":","):dy===3?";":dy===4?" ":",";}if(Y>bot+2&&dd>=1){const dy=Y-bot;if(dy===3)return ";";if(dy===4)return " ";if(dy>=5)return ",";}return dd===1?";":dd<=3?" ":",";};})():null;
-  for(let Y=0;Y<H;Y++)for(let X=0;X<W;X++){let t=tAt(X,Y,g.rows);if(!inP(X,Y)&&BUR_OUT.indexOf(t)<0)t=g.e<0?"%":" ";if(SILV&&BUR_OUT.indexOf(t)>=0)t=SILV(X,Y,t);if(g.e>0&&BUR_OUT.indexOf(t)>=0){let t0=tAt(X,Y,g.r0);if(!inP(X,Y)&&BUR_OUT.indexOf(t0)<0)t0=" ";
+  for(let Y=0;Y<H;Y++)for(let X=0;X<W;X++){let t=tAt(X,Y,g.rows);if(!inP(X,Y)&&BUR_OUT.indexOf(t)<0)t=g.e<0?"%":" ";if(g.rockD&&g.e===0&&Y<(g.rockD[X]||0))t="%";/* paroi de la montagne (quartier nain) */if(SILV&&BUR_OUT.indexOf(t)>=0)t=SILV(X,Y,t);if(g.e>0&&BUR_OUT.indexOf(t)>=0){let t0=tAt(X,Y,g.r0);if(!inP(X,Y)&&BUR_OUT.indexOf(t0)<0)t0=" ";
       if(BUR_OUT.indexOf(t0)<0){if(TOP90){(g._ann=g._ann||new Set()).add(Y*W+X);}else{x.fillStyle=(X+Y*2)%3?"#6a3a2a":"#5e3424";x.fillRect(X*s,Y*s,s+1,s+1);x.fillStyle="rgba(0,0,0,.25)";x.fillRect(X*s,Y*s+s*0.8,s,s*0.2);}}else{ground(X,Y,t0);x.fillStyle=TOP90?"rgba(10,10,20,.12)":"rgba(10,10,20,.45)";x.fillRect(X*s,Y*s,s+1,s+1);}}
     else if(BUR_OUT.indexOf(t)>=0){ground(X,Y,t);OT[Y*W+X]=t;}}
   if(TOP90&&g._ann&&g._ann.size){burAnnexRoofs(x,g,s,W,H);g._ann=null;}
@@ -8463,7 +8518,7 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),p
   else{s=Math.min(cw/c.w,ch/c.h);}
   // Le décor fixe est préparé à une échelle arrondie (le zoom libre du joueur ne le redessine pas à chaque cran), sans dépasser la taille d'un canevas.
   const sq=pl?Math.min(Math.pow(2,Math.round(Math.log2(Math.max(1,s))*3)/3),6000/(Math.max(c.w,c.h)*dpr)):s;
-  const key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h+"|"+(c.url||"")+"|"+Math.round(sq*dpr*10)+"|"+ecSaison()+"|"+(c.bureau||"")+"|"+(+c.etage||0)+"|"+(c.niv?c.niv.min+":"+c.niv.max:"");
+  const key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h+"|"+(c.url||"")+"|"+Math.round(sq*dpr*10)+"|"+ecSaison()+"|"+(c.bureau||"")+"|"+(+c.etage||0)+"|"+(c.niv?c.niv.min+":"+c.niv.max:"")+maisonEnvK(c);
   if(r.key!==key){r.key=key;r.A=EC_GEN[c.type]?{}:c.type==="image"?null:ecAnimInit(c);r.stat=null;r.img=null;if(c.type==="image"&&c.url){const im=new Image();im.crossOrigin="anonymous";im.onload=()=>{r.img=im;};im.src=c.url;}else if(EC_GEN[c.type])r.stat=ecStaticGen(c,sq*dpr);else r.stat=ecStatic(c,sq*dpr);}
   x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle="#000";x.fillRect(0,0,cw,ch);x.save();x.translate(ox,oy);x.beginPath();x.rect(0,0,c.w*s,c.h*s);x.clip();
   if(c.type==="image"){if(r.img)x.drawImage(r.img,0,0,c.w*s,c.h*s);}else if(r.stat){x.drawImage(r.stat,0,0,c.w*s,c.h*s);x.save();ecLumNow=(st&&st.lum)||"";if(EC_GEN[c.type]){ecOpenDoors(x,c,s);EC_GEN[c.type].dyn(x,ecGenGeo(c),s,t,dt,r.A,c,st);}else ecDynamic(x,c,s,t,dt,r.A,st);x.restore();}
@@ -8648,7 +8703,7 @@ function ecCam(E,c){const tv=(ecDoc&&ecDoc.tv)||{cols:40,rows:22},pj=(c.tokens||
 function ecState(){const E=ecP(),c=ecCard(),q=ui.pt;if(!c)return null;
   let ordre=null;if(E.ordre&&E.ordre.mode==="combat"&&q.combat&&q.combat.phase==="combat"){ordre={titre:"Ordre de combat · round "+(q.round||1),liste:ptOrder().filter(x=>!(x.kind!=="pj"&&x.pv<=0)&&!x.cache).map(x=>({n:x.nom,k:x.kind==="pj"?"pj":"en",cur:x.cid===q.cur}))};}
   else if(E.ordre&&E.ordre.mode==="parole"){const L=String(E.ordre.parole||"").split("\n").map(x=>x.trim()).filter(Boolean),i=(E.ordre.idx||0)%Math.max(1,L.length);ordre={titre:"Ordre de parole",liste:L.map((n,j)=>({n,k:"pj",cur:j===i}))};}
-  return {vie:Date.now(),qid:q.id,carte:{id:c.id,nom:c.nom,type:c.type,seed:c.seed,w:c.w,h:c.h,url:c.url||"",gone:c.gone||[],back:c.back||{},vie:c.vie||"",bureau:c.bureau||"",etage:+c.etage||0,niv:c.niv||null,ouv:c.ouv||[],don:c.don||null},cam:ecCam(E,c),tokens:c.tokens||[],fog:{on:E.fog!==false,vu:c.vu||""},lum:E.lum||"jour",meteo:(c.abri||ecIndoor(c.type))?"clair":(E.meteo||"clair"),date:calLabel(calNow()),jour:E.jour||1,grid:!!E.grid,info:E.info||"",ordre,figs:tbFigList(tbQuest(),c),calib:(ecDoc&&ecDoc.calib)||{},ms:Date.now()};}
+  return {vie:Date.now(),qid:q.id,carte:{id:c.id,nom:c.nom,type:c.type,seed:c.seed,w:c.w,h:c.h,url:c.url||"",gone:c.gone||[],back:c.back||{},vie:c.vie||"",bureau:c.bureau||"",etage:+c.etage||0,niv:c.niv||null,ouv:c.ouv||[],don:c.don||null,env:c.env||null},cam:ecCam(E,c),tokens:c.tokens||[],fog:{on:E.fog!==false,vu:c.vu||""},lum:E.lum||"jour",meteo:(c.abri||ecIndoor(c.type))?"clair":(E.meteo||"clair"),date:calLabel(calNow()),jour:E.jour||1,grid:!!E.grid,info:E.info||"",ordre,figs:tbFigList(tbQuest(),c),calib:(ecDoc&&ecDoc.calib)||{},ms:Date.now()};}
 /* ---------- Table virtuelle : l'écran de table, ouvert à distance par les inscrits d'une quête en cours ----------
    Comme à la table : chaque joueur à distance pose UNE figurine virtuelle (pion plein, à l'image de son personnage) et la déplace.
    Elle ne donne aucune vision : c'est le DM qui ajuste l'anneau du personnage dessous, comme sous une figurine posée sur l'écran.
@@ -8771,7 +8826,7 @@ function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc
   h+='<div class="eccards"><strong>Bureaux de la Guilde :</strong> '+Object.keys(EC_BUR).map(b=>'<button class="chip'+(String(E.active||"").split("@")[0]==="bur-"+b?' on':'')+(b===q.bureau?' here':'')+'" data-a="pt-ec-bureau" data-v="'+b+'" aria-pressed="'+(String(E.active||"").split("@")[0]==="bur-"+b)+'">'+esc(((office(b)||{}).nom)||b)+'</button>').join(" ")+'</div>';
   h+='<div class="ecrand"><strong>Rencontre aléatoire :</strong><label for="ec-rt">Lieu<select id="ec-rt">'+Object.keys(EC_GRP).map(gk=>'<optgroup label="'+EC_GRP[gk]+'">'+Object.keys(EC_MAPS).filter(k=>EC_MAPS[k].g===gk&&k!=="image"&&k!=="bureau").map(k=>'<option value="'+k+'"'+(ui.ecRt===k?' selected':'')+'>'+esc(EC_MAPS[k].l)+'</option>').join("")+'</optgroup>').join("")+'</select></label><label for="ec-rl">Heure<select id="ec-rl">'+Object.keys(EC_LUM).map(k=>'<option value="'+k+'"'+(k===(ui.ecRl||E.lum||"jour")?' selected':'')+'>'+EC_LUM[k].l+'</option>').join("")+'</select></label><button class="btn gold sm" data-a="pt-ec-rand">🎲 Générer la rencontre</button></div>';
   h+='<div class="eccards"><strong>Cartes ouvertes :</strong> '+((E.cartes||[]).map(k=>'<button class="chip'+(k.id===E.active?' on':'')+'" data-a="pt-ec-pick" data-id="'+esc(k.id)+'" aria-pressed="'+(k.id===E.active)+'">'+esc(k.nom)+'</button>').join(" ")||'<span class="desc">aucune</span>')+'</div>';
-  h+='<details class="ecnew"'+((E.cartes||[]).length?'':' open')+'><summary>Carte libre (type au choix ou image)</summary><div class="ecrow"><label for="ec-n">Nom<input id="ec-n" maxlength="60" placeholder="Le gué de la Rivière Noire"></label><label for="ec-t">Type<select id="ec-t">'+Object.keys(EC_GRP).map(gk=>'<optgroup label="'+EC_GRP[gk]+'">'+Object.keys(EC_MAPS).filter(k=>EC_MAPS[k].g===gk).map(k=>'<option value="'+k+'">'+esc(EC_MAPS[k].l)+'</option>').join("")+'</optgroup>').join("")+'</select></label><label for="ec-w">Largeur (cases)<input id="ec-w" type="number" min="8" max="120" value="'+((tvv&&tvv.cols)||40)+'"></label><label for="ec-h">Hauteur<input id="ec-h" type="number" min="6" max="120" value="'+((tvv&&tvv.rows)||22)+'"></label><label for="ec-u">URL de l\'image (type Image)<input id="ec-u" maxlength="500" placeholder="https://…"></label><label class="ecck"><input type="checkbox" id="ec-ab"> Intérieur ou souterrain (pas de météo)</label><button class="btn gold sm" data-a="pt-ec-new">Créer</button></div></details>';
+  h+='<details class="ecnew"'+((E.cartes||[]).length?'':' open')+'><summary>Carte libre (type au choix ou image)</summary><div class="ecrow"><label for="ec-n">Nom<input id="ec-n" maxlength="60" placeholder="Le gué de la Rivière Noire"></label><label for="ec-t">Type<select id="ec-t">'+Object.keys(EC_GRP).map(gk=>'<optgroup label="'+EC_GRP[gk]+'">'+Object.keys(EC_MAPS).filter(k=>EC_MAPS[k].g===gk).map(k=>'<option value="'+k+'">'+esc(EC_MAPS[k].l)+'</option>').join("")+'</optgroup>').join("")+'</select></label><label for="ec-w">Largeur (cases)<input id="ec-w" type="number" min="8" max="120" value="'+((tvv&&tvv.cols)||40)+'"></label><label for="ec-h">Hauteur<input id="ec-h" type="number" min="6" max="120" value="'+((tvv&&tvv.rows)||22)+'"></label><label for="ec-u">URL de l\'image (type Image)<input id="ec-u" maxlength="500" placeholder="https://…"></label><label class="ecck"><input type="checkbox" id="ec-ab"> Intérieur ou souterrain (pas de météo)</label><span id="ec-menv" class="ecrow" hidden><label for="ec-mt">Maison : agglomération<select id="ec-mt">'+MAISON_TAILLES.map(t=>'<option value="'+t[0]+'"'+(t[0]==="ville"?' selected':'')+'>'+t[1]+'</option>').join("")+'</select></label><label for="ec-mc">Type de quartier<select id="ec-mc">'+MAISON_CULTS.map(t=>'<option value="'+t[0]+'"'+(t[0]==="standard"?' selected':'')+'>'+t[1]+'</option>').join("")+'</select></label><label class="ecck"><input type="checkbox" id="ec-md" checked> Décor autour (rues, maisons, passants)</label></span><button class="btn gold sm" data-a="pt-ec-new">Créer</button></div></details>';
   h+='<details class="eccal"><summary>Date de la campagne</summary>'+calForm()+'<p class="desc">La date avance à la fin de chaque quête : jours de la mission × '+calMult()+' (temps hors mission). Les saisons suivent le calendrier de Harptos.</p></details>';
   if(!c)return h+'</div>';
   const sel=(c.tokens||[]).find(k=>k.id===ui.ecSel);
@@ -8783,6 +8838,7 @@ function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc
     '<button class="mini" data-a="pt-ec-center" title="Place le cadre télé sur le groupe, une seule fois">📍 Centrer la télé sur le groupe</button><label class="ecck"><input type="checkbox" data-ec="fog"'+(E.fog!==false?' checked':'')+'> Brouillard</label><label class="ecck"><input type="checkbox" data-ec="grid"'+(E.grid?' checked':'')+'> Grille</label></div>';
   {const fl=ecFloors(c);if(fl.length>1||(EC_GEN[c.type]||{}).floors){const cur=+c.etage||0;h+='<div class="eccards ecfloors"><strong>Étages :</strong> '+fl.slice().reverse().map(n=>'<button class="chip'+(n===cur?' on':'')+'" data-a="pt-ec-floor" data-v="'+n+'" aria-pressed="'+(n===cur)+'" title="'+esc(ecFloorName(c,n))+'">'+(n>cur?'▲ ':n<cur?'▼ ':'')+esc(ecFloorShort(n))+'</button>').join(" ")+
     ' <span class="desc">'+esc(ecFloorName(c,cur))+'</span> <button class="mini" data-a="pt-ec-follow" aria-pressed="'+(ui.ecFollow!==false)+'">'+(ui.ecFollow!==false?'☑':'☐')+' Le groupe suit</button>'+(c.type!=="bureau"&&(EC_GEN[c.type]||{}).floors?' <button class="mini" data-a="pt-ec-niv" data-v="haut">+ étage</button><button class="mini" data-a="pt-ec-niv" data-v="bas">+ sous-sol</button>':'')+'</div>';}}
+  if(c.type==="maison"){const ev=maisonEnvDef(c);h+='<div class="eccards ecmenv"><strong>Abords de la maison :</strong> <label for="ec-mt2">Agglomération<select id="ec-mt2" data-ec="mtaille">'+MAISON_TAILLES.map(t=>'<option value="'+t[0]+'"'+(t[0]===ev.taille?' selected':'')+'>'+t[1]+'</option>').join("")+'</select></label> <label for="ec-mc2">Quartier<select id="ec-mc2" data-ec="mcult">'+MAISON_CULTS.map(t=>'<option value="'+t[0]+'"'+(t[0]===ev.cult?' selected':'')+'>'+t[1]+'</option>').join("")+'</select></label> <label class="ecck"><input type="checkbox" data-ec="mdecor"'+(ev.decor?' checked':'')+'> Décor autour</label></div>';}
   if(c.type==="donjon"){const G=ecGenGeo(c);h+='<details class="ecmet"><summary>Surprises du donjon (toi seul) : '+(G.traps||[]).length+' pièges, '+(G.secrets||[]).length+' passages secrets, '+(G.loot||[]).length+' trésors, '+(G.lurk||[]).length+' groupes tapis</summary><ul>'+(G.traps||[]).map(t=>'<li><strong>'+esc(t.n)+'</strong> : '+esc(t.d)+'</li>').join("")+'</ul><p class="desc">Sur ta carte : ! piège, S passage secret, $ trésor, ?N ennemis (N = nombre). Les joueurs ne les voient jamais.</p></details>';}
   {const M=EC_METEO[E.meteo||"clair"];if(M.fx.length||ui.ecMetRoll)h+='<div class="ecmet"><strong>'+M.i+' '+esc(M.l)+'</strong>'+(ui.ecMetRoll?' <span class="desc">(d20 = '+ui.ecMetRoll+')</span>':'')+(M.fx.length?'<ul>'+M.fx.map(f=>'<li>'+esc(f)+'</li>').join("")+'</ul>':'<span class="desc"> : aucun effet en combat.</span>')+(M.vis<999?'<p class="desc">Vision limitée à '+M.vis+' cases ('+(M.vis*5)+' pieds) sur l\'écran.</p>':'')+'</div>';}
   h+='<div class="eccanvas'+(ui.ecBig?' big':'')+'">'+(ui.ecBig?'<div class="ecbigbar">'+[["move","✋ Déplacer · 🚪 portes"],["reveal","☀ Révéler"],["hide","☁ Cacher"]].map(x=>'<button class="chip'+((ui.ecTool||"move")===x[0]?' on':'')+'" data-a="pt-ec-tool" data-v="'+x[0]+'">'+x[1]+'</button>').join("")+'<button class="btn gold sm" data-a="pt-ec-big">Réduire ✕</button></div>':'')+'<canvas id="ec-dm" aria-label="Carte DM : glisse les jetons, clique sur une porte pour l\'ouvrir ou la fermer"></canvas></div>'+(ui.ecBig?'':'<p class="ecbigp"><button class="mini" data-a="pt-ec-big">⛶ Agrandir la carte</button></p>');
@@ -8874,7 +8930,8 @@ function favFor(ref){return faveurs.filter(f=>f.av===ref&&f.statut==="attente");
 async function ecAction(a,id,b,v,q){const E=ecP(),c=ecCard();
   if(a==="pt-ec-new"){const nom=(document.getElementById("ec-n").value||"").trim().slice(0,60)||("Carte "+((E.cartes||[]).length+1)),type=document.getElementById("ec-t").value,w=Math.max(8,Math.min(120,+document.getElementById("ec-w").value||40)),h=Math.max(6,Math.min(120,+document.getElementById("ec-h").value||22)),url=(document.getElementById("ec-u").value||"").trim().slice(0,500);
     if(type==="image"&&!/^https:\/\//.test(url)){ui.ptAlert="Pour une carte Image, indique une URL https://.";return true;}
-    const k={id:ptUid(),nom,type,seed:ptUid(),w,h,url,abri:!!(document.getElementById("ec-ab")||{}).checked,tokens:[],vu:"",cam:{x:0,y:0}};E.cartes=(E.cartes||[]).concat([k]);E.active=k.id;ecPush(true);return true;}
+    const k={id:ptUid(),nom,type,seed:ptUid(),w,h,url,abri:!!(document.getElementById("ec-ab")||{}).checked,tokens:[],vu:"",cam:{x:0,y:0}};
+    if(type==="maison"){const gv=i=>(document.getElementById(i)||{});k.env={taille:gv("ec-mt").value||"ville",cult:gv("ec-mc").value||"standard",decor:gv("ec-md").checked!==false};}E.cartes=(E.cartes||[]).concat([k]);E.active=k.id;ecPush(true);return true;}
   if(a==="pt-ec-pick"){E.active=id;const k=ecCard();if(k){k.vie=ptUid();k.gone=[];}ui.ecSel=null;ecPush(true);return true;}
   if(a==="pt-ec-vie"){if(c){c.vie=ptUid();c.gone=[];}ecPush(true);return true;}
   if(a==="pt-ec-tool"){ui.ecTool=v;render();return false;}
@@ -8941,6 +8998,7 @@ async function ecAction(a,id,b,v,q){const E=ecP(),c=ecCard();
   return false;}
 function ecChange(el){const E=ecP(),c=ecCard(),k=el.getAttribute("data-ec"),sel=c&&(c.tokens||[]).find(t=>t.id===ui.ecSel);
   if(k==="meteo"){E.meteo=el.value;ui.ecMetRoll=null;ptSave();ecPush(true);render();return;}if(k==="saison"){const sa=el.value;monde=Object.assign({},monde||{},{saison:sa});setDoc(doc(db,"prive","monde"),{saison:sa},{merge:true}).catch(e=>console.error(e));if((EC_OK[sa]||[]).indexOf(E.meteo||"clair")<0){E.meteo=ecMeteoRoll(sa).k;ptSave();ecPush(true);}render();return;}
+  if(k==="mtaille"||k==="mcult"||k==="mdecor"){if(c&&c.type==="maison"){c.env=Object.assign(maisonEnvDef(c),c.env||{});if(k==="mdecor")c.env.decor=el.checked;else c.env[k==="mtaille"?"taille":"cult"]=el.value;if(ecFloors(c).indexOf(+c.etage||0)<0)c.etage=0;c.vie=ptUid();c.gone=[];ecReveal(c);ptSave();ecPush(true);render();}return;}
   if(k==="lum")E.lum=el.value;else if(k==="fog")E.fog=el.checked;else if(k==="grid")E.grid=el.checked;else if(k==="follow")E.follow=el.checked;else if(k==="info")E.info=el.value.slice(0,400);
   else if(k==="omode"){E.ordre=Object.assign({mode:"aucun",parole:"",idx:0},E.ordre||{},{mode:el.value});ptSave();ecPush(true);render();return;}
   else if(k==="parole"){E.ordre.parole=el.value.slice(0,400);E.ordre.idx=0;}
@@ -10031,6 +10089,7 @@ document.addEventListener("click",async e=>{
 });
 document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.matches&&d.matches("details.cart"))ui.cartOpen=d.open;if(d&&d.matches&&d.matches("details.shop")){const S=((ui.pt&&ui.pt.boutiques)||[]).find(x=>x.id===d.getAttribute("data-shopid"));if(S)S.ouvert=d.open;}},true);
 document.addEventListener("change",e=>{
+  if(e.target.id==="ec-t"){const m=document.getElementById("ec-menv");if(m)m.hidden=e.target.value!=="maison";return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-ec")){ecChange(e.target);return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-cart")==="rank"){ui.cartRank=e.target.value;ui.cartOpen=true;render();return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-shop")==="lieu"){ui.shopLieu=e.target.value;render();return;}
