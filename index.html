@@ -3414,14 +3414,14 @@ let ecDoc=null,ecBC=null,ecPushT=null,ecRenderers={},ecRaf=0;
 try{ecBC=new BroadcastChannel("rdv-ecran");ecBC.onmessage=e=>{if(e.data&&e.data.vitrine){vitrine=e.data.vitrine;vitUi();return;}if(ui.office==="ecran"&&e.data){ecDoc=Object.assign({},ecDoc||{},e.data);ecTvUpdate();}};}catch(e){}
 /* ---------- Générateurs de cartes (par type) ---------- */
 // g = « ext » (extérieur, météo), « int » (intérieur) ou « abri » (sous terre) : pas de météo à l'intérieur ni à l'abri.
-const EC_MAPS={route:{l:"Route",g:"ext"},foret:{l:"Forêt",g:"ext"},collines:{l:"Collines",g:"ext"},ville:{l:"Ville",g:"ext"},port:{l:"Côte et port",g:"ext"},marais:{l:"Marais",g:"ext"},
+const EC_MAPS={route:{l:"Route",g:"ext"},foret:{l:"Forêt",g:"ext"},collines:{l:"Collines",g:"ext"},ville:{l:"Ville",g:"ext"},toits:{l:"Toits de la ville",g:"ext"},port:{l:"Côte et port",g:"ext"},marais:{l:"Marais",g:"ext"},
   taverne:{l:"Taverne",g:"int"},temple:{l:"Temple",g:"int"},maison:{l:"Maison",g:"int"},entrepot:{l:"Entrepôt",g:"int"},manoir:{l:"Manoir",g:"int"},donjon:{l:"Donjon",g:"int"},
   grotte:{l:"Grotte",g:"abri"},mine:{l:"Mine",g:"abri"},egouts:{l:"Égouts",g:"abri"},image:{l:"Image (URL)",g:"ext"}};
 const EC_GRP={ext:"Extérieur",int:"Intérieur",abri:"Abri"};
 function ecMapLbl(t){const m=EC_MAPS[t==="chemin"?"route":t];return m?EC_GRP[m.g]+" – "+m.l:t;}
 function ecIndoor(t){const m=EC_MAPS[t==="chemin"?"route":t];return !!m&&m.g!=="ext";}
 const ecGenCache={};
-function ecGenGeo(c){const e=+c.etage||0,nv=c.niv?(c.niv.min+":"+c.niv.max):"",key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h+"|"+(c.bureau||"")+"|"+e+"|"+nv+maisonEnvK(c);if(!ecGenCache[key]){const G=EC_GEN[c.type];ecGenCache[key]=ecAutoLights(c,G.geo(c,ecRng(ecSeed(c.seed+(e?"|e"+e:"")))));}return ecGenCache[key];}
+function ecGenGeo(c){const e=+c.etage||0,nv=c.niv?(c.niv.min+":"+c.niv.max):"",key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h+"|"+(c.bureau||"")+"|"+e+"|"+nv+maisonEnvK(c)+(c.opt?"|"+c.opt:"");if(!ecGenCache[key]){const G=EC_GEN[c.type];ecGenCache[key]=ecAutoLights(c,G.geo(c,ecRng(ecSeed(c.seed+(e?"|e"+e:"")))));}return ecGenCache[key];}
 // Éclairage des intérieurs : chaque chandelle et chaque petite flamme éclaire un peu ; puis on pose des appliques murales
 // (torche ou lampe fixée au mur) là où il fait encore noir, jusqu'à la part de la pièce qu'un lieu habité éclaire d'ordinaire.
 // Les lieux sombres par nature (donjon, grotte, mine, égouts, cave) gardent leur obscurité, et les appliques s'éteignent quand le DM choisit « Ténèbres »
@@ -5277,6 +5277,92 @@ const EC_GEN={
   grotte:{geo:geoGrotte34,stat:statGrotte34,dyn:dynGrotte34,glow:glowGrotte},mine:{geo:geoMine,stat:statMine,dyn:dynMine},egouts:{geo:geoEgouts,stat:statEgouts,dyn:dynEgouts},
   ville:{geo:geoVille34,stat:statVille34,dyn:dynVille34},port:{geo:geoPort34,stat:statBureau,dyn:dynPort34},marais:{geo:geoMarais,stat:statMarais,dyn:dynMarais}};
 
+/* ---------- Toits de la ville : quêtes qui se passent sur les toits ----------
+   La ville vue de dessus, mais l'action est en haut : cheminées à enseigne (énigmes), boulangerie de départ (trappe ouverte, traces
+   de farine), cordes à linge entre deux maisons, charrette de foin dans la ruelle, nid de pigeons sur la plus haute cheminée.
+   Options dans la ligne de carte du scénario : « toits/depart=boulangerie,farine,beurre,oeuf,sucre,poisson,croissant,nid ».
+   Chaque mot (sauf depart= et nid) est une cheminée à enseigne ; la dernière est la plus haute, au plus loin du départ. */
+function toitsOpts(c){const r={emb:[],nid:false,depart:""};String(c.opt||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").split(/[,;]/).map(x=>x.trim()).filter(Boolean).forEach(k=>{if(k==="nid")r.nid=true;else if(k.indexOf("depart=")===0)r.depart=k.slice(7);else r.emb.push(k);});return r;}
+function geoToits(c,R){const g=geoVille34(Object.assign({},c,{nom:String(c.nom||"")+" toits"}),R),O=toitsOpts(c),W=g.W,H=g.H,T=g.T;g.toits=1;
+  const HS=g.houses.filter(q=>q.w>=2&&q.h>=2),cen=q=>[q.X+q.w/2,q.Y+q.h/2],dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);let used=new Set();
+  // la boulangerie de départ : une boutique sur rue, plutôt en bas à gauche
+  if(O.depart){const fr=g.houses.filter(q=>q.front&&q.w>=3&&q.h>=3);let q=fr.find(h=>h.shop==="boulangerie")||fr.slice().sort((a,b)=>(a.X+(H-a.Y)*0.6)-(b.X+(H-b.Y)*0.6))[0]||HS[0];
+    if(q){q.shop="boulangerie";q.sign="#c08a2a";q.awning=q.awning||"#a83a32";q.ch=null;q.burnt=false;q.miette=1;used.add(q);const nb0=Math.max(1,Math.round(q.w/1.15)),dx=q.door!=null?q.X+(q.door+0.5)*q.w/nb0:q.X+q.w/2;
+      g.depart={q,x:q.X+q.w*0.3,y:q.Y+q.h*0.4,sx:dx,sy:q.Y+q.h+0.15,k:O.depart};}}
+  // cheminées à enseigne : la dernière (le but) au plus loin du départ, les autres éparpillées pour que l'ordre ne se devine pas
+  const D=g.depart?[g.depart.x,g.depart.y]:[0,H];g.chim=[];
+  if(O.emb.length){const far=g.depart?HS.filter(q=>!used.has(q)).sort((a,b)=>dist(cen(b),D)-dist(cen(a),D)):HS.filter(q=>!used.has(q)&&q.X>2&&q.X+q.w<W-4&&q.Y>2&&q.Y+q.h<H-2).sort((a,b)=>dist(cen(a),[W/2,H/2])-dist(cen(b),[W/2,H/2])).concat(HS);const last=far.find(q=>q.w>=3&&q.h>=3)||far[0];
+    const pts=[];if(last){used.add(last);pts.push(last);}
+    const pool=HS.filter(q=>!used.has(q)).sort(()=>R()-0.5),need=O.emb.length-1;let md=Math.max(4,Math.min(W,H)/3.2);
+    while(pts.length-1<need&&md>=1.5){for(const q of pool){if(pts.length-1>=need)break;if(used.has(q))continue;const p=cen(q);if(dist(p,D)<md*0.8)continue;if(pts.some(o=>dist(cen(o),p)<md))continue;used.add(q);pts.push(q);}md*=0.8;}
+    const others=pts.slice(1);O.emb.forEach((e,i)=>{const isLast=i===O.emb.length-1,q=isLast?pts[0]:others[i];if(!q)return;q.ch=null;const big=isLast&&O.emb.length>1||O.emb.length===1;
+      g.chim.push({x:q.X+q.w*(0.35+R()*0.3),y:q.Y+q.h*(0.3+R()*0.25),emb:e,big,q,sd:Math.floor(R()*999)});});}
+  const goal=g.chim.find(m=>m.big)||g.chim[g.chim.length-1];if(O.nid&&goal)g.nid={x:goal.x,y:goal.y};
+  // cordes à linge entre deux maisons voisines (de part et d'autre d'une ruelle)
+  g.lines=[];const L=g.houses;for(let i=0;i<L.length&&g.lines.length<4;i++)for(let j=0;j<L.length&&g.lines.length<4;j++){if(i===j)continue;const a=L[i],b=L[j],gap=b.X-(a.X+a.w),y0=Math.max(a.Y,b.Y),y1=Math.min(a.Y+a.h,b.Y+b.h);
+    if(gap>=1&&gap<=3&&y1-y0>=1.5&&R()<0.35&&!g.lines.some(l=>Math.abs(l.y-(y0+y1)/2)<3&&Math.abs(l.x0-(a.X+a.w))<4)){g.lines.push({x0:a.X+a.w-0.3,x1:b.X+0.3,y:(y0+y1)/2,sd:Math.floor(R()*99)});}}
+  // charrette de foin dans une rue, contre une façade
+  g.hay=null;for(let k=0;k<600&&!g.hay;k++){const X=Math.floor(R()*(W-2)),Y=Math.floor(R()*H);if(!g.walk[Y*W+X]||!g.walk[Y*W+X+1])continue;if(!(Y>0&&g.occ[(Y-1)*W+X]===1))continue;if(g.depart&&dist([X,Y],D)<3)continue;g.hay={x:X+1,y:Y+0.55};g.walk[Y*W+X]=0;g.walk[Y*W+X+1]=0;}
+  return g;}
+function statToits(x,g,s,c){statVille34(x,g,s,c);}
+// enseigne de métal : un petit dessin reconnaissable (épi, beurre, œuf, sucre, poisson, croissant…)
+function toitsEmb(x,k,r){x.save();const ink="#2a1e14";x.lineWidth=Math.max(1,r*0.09);
+  if(/farine|epi|ble/.test(k)){x.strokeStyle="#7a5a20";x.beginPath();x.moveTo(0,r*0.8);x.lineTo(0,-r*0.6);x.stroke();for(let i=0;i<5;i++){const y=-r*0.55+i*r*0.25;[-1,1].forEach(sg=>{x.fillStyle="#e0b448";x.beginPath();x.ellipse(sg*r*0.2,y,r*0.13,r*0.24,sg*0.6,0,6.283);x.fill();x.strokeStyle="#8a6418";x.lineWidth=Math.max(1,r*0.04);x.stroke();});}}
+  else if(/beurre/.test(k)){x.fillStyle="#f4d860";x.strokeStyle="#9a7a18";x.beginPath();x.moveTo(-r*0.7,-r*0.1);x.lineTo(-r*0.2,-r*0.45);x.lineTo(r*0.7,-r*0.45);x.lineTo(r*0.7,r*0.35);x.lineTo(-r*0.7,r*0.35);x.closePath();x.fill();x.stroke();x.fillStyle="#fff1a8";x.beginPath();x.moveTo(-r*0.7,-r*0.1);x.lineTo(-r*0.2,-r*0.45);x.lineTo(r*0.7,-r*0.45);x.lineTo(r*0.25,-r*0.1);x.closePath();x.fill();x.stroke();}
+  else if(/oeuf|œuf/.test(k)){x.fillStyle="#fbf6ea";x.strokeStyle="#8a7a5a";x.beginPath();x.ellipse(0,r*0.05,r*0.48,r*0.66,0,0,6.283);x.fill();x.stroke();x.fillStyle="rgba(255,255,255,.9)";x.beginPath();x.ellipse(-r*0.16,-r*0.22,r*0.1,r*0.18,-0.4,0,6.283);x.fill();}
+  else if(/sucre/.test(k)){[[-0.38,0.12],[0.3,0.12],[-0.04,-0.4]].forEach(([u,v])=>{x.fillStyle="#ffffff";x.strokeStyle="#8a8a9a";x.fillRect((u-0.26)*r,(v-0.26)*r,r*0.52,r*0.52);x.strokeRect((u-0.26)*r,(v-0.26)*r,r*0.52,r*0.52);x.fillStyle="#dfe4ee";x.fillRect((u-0.26)*r,(v+0.1)*r,r*0.52,r*0.16);});}
+  else if(/poisson/.test(k)){x.fillStyle="#7ab0c8";x.strokeStyle="#2a5a72";x.beginPath();x.ellipse(-r*0.1,0,r*0.55,r*0.3,0,0,6.283);x.fill();x.stroke();x.beginPath();x.moveTo(r*0.4,0);x.lineTo(r*0.8,-r*0.32);x.lineTo(r*0.8,r*0.32);x.closePath();x.fill();x.stroke();x.fillStyle=ink;x.beginPath();x.arc(-r*0.42,-r*0.06,r*0.07,0,6.283);x.fill();}
+  else if(/croissant/.test(k)){x.fillStyle="#e0a040";x.strokeStyle="#8a5214";x.beginPath();x.arc(0,r*0.2,r*0.7,Math.PI*1.08,Math.PI*1.92);x.arc(0,r*0.55,r*0.42,Math.PI*1.85,Math.PI*1.15,true);x.closePath();x.fill();x.stroke();x.strokeStyle="rgba(120,60,10,.7)";for(const u of [-0.32,0,0.32]){x.beginPath();x.moveTo(u*r,-r*0.45+Math.abs(u)*r*0.5);x.lineTo(u*r*0.8,r*0.05+Math.abs(u)*r*0.3);x.stroke();}}
+  else if(/pain|baguette|boulang/.test(k)){x.fillStyle="#d89a48";x.strokeStyle="#7a4a14";x.beginPath();x.ellipse(0,0,r*0.72,r*0.4,-0.35,0,6.283);x.fill();x.stroke();x.strokeStyle="#f4d8a0";for(const u of [-0.35,0,0.35]){x.beginPath();x.moveTo((u-0.12)*r,(-0.12-u*0.3)*r);x.lineTo((u+0.12)*r,(0.12-u*0.3)*r);x.stroke();}}
+  else{x.fillStyle=ink;x.font="bold "+Math.round(r*1.1)+"px Georgia,serif";x.textAlign="center";x.textBaseline="middle";x.fillText(k.charAt(0).toUpperCase(),0,r*0.05);}
+  x.restore();}
+// pigeon vu de dessus (gris, cou vert irisé) ; la reine est énorme et porte une couronne de brindilles
+function toitsPigeon(x,X,Y,s,a,TT,ph,sc,reine){x.save();x.translate(X*s,Y*s);x.rotate(a);const k=s*0.4*(sc||1),bob=Math.sin(TT*5+ph)>0.6?k*0.12:0;
+  x.fillStyle="rgba(0,0,0,.25)";x.beginPath();x.ellipse(k*0.1,k*0.15,k*0.75,k*0.48,0,0,6.283);x.fill();
+  x.fillStyle="#6e7078";x.beginPath();x.moveTo(-k*0.95,-k*0.22);x.lineTo(-k*1.25,0);x.lineTo(-k*0.95,k*0.22);x.closePath();x.fill();
+  x.fillStyle="#9a9ca6";x.beginPath();x.ellipse(-k*0.1,0,k*0.72,k*0.45,0,0,6.283);x.fill();x.fillStyle="#7c7e88";x.beginPath();x.ellipse(-k*0.2,-k*0.22,k*0.5,k*0.18,0.1,0,6.283);x.ellipse(-k*0.2,k*0.22,k*0.5,k*0.18,-0.1,0,6.283);x.fill();
+  x.strokeStyle="#3a3a44";x.lineWidth=Math.max(1,k*0.08);x.beginPath();x.moveTo(-k*0.55,-k*0.34);x.lineTo(-k*0.1,-k*0.36);x.moveTo(-k*0.55,k*0.34);x.lineTo(-k*0.1,k*0.36);x.stroke();
+  x.fillStyle="#4a7a64";x.beginPath();x.arc(k*0.5+bob,0,k*0.3,0,6.283);x.fill();x.fillStyle="#8a8c98";x.beginPath();x.arc(k*0.62+bob,0,k*0.22,0,6.283);x.fill();x.fillStyle="#e8a040";x.beginPath();x.moveTo(k*0.82+bob,-k*0.06);x.lineTo(k*1.0+bob,0);x.lineTo(k*0.82+bob,k*0.06);x.fill();
+  x.fillStyle="#e85a20";x.beginPath();x.arc(k*0.66+bob,-k*0.12,k*0.045,0,6.283);x.arc(k*0.66+bob,k*0.12,k*0.045,0,6.283);x.fill();
+  if(reine){x.strokeStyle="#6a4a22";x.lineWidth=Math.max(1,k*0.07);for(let i=0;i<7;i++){const an=i/7*6.283;x.beginPath();x.moveTo(k*0.62+bob+Math.cos(an)*k*0.14,Math.sin(an)*k*0.14);x.lineTo(k*0.62+bob+Math.cos(an)*k*0.32,Math.sin(an)*k*0.32);x.stroke();}x.fillStyle="#e8c040";x.beginPath();x.arc(k*0.62+bob,0,k*0.07,0,6.283);x.fill();}
+  x.restore();}
+function dynToits(x,g,s,t,dt,A,c){dynVille34(x,g,s,t,dt,A,c);const TT=Date.now()/1000,lw=Math.max(1,s*0.03);
+  V34LATE.push(((T0,A0)=>()=>{x.save();x.setTransform(T0);x.globalAlpha=A0;
+    // boulangerie : enseigne ronde au-dessus de la porte, trappe ouverte sur le toit, traces de pattes enfarinées
+    const d=g.depart;if(d){const sx=d.sx*s,sy=d.sy*s,r=s*0.55;x.strokeStyle="#2a1e14";x.lineWidth=Math.max(1.5,s*0.06);x.beginPath();x.moveTo(sx,sy-r*1.1);x.lineTo(sx,sy-r);x.stroke();
+      x.fillStyle="rgba(0,0,0,.3)";x.beginPath();x.arc(sx+s*0.08,sy+s*0.1,r,0,6.283);x.fill();x.fillStyle="#7a4e26";x.beginPath();x.arc(sx,sy,r,0,6.283);x.fill();x.strokeStyle="#c9a24a";x.lineWidth=Math.max(1.5,s*0.07);x.stroke();
+      x.save();x.translate(sx,sy);toitsEmb(x,d.k==="boulangerie"?"croissant":d.k,r*0.78);x.restore();
+      const hx=d.x*s,hy=d.y*s,hw=s*0.8;x.fillStyle="#140d08";x.fillRect(hx-hw/2,hy-hw/2,hw,hw);x.fillStyle="#3a2414";x.fillRect(hx-hw/2+s*0.05,hy-hw/2+s*0.05,hw-s*0.1,hw*0.35);
+      x.fillStyle="#8a5a30";x.fillRect(hx-hw/2,hy-hw/2-hw*0.95,hw,hw*0.9);x.strokeStyle="#4a2c14";x.lineWidth=lw;x.strokeRect(hx-hw/2,hy-hw/2-hw*0.95,hw,hw*0.9);for(let i=1;i<3;i++){x.beginPath();x.moveTo(hx-hw/2+i*hw/3,hy-hw/2-hw*0.95);x.lineTo(hx-hw/2+i*hw/3,hy-hw/2-hw*0.05);x.stroke();}
+      x.fillStyle="#b8b8b8";x.fillRect(hx-hw*0.08,hy-hw/2-hw*0.2,hw*0.16,hw*0.1);
+      const goal=(g.chim.find(m=>m.big)||g.chim[0]);const ax=goal?Math.atan2(goal.y-d.y,goal.x-d.x):-0.5;
+      for(let i=0;i<7;i++){const u=0.9+i*0.55,px=d.x+Math.cos(ax+Math.sin(i*1.7)*0.35)*u,py=d.y+Math.sin(ax+Math.sin(i*1.7)*0.35)*u,al=Math.max(0,0.95-i*0.12),side=i%2?0.12:-0.12;
+        x.fillStyle="rgba(250,248,240,"+al+")";const qx=(px-Math.sin(ax)*side)*s,qy=(py+Math.cos(ax)*side)*s;x.beginPath();x.arc(qx,qy,s*0.1,0,6.283);x.fill();for(let j=0;j<4;j++){const aa=ax+(j-1.5)*0.45;x.beginPath();x.arc(qx+Math.cos(aa)*s*0.15,qy+Math.sin(aa)*s*0.15,s*0.045,0,6.283);x.fill();}}}
+    // cordes à linge : draps qui bougent au vent
+    g.lines.forEach(l=>{const sag=0.15;x.strokeStyle="#d8ccb0";x.lineWidth=Math.max(1,s*0.035);x.beginPath();x.moveTo(l.x0*s,l.y*s);x.quadraticCurveTo((l.x0+l.x1)/2*s,(l.y+sag*2)*s,l.x1*s,l.y*s);x.stroke();
+      const n=Math.max(1,Math.floor((l.x1-l.x0)/0.75));for(let i=0;i<n;i++){const u=(i+0.5)/n,X=l.x0+(l.x1-l.x0)*u,Y=l.y+sag*2*2*u*(1-u),sw=Math.sin(TT*2.2+i*1.3+l.sd)*0.12,w=(l.x1-l.x0)/n*0.8;
+        x.fillStyle="rgba(0,0,0,.25)";x.fillRect((X-w/2+0.08)*s,(Y+0.1)*s,w*s,(0.42+sw)*s);x.fillStyle=["#f2efe6","#e8d8c0","#cfe0ea","#f0d8d8"][(i+l.sd)%4];x.fillRect((X-w/2)*s,Y*s,w*s,(0.4+sw)*s);x.fillStyle="#8a7a60";x.fillRect((X-w/2)*s,Y*s,s*0.05,s*0.06);x.fillRect((X+w/2-0.05)*s,Y*s,s*0.05,s*0.06);}});
+    // charrette de foin
+    if(g.hay){const h=g.hay,X=h.x*s,Y=h.y*s;x.fillStyle="rgba(0,0,0,.3)";x.fillRect(X-s*0.95,Y-s*0.35,s*1.95,s*0.8);x.fillStyle="#6a4426";x.fillRect(X-s*1.0,Y-s*0.42,s*1.9,s*0.78);x.fillStyle="#2a1a10";x.fillRect(X-s*0.6,Y-s*0.52,s*0.35,s*0.12);x.fillRect(X-s*0.6,Y+s*0.34,s*0.35,s*0.12);x.fillRect(X+s*0.35,Y-s*0.52,s*0.35,s*0.12);x.fillRect(X+s*0.35,Y+s*0.34,s*0.35,s*0.12);
+      x.fillStyle="#d8b850";x.beginPath();x.ellipse(X,Y-s*0.04,s*0.9,s*0.38,0,0,6.283);x.fill();x.strokeStyle="#a88a2a";x.lineWidth=lw;for(let i=0;i<14;i++){const a=i*0.9,r=(i%4)*0.18;x.beginPath();x.moveTo(X+Math.cos(a)*r*s,Y+Math.sin(a)*r*0.4*s);x.lineTo(X+Math.cos(a)*(r+0.3)*s,Y+Math.sin(a)*(r+0.3)*0.4*s);x.stroke();}
+      x.fillStyle="#6a4426";x.fillRect(X+s*0.9,Y-s*0.05,s*0.6,s*0.07);}
+    // cheminées à enseigne (fumée, plaque de métal), la plus haute est plus grosse
+    g.chim.forEach((m,i)=>{const z=m.big?1.7:1.15,X=m.x*s,Y=m.y*s,w=z*s,sh=(m.big?0.5:0.3)*s;x.fillStyle="rgba(0,0,0,.35)";x.fillRect(X-w/2+sh,Y-w/2+sh,w,w);
+      x.fillStyle="#7a6a5a";x.fillRect(X-w/2,Y-w/2,w,w);x.fillStyle="#9a8a78";x.fillRect(X-w/2,Y-w/2,w,w*0.18);x.strokeStyle="rgba(30,20,14,.6)";x.lineWidth=lw;for(let r=1;r<4;r++){x.beginPath();x.moveTo(X-w/2,Y-w/2+r*w/4);x.lineTo(X+w/2,Y-w/2+r*w/4);x.stroke();}x.strokeRect(X-w/2,Y-w/2,w,w);
+      x.fillStyle="#1a120c";x.fillRect(X-w*0.28,Y-w*0.28,w*0.56,w*0.56);
+      if(!(g.nid&&m.big))for(let k=0;k<4;k++){const u=((TT*0.25+k/4+i*0.21)%1);x.fillStyle="rgba(215,215,215,"+(0.4*(1-u))+")";x.beginPath();x.arc(X+u*1.1*s,Y-u*1.3*s,(0.18+u*0.5)*s,0,6.283);x.fill();}
+      const px=X+w/2+s*0.85,py=Y+w*0.1,pr=s*0.75;x.strokeStyle="#2a2a2e";x.lineWidth=Math.max(1.5,s*0.06);x.beginPath();x.moveTo(X+w/2,py-pr*0.9);x.lineTo(px,py-pr*0.9);x.stroke();
+      x.fillStyle="rgba(0,0,0,.3)";x.fillRect(px-pr+s*0.07,py-pr+s*0.09,pr*2,pr*2);x.fillStyle="#3a3c42";x.fillRect(px-pr,py-pr,pr*2,pr*2);x.fillStyle="#d8c8a0";x.fillRect(px-pr*0.82,py-pr*0.82,pr*1.64,pr*1.64);x.strokeStyle="#b08a3a";x.lineWidth=Math.max(1,s*0.04);x.strokeRect(px-pr*0.82,py-pr*0.82,pr*1.64,pr*1.64);
+      x.save();x.translate(px,py);toitsEmb(x,m.emb,pr*0.72);x.restore();});
+    // nid de pigeons et la Reine, petits pigeons qui roucoulent autour
+    if(g.nid){const n=g.nid,X=n.x*s,Y=n.y*s,r=s*0.8;x.fillStyle="#5a3e22";x.beginPath();x.arc(X,Y,r,0,6.283);x.fill();x.strokeStyle="#8a6436";x.lineWidth=Math.max(1,s*0.05);for(let i=0;i<16;i++){const a=i*0.4;x.beginPath();x.moveTo(X+Math.cos(a)*r*0.55,Y+Math.sin(a)*r*0.55);x.lineTo(X+Math.cos(a+0.9)*r,Y+Math.sin(a+0.9)*r);x.stroke();}
+      x.fillStyle="#3a2814";x.beginPath();x.arc(X,Y,r*0.5,0,6.283);x.fill();[[-0.24,-0.12],[0.22,-0.15],[0,0.22]].forEach(([u,v])=>{x.fillStyle="#f6f0e2";x.beginPath();x.ellipse(X+u*s,Y+v*s,s*0.14,s*0.18,0.3,0,6.283);x.fill();});
+      toitsPigeon(x,n.x-0.3,n.y+1.45,s,-Math.PI/2+Math.sin(TT*0.8)*0.4,TT,0,2.4,true);
+      for(let i=0;i<7;i++){const a=i/7*6.283+Math.sin(TT*0.2+i)*0.15,rr=2.4+(i%3)*0.5,px=n.x+Math.cos(a)*rr,py=n.y+Math.sin(a)*rr;toitsPigeon(x,px,py,s,a+Math.PI+Math.sin(TT*0.9+i*2)*0.6,TT,i*1.3,1);}}
+    // quelques pigeons ailleurs sur les toits
+    const R=ecRng(ecSeed(c.seed+"|pig"));for(let i=0;i<6;i++){const q=g.houses[Math.floor(R()*g.houses.length)];if(!q)continue;toitsPigeon(x,q.X+0.5+R()*(q.w-1),q.Y+0.4+R()*(q.h-0.8),s,R()*6.283+Math.sin(TT*0.7+i)*0.5,TT,i,0.9);}
+    x.restore();})(x.getTransform(),x.globalAlpha));}
+EC_GEN.toits={geo:geoToits,stat:statToits,dyn:dynToits};
 /* ---------- Types de cartes supplémentaires : navire, abordage, serre, campement, cimetière, ruines ---------- */
 function ecTreeOne(x,tr,s,TT,wind,TP){const col=TP[tr.c%TP.length],wf=wind?3.2:1,sw=(Math.sin(TT*0.9*wf+tr.ph)*0.05*wf+(wind?0.06:0))*tr.r,X=(tr.x+sw)*s,Y=tr.y*s,r=tr.r*s;
   if(col.bare){x.strokeStyle="#4a3a2c";x.lineWidth=Math.max(1,s*0.06);for(let k=0;k<6;k++){const a=tr.ph+k*1.05;x.beginPath();x.moveTo(X,Y);x.lineTo(X+Math.cos(a)*r,Y+Math.sin(a)*r);x.stroke();}x.fillStyle="#5a4838";x.beginPath();x.arc(X,Y,r*0.18,0,6.283);x.fill();if(col.snow){x.fillStyle="rgba(240,245,250,.85)";x.beginPath();x.arc(X-r*0.1,Y-r*0.12,r*0.22,0,6.283);x.fill();}return;}
@@ -9955,7 +10041,7 @@ function ecState(){const E=ecP(),c=ecCard(),q=ui.pt;if(!c)return null;
   let ordre=null;if(E.ordre&&E.ordre.mode==="combat"&&q.combat&&q.combat.phase==="combat"){ordre={titre:"Ordre de combat · round "+(q.round||1),liste:ptOrder().filter(x=>!(x.kind!=="pj"&&x.pv<=0)&&!x.cache).map(x=>({n:x.nom,k:x.kind==="pj"?"pj":"en",cur:x.cid===q.cur}))};}
   else if(E.ordre&&E.ordre.mode==="parole"&&ptParActive()){ordre={titre:"Ordre de parole",liste:ptParNames().map(o=>({n:o.n,k:"pj",cur:o.cur}))};}
   else if(E.ordre&&E.ordre.mode==="parole"){const L=String(E.ordre.parole||"").split("\n").map(x=>x.trim()).filter(Boolean),i=(E.ordre.idx||0)%Math.max(1,L.length);ordre={titre:"Ordre de parole",liste:L.map((n,j)=>({n,k:"pj",cur:j===i}))};}
-  return {vie:Date.now(),qid:q.id,carte:{id:c.id,nom:c.nom,type:c.type,seed:c.seed,w:c.w,h:c.h,url:c.url||"",gone:c.gone||[],back:c.back||{},vie:c.vie||"",bureau:c.bureau||"",etage:+c.etage||0,niv:c.niv||null,ouv:c.ouv||[],don:c.don||null,env:c.env||null,kraken:!!c.kraken,off:c.off||[]},cam:ecCam(E,c),tokens:c.tokens||[],fog:{on:E.fog!==false,vu:c.vu||""},lum:E.lum||"jour",meteo:(c.abri||ecIndoor(c.type))?"clair":(E.meteo||"clair"),date:calLabel(calNow()),jour:E.jour||1,grid:ecGridOn(E),info:E.info||"",ordre,figs:tbFigList(tbQuest(),c),calib:(ecDoc&&ecDoc.calib)||{},ms:Date.now()};}
+  return {vie:Date.now(),qid:q.id,carte:{id:c.id,nom:c.nom,type:c.type,seed:c.seed,w:c.w,h:c.h,url:c.url||"",gone:c.gone||[],back:c.back||{},vie:c.vie||"",bureau:c.bureau||"",etage:+c.etage||0,niv:c.niv||null,ouv:c.ouv||[],don:c.don||null,env:c.env||null,opt:c.opt||"",kraken:!!c.kraken,off:c.off||[]},cam:ecCam(E,c),tokens:c.tokens||[],fog:{on:E.fog!==false,vu:c.vu||""},lum:E.lum||"jour",meteo:(c.abri||ecIndoor(c.type))?"clair":(E.meteo||"clair"),date:calLabel(calNow()),jour:E.jour||1,grid:ecGridOn(E),info:E.info||"",ordre,figs:tbFigList(tbQuest(),c),calib:(ecDoc&&ecDoc.calib)||{},ms:Date.now()};}
 /* ---------- Table virtuelle : l'écran de table, ouvert à distance par les inscrits d'une quête en cours ----------
    Comme à la table : chaque joueur à distance pose UNE figurine virtuelle (pion plein, à l'image de son personnage) et la déplace.
    Elle ne donne aucune vision : c'est le DM qui ajuste l'anneau du personnage dessous, comme sous une figurine posée sur l'écran.
@@ -10225,7 +10311,7 @@ async function ecAction(a,id,b,v,q){const E=ecP(),c=ecCard();
   if(a==="pt-ec-scene"){const m=scMaps((id&&questById(id))||q)[+v];if(!m)return false;
     if(m.type==="bureau"){ecOpenBureau(E,"waterdeep",0);E.lum="jour";E.meteo="clair";ui.ecSel=null;ecPush(true);return true;}E.cartes=E.cartes||[];let k=E.cartes.find(x=>x.id===m.id);const tv=(ecDoc&&ecDoc.tv)||{cols:40,rows:22};
     const big=!ecIndoor(m.type)||["donjon","grotte","mine","egouts","chateau"].indexOf(m.type)>=0;if(!k){k={id:m.id,nom:m.nom,type:m.type,seed:m.seed,w:m.w||Math.min(120,(tv.cols||40)*(big?2:1)),h:m.h||Math.min(120,(tv.rows||22)*(big?2:1)),url:m.url,tokens:[],vu:"",cam:{x:0,y:0},scene:true};k.cam={x:Math.max(0,Math.round((k.w-(tv.cols||40))/2)),y:Math.max(0,Math.round((k.h-(tv.rows||22))/2))};E.cartes.push(k);}
-    Object.assign(k,{nom:m.nom,type:m.url?"image":m.type,url:m.url||"",seed:m.seed,vie:ptUid(),gone:[]});if(m.env)k.env=m.env;E.active=k.id;E.lum=m.lum;E.meteo=ecIndoor(m.type)?"clair":ecSeasonize(m.meteo,ecSaison());ui.ecMetRoll=null;ui.ecSel=null;ecReveal(k);ecPush(true);return true;}
+    Object.assign(k,{nom:m.nom,type:m.url?"image":m.type,url:m.url||"",seed:m.seed,vie:ptUid(),gone:[]});if(m.env)k.env=m.env;k.opt=m.opt||"";E.active=k.id;E.lum=m.lum;E.meteo=ecIndoor(m.type)?"clair":ecSeasonize(m.meteo,ecSaison());ui.ecMetRoll=null;ui.ecSel=null;ecReveal(k);ecPush(true);return true;}
   if(a==="pt-ec-bureau"){const b=EC_BURP[v]?v:"waterdeep";ecOpenBureau(E,b,0);E.lum="jour";E.meteo="clair";ui.ecSel=null;ecPush(true);return true;}
   if(a==="pt-ec-floor"){const c=ecCard();if(!c)return false;const n=+v,cur=+c.etage||0;if(n===cur)return false;
     const k=c.type==="bureau"?ecOpenBureau(E,c.bureau,n):ecFloorCard(E,c,n);
@@ -10325,7 +10411,7 @@ function calForm(){const c=calNow(),x=calParts(c.an,c.j);
 function scTrajet(q){const t=String((scenarios[q.id]||{}).trajet||"").trim();if(!t)return {a:0,r:0};const m=t.split(/[\/|,]/).map(x=>Math.max(0,Math.min(30,parseInt(x)||0)));return {a:m[0],r:m.length>1?m[1]:m[0]};}
 // Cartes des scènes du scénario : une ligne « Nom | type | heure | météo | taille | URL » (carte fixe : la graine vient de la quête et du nom).
 function scMaps(q){const t=String((scenarios[q.id]||{}).cartes||"");return t.split("\n").map(l=>l.split("|").map(x=>x.trim())).filter(x=>x[0]).map((x,i)=>{const tp0=(x[1]||"route").toLowerCase().split("/"),tp=tp0[0],envT=tp==="maison"&&tp0[1]?tp0[1]:"",sz=String(x[4]||"").match(/(\d+)\s*[x×]\s*(\d+)/);
-  return {id:"sc"+i+"-"+ecSeed(x[0]).toString(36),nom:x[0],type:(EC_MAPS[tp]||tp==="chemin"||tp==="bureau")?tp:"route",lum:EC_LUM[(x[2]||"").toLowerCase()]?(x[2]||"").toLowerCase():"jour",meteo:(x[3]||"clair").toLowerCase(),w:sz?Math.max(8,Math.min(120,+sz[1])):0,h:sz?Math.max(6,Math.min(120,+sz[2])):0,url:x[5]||"",env:envT?{taille:envT,cult:"standard",decor:true}:null,seed:x[6]?"lieu|"+x[6].toLowerCase():q.id+"|"+x[0]};});}
+  return {id:"sc"+i+"-"+ecSeed(x[0]).toString(36),nom:x[0],type:(EC_MAPS[tp]||tp==="chemin"||tp==="bureau")?tp:"route",lum:EC_LUM[(x[2]||"").toLowerCase()]?(x[2]||"").toLowerCase():"jour",meteo:(x[3]||"clair").toLowerCase(),w:sz?Math.max(8,Math.min(120,+sz[1])):0,h:sz?Math.max(6,Math.min(120,+sz[2])):0,url:x[5]||"",opt:tp==="toits"?tp0.slice(1).join("/"):"",env:envT?{taille:envT,cult:"standard",decor:true}:null,seed:x[6]?"lieu|"+x[6].toLowerCase():q.id+"|"+x[0]};});}
 function scDuree(q){const d=parseInt((scenarios[q.id]||{}).duree);return d>=0?d:1;}
 // La saison globale ajuste une météo prédéfinie qui ne lui convient pas.
 const EC_SEASONIZE={hiver:{pluie:"neige",orage:"neige",chaleur:"clair"},ete:{neige:"pluie",froid:"clair",brouillard:"brume"},printemps:{neige:"pluie",froid:"nuageux",chaleur:"clair"},automne:{neige:"pluie",froid:"vent",chaleur:"clair"}};
