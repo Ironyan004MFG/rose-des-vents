@@ -2926,7 +2926,9 @@ function route(){
   const id=(location.hash||"").slice(1);
   const next=id&&id!=="carte"?id:null;
   if(next!==ui.office){const wasPt=!!ui.office&&ui.office.indexOf("partie-")===0,isPt=!!next&&next.indexOf("partie-")===0;
-    if(wasPt&&!isPt)ecCloseScreens();
+    {const disp=o=>!!o&&(o.indexOf("partie-")===0||o==="dm"||o==="mini"||o==="ecran");// quitter le Mode Partie, ou aller ailleurs que l'Espace DM / la Mini Guilde, ferme l'écran des joueurs
+     if(isPt&&isAdmin)setTimeout(hbBeat,800);
+     if((wasPt&&!isPt)||(isAdmin&&disp(ui.office)&&!disp(next)&&(vitOn()||(ecDoc&&ecDoc.carte))))ecCloseScreens();}
     if(isPt&&!wasPt)setTimeout(()=>{if(ui.pt&&ui.office==="partie-"+ui.pt.id&&ui.pt.id!=="libre")ecPush(true);},400);
     if(next&&next.indexOf("perso-")===0&&!(ui.office&&ui.office.indexOf("perso-")===0))ui.persoFrom=ui.office||"";ui.office=next;if(!(next==="personnages"&&ui.sheetEdit==="new"))ui.sheetEdit=null;if(!(next==="compendium"&&ui.compEdit==="new"))ui.compEdit=null;ui.compHist=null;ui.compVer=null;ui.confirmComp=null;ui.evolve=null;ui.noteEdit=null;ui.newsEdit=null;if(!ui.pendingMan){ui.manEdit=null;}ui.pendingMan=false;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=ui.pendingEdit||null;ui.pendingEdit=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter=ui.pendingFilter||"ouverte";ui.rank="all";const focusQ=ui.pendingQuest;ui.pendingFilter=null;ui.pendingQuest=null;render();
     try{const el=focusQ&&document.getElementById("q-"+focusQ);if(el){el.scrollIntoView({block:"center"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1600);}else window.scrollTo(0,0);}catch(e){}}
@@ -3355,7 +3357,7 @@ function resizeHd(file){return [[1600,0.86],[1300,0.84],[1100,0.8],[900,0.78]].r
 function hdSave(coll,id,file){if(!isAdmin||!coll||!id||!file)return Promise.resolve();return resizeHd(file).then(u=>u?setDoc(hdRef(coll,id),{image:u,ms:Date.now()}):null).catch(e=>console.error(e));}
 function hdDel(coll,id){if(!isAdmin||!coll||!id)return Promise.resolve();return deleteDoc(hdRef(coll,id)).catch(()=>{});}
 function vitOn(){return !!(vitrine&&(vitrine.image||vitrine.texte));}
-async function vitSet(v){vitrine=v;try{ecBC&&ecBC.postMessage({vitrine:v});}catch(e){}vitUi();
+async function vitSet(v){vitrine=v;if(v&&(v.image||v.texte))setTimeout(hbBeat,0);try{ecBC&&ecBC.postMessage({vitrine:v});}catch(e){}vitUi();
   {const q=ui.pt&&ui.pt.id!=="libre"&&questById(ui.pt.id);if(q)setDoc(doc(db,"table",q.id,"vitrine","live"),v&&(v.image||v.texte)?v:{nom:"",image:"",ms:Date.now()}).catch(e=>console.error(e));}
   try{await setDoc(doc(db,"prive","vitrine"),v);}catch(e){console.error(e);save={state:"error",msg:"L'écran des joueurs n'a pas pu être mis à jour."};render();}}
 function vitShow(nom,image,texte){if(!isAdmin||!(image||texte))return Promise.resolve();return vitSet({nom:String(nom||"").slice(0,80),image:image||"",texte:String(texte||"").slice(0,3000),ms:Date.now()});}
@@ -9333,7 +9335,7 @@ function ecBind(id,mode){const cv=document.getElementById(id);if(!cv){delete ecR
 function ecSet(r,st){r.st=st;}
 let ecLast=0;
 function ecLoop(ts){ecRaf=requestAnimationFrame(ecLoop);const dt=Math.min(0.1,(ts-ecLast)/1000||0.016);ecLast=ts;const t=ts/1000;
-  Object.keys(ecRenderers).forEach(id=>{const r=ecRenderers[id];if(!document.body.contains(r.cv)){delete ecRenderers[id];return;}if(r.st&&r.st.carte)try{ecDraw(r,t,dt);}catch(e){console.error(e);}});
+  Object.keys(ecRenderers).forEach(id=>{const r=ecRenderers[id];if(!document.body.contains(r.cv)){delete ecRenderers[id];return;}if(r.st&&r.st.carte){r.blank=false;try{ecDraw(r,t,dt);}catch(e){console.error(e);}}else if(!r.blank){r.blank=true;try{const x=r.cv.getContext("2d");x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,r.cv.width,r.cv.height);}catch(e){}}});
   if(!Object.keys(ecRenderers).length){cancelAnimationFrame(ecRaf);ecRaf=0;}}
 function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),pl=r.mode==="joueur",tv=r.mode==="tv"||pl||(r.mode==="dm"&&!!ui.ecPv);
   const dpr=window.devicePixelRatio||1,cw=cv.clientWidth,ch=cv.clientHeight;if(cv.width!==Math.round(cw*dpr)||cv.height!==Math.round(ch*dpr)){cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr);}
@@ -9639,13 +9641,14 @@ function tbBind(r){const cv=r.cv;if(cv.dataset.bound)return;cv.dataset.bound="1"
   cv.addEventListener("pointerup",end);cv.addEventListener("pointercancel",end);
   cv.addEventListener("wheel",e=>{e.preventDefault();zoomAt(e.deltaY<0?1.15:1/1.15,e.clientX,e.clientY);},{passive:false});}
 /* ----- Signal de présence du DM : si son Mode Partie se ferme sans prévenir (onglet fermé, Wi-Fi coupé, veille),
-   la télé et les joueurs à distance passent d'eux-mêmes en attente au bout d'environ 1 min 30. ----- */
-const HB_EVERY=30000,HB_LOST=95000,HB={ec:{vie:null,seen:0,live:true},tb:{vie:null,seen:0,live:true}};
+   la télé et les joueurs à distance passent d'eux-mêmes en attente au bout d'environ 1 min (2 battements de 30 s manqués). ----- */
+const HB_EVERY=30000,HB_LOST=65000,HB_T0=Date.now(),HB={ec:{vie:null,seen:0,live:true},tb:{vie:null,seen:0,live:true}};
 // On mesure l'arrivée des signaux avec l'horloge locale (pas celle du DM) ; au premier chargement, un signal trop vieux compte comme absent.
 function hbSaw(k,d){const h=HB[k],v=d&&+d.vie||0,now=Date.now();if(!v){h.vie=null;h.seen=0;return;}if(v===h.vie)return;
-  h.seen=h.vie==null?(now-v>HB_LOST+60000?0:now):now;h.vie=v;}
-function hbLive(k){const h=HB[k];if(h.vie==null)return true;return !!h.seen&&Date.now()-h.seen<HB_LOST;}
-function hbDmOn(){if(!isAdmin||!ui.pt)return false;if(ui.office&&ui.office.indexOf("partie-")===0)return true;return ui.office==="dm"&&ui.dmTab==="cartes"&&!!ecP().tv;}
+  h.seen=h.vie==null?(now-v>HB_LOST?0:now):now;h.vie=v;}
+function hbLive(k){const h=HB[k];if(h.vie==null)return Date.now()-HB_T0<HB_LOST;return !!h.seen&&Date.now()-h.seen<HB_LOST;}
+// Le DM « bat » tant que quelque chose est affiché depuis le Mode Partie, l'Espace DM ou la Mini Guilde ; ailleurs (ou onglet fermé), l'écran se ferme après 2 battements manqués (~1 min).
+function hbDmOn(){if(!isAdmin)return false;const o=ui.office||"";if(o.indexOf("partie-")===0)return !!ui.pt;if(o==="dm"||o==="mini")return vitOn()||!!(ecDoc&&ecDoc.carte)||(o==="dm"&&!!ui.pt&&ui.dmTab==="cartes"&&!!ecP().tv);return false;}
 function hbBeat(){if(!hbDmOn())return;const now=Date.now();setDoc(doc(db,"prive","ecran"),{vie:now},{merge:true}).catch(()=>{});const q=tbQuest();if(q)setDoc(doc(db,"table",q.id),{vie:now},{merge:true}).catch(()=>{});}
 setInterval(hbBeat,HB_EVERY);
 setInterval(()=>{["ec","tb"].forEach(k=>{const l=hbLive(k);if(l!==HB[k].live){HB[k].live=l;if(k==="ec"&&ui.office==="ecran")ecTvUpdate();if(k==="tb")tbUpdate();}});},5000);
