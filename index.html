@@ -10113,7 +10113,9 @@ function ecAfter(){if(ui.office==="ecran")return;const cv=document.getElementByI
     else if(ecZones(cc)){const k=ecZoneAt(cc,p);if(k>=0){ecZoneSet(cc,k,tool==="hide"?"2":"1");ecUpd();ptSave();ecPush(true);}}
     else{drag={paint:true};paint(p);ecUpd();}});
   cv.addEventListener("pointermove",e=>{if(!drag)return;const p=cell(e),cc=ecCard();
-    if(drag.k){drag.k.x=Math.max(0.5,Math.min(cc.w-0.5,Math.floor(p[0]+drag.dx)+0.5));drag.k.y=Math.max(0.5,Math.min(cc.h-0.5,Math.floor(p[1]+drag.dy)+0.5));ecReveal(cc);ecUpd();}
+    if(drag.k){const ox=drag.k.x,oy=drag.k.y;drag.k.x=Math.max(0.5,Math.min(cc.w-0.5,Math.floor(p[0]+drag.dx)+0.5));drag.k.y=Math.max(0.5,Math.min(cc.h-0.5,Math.floor(p[1]+drag.dy)+0.5));
+      // un personnage qu'on déplace se tourne dans le sens où on le tire (il ne glisse pas de côté)
+      if((drag.k.look||drag.k.sp)&&(drag.k.x!==ox||drag.k.y!==oy)){drag.k.a=Math.atan2(drag.k.y-oy,drag.k.x-ox);if(drag.k.look)EC_ROAMPOS.set(drag.k,[drag.k.x,drag.k.y]);}ecReveal(cc);ecUpd();}
     else if(drag.cam){ecP().follow=false;cc.cam={x:Math.round(p[0]+drag.dx),y:Math.round(p[1]+drag.dy)};ecUpd();}else if(drag.paint){paint(p);ecUpd();}});
   const end=()=>{if(drag){const rs=drag.resel;drag=null;ptSave();ecPush(true);if(rs)render();}};cv.addEventListener("pointerup",end);cv.addEventListener("pointercancel",end);}
 // Chasse ou rencontre : un clic sur un animal ou un passant le transforme en jeton (il quitte la vie de fond, partout).
