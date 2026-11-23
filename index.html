@@ -2916,7 +2916,10 @@ function render(){
   const ptKeep={};let ptFoc=null,ptSel=null;
   {document.querySelectorAll(".partie input[id],.partie select[id],.partie textarea[id],#loot-add input[id],#loot-add select[id]").forEach(el=>{if(el.value!==""&&!el.closest(".ecdm"))ptKeep[el.id]=el.value;});
     const ae=document.activeElement;if(ae&&ae.id&&ae.closest&&ae.closest(".partie")){ptFoc=ae.id;try{ptSel=[ae.selectionStart,ae.selectionEnd];}catch(e){}}}
+  // La carte du DM garde sa toile d'un rendu à l'autre : sans ça, chaque clic recréait la toile et redessinait toute la carte (gros pic de calcul, écran qui « coche »).
+  const keepCv=document.getElementById("ec-dm");if(keepCv)keepCv.remove();
   app.innerHTML=h+'</div>';
+  if(keepCv){const nv=document.getElementById("ec-dm");if(nv){keepCv.className=nv.className;["aria-label","title","role","tabindex"].forEach(k=>{const v=nv.getAttribute(k);if(v==null)keepCv.removeAttribute(k);else keepCv.setAttribute(k,v);});nv.replaceWith(keepCv);}}
   {Object.keys(ptKeep).forEach(k=>{const el=document.getElementById(k);if(el)el.value=ptKeep[k];});
     if(ptFoc){const el=document.getElementById(ptFoc);if(el){el.focus();try{if(ptSel&&ptSel[0]!=null)el.setSelectionRange(ptSel[0],ptSel[1]);}catch(e){}}}}
   // Tableaux du DM : étiquette de colonne sur chaque cellule (affichage en cartes sur mobile)
@@ -9705,7 +9708,8 @@ function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc
   return h+'</div>';}
 // Après chaque rendu : rattache les canvas (DM et télé) et les interactions.
 function ecAfter(){if(ui.office==="ecran")return;const cv=document.getElementById("ec-dm");if(!cv||!ui.pt)return;const r=ecBind("ec-dm","dm");if(!r)return;const st=ecState();if(!st)return;st.tvv=ecDoc&&ecDoc.tv;r.sel=ui.ecSel;ecSet(r,st);
-  if(cv.dataset.bound)return;cv.dataset.bound="1";const c=ecCard();if(!ui.ecBig)cv.style.aspectRatio=c.w+" / "+c.h;
+  {const c0=ecCard();cv.style.aspectRatio=!ui.ecBig&&c0?c0.w+" / "+c0.h:"";}
+  if(cv.dataset.bound)return;cv.dataset.bound="1";const c=ecCard();
   const cell=e=>{const b=cv.getBoundingClientRect(),cc=ecCard(),s=Math.min(b.width/cc.w,b.height/cc.h);return [(e.clientX-b.left)/s,(e.clientY-b.top)/s];};
   let drag=null;
   const paint=(p)=>{const cc=ecCard();let vu=(cc.vu||"").padEnd(cc.w*cc.h,"0").split("");for(let y=Math.floor(p[1]-1.5);y<=p[1]+1.5;y++)for(let x=Math.floor(p[0]-1.5);x<=p[0]+1.5;x++){if(x<0||y<0||x>=cc.w||y>=cc.h)continue;if(Math.hypot(x+0.5-p[0],y+0.5-p[1])<=1.6)vu[y*cc.w+x]=ui.ecTool==="hide"?"2":"1";}cc.vu=vu.join("");};
