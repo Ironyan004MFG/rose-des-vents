@@ -2931,7 +2931,7 @@ function render(){
   // La carte du DM garde sa toile d'un rendu à l'autre : sans ça, chaque clic recréait la toile et redessinait toute la carte (gros pic de calcul, écran qui « coche »).
   const keepCv=document.getElementById("ec-dm");
   // la page ne saute plus : on garde la position de défilement d'un rendu à l'autre sur la même page (la carte est retirée APRÈS avoir noté la position)
-  const scY=window.scrollY,scKey=ui.office+"|"+(ui.ptTab||"")+"|"+(ui.dmTab||""),scSame=render.scKey===scKey;render.scKey=scKey;
+  const scY=window.scrollY,scKey=ui.office+"|"+(ui.ptTab||"")+"|"+(ui.dmTab||""),scSame=render.scKey===scKey;render.scKey=scKey;const inSc=[...document.querySelectorAll(".ptpanel")].map(e=>e.scrollTop);
   if(keepCv)keepCv.remove();
   app.innerHTML=h+'</div>';
   if(keepCv){const nv=document.getElementById("ec-dm");if(nv){keepCv.className=nv.className;["aria-label","title","role","tabindex"].forEach(k=>{const v=nv.getAttribute(k);if(v==null)keepCv.removeAttribute(k);else keepCv.setAttribute(k,v);});nv.replaceWith(keepCv);}}
@@ -2944,6 +2944,8 @@ function render(){
   if(focusId){const f=document.getElementById(focusId);if(f&&f.focus)f.focus({preventScroll:true});}
   try{ecAfter();}catch(e){console.error(e);}
   if(scSame&&Math.abs(window.scrollY-scY)>2)window.scrollTo(0,scY);
+  // et le panneau de droite (onglets Scénario, Écran…) garde aussi sa position
+  if(scSame)document.querySelectorAll(".ptpanel").forEach((e,i)=>{if(inSc[i]!=null&&Math.abs(e.scrollTop-inSc[i])>2)e.scrollTop=inSc[i];});
 }
 
 /* ---------- routing ---------- */
