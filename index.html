@@ -4240,7 +4240,7 @@ function geoGrotte34(c,R){const W=c.w,H=c.h,X=grotteCtx(c),T=new Uint8Array(W*H)
     for(let k=0;k<3;k++){const p=pick((x,y)=>Math.hypot(x-big.x,y-big.y)<big.r+3);if(p)g.flats.push({k:"bones",x:p[0]+0.5,y:p[1]+0.5,a:R()*6});}}
   // nid : grappe d'œufs luisants dans la salle la plus profonde, toiles si araignées
   if(X.lair&&deep){const E=ring(deep.x,deep.y,0,Math.max(1.6,deep.r-0.8));for(let k=0;k<9&&E.length;k++){const p=E.splice(Math.floor(R()*E.length),1)[0];busy[p[1]*W+p[0]]=1;const m=2+Math.floor(R()*2);for(let j=0;j<m;j++)g.eggs.push({x:p[0]+0.25+R()*0.5,y:p[1]+0.35+R()*0.5,r:0.16+R()*0.08,p:R()*6});}
-    g.lights.push({x:deep.x,y:deep.y,r:2.5});for(let k=0;k<4;k++){const p=pick(null,true);if(p)g.flats.push({k:"bones",x:p[0]+0.5,y:p[1]+0.5,a:R()*6});}}
+    g.lights.push({x:deep.x,y:deep.y,r:2.5,glow:1});for(let k=0;k<4;k++){const p=pick(null,true);if(p)g.flats.push({k:"bones",x:p[0]+0.5,y:p[1]+0.5,a:R()*6});}}
   if(X.web){g.cocoons=[];g.sheets=[];g.strands=[];
     // proies emballées : contre les parois, parfois en grappe ; certaines de taille humaine
     for(let k=0;k<11;k++){const p=pick((x,y)=>wallN(x,y)>=1&&y<H-5,true);if(!p)continue;const big=R()<0.55;g.cocoons.push({x:p[0]+0.5,y:p[1]+0.5,a:R()*6.283,L:big?1.35+R()*0.4:0.7+R()*0.3,w:big?0.52:0.32,sd:Math.floor(R()*999)});}
@@ -4257,8 +4257,8 @@ function geoGrotte34(c,R){const W=c.w,H=c.h,X=grotteCtx(c),T=new Uint8Array(W*H)
   // concrétions : stalagmites (surtout près des parois), rochers, champignons et cristaux qui luisent
   for(let k=0;k<Math.round(cells.length/26);k++){const p=pick(null,R()<0.7);if(p)g.stal.push({x:p[0]+0.3+R()*0.4,y:p[1]+0.55+R()*0.35,r:0.16+R()*0.2,h:2.2+R()*1.6,c:Math.floor(R()*3)});}
   for(let k=0;k<Math.round(cells.length/45);k++){const p=pick(null,R()<0.5);if(p)g.rocks.push({x:p[0]+0.5,y:p[1]+0.7,r:0.28+R()*0.22,sd:R()*99});}
-  for(let k=0;k<Math.round(cells.length/55);k++){const p=pick(null,true);if(p){const n2=3+Math.floor(R()*4),L=[];for(let j=0;j<n2;j++)L.push({dx:(R()-0.5)*0.7,dy:(R()-0.5)*0.4,h:0.12+R()*0.18,r:0.07+R()*0.07});g.shrooms.push({x:p[0]+0.5,y:p[1]+0.65,L,c:R()<0.7?0:1});g.lights.push({x:p[0]+0.5,y:p[1]+0.5,r:1.8});}}
-  if(X.cristal){for(let k=0;k<4+Math.floor(R()*3);k++){const p=pick(null,true);if(p){const n2=3+Math.floor(R()*3),L=[];for(let j=0;j<n2;j++)L.push({dx:(R()-0.5)*0.6,a:(R()-0.5)*0.9,h:0.35+R()*0.5,w:0.07+R()*0.05});g.crys.push({x:p[0]+0.5,y:p[1]+0.75,L,c:R()<0.5?0:1,p:R()*6});g.lights.push({x:p[0]+0.5,y:p[1]+0.4,r:2.6});}}}
+  for(let k=0;k<Math.round(cells.length/55);k++){const p=pick(null,true);if(p){const n2=3+Math.floor(R()*4),L=[];for(let j=0;j<n2;j++)L.push({dx:(R()-0.5)*0.7,dy:(R()-0.5)*0.4,h:0.12+R()*0.18,r:0.07+R()*0.07});g.shrooms.push({x:p[0]+0.5,y:p[1]+0.65,L,c:R()<0.7?0:1});g.lights.push({x:p[0]+0.5,y:p[1]+0.5,r:1.8,glow:1});}}
+  if(X.cristal){for(let k=0;k<4+Math.floor(R()*3);k++){const p=pick(null,true);if(p){const n2=3+Math.floor(R()*3),L=[];for(let j=0;j<n2;j++)L.push({dx:(R()-0.5)*0.6,a:(R()-0.5)*0.9,h:0.35+R()*0.5,w:0.07+R()*0.05});g.crys.push({x:p[0]+0.5,y:p[1]+0.75,L,c:R()<0.5?0:1,p:R()*6});g.lights.push({x:p[0]+0.5,y:p[1]+0.4,r:2.6,glow:1});}}}
   for(let k=0;k<3;k++){const p=pick();if(p)g.flats.push({k:"bones",x:p[0]+0.5,y:p[1]+0.5,a:R()*6});}
   // le jour qui entre par la bouche de la grotte (de jour seulement)
   for(let x=0;x<W;x+=3)g.lights.push({x:x+0.5,y:H-1.5,r:5,jour:1});g.lights.push({x:ex,y:H-oh-1.5,r:4.5,jour:1});g.lights.push({x:ex,y:H-oh-4,r:3,jour:1});
@@ -4285,6 +4285,10 @@ function gvGazon(x,s,W,H,grs,SA){const gb={printemps:"#6aa53b",ete:"#6fa23a",aut
         for(let qq=0;qq<nb;qq++){const a=-1.57+(qq/(nb-1)-0.5)*1.5+(gHash(X,Y,k*7+qq)-0.5)*0.3;L.moveTo(bx+o,by+o);L.quadraticCurveTo(bx+Math.cos(a)*sz*0.5+o,by+Math.sin(a)*sz*0.6+o,bx+Math.cos(a)*sz+o,by+Math.sin(a)*sz+o);}L.stroke();}}
     if(SA!=="hiver"&&gHash(X,Y,20)<0.08){L.fillStyle=["#f0e6a0","#e8a8c8","#ffffff","#a8c0f0"][Math.floor(gHash(X,Y,21)*4)];for(let k=0;k<3;k++){L.beginPath();L.arc((X+gHash(X,Y,22+k))*s,(Y+gHash(X,Y,25+k))*s,s*0.04,0,6.283);L.fill();}}});
   L.globalCompositeOperation="destination-in";L.fillStyle="#000";L.beginPath();grs.forEach(([X,Y])=>L.rect(X*s,Y*s,s+1,s+1));L.fill();x.drawImage(cv,0,0);}
+function glowGrotte(x,g,s,t,ok){const dot=(X,Y,r,c0,a)=>{const gr=x.createRadialGradient(X*s,Y*s,0,X*s,Y*s,r*s);gr.addColorStop(0,c0+a+")");gr.addColorStop(1,c0+"0)");x.fillStyle=gr;x.fillRect((X-r)*s,(Y-r)*s,2*r*s,2*r*s);};
+  (g.shrooms||[]).forEach((m,i)=>{if(!ok(m.x,m.y))return;const p=0.65+Math.sin(t*1.4+i)*0.25,c0=m.c?"rgba(255,140,230,":"rgba(120,255,220,";(m.L||[]).forEach(q=>dot(m.x+q.dx,m.y+q.dy-q.h,q.r*2.2,c0,0.75*p));dot(m.x,m.y-0.1,0.45,c0,0.18*p);});
+  (g.crys||[]).forEach(cr=>{if(!ok(cr.x,cr.y))return;const p=0.7+Math.sin(t*1.1+cr.p)*0.3,c0=cr.c?"rgba(170,120,255,":"rgba(110,210,255,";(cr.L||[]).forEach(q=>dot(cr.x+q.dx+Math.sin(q.a)*q.h*0.6,cr.y-Math.cos(q.a)*q.h*0.6,q.w*2.6,c0,0.7*p));dot(cr.x,cr.y-0.3,0.55,c0,0.15*p);});
+  (g.eggs||[]).forEach(e=>{if(!ok(e.x,e.y))return;const p=0.5+Math.sin(t*0.9+e.p)*0.5;dot(e.x,e.y-e.r*0.9,e.r*1.4,"rgba(200,255,140,",0.35*p);});}
 function statGrotte34(x,g,s,c){const W=c.w,H=c.h,SA=ecSaison(),CW=Math.ceil(W*s),CH=Math.ceil(H*s);
   const M=gvMask(W,H,s,g.fl,0.74,0.45);
   // dessus des rochers : roc gris-brun, taches, fissures, un peu de mousse
@@ -5202,7 +5206,7 @@ const EC_GEN={
   taverne:{geo:geoInt,stat:statInt,dyn:(x,g,s,t)=>dynFires(x,g,s,t)},temple:{geo:geoInt,stat:statInt,dyn:(x,g,s,t)=>dynFires(x,g,s,t)},maison:{geo:geoMaison34,stat:statBureau,dyn:dynMaison34},
   entrepot:{geo:geoEntrepot34,stat:statBureau,dyn:(x,g,s,t,dt,A,c,st)=>{dynBureau(x,g,s,t,dt,A,c,st);ecRats(x,g,s,t,dt,A);}},manoir:{geo:geoInt,stat:statInt,dyn:(x,g,s,t)=>dynFires(x,g,s,t)},
   donjon:{geo:geoDonjon,stat:statDonjon,dm:dmDonjon,dyn:(x,g,s,t,dt,A)=>{dynFires(x,g,s,t);ecRats(x,g,s,t,dt,A);}},
-  grotte:{geo:geoGrotte34,stat:statGrotte34,dyn:dynGrotte34},mine:{geo:geoMine,stat:statMine,dyn:dynMine},egouts:{geo:geoEgouts,stat:statEgouts,dyn:dynEgouts},
+  grotte:{geo:geoGrotte34,stat:statGrotte34,dyn:dynGrotte34,glow:glowGrotte},mine:{geo:geoMine,stat:statMine,dyn:dynMine},egouts:{geo:geoEgouts,stat:statEgouts,dyn:dynEgouts},
   ville:{geo:geoVille34,stat:statVille34,dyn:dynVille34},port:{geo:geoPort34,stat:statBureau,dyn:dynPort34},marais:{geo:geoMarais,stat:statMarais,dyn:dynMarais}};
 
 /* ---------- Types de cartes supplémentaires : navire, abordage, serre, campement, cimetière, ruines ---------- */
@@ -9553,13 +9557,30 @@ function ecLos(G,W,x0,y0,x1,y1){let cx=Math.floor(x0),cy=Math.floor(y0);const tx
   const dx=x1-x0,dy=y1-y0,sx=dx>0?1:-1,sy=dy>0?1:-1,tdx=dx?Math.abs(1/dx):1e9,tdy=dy?Math.abs(1/dy):1e9;let tmx=dx?(sx>0?cx+1-x0:x0-cx)*tdx:1e9,tmy=dy?(sy>0?cy+1-y0:y0-cy)*tdy:1e9;
   for(let n=0;n<600;n++){if(Math.abs(tmx-tmy)<1e-9){if(ecBlk(G[cy*W+cx+sx],r0)&&ecBlk(G[(cy+sy)*W+cx],r0))return false;cx+=sx;cy+=sy;tmx+=tdx;tmy+=tdy;}else if(tmx<tmy){cx+=sx;tmx+=tdx;}else{cy+=sy;tmy+=tdy;}
     if(cx===tx&&cy===ty)return true;if(cx<0||cy<0||cx>=W)return true;if(ecBlk(G[cy*W+cx],r0))return false;}return true;}
+// Brume des bâtiments : la carte est découpée en pièces (et couloirs) ; une pièce non découverte est couverte de brume jusqu'aux murs extérieurs (on ne devine pas les murs intérieurs), l'extérieur reste visible.
+// Une pièce est découverte si une de ses cases est mémorisée (vu "1"), si un PJ y est, ou si elle donne sur l'extérieur ; « Cacher » la remet sous la brume (vu "2").
+function ecZoneOn(c){return !!(c&&EC_GEN[c.type]&&c.type!=="bureau"&&c.type!=="image"&&ecIndoor(c.type)&&(c.type==="donjon"||!ecDarkPlace(c)));}
+function ecZones(c){if(!ecZoneOn(c))return null;const g=ecGenGeo(c),G=g.G;if(!G)return null;if(g._zones)return g._zones;const W=c.w,H=c.h,lab=new Int32Array(W*H).fill(-1),zones=[],out=v=>v==="."||v==="c"||v==null,isF=v=>!out(v)&&v!=="W"&&v!=="D";
+  const add=()=>{zones.push({cells:[],ext:false});return zones.length-1;};
+  if(c.type==="donjon"&&g.rooms)g.rooms.forEach(r=>{const k=add();for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++){const i=y*W+x;if(x>=0&&y>=0&&x<W&&y<H&&isF(G[i])&&lab[i]<0){lab[i]=k;zones[k].cells.push(i);}}});
+  for(let i=0;i<W*H;i++){if(lab[i]>=0||!isF(G[i]))continue;const k=add(),q=[i];lab[i]=k;while(q.length){const j=q.pop();zones[k].cells.push(j);const x=j%W,y=(j/W)|0;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([a,b])=>{const u=x+a,v=y+b;if(u<0||v<0||u>=W||v>=H)return;const n=v*W+u;if(lab[n]<0&&isF(G[n])&&!(c.type==="donjon"&&g.rooms&&g.rooms.some(r=>u>=r.x&&u<r.x+r.w&&v>=r.y&&v<r.y+r.h))){lab[n]=k;q.push(n);}});}}
+  const doors={};for(let i=0;i<W*H;i++){if(G[i]!=="D")continue;const x=i%W,y=(i/W)|0,zs=[];let ext=false;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([a,b])=>{const u=x+a,v=y+b,n=v*W+u,o=(u<0||v<0||u>=W||v>=H)?null:G[n];if(out(o))ext=true;else if(lab[n]>=0&&zs.indexOf(lab[n])<0)zs.push(lab[n]);});doors[i]=zs;if(ext)zs.forEach(k=>zones[k].ext=true);}
+  zones.forEach(z=>{if(z.ext)return;z.ext=z.cells.some(i=>{const x=i%W,y=(i/W)|0;return [[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>{const u=x+a,v=y+b;return out(u<0||v<0||u>=W||v>=H?null:G[v*W+u]);});});});
+  if(c.type==="donjon"&&(g.stairs||[]).length){const s0=g.stairs[0],i=Math.floor(s0.y+(s0.h||1)/2)*W+Math.floor(s0.x+(s0.w||1)/2);if(lab[i]>=0)zones[lab[i]].ext=true;}
+  // Donjon hybride : les pièces et couloirs éclairés (une torche, un brasero) se découvrent pièce par pièce ; les couloirs sombres, à l'aura de vision
+  zones.forEach(z=>{z.lit=c.type!=="donjon";});if(c.type==="donjon")(g.lights||[]).concat(g.fires||[]).forEach(l=>{if(l.glow)return;const x=Math.floor(l.x),y=Math.floor(l.y);[[0,0],[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>{const u=x+a,v=y+b;if(u<0||v<0||u>=W||v>=H)return false;const k=lab[v*W+u];if(k>=0){zones[k].lit=true;return true;}return false;});});
+  return g._zones={lab,zones,doors};}
+function ecZoneAt(c,p){const Z=ecZones(c);if(!Z)return -1;const x=Math.floor(p[0]),y=Math.floor(p[1]);if(x<0||y<0||x>=c.w||y>=c.h)return -1;const k=Z.lab[y*c.w+x];if(k>=0)return k;
+  const G=ecGenGeo(c).G,i=y*c.w+x;if(G[i]==="D"&&Z.doors[i]&&Z.doors[i].length)return Z.doors[i][0];return -1;}
+function ecZoneSet(c,k,v){const Z=ecZones(c);if(!Z||!Z.zones[k])return;const vu=(c.vu||"").padEnd(c.w*c.h,"0").split("");Z.zones[k].cells.forEach(i=>{vu[i]=v;});c.vu=vu.join("");}
 function ecVision(st){const c=st.carte,W=c.w,H=c.h,vis=new Uint8Array(W*H),lit=new Float32Array(W*H),toks=st.tokens||[],ind=ecIndoor(c.type)||c.type==="image",dp=ecDarkPlace(c);
   // À l'intérieur, la météo ne compte pas ; dans un lieu sombre, il fait noir même en plein jour.
   let L0=EC_LUM[st.lum]||EC_LUM.jour;if(dp&&L0.dark<EC_LUM.tenebres.dark)L0=EC_LUM.tenebres;const M=ind?EC_METEO.clair:(EC_METEO[st.meteo]||EC_METEO.clair);
   const L={vis:Math.min(L0.vis,M.vis),dark:Math.min(0.95,L0.dark+M.dk)},noFlame=!ind&&!!(M.rain||M.wind);
   const G=EC_GEN[c.type]&&c.type!=="image"&&ecIndoor(c.type)?ecGenGeo(c).G:null,Gs=ecOpenG(G,c)||ecOccluders(c),see=(ax,ay,bx,by)=>!Gs||ecLos(Gs,W,ax,ay,bx,by);
-  const lights=toks.filter(k=>(k.k==="lum"&&!(noFlame&&k.flamme!==false))||(k.k==="pj"&&k.torche&&!noFlame)).map(k=>({x:k.x,y:k.y,r:k.k==="lum"?(+k.r||4):4})).concat(ecGenLights(c).filter(l=>!(l.auto&&st.lum==="tenebres"&&c.type!=="bureau")).filter(l=>!l.nuit||L0.dark>0.2).filter(l=>!l.jour||(EC_LUM[st.lum]||EC_LUM.jour).dark<0.5).filter(l=>!(l.nuit&&noFlame)));
-  lights.forEach(o=>{const R=o.r*2;for(let y=Math.max(0,Math.floor(o.y-R));y<Math.min(H,Math.ceil(o.y+R));y++)for(let x=Math.max(0,Math.floor(o.x-R));x<Math.min(W,Math.ceil(o.x+R));x++){const d=Math.hypot(x+0.5-o.x,y+0.5-o.y),i=y*W+x;if(d>R||!see(o.x,o.y,x+0.5,y+0.5))continue;lit[i]=Math.max(lit[i],d<=o.r?1:1-(d-o.r)/o.r*0.6);}});
+  const lights=toks.filter(k=>(k.k==="lum"&&!(noFlame&&k.flamme!==false))||(k.k==="pj"&&k.torche&&!noFlame)).map(k=>({x:k.x,y:k.y,r:k.k==="lum"?(+k.r||4):4,t:k.k==="pj"})).concat(ecGenLights(c).filter(l=>!l.glow).filter(l=>!(l.auto&&st.lum==="tenebres"&&c.type!=="bureau")).filter(l=>!l.nuit||L0.dark>0.2).filter(l=>!l.jour||(EC_LUM[st.lum]||EC_LUM.jour).dark<0.5).filter(l=>!(l.nuit&&noFlame)));
+  // Une torche (portée par un PJ, ou toute lumière dans un lieu sombre) éclaire son rayon, avec juste une case de pénombre au bout
+  lights.forEach(o=>{const sh=dp||o.t,R=sh?o.r+1:o.r*2;for(let y=Math.max(0,Math.floor(o.y-R));y<Math.min(H,Math.ceil(o.y+R));y++)for(let x=Math.max(0,Math.floor(o.x-R));x<Math.min(W,Math.ceil(o.x+R));x++){const d=Math.hypot(x+0.5-o.x,y+0.5-o.y),i=y*W+x;if(d>R||!see(o.x,o.y,x+0.5,y+0.5))continue;lit[i]=Math.max(lit[i],sh?(d<=o.r-0.5?1:Math.max(0,1-(d-o.r+0.5)/1.5)):(d<=o.r?1:1-(d-o.r)/o.r*0.6));}});
   const pjs=toks.filter(k=>k.k==="pj");pjs.forEach(p=>{const vr=Math.min(M.vis,Math.max(L.vis,(+p.dv||0))),R=Math.min(Math.max(W,H),Math.max(vr,24)),R2=Math.max(W,H);
     for(let y=Math.max(0,Math.floor(p.y-R2));y<Math.min(H,Math.ceil(p.y+R2));y++)for(let x=Math.max(0,Math.floor(p.x-R2));x<Math.min(W,Math.ceil(p.x+R2));x++){const d=Math.hypot(x+0.5-p.x,y+0.5-p.y),i=y*W+x;if((d<=vr||(lit[i]>0&&d<=Math.min(60,M.vis*2)))&&see(p.x,p.y,x+0.5,y+0.5))vis[i]=1;}});
   // Ce qu'une lumière éclaire est vu par les PJ qui ont la ligne de vue (les murs la coupent) ; sans aucun PJ sur la carte, tout ce qui est éclairé est visible
@@ -9577,6 +9598,16 @@ function ecVision(st){const c=st.carte,W=c.w,H=c.h,vis=new Uint8Array(W*H),lit=n
     for(let h=0;h<q.length;h++){const i=q[h],d=D[i];if(d>=5)continue;const X=i%W,Y=(i/W)|0;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([a,b])=>{const u=X+a,v=Y+b;if(u<0||v<0||u>=W||v>=H)return;const j=v*W+u;if(D[j]>=0||G[j]==="W")return;D[j]=d+1;q.push(j);lit[j]=Math.max(lit[j],f*(1-(d+1)/6));});}}}
   // Maison de jour : les fenêtres éclairent les pièces (la vue reste celle des jetons, le brouillard décide)
   if(G&&(c.type==="maison"||c.type==="entrepot")&&L0.dark<0.5)for(let i=0;i<W*H;i++)if(G[i]!==".")lit[i]=1;
+  // Brume des bâtiments (brouillard actif) : pièces découvertes visibles avec leur vraie lumière, les autres sous la brume ; dehors visible de jour
+  let mist=null;const ZZ=(st.fog&&st.fog.on)?ecZones(c):null;
+  if(ZZ&&G){const vz=(st.fog&&st.fog.vu)||"",rev=new Uint8Array(ZZ.zones.length),out=v=>v==="."||v==="c";
+    ZZ.zones.forEach((z,k)=>{let h=0,m=0;for(const i of z.cells){const q=vz[i];if(q==="2")h=1;else if(q==="1")m=1;}rev[k]=h?0:(m||z.ext)?1:0;});
+    // Avec des jetons PJ : une pièce n'est vue que si un PJ y est ou en voit une case (ligne de vue, pas à travers les murs) ; les pièces déjà vues restent en mémoire, assombries, sans ce qui s'y trouve
+    const act=new Uint8Array(ZZ.zones.length);if(pjs.length){ZZ.zones.forEach((z,k)=>{if(z.cells.some(i=>vis[i]))act[k]=1;});pjs.forEach(p=>{const k=ZZ.lab[Math.floor(p.y)*W+Math.floor(p.x)];if(k>=0)act[k]=1;});act.forEach((a,k)=>{if(a)rev[k]=1;});}
+    const day=(EC_LUM[st.lum]||EC_LUM.jour).dark<0.5;mist=new Uint8Array(W*H);
+    for(let i=0;i<W*H;i++){const v=G[i];if(out(v)){if(day){vis[i]=1;forced[i]=1;}continue;}const k=ZZ.lab[i];let show=false;
+      if(k>=0){if(!ZZ.zones[k].lit)continue;show=!!rev[k];if(show&&dp)lit[i]=Math.max(lit[i],0.85);if(show&&pjs.length&&!act[k]){vis[i]=0;continue;}}else{const x=i%W,y=(i/W)|0;let nearLit=false,memOnly=false;for(let b=-1;b<=1&&!show;b++)for(let a=-1;a<=1;a++){const u=x+a,w2=y+b;if(u<0||w2<0||u>=W||w2>=H)continue;const kn=ZZ.lab[w2*W+u];if(kn>=0&&ZZ.zones[kn].lit){nearLit=true;if(rev[kn]){show=true;if(!pjs.length||act[kn]){memOnly=false;break;}memOnly=true;}}}if(!nearLit&&!show)continue;if(show&&memOnly){vis[i]=0;continue;}}
+      if(show){vis[i]=1;forced[i]=1;}else{vis[i]=0;if(!dp)mist[i]=1;}}}
   // Zones cachées à la main par le DM (« Cacher ») : restent cachées tant qu'il ne les révèle pas
   const vu=(st.fog&&st.fog.vu)||"";for(let i=0;i<vu.length&&i<W*H;i++)if(vu[i]==="2")vis[i]=0;
   // Jetons : en vue si leur case est vue ; en plein jour dehors, il faut en plus qu'un PJ ait la ligne de vue (bâtiments, arbres)
@@ -9584,7 +9615,7 @@ function ecVision(st){const c=st.carte,W=c.w,H=c.h,vis=new Uint8Array(W*H),lit=n
   const seeAt=(x,y)=>{const i=Math.floor(y)*W+Math.floor(x);if(i<0||i>=W*H)return false;if(vu[i]==="2")return false;if(!pjs.length||!Gs||forced[i])return !!vis[i];
     return pjs.some(p=>{const vr=Math.min(M.vis,Math.max(L.vis,(+p.dv||0))),d=Math.hypot(x-p.x,y-p.y);return (d<=vr||(lit[i]>0&&d<=Math.min(60,M.vis*2)))&&ecLos(Gs,W,p.x,p.y,x,y);});};
   const dayOut=!ind&&L.vis>=Math.max(W,H),tokSeen=(x,y)=>{const i=Math.floor(y)*W+Math.floor(x);if(!vis[i])return false;if(!dayOut||!Gs||!pjs.length)return true;return pjs.some(p=>ecLos(Gs,W,p.x,p.y,x,y));};
-  return {vis,lit,dark:L.dark,L0,M,ind,dp,tokSeen,seeAt};}
+  return {vis,lit,dark:L.dark,L0,M,ind,dp,tokSeen,seeAt,mist};}
 // Brouillard « organique » :
 // - dehors, le terrain reste toujours là : de jour il est clair, à l'aube et au crépuscule il est assombri, la nuit il est noir hors de la vue et de la lumière ;
 // - la météo voile ce qui est loin (blanc pour la neige et le brouillard, gris pour la pluie) sans tout masquer ;
@@ -9592,7 +9623,7 @@ function ecVision(st){const c=st.carte,W=c.w,H=c.h,vis=new Uint8Array(W*H),lit=n
 // - les créatures non vues restent cachées dans tous les cas (gérées au rendu des jetons).
 function ecFogCanvas(st,V,forDm){const c=st.carte,W=c.w,H=c.h,cv=document.createElement("canvas"),K=4;cv.width=W*K;cv.height=H*K;const x=cv.getContext("2d"),im=x.createImageData(W*K,H*K),vu=(st.fog&&st.fog.vu)||"",fogOn=!!(st.fog&&st.fog.on);
   const out=!V.ind&&!V.dp,ld=V.L0.dark,vl=out?EC_VEIL[st.meteo]:null;
-  const px=(i,seen,lv)=>{const mem=vu[i]==="1",hid=vu[i]==="2",d=V.dark*(1-(lv==null?V.lit[i]:lv)*0.92);let a=d,va=0;
+  const px=(i,seen,lv)=>{if(V.mist&&V.mist[i])return [0,0,0,0];const mem=vu[i]==="1",hid=vu[i]==="2",d=V.dark*(1-(lv==null?V.lit[i]:lv)*0.92);let a=d,va=0;
     // Brouillard coupé (figurines sur la table, pas de jetons PJ) : seule la lumière compte — le jour et les torches éclairent, le noir reste noir.
     if(!seen&&!fogOn){a=d;if(out&&vl)va=vl[1];}
     else if(!seen){
@@ -9611,6 +9642,10 @@ function ecFogCanvas(st,V,forDm){const c=st.carte,W=c.w,H=c.h,cv=document.create
         const lv=L(x0,y0)*(1-tx)*(1-ty)+L(x0+1,y0)*tx*(1-ty)+L(x0,y0+1)*(1-tx)*ty+L(x0+1,y0+1)*tx*ty;put(X*K+a,y*K+b,px(i,sv,Math.max(lv,V.lit[i]*0.5)));}continue;}
       const p=px(i,sv);for(let b=0;b<K;b++)for(let a=0;a<K;a++)put(X*K+a,y*K+b,p);continue;}
     const pS=px(i,true),pU=px(i,false);for(let b=0;b<K;b++)for(let a=0;a<K;a++)put(X*K+a,y*K+b,V.seeAt(X+(a+0.5)/K,y+(b+0.5)/K)?pS:pU);}
+  // Brume : nuages gris-bleu, aux bords adoucis ; le DM la voit en transparence
+  if(V.mist){const R0=ecRng(ecSeed((c.seed||"")+"brume")),q=[0,1,2,3,4,5].map(()=>R0()*9),C0=[44,50,60],C1=[104,114,128],A=forDm?0.55:0.97;
+    for(let y=0;y<H;y++)for(let X=0;X<W;X++){const i=y*W+X;if(!V.mist[i])continue;for(let b=0;b<K;b++)for(let a=0;a<K;a++){const fx=X+(a+0.5)/K,fy=y+(b+0.5)/K,v=Math.sin(fx*0.42+q[0])*Math.sin(fy*0.55+q[1])*0.42+Math.sin(fx*0.21+fy*0.09+q[2])*Math.cos(fy*0.26-fx*0.07+q[3])*0.33+Math.sin(fx*1.15+q[4])*Math.cos(fy*0.95+q[5])*0.17+Math.sin(fx*2.3+q[1])*Math.sin(fy*2.6+q[2])*0.08,t=Math.max(0,Math.min(1,0.5+v*0.6)),o=((y*K+b)*W*K+X*K+a)*4;
+      im.data[o]=C0[0]+(C1[0]-C0[0])*t;im.data[o+1]=C0[1]+(C1[1]-C0[1])*t;im.data[o+2]=C0[2]+(C1[2]-C0[2])*t;im.data[o+3]=Math.round(A*255);}}}
   x.putImageData(im,0,0);return cv;}
 // Un rendu = un canvas + son état ; la boucle anime tous les rendus présents dans la page.
 function ecBind(id,mode){const cv=document.getElementById(id);if(!cv){delete ecRenderers[id];return null;}let r=ecRenderers[id];if(!r||r.cv!==cv){r=ecRenderers[id]={cv,mode,key:"",A:null,st:null,stat:null,img:null,fog:null,fogKey:""};}if(!ecRaf)ecRaf=requestAnimationFrame(ecLoop);return r;}
@@ -9653,6 +9688,8 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),p
   // personnages et meubles devant eux, triés par profondeur, AVANT l'éclairage et le brouillard (même lumière pour tous)
   v34Occlude(x,c.type==="bureau"&&!st.combat?ecGenGeo(c):null,s);
   x.imageSmoothingEnabled=true;x.save();x.filter="blur("+Math.max(1,Math.round(s*0.12))+"px)";x.drawImage(r.fog,0,0,c.w*s,c.h*s);x.restore();
+  // Ce qui luit (champignons, cristaux, œufs) se voit dans le noir, sans éclairer autour
+  if(EC_GEN[c.type]&&EC_GEN[c.type].glow&&r.V&&r.V.dark>0.3){const vz=(st.fog&&st.fog.vu)||"";x.save();x.globalCompositeOperation="lighter";EC_GEN[c.type].glow(x,ecGenGeo(c),s,t,(X,Y)=>vz[Math.floor(Y)*c.w+Math.floor(X)]!=="2");x.restore();}
   // Lueurs chaudes des lumières
   {const nf=!!(M.rain||M.wind);(st.tokens||[]).filter(k=>(k.k==="lum"&&!(nf&&k.flamme!==false))||(k.k==="pj"&&k.torche&&!nf)).forEach(k=>{if(Math.min(0.95,(EC_LUM[st.lum]||EC_LUM.jour).dark+M.dk)<0.2)return;const R=(k.k==="lum"?(+k.r||4):4)*s,fl=1+Math.sin(t*9+k.x)*0.04+Math.sin(t*13.7)*0.03,g=x.createRadialGradient(k.x*s,k.y*s,0,k.x*s,k.y*s,R*fl);g.addColorStop(0,"rgba(255,180,90,.28)");g.addColorStop(1,"rgba(255,140,60,0)");x.fillStyle=g;x.fillRect(k.x*s-R,k.y*s-R,R*2,R*2);});}
   if(st.grid){x.strokeStyle=tv?"rgba(255,255,255,.14)":"rgba(255,255,255,.18)";x.lineWidth=1;x.beginPath();for(let i=0;i<=c.w;i++){x.moveTo(i*s,0);x.lineTo(i*s,c.h*s);}for(let j=0;j<=c.h;j++){x.moveTo(0,j*s);x.lineTo(c.w*s,j*s);}x.stroke();}
@@ -9991,9 +10028,10 @@ function ecAfter(){if(ui.office==="ecran")return;const cv=document.getElementByI
   const paint=(p)=>{const cc=ecCard();let vu=(cc.vu||"").padEnd(cc.w*cc.h,"0").split("");for(let y=Math.floor(p[1]-1.5);y<=p[1]+1.5;y++)for(let x=Math.floor(p[0]-1.5);x<=p[0]+1.5;x++){if(x<0||y<0||x>=cc.w||y>=cc.h)continue;if(Math.hypot(x+0.5-p[0],y+0.5-p[1])<=1.6)vu[y*cc.w+x]=ui.ecTool==="hide"?"2":"1";}cc.vu=vu.join("");};
   cv.addEventListener("pointerdown",e=>{if(ui.ecPv)return;if(ui.ecArm){const p0=ecCellAt(e.clientX,e.clientY);if(p0){ecDrop(ui.ecArm,p0);return;}}const p=cell(e),cc=ecCard();cv.setPointerCapture(e.pointerId);const tool=ui.ecTool||"move";
     if(tool==="move"){const k=(cc.tokens||[]).slice().reverse().find(k=>{if(k.deco)return false;const q=EC_ROAMPOS.get(k)||[k.x,k.y];return Math.hypot(q[0]-p[0],q[1]-p[1])<0.6;});if(k){drag={k,dx:k.x-p[0],dy:k.y-p[1],resel:ui.ecSel!==k.id};ui.ecSel=k.id;const rr=ecRenderers["ec-dm"];if(rr)rr.sel=k.id;}
-      else if(ecDoorAt(cc,p)>=0){const i=ecDoorAt(cc,p),o=(cc.ouv||[]).slice(),j=o.indexOf(i);if(j>=0)o.splice(j,1);else o.push(i);cc.ouv=o;ecUpd();ptSave();ecPush(true);return;}
+      else if(ecDoorAt(cc,p)>=0){const i=ecDoorAt(cc,p),o=(cc.ouv||[]).slice(),j=o.indexOf(i);if(j>=0)o.splice(j,1);else{o.push(i);const Z=ecZones(cc);if(Z&&Z.doors[i])Z.doors[i].forEach(k=>ecZoneSet(cc,k,"1"));}cc.ouv=o;ecUpd();ptSave();ecPush(true);return;}
       else if(ecPromote(p))return;
       else{const tv=ecDoc&&ecDoc.tv,cam=cc.cam||{x:0,y:0};if(tv&&p[0]>=cam.x&&p[1]>=cam.y&&p[0]<=cam.x+tv.cols&&p[1]<=cam.y+tv.rows)drag={cam:true,dx:cam.x-p[0],dy:cam.y-p[1]};else if(ui.ecSel){ui.ecSel=null;render();}}}
+    else if(ecZones(cc)){const k=ecZoneAt(cc,p);if(k>=0){ecZoneSet(cc,k,tool==="hide"?"2":"1");ecUpd();ptSave();ecPush(true);}}
     else{drag={paint:true};paint(p);ecUpd();}});
   cv.addEventListener("pointermove",e=>{if(!drag)return;const p=cell(e),cc=ecCard();
     if(drag.k){drag.k.x=Math.max(0.5,Math.min(cc.w-0.5,Math.floor(p[0]+drag.dx)+0.5));drag.k.y=Math.max(0.5,Math.min(cc.h-0.5,Math.floor(p[1]+drag.dy)+0.5));ecReveal(cc);ecUpd();}
