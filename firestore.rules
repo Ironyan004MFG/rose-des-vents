@@ -268,6 +268,11 @@ service cloud.firestore {
     match /dossiers/{id} {
       allow read, write: if isAdmin();
     }
+    // Don d'Outerworlder : copie (nom + description) lisible par le joueur propriétaire du personnage ; seul le DM l'écrit
+    match /dons/{id} {
+      allow read: if isAdmin() || (request.auth != null && resource.data.proprietaire == request.auth.uid);
+      allow write: if isAdmin();
+    }
     match /pnj/{id} {
       allow read, write: if isAdmin();
     }
