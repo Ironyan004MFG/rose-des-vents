@@ -118,6 +118,8 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .calform{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:6px 0}.calform label{display:flex;flex-direction:column;font-size:13px}.calform input{max-width:110px}
 .ectv-met .dt{display:block;font-family:var(--display);font-size:.9em;letter-spacing:.05em;color:#e9dfc6;margin-bottom:2px}
 .ecdm .chip.here{border-color:#d8b45e;border-width:2px}.ecdm .ecday{font-family:var(--display);font-size:13px;letter-spacing:.08em;padding:0 4px}.ecdm .ecmet{background:#efe4c6;border-radius:6px;padding:8px 12px;margin:8px 0;font-size:14px}.ecdm .ecmet ul{margin:4px 0 0;padding-left:18px}.ecdm .ecmet p{margin:4px 0 0}
+.ectv-follow{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:6;background:#d8b45e;color:#1b130b;border:0;border-radius:20px;padding:10px 18px;font:inherit;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.6)}
+.ectv canvas#ec-tv{cursor:grab;touch-action:none}.ectv canvas#ec-tv:active{cursor:grabbing}
 .ectv-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#d8b45e;font-family:var(--display);font-size:22px;text-align:center;padding:20px;pointer-events:none}.ectv-msg:empty{display:none}
 .ecdm .ecbar,.ecdm .ecrow,.ecdm .ecsel{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:8px 0}.ecdm label{display:flex;flex-direction:column;font-size:13px}.ecdm label.ecck{flex-direction:row;align-items:center;gap:5px}.ecdm .ecsp{flex:1}
 /* Agrandir une image de fiche ; la montrer sur l'écran des joueurs */
@@ -9335,11 +9337,13 @@ function ecLoop(ts){ecRaf=requestAnimationFrame(ecLoop);const dt=Math.min(0.1,(t
   if(!Object.keys(ecRenderers).length){cancelAnimationFrame(ecRaf);ecRaf=0;}}
 function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),pl=r.mode==="joueur",tv=r.mode==="tv"||pl||(r.mode==="dm"&&!!ui.ecPv);
   const dpr=window.devicePixelRatio||1,cw=cv.clientWidth,ch=cv.clientHeight;if(cv.width!==Math.round(cw*dpr)||cv.height!==Math.round(ch*dpr)){cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr);}
-  let s,ox=0,oy=0;if(r.mode==="tv"){s=ecPpi(st);const cam=st.cam||{x:0,y:0};if(r.cx==null||Math.abs(r.cx-cam.x)>60){r.cx=cam.x;r.cy=cam.y;}r.cx+=(cam.x-r.cx)*Math.min(1,dt*2.5);r.cy+=(cam.y-r.cy)*Math.min(1,dt*2.5);ox=-r.cx*s;oy=-r.cy*s;}
+  let s,ox=0,oy=0;if(r.mode==="tv"){const s0=ecPpi(st),cam=st.cam||{x:0,y:0};if(r.tvCarte!==c.id){r.tvCarte=c.id;r.free=false;}
+    if(r.cx==null||Math.abs(r.cx-cam.x)>60){r.cx=cam.x;r.cy=cam.y;}if(!r.free){r.cx+=(cam.x-r.cx)*Math.min(1,dt*2.5);r.cy+=(cam.y-r.cy)*Math.min(1,dt*2.5);r.ts=r.ts==null?s0:r.ts+(s0-r.ts)*Math.min(1,dt*2.5);}
+    s=r.ts||s0;ox=-r.cx*s;oy=-r.cy*s;tvFreeUi(r);}
   else if(pl){const f=tbFollow(r,st,cw,ch);if(!r.free){const k=Math.min(1,dt*2.5);if(r.vx==null||Math.abs(r.vx-f.x)>60){r.vx=f.x;r.vy=f.y;r.vs=f.s;}r.vx+=(f.x-r.vx)*k;r.vy+=(f.y-r.vy)*k;r.vs+=(f.s-r.vs)*k;}s=r.vs;ox=cw/2-r.vx*s;oy=ch/2-r.vy*s;}
   else{s=Math.min(cw/c.w,ch/c.h);}
   // Le décor fixe est préparé à une échelle arrondie (le zoom libre du joueur ne le redessine pas à chaque cran), sans dépasser la taille d'un canevas.
-  const sq=pl?Math.min(Math.pow(2,Math.round(Math.log2(Math.max(1,s))*3)/3),6000/(Math.max(c.w,c.h)*dpr)):s;
+  const sq=pl||(r.mode==="tv"&&r.free)?Math.min(Math.pow(2,Math.round(Math.log2(Math.max(1,s))*3)/3),6000/(Math.max(c.w,c.h)*dpr)):s;
   const key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h+"|"+(c.url||"")+"|"+Math.round(sq*dpr*10)+"|"+ecSaison()+"|"+(c.bureau||"")+"|"+(+c.etage||0)+"|"+(c.niv?c.niv.min+":"+c.niv.max:"")+maisonEnvK(c);
   if(r.key!==key){r.key=key;r.A=EC_GEN[c.type]?{}:c.type==="image"?null:ecAnimInit(c);r.stat=null;r.img=null;if(c.type==="image"&&c.url){const im=new Image();im.crossOrigin="anonymous";im.onload=()=>{r.img=im;};im.src=c.url;}else if(EC_GEN[c.type])r.stat=ecStaticGen(c,sq*dpr);else r.stat=ecStatic(c,sq*dpr);}
   x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle="#000";x.fillRect(0,0,cw,ch);x.save();x.translate(ox,oy);x.beginPath();x.rect(0,0,c.w*s,c.h*s);x.clip();
@@ -9422,7 +9426,7 @@ function ecLightSprite(x,k,X,Y,s,t,st,tv){const M=EC_METEO[st.meteo]||EC_METEO.c
   x.fillStyle="#5a3e22";x.fillRect(X-s*0.04,Y-s*0.04,s*0.08,s*0.25);if(!out)gFire(x,X/s,Y/s,s,t,0.22);}
 function ecPpi(st){const k=(st.calib&&+st.calib.k)||1,d=st.calib&&+st.calib.diag;if(d>5){const hyp=Math.hypot(screen.width,screen.height);return hyp/d*k;}return 48*k;}
 /* ----- Télé (#ecran) ----- */
-function ecTvShell(){return '<div class="ectv"><canvas id="ec-tv"></canvas><div class="ectv-met" id="ec-met"></div><div class="ectv-info" id="ec-info"></div><div class="ectv-ord" id="ec-ord"></div><div class="ectv-msg" id="ec-msg"></div><div class="ectv-fiche" id="ec-fiche"></div></div>';}
+function ecTvShell(){return '<div class="ectv"><canvas id="ec-tv" aria-label="Carte : glisse pour te promener, molette pour zoomer, double-clic pour revenir à la vue du DM"></canvas><button class="ectv-follow" id="ec-follow" data-a="tv-follow" hidden>🎯 Revenir à la vue du DM</button><div class="ectv-met" id="ec-met"></div><div class="ectv-info" id="ec-info"></div><div class="ectv-ord" id="ec-ord"></div><div class="ectv-msg" id="ec-msg"></div><div class="ectv-fiche" id="ec-fiche"></div></div>';}
 // Écran posé à plat : la fiche est montrée deux fois, tête-bêche, pour les deux bords de la table (réglable dans le calibrage).
 function ecMirror(){return !(ecDoc&&ecDoc.calib&&ecDoc.calib.miroir===false);}
 function ecFicheHtml(v){return (v.image?'<img src="'+esc(v.image)+'" alt="'+esc(v.nom||"Image")+'">':'')+(v.nom?'<h2>'+esc(v.nom)+'</h2>':'')+(v.texte?'<div class="vtxt">'+esc(v.texte).replace(/\n/g,"<br>")+'</div>':'');}
@@ -9436,11 +9440,27 @@ function ecTvUpdate(){if(ui.office!=="ecran")return;const app=document.getElemen
   ecTvFiche();
   if(st&&st.carte&&!hbLive("ec")){["ec-met","ec-info","ec-ord"].forEach(k=>{const el=document.getElementById(k);if(el)el.innerHTML="";});m.textContent="Le Maître de la Guilde s'est déconnecté. L'écran reviendra dès qu'il rouvrira la partie.";const r=ecBind("ec-tv","tv");if(r)r.st=null;return;}
   if(!st||!st.carte){["ec-met","ec-info","ec-ord"].forEach(k=>{const el=document.getElementById(k);if(el)el.innerHTML="";});m.textContent=vitOn()?"":"En attente d'une carte… Ouvre une carte dans le Mode Partie (onglet Écran) ou dans l'Espace DM → Cartes (« Montrer aux joueurs »).";const r=ecBind("ec-tv","tv");if(r)r.st=null;return;}
-  m.textContent="";const r=ecBind("ec-tv","tv");if(r)ecSet(r,st);
+  m.textContent="";const r=ecBind("ec-tv","tv");if(r){ecSet(r,st);tvBind(r);}
   {const M=EC_METEO[st.meteo]||EC_METEO.clair;document.getElementById("ec-met").innerHTML=(st.date?'<span class="dt">📜 '+esc(st.date)+'</span>':'')+(st.meteo&&st.meteo!=="clair"?'<strong>'+M.i+' '+esc(M.l)+'</strong>'+(M.fx.length?'<span>'+esc(M.fx[0])+'</span>':''):'');}
   document.getElementById("ec-info").innerHTML=st.info?'<p>'+esc(st.info).replace(/\n/g,"<br>")+'</p>':'';
   const o=st.ordre;document.getElementById("ec-ord").innerHTML=o&&o.liste&&o.liste.length?'<h3>'+esc(o.titre||"Ordre")+'</h3><ol>'+o.liste.map(x=>'<li class="'+(x.cur?'cur ':'')+(x.k==="pj"?'pj':'')+'">'+esc(x.n)+'</li>').join("")+'</ol>':'';
   ecTvReport();}
+// Écran des joueurs : on peut s'y promener à la souris (glisser, molette) ou au doigt (glisser, pincer), sans toucher la vue du DM.
+function tvBind(r){const cv=r.cv;if(!cv||cv.dataset.bound)return;cv.dataset.bound="1";const P=new Map();let act=null;
+  const sc=()=>r.ts||ecPpi(r.st||{}),zoomAt=(f,cx,cy)=>{if(!r.st||!r.st.carte)return;const b=cv.getBoundingClientRect(),s=sc(),c=r.st.carte,mn=Math.max(4,Math.min(b.width/c.w,b.height/c.h)*0.6),ns=Math.max(mn,Math.min(200,s*f)),px=(cx-b.left)/s+r.cx,py=(cy-b.top)/s+r.cy;
+    r.free=true;r.ts=ns;r.cx=px-(cx-b.left)/ns;r.cy=py-(cy-b.top)/ns;};
+  r.zoomAt=zoomAt;
+  cv.addEventListener("pointerdown",e=>{if(!r.st||!r.st.carte)return;cv.setPointerCapture(e.pointerId);P.set(e.pointerId,[e.clientX,e.clientY]);
+    if(P.size===2){const a=[...P.values()];act={pinch:true,d0:Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])||1,s0:sc()};return;}
+    act={pan:true,x0:e.clientX,y0:e.clientY,cx:r.cx,cy:r.cy};});
+  cv.addEventListener("pointermove",e=>{if(!P.has(e.pointerId))return;P.set(e.pointerId,[e.clientX,e.clientY]);if(!act)return;
+    if(act.pinch&&P.size===2){const a=[...P.values()],d=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);zoomAt(act.s0*d/act.d0/sc(),(a[0][0]+a[1][0])/2,(a[0][1]+a[1][1])/2);}
+    else if(act.pan){if(Math.hypot(e.clientX-act.x0,e.clientY-act.y0)>3)r.free=true;if(r.free){const s=sc();r.cx=act.cx-(e.clientX-act.x0)/s;r.cy=act.cy-(e.clientY-act.y0)/s;}}});
+  const end=e=>{P.delete(e.pointerId);if(P.size<2&&act&&act.pinch)act=null;if(!P.size)act=null;};
+  cv.addEventListener("pointerup",end);cv.addEventListener("pointercancel",end);
+  cv.addEventListener("wheel",e=>{if(!r.st||!r.st.carte)return;e.preventDefault();if(e.ctrlKey||Math.abs(e.deltaY)>=Math.abs(e.deltaX)&&!e.shiftKey)zoomAt(Math.exp(-e.deltaY*0.0015),e.clientX,e.clientY);else{r.free=true;const s=sc();r.cx+=e.deltaX/s;r.cy+=e.deltaY/s;}},{passive:false});
+  cv.addEventListener("dblclick",()=>{r.free=false;});}
+function tvFreeUi(r){const b=document.getElementById("ec-follow");if(b&&b.hidden===!!r.free)b.hidden=!r.free;}
 let ecTvT=null;
 function ecTvReport(){clearTimeout(ecTvT);ecTvT=setTimeout(()=>{if(!isAdmin||!ecDoc)return;const p=ecPpi(ecDoc),cols=Math.floor(window.innerWidth/p),rows=Math.floor(window.innerHeight/p),tv=ecDoc.tv||{};
   if(tv.cols!==cols||tv.rows!==rows||tv.sw!==screen.width||tv.sh!==screen.height)setDoc(doc(db,"prive","ecran"),{tv:{cols,rows,sw:screen.width,sh:screen.height}},{merge:true}).catch(()=>{});},800);}
@@ -10718,6 +10738,7 @@ document.addEventListener("click",async e=>{
   if(await miniClick(a,b,id,e))return;
   if(a==="zoom-close"){zoomClose();return;}
   if(a==="tb-figdel"){if(!isAdmin)return;const q=tbQuest();if(q)await run("Figurine retirée",()=>deleteDoc(doc(db,"table",q.id,"figs",id)));return;}
+  if(a==="tv-follow"){const r=ecRenderers["ec-tv"];if(r)r.free=false;return;}
   if(a==="tb-follow"||a==="tb-zoom"){const r=ecRenderers["ec-pl"];if(!r)return;if(a==="tb-follow")r.free=false;else if(r.zoomAt){const bb=r.cv.getBoundingClientRect();r.zoomAt(+b.getAttribute("data-v")||1,bb.left+bb.width/2,bb.top+bb.height/2);}return;}
   if(a==="vit-hide"){await vitHide();return;}
   if(a==="vit-send"){if(!zoomSt)return;const n=document.getElementById("zoom-nom");zoomSt.vn=n?n.value.trim():zoomSt.nom;await vitShow(zoomSt.vn,zoomSt.src);return;}
