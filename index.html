@@ -10461,12 +10461,14 @@ function secLoot(){
   h+='<form id="loot-add" class="lootadd"><h3>Ajouter à la main</h3><label for="la-nom">Objet<input id="la-nom" maxlength="120" required placeholder="Ex. Épée courte +1"></label><label for="la-val">Valeur (po)<input id="la-val" type="number" min="0" step="0.1"></label><label for="la-q">Quête<select id="la-q"><option value="">—</option>'+quetes.slice().sort((a,b)=>String(a.titre).localeCompare(String(b.titre),"fr")).map(q=>'<option value="'+esc(q.id)+'"'+(f===q.id?' selected':'')+'>'+esc(q.titre)+'</option>').join("")+'</select></label><label for="la-p">Pour<select id="la-p"><option value="">Le groupe</option>'+byName(aventuriers).filter(a=>!a.pnj).map(a=>'<option value="'+esc(a.id)+'">'+esc(a.nom)+'</option>').join("")+'</select></label><button class="btn gold">Ajouter</button></form>';
   return h;
 }
+// Butin spécial (objets de quête, inhabituels et mieux) : bouton 📺 pour le montrer sur l'écran des joueurs.
+function lootTvBtn(nom,rar,quete){if(!quete&&(!rar||rar==="classique"||rar==="mediocre"))return "";return '<button class="ptvit" data-a="vit-loot" data-n="'+esc(nom)+'" data-r="'+esc(quete?"quete":rar)+'" title="Montrer sur l\'écran des joueurs" aria-label="Montrer '+esc(nom)+' sur l\'écran des joueurs">📺</button>';}
 function ptLootTab(q){
   const mine=butins.filter(x=>x.quete===q.id),r=ui.pt.combat&&ui.pt.combat.ref?rencontres.find(x=>x.id===ui.pt.combat.ref):null;
   let h='<p class="desc">Le butin se distribue en clôturant une rencontre. Le Loot Box complet est dans le Manuel du DM.</p>';
-  const qls=ltQuestStatus(q);if(qls.length)h+='<h3>Objets de quête</h3><ul class="lootlist">'+qls.map(x=>'<li><span>'+rarName({nom:x.e.nom,quete:x.e.garanti,rar:x.e.rar})+' <span class="desc">· '+esc(x.who)+' · '+esc(x.how)+(x.e.unique?'':' · '+x.n+(x.e.max?'/'+x.e.max:''))+'</span></span>'+(x.pris?'<span class="ccat">'+(x.e.unique?'Obtenu':'Complet')+'</span>':'')+'</li>').join("")+'</ul>';
+  const qls=ltQuestStatus(q);if(qls.length)h+='<h3>Objets de quête</h3><ul class="lootlist">'+qls.map(x=>'<li><span>'+rarName({nom:x.e.nom,quete:x.e.garanti,rar:x.e.rar})+' <span class="desc">· '+esc(x.who)+' · '+esc(x.how)+(x.e.unique?'':' · '+x.n+(x.e.max?'/'+x.e.max:''))+'</span></span>'+(x.pris?'<span class="ccat">'+(x.e.unique?'Obtenu':'Complet')+'</span>':'')+lootTvBtn(x.e.nom,x.e.rar,true)+'</li>').join("")+'</ul>';
   if(r&&r.butin)h+='<h3>Butin prévu : '+esc(r.nom)+'</h3><div class="wikibody">'+md(r.butin)+'</div>';
-  h+='<h3>Récupéré pendant cette quête</h3>'+(mine.length?'<ul class="lootlist">'+mine.map(x=>'<li><span><strong>'+(x.rar?rarName({nom:x.nom,rar:x.rar,quete:x.rar==="quete"}):esc(x.nom))+'</strong>'+(x.valeur?' <em>'+esc(lootPo(x.valeur))+'</em>':'')+'<span class="desc"> · '+esc(x.pourNom||"le groupe")+'</span></span></li>').join("")+'</ul><p class="desc">Valeur estimée : '+esc(lootPo(lootTotal(mine))||"0 po")+'</p>':'<p class="desc">Rien pour l\'instant.</p>');
+  h+='<h3>Récupéré pendant cette quête</h3>'+(mine.length?'<ul class="lootlist">'+mine.map(x=>'<li><span><strong>'+(x.rar?rarName({nom:x.nom,rar:x.rar,quete:x.rar==="quete"}):esc(x.nom))+'</strong>'+(x.valeur?' <em>'+esc(lootPo(x.valeur))+'</em>':'')+'<span class="desc"> · '+esc(x.pourNom||"le groupe")+'</span></span>'+lootTvBtn(x.nom,x.rar,x.rar==="quete")+'</li>').join("")+'</ul><p class="desc">Valeur estimée : '+esc(lootPo(lootTotal(mine))||"0 po")+'</p>':'<p class="desc">Rien pour l\'instant.</p>');
   return h;
 }
 function partyView(){
@@ -10755,6 +10757,9 @@ document.addEventListener("click",async e=>{
   if(a==="ec-start"){ui.ecStopped=false;const st=ecState();if(st){ecDoc=Object.assign({},ecDoc||{},st);ecPush(true);hbBeat();}render();return;}
   if(a==="ec-stop"){ui.ecStopped=true;ecCloseScreens();render();return;}
   if(a==="ec-copylink"){copyText(ecLink());ui.ecCopied=true;render();setTimeout(()=>{ui.ecCopied=false;render();},2500);return;}
+  if(a==="vit-loot"){const n=b.getAttribute("data-n")||"",rr=b.getAttribute("data-r")||"",o=objets.find(y=>ptNorm(y.nom)===ptNorm(n));b.disabled=true;
+    if(o&&(o.image||o.texte)){const hd=o.image?await hdGet("objets",o.id):"";await vitShow(o.nom,hd||o.image||"",o.texte||"");}
+    else await vitShow(n,"",rr==="quete"?"Objet de quête":((RAR[rr]||[,"Objet"])[1]+" · trésor"));b.disabled=false;return;}
   if(a==="tv-follow"){const r=ecRenderers["ec-tv"];if(r)r.free=false;return;}
   if(a==="tb-follow"||a==="tb-zoom"){const r=ecRenderers["ec-pl"];if(!r)return;if(a==="tb-follow")r.free=false;else if(r.zoomAt){const bb=r.cv.getBoundingClientRect();r.zoomAt(+b.getAttribute("data-v")||1,bb.left+bb.width/2,bb.top+bb.height/2);}return;}
   if(a==="vit-hide"){await vitHide();return;}
