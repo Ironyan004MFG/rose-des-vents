@@ -689,6 +689,8 @@ ul.objsub input:checked+span{text-decoration:line-through;opacity:.65}
 .ptjournal li span{color:var(--ink-soft);margin-right:8px;font-variant-numeric:tabular-nums}
 .ptfoot{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;border-top:1px solid var(--parch-3);padding-top:12px}
 a.btn{text-decoration:none;display:inline-flex;align-items:center}
+/* écran MJ (partie, espace MJ) : plus large sur un PC, la page publique garde sa largeur */
+@media (min-width:1300px){.wrap:has(.ptgrid),.wrap:has(.dmspace){max-width:min(1800px,95vw)}}
 @media (max-width:900px){
   .ptgrid{grid-template-columns:1fr}
   .ptside{position:static;max-height:none}
