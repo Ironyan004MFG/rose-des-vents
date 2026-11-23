@@ -7424,7 +7424,7 @@ function ecPaxAt(k,g,c,TT){if(!g||!g.people)return null;const nav=burNav(g,c),P=
       else{const sc=st.scr||[];let sg=sc.find(q=>tt>=q.t0&&tt<q.t1)||{k:"idle",t0:0,t1:w};if(st.oswin&&tt>=st.oswin[0]&&tt<st.oswin[1]){const n2=Math.floor((tt-st.oswin[0])/2.2);sg={k:n2%3===1?"talk":"laugh",t0:st.oswin[0]+n2*2.2,t1:st.oswin[0]+n2*2.2+2.2,seed:n2+77};}o.seg=sg;const cup=st.cup0;
         let l=st.lvl0;const sp=sc.find(q=>q.k==="sip");if(sp&&cup){if(tt>=sp.t1)l-=st.drop;else if(tt>sp.t0+0.8)l-=st.drop*Math.min(1,(tt-sp.t0-0.8)/1.2);}o.lvl=Math.max(0,l);
         o.pose=!cup?"relaxed":sg.k==="talk"?"discute":sg.k==="laugh"?"rire":sg.k==="sip"?"boire":"cafe_repos";o.tin=tt-sg.t0;}
-        if(o.pose==="rire"){const u=o.tin*7.5,k2=Math.floor(u)%3;o.pose=k2===1?(o.cup?"cafe_repos":"relaxed"):"rire";o.y-=0.05*Math.abs(Math.sin(u*Math.PI));}
+        if(o.pose==="rire"){const u=o.tin*7.5,k2=Math.floor(u)%3;o.pose=k2===1?(o.cup?"cafe_repos":"relaxed"):"rire";if(!TOP90)o.y-=0.05*Math.abs(Math.sin(u*Math.PI));}
       return o;}
     tt-=w;const r=S._legs[i],d=r.tot/P.v;
     if(tt<d){const u=tt*P.v;let j=0,uu=u;while(j<r.seg.length-1&&uu>r.seg[j]){uu-=r.seg[j];j++;}const a=r.P[j],b=r.P[j+1]||a,f=r.seg[j]?Math.min(1,uu/r.seg[j]):1,X=a[0]+(b[0]-a[0])*f,Y=a[1]+(b[1]-a[1])*f;
@@ -7495,7 +7495,7 @@ function ecPaxSprite(x,X,Y,s,o,TT){if(TOP90){paxTop(x,X,Y+s*0.05,s,o,TT);{const 
   if(steam&&o.lvl>0.25){const sp=iv.transformPoint(steam),S=s/60;x.save();x.translate(sp.x,sp.y);x.rotate(rot);for(let i=0;i<5;i++){const u=((TT*0.4+i/5)%1);x.save();x.filter="blur("+((1+u*3)*S).toFixed(2)+"px)";x.fillStyle="rgba(245,245,245,"+(0.45*Math.sin(Math.PI*Math.min(1,u*1.3))*(1-u)*o.lvl).toFixed(3)+")";x.beginPath();x.ellipse(Math.sin(TT*1.7+i*1.3+u*5)*5*S*u,-u*30*S,(2+u*5)*S,(3+u*4)*S,0,0,6.283);x.fill();x.restore();}x.restore();}
   if(!o._nob){x.save();x.translate(hp.x,hp.y);o.bs=o.flip?-1:1;ecPaxBubble(x,0,0,s,o,TT);x.restore();}}
 // bulle de Pax seule (dessinée après tout le monde), à la même place qu'avec le sprite
-function ecPaxBubbleAt(x,X,Y,s,o,TT){const h=s*EC_PAXLEN;x.save();x.translate(X,Y-s*0.62-h/2+h*0.1);o.bs=o.flip?-1:1;ecPaxBubble(x,0,0,s,o,TT);x.restore();}
+function ecPaxBubbleAt(x,X,Y,s,o,TT){const h=s*EC_PAXLEN;x.save();x.translate(X,TOP90?Y-s*0.15:Y-s*0.62-h/2+h*0.1);o.bs=o.flip?-1:1;ecPaxBubble(x,0,0,s,o,TT);x.restore();}
 // Pax immobile (étage, autres cartes) : debout, café à la main, une gorgée de temps en temps
 function ecPaxIdle(k,TT){const t=(TT+(k.x*13+k.y*7))%30;return {x:k.x,y:k.y,a:k.a!=null?k.a:Math.PI/2,still:true,flip:false,cup:true,lvl:0.35+0.6*(1-((TT/240)%1)),pose:t>24&&t<26.6?"boire":"cafe_repos"};}
 // Employés sans nom : un cuisinier et un serveur qui servent À LA COMMANDE, un marchand derrière ses étals de boutique
@@ -10113,7 +10113,9 @@ function ecAfter(){if(ui.office==="ecran")return;const cv=document.getElementByI
     else if(ecZones(cc)){const k=ecZoneAt(cc,p);if(k>=0){ecZoneSet(cc,k,tool==="hide"?"2":"1");ecUpd();ptSave();ecPush(true);}}
     else{drag={paint:true};paint(p);ecUpd();}});
   cv.addEventListener("pointermove",e=>{if(!drag)return;const p=cell(e),cc=ecCard();
-    if(drag.k){drag.k.x=Math.max(0.5,Math.min(cc.w-0.5,Math.floor(p[0]+drag.dx)+0.5));drag.k.y=Math.max(0.5,Math.min(cc.h-0.5,Math.floor(p[1]+drag.dy)+0.5));ecReveal(cc);ecUpd();}
+    if(drag.k){const ox=drag.k.x,oy=drag.k.y;drag.k.x=Math.max(0.5,Math.min(cc.w-0.5,Math.floor(p[0]+drag.dx)+0.5));drag.k.y=Math.max(0.5,Math.min(cc.h-0.5,Math.floor(p[1]+drag.dy)+0.5));
+      // un personnage qu'on déplace se tourne dans le sens où on le tire (il ne glisse pas de côté)
+      if((drag.k.look||drag.k.sp)&&(drag.k.x!==ox||drag.k.y!==oy)){drag.k.a=Math.atan2(drag.k.y-oy,drag.k.x-ox);if(drag.k.look)EC_ROAMPOS.set(drag.k,[drag.k.x,drag.k.y]);}ecReveal(cc);ecUpd();}
     else if(drag.cam){ecP().follow=false;cc.cam={x:Math.round(p[0]+drag.dx),y:Math.round(p[1]+drag.dy)};ecUpd();}else if(drag.paint){paint(p);ecUpd();}});
   const end=()=>{if(drag){const rs=drag.resel;drag=null;ptSave();ecPush(true);if(rs)render();}};cv.addEventListener("pointerup",end);cv.addEventListener("pointercancel",end);}
 // Chasse ou rencontre : un clic sur un animal ou un passant le transforme en jeton (il quitte la vie de fond, partout).
