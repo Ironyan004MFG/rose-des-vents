@@ -9758,7 +9758,8 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),p
             x.save();x.globalAlpha=!tv&&!k.vis?0.55:1;const PX=o.x*s,PY=o.y*s;
       if(r.sel===k.id){x.strokeStyle="#fff";x.lineWidth=Math.max(3,s*0.08);x.beginPath();x.arc(PX,PY,s*0.95,0,6.283);x.stroke();}
       x.strokeStyle="rgba(240,208,112,"+(0.55+Math.sin(TT*1.6)*0.2).toFixed(2)+")";x.lineWidth=Math.max(1.5,s*0.045);x.beginPath();x.arc(PX,PY,s*0.9,0,6.283);x.stroke();
-      {const mv=o.a!=null?o.a:Math.PI/2,fa=Math.PI/2,rot=fa-Math.PI/2,sd=Math.cos(mv-rot);o.a=fa;o.flip=sd<-0.2;o.persp=()=>Math.PI/2;}
+      // vue 3/4 seulement : Pax toujours de face, retourné gauche/droite ; vue de dessus : il se tourne vers où il marche
+      if(!TOP90){const mv=o.a!=null?o.a:Math.PI/2,fa=Math.PI/2,rot=fa-Math.PI/2,sd=Math.cos(mv-rot);o.a=fa;o.flip=sd<-0.2;o.persp=()=>Math.PI/2;}
       ecPaxSprite(x,PX,PY,s,o,TT);if(gg){const T=x.getTransform(),A=x.globalAlpha;bubTop(x,PX,PY,()=>{x.save();x.setTransform(T);x.globalAlpha=A;ecPaxReact(x,gg,s,o,TT,0,0);x.restore();});}x.restore();return;}});}
   // personnages et meubles devant eux, triés par profondeur, AVANT l'éclairage et le brouillard (même lumière pour tous)
   v34Occlude(x,c.type==="bureau"&&!st.combat?ecGenGeo(c):null,s);
