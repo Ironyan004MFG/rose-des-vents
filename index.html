@@ -3035,7 +3035,9 @@ function ptClone(o){return JSON.parse(JSON.stringify(o));}
 function ptSync(qid){
   const d=parties.find(p=>p.id===qid);
   if(!ui.pt||ui.pt.id!==qid){ui.pt=d?Object.assign(ptBlank(qid),ptClone(d)):ptBlank(qid);ui.ptRev=ui.pt.rev||0;if(isAdmin&&qid!=="libre")setTimeout(tbPush,0);return;}
-  if(d&&d.rev&&d.rev!==ui.ptRev&&Date.now()-(ui.ptEditMs||0)>4000){ui.pt=Object.assign(ptBlank(qid),ptClone(d));ui.ptRev=d.rev;}
+  // On ne reprend la version enregistrée que si elle est PLUS RÉCENTE que la nôtre (jamais de retour en arrière).
+  // Si elle vient d'un autre onglet ou appareil, on prévient : les deux se remplacent l'un l'autre.
+  if(d&&d.rev&&d.rev>(ui.ptRev||0)&&Date.now()-(ui.ptEditMs||0)>4000){ui.pt=Object.assign(ptBlank(qid),ptClone(d));ui.ptRev=d.rev;if(d.by&&d.by!==PT_CLIENT)ui.ptAlert="⚠ Cette partie est aussi ouverte dans un autre onglet ou sur un autre appareil : ses changements remplacent les tiens. Garde la partie ouverte à un seul endroit (la télé, elle, doit afficher l'écran des joueurs).";}
 }
 let ptTimer=null;
 // Objectifs d'élimination : chaque ennemi vaincu coche l'élément correspondant (même nom, sans le numéro).
@@ -3047,9 +3049,10 @@ function ptObjSync(){const P=ui.pt,q=P&&questById(P.id);if(!q)return;const ob=ob
   ob.forEach(o=>{if(!o.sub.length)return;const L=S[o.i]=S[o.i]||[],seen={};
     o.sub.forEach((x,k)=>{const b=objBase(x);seen[b]=(seen[b]||0)+1;if(seen[b]<=(cnt[b]||0)&&L.indexOf(k)<0){L.push(k);ptLog("✔ "+x+" (objectif : "+o.txt+")");}});
     if(o.sub.every((_,k)=>L.indexOf(k)>=0)&&F.indexOf(o.i)<0){F.push(o.i);ptLog("🎯 Objectif rempli : "+o.txt);}});}
+const PT_CLIENT=Math.random().toString(36).slice(2,10);
 function ptSave(){
   try{ptObjSync();}catch(e){console.error(e);}
-  ui.ptEditMs=Date.now();ui.pt.rev=Date.now();ui.ptRev=ui.pt.rev;
+  ui.ptEditMs=Date.now();ui.pt.rev=Math.max(Date.now(),(ui.ptRev||0)+1);ui.ptRev=ui.pt.rev;ui.pt.by=PT_CLIENT;
   clearTimeout(ptTimer);const st=ptClone(ui.pt),qid=st.id;delete st.id;
   ptTimer=setTimeout(()=>{setDoc(doc(db,"parties",qid),Object.assign(st,{majLe:serverTimestamp()})).catch(e=>{console.error(e);save={state:"error",msg:errText(e)};render();});},500);
 }
@@ -10194,7 +10197,7 @@ function ecCloseScreens(){if(!isAdmin)return;clearTimeout(ecPushT);clearTimeout(
   if(q)setDoc(doc(db,"table",q.id),{qid:q.id,titre:q.titre,carte:null,ms:Date.now()}).catch(e=>console.error(e));}
 // grille active par défaut tant que le MJ ne l'a pas décochée lui-même
 function ecGridOn(E){return E.gridSet?!!E.grid:true;}
-function ecPush(now){if(ui.ecStopped)return;if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);const wr=()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));};if(now)wr();else ecPushT=setTimeout(wr,250);}
+function ecPush(now){if(ui.ecStopped)return;if(isAdmin&&ui.pt)try{ptSave();}catch(e){console.error(e);}if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);const wr=()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));};if(now)wr();else ecPushT=setTimeout(wr,250);}
 function ecReveal(c){const E=ecP();const st=ecState();if(!st)return;const V=ecVision(st);let vu=(c.vu||"").padEnd(c.w*c.h,"0").split("");let ch=false;for(let i=0;i<V.vis.length;i++)if(V.vis[i]&&vu[i]!=="1"){vu[i]="1";ch=true;}if(ch)c.vu=vu.join("");}
 function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc.calib)||{};
   let h='<div class="ecdm"><p class="ecopen"><a class="btn gold sm" href="#ecran" target="_blank" rel="noopener">Ouvrir l\'écran joueurs ↗</a> '+(ecDoc&&ecDoc.carte?'<button class="btn ghost sm" data-a="ec-stop">■ Arrêter l\'écran joueur</button>':'<button class="btn gold sm" data-a="ec-start"'+(ecState()?'':' disabled title="Ouvre d\'abord une carte ci-dessous"')+'>▶ Démarrer l\'écran joueur</button>')+' <button class="btn ghost sm" data-a="ec-copylink">'+(ui.ecCopied?'✓ Lien copié':'Copier le lien')+'</button> <span class="desc">Ouvre-le sur l\'écran de table, puis F11 pour le plein écran. Sur un autre ordinateur : colle le lien et connecte-toi avec ton compte de DM.'+(tvv?' Écran détecté : '+tvv.cols+' × '+tvv.rows+' cases.':'')+'</span></p>';
