@@ -323,7 +323,7 @@ service cloud.firestore {
     // ---------- Phase 2 : renommée (lecture publique, écriture admin) ----------
     function validAdv(d) {
       return d.keys().hasOnly(['nom', 'joueur', 'niveaux', 'proprietaire', 'espece', 'classe', 'description',
-                               'background', 'image', 'token', 'tokenCadre', 'don', 'pnj', 'rangGuilde', 'etoiles', 'xp', 'xpLog', 'stats', 'creeLe', 'majLe'])
+                               'background', 'image', 'token', 'tokenCadre', 'don', 'pnj', 'rangGuilde', 'etoiles', 'xp', 'xpLog', 'stats', 'compagnons', 'creeLe', 'majLe'])
         && str(d.nom, 1, 60)
         && optStr(d, 'joueur', 60) && optStr(d, 'espece', 60) && optStr(d, 'classe', 60)
         && optStr(d, 'description', 2000) && optStr(d, 'background', 7000) && optStr(d, 'don', 500)
@@ -335,6 +335,8 @@ service cloud.firestore {
         && (!('xp' in d) || (d.xp is int && d.xp >= 0 && d.xp <= 999999))
         && (!('xpLog' in d) || (d.xpLog is list && d.xpLog.size() <= 200))
         && (!('niveaux' in d) || d.niveaux is map)
+        // Compagnons (familier, Main de mage…) : 6 au plus, chacun avec son petit jeton
+        && (!('compagnons' in d) || (d.compagnons is list && d.compagnons.size() <= 6))
         // Statistiques de jeu (fiche publique) : PV max, CA, Perception passive, vision dans le noir (pieds)
         && (!('stats' in d) || (d.stats is map && d.stats.keys().hasOnly(['pv', 'ca', 'pp', 'dv'])
             && (!('pv' in d.stats) || (d.stats.pv is int && d.stats.pv >= 0 && d.stats.pv <= 999))
@@ -355,7 +357,7 @@ service cloud.firestore {
       allow update: if realAccount() && validAdv(request.resource.data)
         && resource.data.proprietaire == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['nom', 'espece', 'classe', 'description', 'background', 'image', 'token', 'tokenCadre', 'stats', 'majLe']);
+             .hasOnly(['nom', 'espece', 'classe', 'description', 'background', 'image', 'token', 'tokenCadre', 'stats', 'compagnons', 'majLe']);
       allow delete: if isAdmin();
     }
     // Points de renommée : réservés au DM (les joueurs ne voient que les rangs)
