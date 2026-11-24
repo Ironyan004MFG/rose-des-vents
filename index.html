@@ -3035,7 +3035,7 @@ function ptClone(o){return JSON.parse(JSON.stringify(o));}
 function ptSync(qid){
   const d=parties.find(p=>p.id===qid);
   // Tant que les parties enregistrées ne sont pas arrivées, on n'enregistre rien (sinon un nouvel onglet écraserait la partie avec une page blanche)
-  if(ui.pt&&ui.pt.id===qid&&ui.ptWait&&loaded.pa){const R=d?Object.assign(ptBlank(qid),ptClone(d)):ptBlank(qid);ui.pt=ptMerge3(ui.ptBase||ptBlank(qid),ui.pt,R);ui.ptBase=R;ui.ptWait=false;ui.ptRev=Math.max(ui.ptRev||0,R.rev||0);if(ui.ptDirty){ui.ptDirty=false;setTimeout(ptSave,0);}return;}
+  if(ui.pt&&ui.pt.id===qid&&ui.ptWait&&loaded.pa){const R=d?Object.assign(ptBlank(qid),ptClone(d)):ptBlank(qid);ui.pt=ui.ptDirty?ptMerge3(ui.ptBase||ptBlank(qid),ui.pt,R):R;ui.ptBase=ptClone(R);ui.ptWait=false;ui.ptRev=Math.max(ui.ptRev||0,R.rev||0);if(ui.ptDirty){ui.ptDirty=false;setTimeout(ptSave,0);}return;}
   if(!ui.pt||ui.pt.id!==qid){ui.pt=d?Object.assign(ptBlank(qid),ptClone(d)):ptBlank(qid);ui.ptWait=!loaded.pa;ui.ptRev=ui.pt.rev||0;ui.ptBase=ptClone(ui.pt);if(isAdmin&&qid!=="libre")setTimeout(tbPush,0);return;}
   // Une version plus récente vient d'un autre onglet (ex. scénario dans un onglet, carte dans l'autre) : on COMBINE,
   // on ne remplace pas. Ce qu'on a changé ici est gardé, ce que l'autre onglet a changé est repris. Jamais de retour en arrière.
@@ -3047,7 +3047,7 @@ function ptSync(qid){
 // Différences champ par champ entre deux états (les listes sont envoyées en entier)
 function ptDiff(b,l,pa,out){const isO=v=>!!v&&typeof v==="object"&&!Array.isArray(v);if(ptStab(b)===ptStab(l))return;
   if(isO(b)&&isO(l)&&pa.length<4){new Set(Object.keys(b).concat(Object.keys(l))).forEach(k=>{if(k==="majLe")return;ptDiff(b[k],l[k],pa.concat([k]),out);});return;}out.push([pa,l]);}
-function ptStab(v){return v===undefined?"u":JSON.stringify(v,(k,x)=>x&&typeof x==="object"&&!Array.isArray(x)?Object.keys(x).sort().reduce((o,k2)=>{o[k2]=x[k2];return o;},{}):x);}
+function ptStab(v){return v==null?"u":JSON.stringify(v,(k,x)=>x&&typeof x==="object"&&!Array.isArray(x)?Object.keys(x).sort().reduce((o,k2)=>{o[k2]=x[k2];return o;},{}):x);}
 function ptMerge3(b,l,r){const eq=(x,y)=>ptStab(x)===ptStab(y),isO=v=>!!v&&typeof v==="object"&&!Array.isArray(v);
   if(eq(l,b))return r===undefined?undefined:ptClone(r);if(eq(r,b)||eq(l,r))return l;
   if(isO(l)&&isO(r)){const o={},B=isO(b)?b:{};new Set(Object.keys(l).concat(Object.keys(r),Object.keys(B))).forEach(k=>{if(k==="rev"||k==="by"||k==="majLe"){if(r[k]!==undefined)o[k]=r[k];return;}const v=ptMerge3(B[k],l[k],r[k]);if(v!==undefined)o[k]=v;});return o;}
