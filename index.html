@@ -126,6 +126,7 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .ectv-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#d8b45e;font-family:var(--display);font-size:22px;text-align:center;padding:20px;pointer-events:none}.ectv-msg .btn,.ectv-msg a{pointer-events:auto}.ectv-msg{flex-direction:column}.ectv-msg:empty{display:none}
 .eccamp{display:inline-flex;gap:4px;margin:0 6px}.eccamp .mini.red{border-color:#c0392b;color:#c0392b}.eccamp .mini.green{border-color:#2e8b57;color:#2e8b57}.eccamp .mini.red.on{background:#c0392b;color:#fff}.eccamp .mini.green.on{background:#2e8b57;color:#fff}
 .exph{font-family:var(--display);margin:6px 0 12px}.livebadge{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:#2e8b57;color:#fff;font-size:12px;letter-spacing:.05em}.explive{outline:2px solid rgba(46,139,87,.5)}
+.ptmaponly .ptmapbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:0 0 10px}.ptmaponly .ptmapbar .desc{flex:1}.ptsepbox{padding:16px;border:2px dashed #d8b45e;border-radius:10px;background:rgba(216,180,94,.1)}.pttabs button.ptsepbtn{flex:0 0 auto;margin:6px 8px 6px auto;align-self:center;min-height:32px;border:1px solid #b89a5a;border-bottom:1px solid #b89a5a;background:#d8b45e;color:#2b1d0e;border-radius:999px;padding:4px 12px;font-weight:600}.pttabs button.ptsepbtn.on{background:#2b1d0e;color:#f6ecd0;border-color:#2b1d0e}
 .ecselbox{border:2px solid #d8b45e;border-radius:10px;background:rgba(216,180,94,.12);padding:6px 10px;margin:8px 0}.ecselbox h4{margin:2px 0;font-size:14px}.ecselbox .ecsel{margin:4px 0}.ecdm .ecbar,.ecdm .ecrow,.ecdm .ecsel{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:8px 0}.ecdm label{display:flex;flex-direction:column;font-size:13px}.ecdm label.ecck{flex-direction:row;align-items:center;gap:5px}.ecdm .ecsp{flex:1}
 /* Agrandir une image de fiche ; la montrer sur l'écran des joueurs */
 img.zoomable{cursor:zoom-in}img.zoomable:focus-visible{outline:3px solid #2a6fb0;outline-offset:2px}
@@ -694,7 +695,7 @@ ul.objsub input:checked+span{text-decoration:line-through;opacity:.65}
 .ptfoot{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;border-top:1px solid var(--parch-3);padding-top:12px}
 a.btn{text-decoration:none;display:inline-flex;align-items:center}
 /* écran MJ (partie, espace MJ) : plus large sur un PC, la page publique garde sa largeur */
-@media (min-width:1300px){.wrap:has(.ptgrid),.wrap:has(.dmspace){max-width:min(1800px,95vw)}}
+@media (min-width:1300px){.wrap:has(.ptgrid),.wrap:has(.dmspace),.wrap:has(.ptmaponly){max-width:min(1800px,95vw)}}
 @media (max-width:900px){
   .ptgrid{grid-template-columns:1fr}
   .ptside{position:static;max-height:none}
@@ -2982,6 +2983,8 @@ function route(){
   let id=(location.hash||"").slice(1);
   // #tele-CLE : écran des joueurs public (sans connexion), en lecture seule, pour la télé ou une diffusion
   if(id.indexOf("tele-")===0){ui.teleKey=id.slice(5);teleSub(ui.teleKey);id="ecran";}else if(ui.teleKey){ui.teleKey=null;teleSub(null);}
+  // #partie-ID~carte : onglet « carte seule » des écrans séparés
+  ui.ptMapOnly=/~carte$/.test(id);if(ui.ptMapOnly)id=id.slice(0,-6);
   const next=id&&id!=="carte"?id:null;
   if(next!==ui.office){const wasPt=!!ui.office&&ui.office.indexOf("partie-")===0,isPt=!!next&&next.indexOf("partie-")===0;
     {const disp=o=>!!o&&(o.indexOf("partie-")===0||o==="dm"||o==="mini"||o==="ecran");// quitter le Mode Partie, ou aller ailleurs que l'Espace DM / la Mini Guilde, ferme l'écran des joueurs
@@ -3058,7 +3061,7 @@ function ptSync(qid){
   // on ne remplace pas. Ce qu'on a changé ici est gardé, ce que l'autre onglet a changé est repris. Jamais de retour en arrière.
   if(d&&d!==ui.ptSeenObj&&Date.now()-(ui.ptEditMs||0)<=1500){clearTimeout(ptSync.t);ptSync.t=setTimeout(()=>{if(ui.pt&&ui.pt.id===qid&&!document.activeElement.matches("input,textarea,select"))render();},1600);}
   if(d&&d!==ui.ptSeenObj&&Date.now()-(ui.ptEditMs||0)>1500){ui.ptSeenObj=d;const R=Object.assign(ptBlank(qid),ptClone(d)),nk=o=>{const c=Object.assign({},o);delete c.rev;delete c.by;delete c.majLe;delete c.id;return ptStab(c);};
-    if(!ui.ptBase||nk(R)!==nk(ui.ptBase)){ui.pt=ptMerge3(ui.ptBase||R,ui.pt,R);ui.ptBase=R;ui.ptSeen=d.rev;ui.ptRev=Math.max(ui.ptRev||0,d.rev||0);}}
+    if(!ui.ptBase||nk(R)!==nk(ui.ptBase)){ui.pt=ptMerge3(ui.ptBase||R,ui.pt,R);ui.ptBase=R;ui.ptSeen=d.rev;ui.ptRev=Math.max(ui.ptRev||0,d.rev||0);if(ui.ptMapOnly)setTimeout(()=>{try{ecUpd();ecPush(true);}catch(e){}},0);}}
 }
 // Fusion à trois voies (base commune, ici, là-bas) : champ par champ ; listes de jetons, cartes et combattants par identifiant.
 // Différences champ par champ entre deux états (les listes sont envoyées en entier)
@@ -10250,7 +10253,8 @@ function ecCloseScreens(){if(!isAdmin)return;clearTimeout(ecPushT);clearTimeout(
   if(q)setDoc(doc(db,"table",q.id),{qid:q.id,titre:q.titre,carte:null,ms:Date.now()}).catch(e=>console.error(e));}
 // grille active par défaut tant que le MJ ne l'a pas décochée lui-même
 function ecGridOn(E){return E.gridSet?!!E.grid:true;}
-function ecPush(now){if(ui.ecStopped)return;if(!ptActive())return;if(isAdmin&&ui.pt)try{ptSave();}catch(e){console.error(e);}if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);const wr=()=>{fsThr("ec",()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},1000);telePush(st);};if(now)wr();else ecPushT=setTimeout(wr,250);}
+function ecPush(now){if(ui.ecStopped)return;if(!ptActive()&&!ui.ptMapOnly)return;if(isAdmin&&ui.pt)try{ptSave();}catch(e){console.error(e);}
+  if(ui.pt&&ui.pt.id!=="libre"&&!ui.ptMapOnly&&ptSepOn(ui.pt.id))return;if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);const wr=()=>{fsThr("ec",()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},1000);telePush(st);};if(now)wr();else ecPushT=setTimeout(wr,250);}
 function ecReveal(c){const E=ecP();const st=ecState();if(!st)return;const V=ecVision(st);let vu=(c.vu||"").padEnd(c.w*c.h,"0").split("");let ch=false;for(let i=0;i<V.vis.length;i++)if(V.vis[i]&&vu[i]!=="1"){vu[i]="1";ch=true;}if(ch)c.vu=vu.join("");}
 function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc.calib)||{};
   let h='<div class="ecdm"><p class="ecopen"><a class="btn gold sm" href="#ecran" target="_blank" rel="noopener">Ouvrir l\'écran joueurs ↗</a> '+(ecDoc&&ecDoc.carte?'<button class="btn ghost sm" data-a="ec-stop">■ Arrêter l\'écran joueur</button>':'<button class="btn gold sm" data-a="ec-start"'+(ecState()?'':' disabled title="Ouvre d\'abord une carte ci-dessous"')+'>▶ Démarrer l\'écran joueur</button>')+' <button class="btn gold sm" data-a="tele-copylink" title="Un lien secret, sans connexion : la télé ou un autre ordinateur affiche l\'écran des joueurs sans pouvoir rien modifier">'+(ui.teleCopied?'✓ Lien copié':'📡 Copier le lien télé (sans connexion)')+'</button> <button class="btn ghost sm" data-a="ec-copylink">'+(ui.ecCopied?'✓ Lien copié':'Copier le lien (compte DM)')+'</button> <span class="desc">Sur l\'ordinateur de la télé : colle le <strong>lien télé</strong> (aucune connexion), puis F11 pour le plein écran. Il affiche seulement ce que les joueurs voient et ne modifie jamais la partie.'+(tvv?' Écran détecté : '+tvv.cols+' × '+tvv.rows+' cases.':'')+'</span></p>';
@@ -10518,10 +10522,10 @@ const EC_SEASONIZE={hiver:{pluie:"neige",orage:"neige",chaleur:"clair"},ete:{nei
 function ecSeasonize(k,sa){const ok=EC_OK[sa]||EC_OK.printemps;if(!EC_METEO[k])return "clair";if(ok.indexOf(k)>=0)return k;const m=(EC_SEASONIZE[sa]||{})[k];return m&&ok.indexOf(m)>=0?m:"clair";}
 
 function ptSide(q){
-  const tab=(ui.ptTab==="secrets"&&!bgAvail(q))?"scenario":(ui.ptTab||"scenario"),s=scenarios[q.id]||{};
+  const sep=!q.libre&&ptSepOn(q.id),tab0=(ui.ptTab==="secrets"&&!bgAvail(q))?"scenario":(ui.ptTab||"scenario"),tab=sep&&tab0==="ecran"?"scenario":tab0,s=scenarios[q.id]||{};
   const ob=objsOf(q),od=(ui.pt.objectifs||[]).filter(i=>i<ob.length).length;
-  const tabs=(ob.length?[["objectifs",'Objectifs <span class="otc'+(od>=ob.length?' ok':'')+'">'+od+'/'+ob.length+'</span>']]:[]).concat(bgAvail(q)?[["secrets",(()=>{const c=bgCount(q);return 'Secrets <span class="otc'+(c.n&&c.f>=c.n?' ok':'')+'">'+c.f+'/'+c.n+'</span>';})()]]:[]).concat([["scenario","Scénario"],["compendium","Compendium"],["butin","Butin"],["boutiques","Boutiques"],["ecran","Écran"],["tests","Tests & DD"],["regles","Règles"],["des","Dés"],["journal","Journal"],["bilan","Bilan"]]);
-  let h='<div class="pttabs" role="tablist">'+tabs.map(t=>'<button role="tab" aria-selected="'+(tab===t[0])+'" class="'+(tab===t[0]?'on':'')+(t[0]==="objectifs"&&od>=ob.length?' allok':'')+'" data-a="pt-tab" data-v="'+t[0]+'">'+t[1]+'</button>').join("")+'</div><div class="ptpanel">';
+  const tabs=(ob.length?[["objectifs",'Objectifs <span class="otc'+(od>=ob.length?' ok':'')+'">'+od+'/'+ob.length+'</span>']]:[]).concat(bgAvail(q)?[["secrets",(()=>{const c=bgCount(q);return 'Secrets <span class="otc'+(c.n&&c.f>=c.n?' ok':'')+'">'+c.f+'/'+c.n+'</span>';})()]]:[]).concat([["scenario","Scénario"],["compendium","Compendium"],["butin","Butin"],["boutiques","Boutiques"]].concat(sep?[]:[["ecran","Écran"]]).concat([["tests","Tests & DD"],["regles","Règles"],["des","Dés"],["journal","Journal"],["bilan","Bilan"]]));
+  let h='<div class="pttabs" role="tablist">'+tabs.map(t=>'<button role="tab" aria-selected="'+(tab===t[0])+'" class="'+(tab===t[0]?'on':'')+(t[0]==="objectifs"&&od>=ob.length?' allok':'')+'" data-a="pt-tab" data-v="'+t[0]+'">'+t[1]+'</button>').join("")+(q.libre?'':'<button class="ptsepbtn'+(sep?' on':'')+'" data-a="'+(sep?'pt-sep-off':'pt-sep-on')+'" title="'+(sep?'La carte revient dans l\'onglet Écran de cette page':'La carte (onglet Écran) part dans un nouvel onglet du navigateur, en pleine page ; ici, tu gardes le combat, le scénario et le compendium')+'">⧉ '+(sep?'Combiner les écrans':'Séparer les écrans')+'</button>')+'</div><div class="ptpanel">';
   if(tab==="objectifs")h+=ptObjectifs(q);
   else if(tab==="secrets")h+=bgPanel(q);
   else if(tab==="scenario"){
@@ -10821,7 +10825,12 @@ function ptObjectifs(q){const ob=objsOf(q),P=ui.pt,od=P.objectifs||[],sd=P.objSu
   return '<p class="desc">Secrets : les joueurs ne les voient pas. Ils déterminent le résultat en fin de quête (tous = Réussite, certains = Réussite partielle, aucun = Échec).</p>'+ob.map(o=>{const on=od.indexOf(o.i)>=0,ss=sd[o.i]||[];
     return '<section class="ptobj'+(on?' done':'')+'"><label class="ptobjrow" for="pobj-'+o.i+'"><input type="checkbox" class="pt-obj" id="pobj-'+o.i+'" data-i="'+o.i+'"'+(on?' checked':'')+'><span><strong>'+esc(o.txt)+'</strong>'+(o.sub.length?' <span class="desc">('+ss.filter(k=>k<o.sub.length).length+' / '+o.sub.length+')</span>':'')+'</span></label>'+
       (o.sub.length?'<ul class="objsub">'+o.sub.map((x,k)=>'<li><label for="psub-'+o.i+'-'+k+'"><input type="checkbox" class="pt-osub" id="psub-'+o.i+'-'+k+'" data-i="'+o.i+'" data-k="'+k+'"'+(ss.indexOf(k)>=0?' checked':'')+'><span>'+esc(x)+'</span></label></li>').join("")+'</ul>':'')+'</section>';}).join("");}
-function ptSplitSet(f,save){if(f==null){try{f=parseFloat(localStorage.getItem("rdv-ptsplit"));}catch(e){}if(!(f>=0.28&&f<=0.72))f=0.47;}else if(save){try{localStorage.setItem("rdv-ptsplit",String(f));}catch(e){}}
+/* ----- Écrans séparés : la carte dans un onglet à part (pleine page), le combat et le reste dans l'autre ----- */
+function ptSplitK(qid){return "rdv-sep|"+qid;}
+function ptSepOn(qid){try{return localStorage.getItem(ptSplitK(qid))==="1";}catch(e){return false;}}
+function ptSepSet(qid,on){try{if(on)localStorage.setItem(ptSplitK(qid),"1");else localStorage.removeItem(ptSplitK(qid));}catch(e){}}
+window.addEventListener("storage",e=>{if(e.key&&e.key.indexOf("rdv-sep|")===0&&ui.office&&ui.office.indexOf("partie-")===0)render();});
+function ptSplitSet(f,save){if(f==null){try{f=parseFloat(sessionStorage.getItem("rdv-ptsplit"));}catch(e){}if(!(f>=0.28&&f<=0.72))f=0.47;}else if(save){try{sessionStorage.setItem("rdv-ptsplit",String(f));}catch(e){}}
   const g=document.querySelector(".ptgrid");if(!g)return;g.style.setProperty("--ptl",f+"fr");g.style.setProperty("--ptr",(1-f)+"fr");
   const sp=g.querySelector(".ptsplit"),a=g.querySelector(".ptcombat");if(sp&&a)sp.style.left=(a.offsetWidth+10)+"px";if(save)try{ecAfter();}catch(e){}}
 window.addEventListener("resize",()=>ptSplitSet());
@@ -11109,6 +11118,7 @@ function partyView(){
   ptSync(q.id);const P=ui.pt,o=ptOrder(),b=office(q.bureau)||{};
   if(ui.ptLaunch){const rid=ui.ptLaunch;ui.ptLaunch=null;if(P.combat)ui.ptAlert="Clos d'abord la rencontre « "+P.combat.nom+" ».";else{ptStartEnc(q,rid,"",true);ptSave();}}
   const xp=P.liste.filter(c=>c.kind==="monstre"&&c.pv<=0).reduce((t,c)=>t+(+c.xp||0),0),npj=P.liste.filter(c=>c.kind==="pj").length;
+  if(ui.ptMapOnly){ui.ptTab="ecran";return '<section class="partie ptmaponly"><div class="ptmapbar"><strong>🗺 '+esc(q.titre)+' · Carte</strong><span class="desc">Le combat, le scénario et le compendium sont dans l\'autre onglet.</span><button class="btn gold sm" data-a="pt-sep-off">⧉ Combiner les écrans</button></div>'+(ui.ptAlert?'<div class="ptalert" role="alert"><span>⚠ '+esc(ui.ptAlert)+'</span><button data-a="pt-aok" aria-label="Fermer l\'alerte">OK</button></div>':'')+'<div class="ptpanel">'+ecTab(q)+'</div></section>';}
   let h='<section class="partie"><div class="pthead"><div><p class="ctags">'+(q.libre?'<span class="creg">Hors quête</span>':q.mini?'<span class="creg">Mini Guilde · Waterdeep</span>':rankSeal(q.rang)+'<span class="creg">'+esc(b.nom||"")+'</span>')+'</p><h2>'+esc(q.titre)+'</h2>'+(function(){if(q.mini)return (q.presents||[]).length?'<p class="desc">Présents : '+esc(q.presents.map(i=>(miniDocs.find(x=>x.id===i)||{}).nom).filter(Boolean).join(", "))+'</p>':'';if(q.libre)return '<p class="desc">Pas de scénario, pas d\'XP ni d\'avance du calendrier : pour les visites à la Guilde, le roleplay en ville, les achats et les rencontres improvisées.</p>';const t=ptXpTotal(q.id),n=signupsFor(q.id).filter(x=>x.statut==="confirmee").length||P.liste.filter(c=>c.kind==="pj").length;return t?'<p class="ptxpgain">✦ '+t.toLocaleString("fr-CA")+' XP gagnés'+(n?' · '+xpShare(t,n).toLocaleString("fr-CA")+' par aventurier ('+n+')':'')+'</p>':'';})()+'</div><div class="ptround">'+(P.combat&&P.combat.phase==="combat"?'<span>Round</span><strong>'+P.round+'</strong>':P.combat?'<span>Initiative</span><strong>🎲</strong>':'<span>Hors combat</span>')+'</div></div>';
   if(ui.ptAlert)h+='<div class="ptalert" role="alert"><span>⚠ '+esc(ui.ptAlert)+'</span><button data-a="pt-aok" aria-label="Fermer l\'alerte">OK</button></div>';
   h+='<div class="ptgrid"><div class="ptsplit" role="separator" aria-orientation="vertical" aria-label="Glisser pour élargir une colonne ou l\'autre" title="Glisser pour ajuster · double-clic pour revenir"></div><div class="ptcombat">'+ptCombatCol(q);
@@ -11389,6 +11399,8 @@ document.addEventListener("click",async e=>{
   if(a==="ec-start"){ui.ecStopped=false;const st=ecState();if(st){ecDoc=Object.assign({},ecDoc||{},st);ecPush(true);hbBeat();}render();return;}
   if(a==="ec-stop"){ui.ecStopped=true;ecCloseScreens();render();return;}
   if(a==="tb-copylink"){copyText(location.origin+location.pathname+"#table-"+id);ui.tbCopied=true;render();setTimeout(()=>{ui.tbCopied=false;render();},2500);return;}
+  if(a==="pt-sep-on"){const q=ptQuest();if(!q)return;ptSepSet(q.id,true);window.open(location.pathname+"#partie-"+q.id+"~carte","rdv-carte-"+q.id);if(ui.ptTab==="ecran")ui.ptTab="scenario";render();return;}
+  if(a==="pt-sep-off"){const q=ptQuest();if(!q)return;ptSepSet(q.id,false);if(ui.ptMapOnly){location.hash="#partie-"+q.id;try{window.close();}catch(e){}}else{ui.ptTab="ecran";render();}return;}
   if(a==="tele-copylink"){const L=teleLink();if(!L)return;copyText(L);ui.teleCopied=true;render();setTimeout(()=>{ui.teleCopied=false;render();},2500);try{const st=ecState();if(st)setDoc(doc(db,"ecranpub",teleKey(false)),ecPubState(st)).catch(e=>console.error(e));}catch(e){}return;}
   if(a==="ec-copylink"){copyText(ecLink());ui.ecCopied=true;render();setTimeout(()=>{ui.ecCopied=false;render();},2500);return;}
   if(a==="vit-loot"){const n=b.getAttribute("data-n")||"",rr=b.getAttribute("data-r")||"",o=objets.find(y=>ptNorm(y.nom)===ptNorm(n));b.disabled=true;
