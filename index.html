@@ -10201,8 +10201,9 @@ function tbPush(){const q=tbQuest();if(!q||!isAdmin||!ptActive())return;tbListen
 function tbListen(qid){if(tbFigQ===qid)return;if(tbFigUnsub){try{tbFigUnsub();}catch(e){}tbFigUnsub=null;}tbFigQ=qid;tbFigs={};if(!qid||!isAdmin)return;
   tbFigUnsub=onSnapshot(collection(db,"table",qid,"figs"),snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data();});tbFigs=o;const q=tbQuest();if(q&&q.id===qid){try{ecUpd();}catch(e){}if(ui.office&&ui.office.indexOf("partie-")===0&&ui.ptTab==="ecran"&&!document.activeElement.matches("input,textarea,select"))render();}},e=>console.error(e));}
 // Figurine : pion plein à l'image du personnage, bordé de la couleur de son anneau.
-function ecFigImg(aid){if(!aid)return null;let e=EC_FIGIMG.get(aid);if(e)return e.ok?e.im:null;const av=aventuriers.find(a=>a.id===aid);if(!av||!av.image)return null;
-  e={ok:false,im:new Image()};e.im.onload=()=>{e.ok=true;};e.im.src=av.image;EC_FIGIMG.set(aid,e);return null;}
+function ecFigImg(aid){if(!aid)return null;let e=EC_FIGIMG.get(aid);if(e)return e.ok?e.im:null;const av=aventuriers.find(a=>a.id===aid);if(!av||!(av.token||av.image))return null;
+  // le token du visage (cadré sur la fiche) en priorité, sinon le portrait entier
+  e={ok:false,im:new Image()};e.im.onload=()=>{e.ok=true;};e.im.src=av.token||av.image;EC_FIGIMG.set(aid,e);return null;}
 function ecFigs(x,st,s,r,pl){(st.figs||[]).forEach(f=>{const X=f.x*s,Y=f.y*s,R=s*0.42,im=ecFigImg(f.a),mine=pl&&f.u===r.me;
   x.fillStyle="rgba(0,0,0,.4)";x.beginPath();x.arc(X+s*0.05,Y+s*0.07,R,0,6.283);x.fill();
   x.save();x.beginPath();x.arc(X,Y,R,0,6.283);x.clip();if(im){const k=Math.max(2*R/im.width,2*R/im.height);x.drawImage(im,X-im.width*k/2,Y-im.height*k/2,im.width*k,im.height*k);}else{x.fillStyle=f.c||"#d8b45e";x.fillRect(X-R,Y-R,2*R,2*R);x.fillStyle="#1b140c";x.font="700 "+Math.round(s*0.42)+"px serif";x.textAlign="center";x.textBaseline="middle";x.fillText(String(f.n||"?").slice(0,1).toUpperCase(),X,Y+1);}x.restore();
