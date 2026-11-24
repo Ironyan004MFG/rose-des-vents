@@ -3066,21 +3066,29 @@ function ptObjSync(){const P=ui.pt,q=P&&questById(P.id);if(!q)return;const ob=ob
     o.sub.forEach((x,k)=>{const b=objBase(x);seen[b]=(seen[b]||0)+1;if(seen[b]<=(cnt[b]||0)&&L.indexOf(k)<0){L.push(k);ptLog("✔ "+x+" (objectif : "+o.txt+")");}});
     if(o.sub.every((_,k)=>L.indexOf(k)>=0)&&F.indexOf(o.i)<0){F.push(o.i);ptLog("🎯 Objectif rempli : "+o.txt);}});}
 const PT_CLIENT=Math.random().toString(36).slice(2,10);
-function ptSave(){if(!ui.pt)return;if(ui.ptWait){ui.ptDirty=true;return;}
+// Une page de Mode Partie laissée ouverte sans qu'on y touche (ex. sur l'ordinateur de la télé) n'écrit rien :
+// seule la page où le DM clique ou tape enregistre la partie et l'écran. Sinon elle renverrait sa vieille carte.
+let PT_INPUT=0;["pointerdown","keydown","wheel"].forEach(ev=>document.addEventListener(ev,()=>{PT_INPUT=Date.now();},true));
+function ptActive(){return Date.now()-PT_INPUT<20000;}
+// Firestore n'aime pas plus d'une écriture par seconde sur le même document : au-delà, les écritures s'empilent et tout prend du retard.
+// fsThr garde au plus une écriture par « pas » pour chaque document ; la plus récente gagne.
+const FS_THR={};function fsThr(k,fn,gap){const T=FS_THR[k]||(FS_THR[k]={last:0,t:null,fn:null});T.fn=fn;if(T.t)return;const w=Math.max(0,T.last+gap-Date.now());const go=()=>{T.t=null;T.last=Date.now();const f=T.fn;T.fn=null;try{f&&f();}catch(e){console.error(e);}};if(w===0)go();else T.t=setTimeout(go,w);}
+function ptSave(){if(!ui.pt)return;if(!ptActive())return;if(ui.ptWait){ui.ptDirty=true;return;}
   try{ptObjSync();}catch(e){console.error(e);}
   ui.ptEditMs=Date.now();ui.pt.rev=Math.max(Date.now(),(ui.ptRev||0)+1);ui.ptRev=ui.pt.rev;ui.pt.by=PT_CLIENT;
   clearTimeout(ptTimer);const snap=ptClone(ui.pt),qid=snap.id;
-  ptTimer=setTimeout(()=>{let st=snap;
+  ptTimer=setTimeout(()=>fsThr("pt|"+qid,()=>{let st=snap;
     // juste avant d'écrire : si un autre onglet a enregistré entre-temps, on combine d'abord avec sa version
     const fail=e=>{console.error(e);save={state:"error",msg:errText(e)};render();};
     if(ui.pt&&ui.pt.id===qid){const d=parties.find(p=>p.id===qid);if(d&&d.rev&&d.by!==PT_CLIENT&&d.rev!==ui.ptSeen){const R=Object.assign(ptBlank(qid),ptClone(d));ui.pt=ptMerge3(ui.ptBase||R,ui.pt,R);ui.ptBase=R;ui.ptSeen=d.rev;}
       ui.pt.rev=Math.max(Date.now(),(d&&d.rev||0)+1,(ui.ptRev||0));ui.ptRev=ui.pt.rev;ui.pt.by=PT_CLIENT;
       // on n'envoie que ce qui a changé ici (champ par champ) : deux onglets qui changent des choses différentes ne s'effacent plus
-      if(d&&ui.ptBase){const P=[];ptDiff(ui.ptBase,ui.pt,[],P);const args=[];P.forEach(([pa,v])=>{if(pa[0]==="id")return;args.push(new FieldPath(...pa),v===undefined?deleteField():ptClone(v));});args.push("majLe",serverTimestamp());
-        ui.ptBase=ptClone(ui.pt);if(args.length>2)updateDoc(doc(db,"parties",qid),...args).catch(fail);return;}
+      if(d&&ui.ptBase){const P=[];ptDiff(ui.ptBase,ui.pt,[],P);const real=P.filter(([pa])=>pa[0]!=="id"&&pa[0]!=="rev"&&pa[0]!=="by");if(!real.length)return;
+        const args=[];P.forEach(([pa,v])=>{if(pa[0]==="id")return;args.push(new FieldPath(...pa),v===undefined?deleteField():ptClone(v));});args.push("majLe",serverTimestamp());
+        ui.ptBase=ptClone(ui.pt);updateDoc(doc(db,"parties",qid),...args).catch(fail);return;}
       st=ptClone(ui.pt);ui.ptBase=ptClone(ui.pt);}
     st=Object.assign({},st);delete st.id;
-    setDoc(doc(db,"parties",qid),Object.assign(st,{majLe:serverTimestamp()})).catch(fail);},500);
+    setDoc(doc(db,"parties",qid),Object.assign(st,{majLe:serverTimestamp()})).catch(fail);},1500),500);
 }
 function ptLog(t){const j=ui.pt.journal||(ui.pt.journal=[]);const d=new Date(),e={h:String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"),t:String(t).slice(0,500)};j.push(e);if(ui.pt.combat){const L=ui.pt.combat.log||(ui.pt.combat.log=[]);L.push(e);if(L.length>200)L.splice(0,L.length-200);}if(j.length>300)j.splice(0,j.length-300);}
 function ptOrder(){return (ui.pt.liste||[]).slice().sort((a,b)=>((+b.init||0)-(+a.init||0))||(((+b.dex||0)+(+b.dx||0))-((+a.dex||0)+(+a.dx||0)))||String(a.nom).localeCompare(String(b.nom),"fr"));}
@@ -10135,8 +10143,8 @@ function tbState(q,st){const c=st&&st.carte;if(!c)return {qid:q.id,titre:q.titre
   const fogOn=!!(st.fog&&st.fog.on),V=fogOn?ecVision(st):null;
   const tokens=(st.tokens||[]).filter(k=>{if(k.k==="pj"||k.k==="lum")return true;if(!k.vis)return false;if(!fogOn)return true;return !!(V&&V.tokSeen(k.x,k.y));});
   const out=Object.assign({},st,{vie:Date.now(),qid:q.id,titre:q.titre,tokens,vue:(ecDoc&&ecDoc.tv)?{cols:ecDoc.tv.cols,rows:ecDoc.tv.rows}:{cols:40,rows:22},ms:Date.now()});delete out.calib;delete out.tvv;return JSON.parse(JSON.stringify(out));}
-function tbPush(){const q=tbQuest();if(!q||!isAdmin)return;tbListen(q.id);clearTimeout(tbPushT);tbPushT=setTimeout(()=>{if(tbQuest()!==q)return;let st=null;try{st=ecState();}catch(e){}
-  setDoc(doc(db,"table",q.id),tbState(q,st)).catch(e=>console.error(e));},600);}
+function tbPush(){const q=tbQuest();if(!q||!isAdmin||!ptActive())return;tbListen(q.id);clearTimeout(tbPushT);tbPushT=setTimeout(()=>fsThr("tb|"+q.id,()=>{if(tbQuest()!==q)return;let st=null;try{st=ecState();}catch(e){}
+  setDoc(doc(db,"table",q.id),tbState(q,st)).catch(e=>console.error(e));},1500),600);}
 // Côté DM : écoute les figurines des joueurs, pour les montrer sur sa vue, la télé et la copie publiée.
 function tbListen(qid){if(tbFigQ===qid)return;if(tbFigUnsub){try{tbFigUnsub();}catch(e){}tbFigUnsub=null;}tbFigQ=qid;tbFigs={};if(!qid||!isAdmin)return;
   tbFigUnsub=onSnapshot(collection(db,"table",qid,"figs"),snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data();});tbFigs=o;const q=tbQuest();if(q&&q.id===qid){try{ecUpd();}catch(e){}if(ui.office&&ui.office.indexOf("partie-")===0&&ui.ptTab==="ecran"&&!document.activeElement.matches("input,textarea,select"))render();}},e=>console.error(e));}
@@ -10223,7 +10231,7 @@ function ecCloseScreens(){if(!isAdmin)return;clearTimeout(ecPushT);clearTimeout(
   if(q)setDoc(doc(db,"table",q.id),{qid:q.id,titre:q.titre,carte:null,ms:Date.now()}).catch(e=>console.error(e));}
 // grille active par défaut tant que le MJ ne l'a pas décochée lui-même
 function ecGridOn(E){return E.gridSet?!!E.grid:true;}
-function ecPush(now){if(ui.ecStopped)return;if(isAdmin&&ui.pt)try{ptSave();}catch(e){console.error(e);}if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);const wr=()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));};if(now)wr();else ecPushT=setTimeout(wr,250);}
+function ecPush(now){if(ui.ecStopped)return;if(!ptActive())return;if(isAdmin&&ui.pt)try{ptSave();}catch(e){console.error(e);}if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);const wr=()=>fsThr("ec",()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},1000);if(now)wr();else ecPushT=setTimeout(wr,250);}
 function ecReveal(c){const E=ecP();const st=ecState();if(!st)return;const V=ecVision(st);let vu=(c.vu||"").padEnd(c.w*c.h,"0").split("");let ch=false;for(let i=0;i<V.vis.length;i++)if(V.vis[i]&&vu[i]!=="1"){vu[i]="1";ch=true;}if(ch)c.vu=vu.join("");}
 function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc.calib)||{};
   let h='<div class="ecdm"><p class="ecopen"><a class="btn gold sm" href="#ecran" target="_blank" rel="noopener">Ouvrir l\'écran joueurs ↗</a> '+(ecDoc&&ecDoc.carte?'<button class="btn ghost sm" data-a="ec-stop">■ Arrêter l\'écran joueur</button>':'<button class="btn gold sm" data-a="ec-start"'+(ecState()?'':' disabled title="Ouvre d\'abord une carte ci-dessous"')+'>▶ Démarrer l\'écran joueur</button>')+' <button class="btn ghost sm" data-a="ec-copylink">'+(ui.ecCopied?'✓ Lien copié':'Copier le lien')+'</button> <span class="desc">Ouvre-le sur l\'écran de table, puis F11 pour le plein écran. Sur un autre ordinateur : colle le lien et connecte-toi avec ton compte de DM.'+(tvv?' Écran détecté : '+tvv.cols+' × '+tvv.rows+' cases.':'')+'</span></p>';
