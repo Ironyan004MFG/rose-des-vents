@@ -1437,7 +1437,7 @@ function listenPrivate(on){
   arr("mini",l=>{miniDocs=l;});arr("pnj",l=>{pnjs=l;});arr("objets",l=>{objets=l;});arr("factions",l=>{factions=l;});arr("parties",l=>{parties=l;loaded.pa=true;});arr("modules",l=>{modules=l;});arr("butins",l=>{butins=l;});arr("relations",l=>{relations=l;});arr("faveurs",l=>{faveurs=l;});arr("monstres",l=>{monstres=l;});arr("rencontres",l=>{rencontres=l;});
   privUnsubs.push(onSnapshot(collection(db,"notesdm"),snap=>{notesDm=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(collection(db,"evolutions"),snap=>{evols=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
-  privUnsubs.push(onSnapshot(doc(db,"prive","monde"),snap=>{monde=snap.exists()?snap.data():null;render();},err));
+  privUnsubs.push(onSnapshot(doc(db,"prive","monde"),snap=>{monde=snap.exists()?snap.data():null;teleTvSub();render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","ecran"),snap=>{const d=snap.exists()?snap.data():null;hbSaw("ec",d);if(!d){ecDoc=null;}else if(!ecDoc||(+d.ms||0)>=(+ecDoc.ms||0))ecDoc=d;else ecDoc=Object.assign({},ecDoc,{tv:d.tv,calib:d.calib});
     if(ui.office==="ecran")ecTvUpdate();else if(ecRenderers["ec-dm"]&&ecRenderers["ec-dm"].st)ecRenderers["ec-dm"].st.tvv=ecDoc&&ecDoc.tv;},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","vitrine"),snap=>{const d=snap.exists()?snap.data():null;if(!d||!vitrine||(+d.ms||0)>=(+vitrine.ms||0))vitrine=d;vitUi();},err));
@@ -2466,6 +2466,21 @@ async function artSave(target,file){const [coll,id]=target.split("|");if(!file||
     await run("Image",()=>setDoc(doc(db,coll,id),{image:url,majLe:serverTimestamp()},{merge:true}));hdSave(coll,id,file);}catch(err){save={state:"error",msg:err.message};render();}}
 // Écran des joueurs : l'ouvrir ici (nouvel onglet) ou copier son lien pour l'ouvrir et le caster depuis un autre ordinateur.
 function ecLink(){return location.origin+location.pathname+"#ecran";}
+/* ----- Télé sans connexion : une copie publique de l'écran des joueurs, à une adresse secrète (#tele-CLE) ----- */
+let teleUnsubs=[],teleOn=null;
+function teleSub(key){if(teleOn===key)return;teleUnsubs.forEach(f=>{try{f();}catch(e){}});teleUnsubs=[];teleOn=key;if(!key)return;
+  teleUnsubs.push(onSnapshot(doc(db,"ecranpub",key),snap=>{const d=snap.exists()?snap.data():null;hbSaw("ec",d);if(!d)ecDoc=null;else if(!ecDoc||(+d.ms||0)>=(+ecDoc.ms||0))ecDoc=d;if(ui.office==="ecran")ecTvUpdate();},e=>{console.error(e);const m=document.getElementById("ec-msg");if(m)m.textContent="Ce lien d'écran n'est pas valide (ou plus valide). Demande le nouveau lien au Maître de la Guilde.";}));
+  teleUnsubs.push(onSnapshot(doc(db,"ecranpub",key+"-vit"),snap=>{vitrine=snap.exists()?snap.data():null;vitUi();},()=>{}));}
+function teleKey(create){if(monde&&monde.teleKey)return monde.teleKey;if(!create||!isAdmin)return null;const k=Array.from(crypto.getRandomValues(new Uint8Array(12)),b=>"abcdefghjkmnpqrstuvwxyz23456789"[b%31]).join("");monde=Object.assign({},monde||{},{teleKey:k});setDoc(doc(db,"prive","monde"),{teleKey:k},{merge:true}).catch(e=>console.error(e));return k;}
+let teleTvU=null,teleTvK=null;
+function teleTvSub(){const k=teleKey(false);if(k===teleTvK)return;if(teleTvU){try{teleTvU();}catch(e){}teleTvU=null;}teleTvK=k;if(!k||!isAdmin)return;
+  teleTvU=onSnapshot(doc(db,"ecranpub",k+"-tv"),snap=>{const t=snap.exists()?snap.data():null;if(!t||!t.cols)return;const tv=(ecDoc&&ecDoc.tv)||{};if(tv.cols===t.cols&&tv.rows===t.rows&&tv.sw===t.sw&&tv.sh===t.sh)return;const nt={cols:t.cols,rows:t.rows,sw:t.sw,sh:t.sh};ecDoc=Object.assign({},ecDoc||{},{tv:nt});setDoc(doc(db,"prive","ecran"),{tv:nt},{merge:true}).catch(()=>{});},()=>{});}
+function teleLink(){const k=teleKey(true);return k?location.origin+location.pathname+"#tele-"+k:"";}
+// Copie publique : les ennemis, alliés et objets cachés ou hors de vue n'y sont pas du tout (comme la table virtuelle)
+function ecPubState(st){if(!st||!st.carte)return Object.assign({carte:null,tokens:[],figs:[],ordre:null,info:""},{ms:Date.now(),vie:Date.now()});const fogOn=!!(st.fog&&st.fog.on),V=fogOn?ecVision(st):null;
+  const tokens=(st.tokens||[]).filter(k=>{if(k.k==="pj"||k.k==="lum")return true;if(!k.vis)return false;if(!fogOn)return true;return !!(V&&V.tokSeen(k.x,k.y));});
+  const out=Object.assign({},st,{tokens,vie:Date.now(),ms:Date.now()});delete out.tvv;return JSON.parse(JSON.stringify(out));}
+function telePush(st){const k=teleKey(false);if(!k||!isAdmin)return;fsThr("tele",()=>{setDoc(doc(db,"ecranpub",k),ecPubState(st)).catch(e=>console.error(e));},1000);}
 function ecOpenBar(){return '<div class="ecopenbar"><span class="t">📺 Écran des joueurs</span><a class="btn gold sm" href="#ecran" target="_blank" rel="noopener">Ouvrir l\'écran ↗</a><button class="btn board sm" data-a="ec-copylink">'+(ui.ecCopied?'✓ Lien copié':'Copier le lien')+'</button>'+
   '<span class="desc">Sur un autre ordinateur (pour caster ou brancher la télé) : ouvre le lien, connecte-toi avec ton compte de DM, puis caste l\'onglet ou mets-le en plein écran (F11). Tu gardes la partie ici.</span></div>';}
 function copyText(t){return (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject()).catch(()=>{const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}ta.remove();});}
@@ -2964,7 +2979,9 @@ function render(){
 
 /* ---------- routing ---------- */
 function route(){
-  const id=(location.hash||"").slice(1);
+  let id=(location.hash||"").slice(1);
+  // #tele-CLE : écran des joueurs public (sans connexion), en lecture seule, pour la télé ou une diffusion
+  if(id.indexOf("tele-")===0){ui.teleKey=id.slice(5);teleSub(ui.teleKey);id="ecran";}else if(ui.teleKey){ui.teleKey=null;teleSub(null);}
   const next=id&&id!=="carte"?id:null;
   if(next!==ui.office){const wasPt=!!ui.office&&ui.office.indexOf("partie-")===0,isPt=!!next&&next.indexOf("partie-")===0;
     {const disp=o=>!!o&&(o.indexOf("partie-")===0||o==="dm"||o==="mini"||o==="ecran");// quitter le Mode Partie, ou aller ailleurs que l'Espace DM / la Mini Guilde, ferme l'écran des joueurs
@@ -3438,6 +3455,7 @@ function hdDel(coll,id){if(!isAdmin||!coll||!id)return Promise.resolve();return 
 function vitOn(){return !!(vitrine&&(vitrine.image||vitrine.texte));}
 async function vitSet(v){vitrine=v;if(v&&(v.image||v.texte))setTimeout(hbBeat,0);try{ecBC&&ecBC.postMessage({vitrine:v});}catch(e){}vitUi();
   {const q=ui.pt&&ui.pt.id!=="libre"&&questById(ui.pt.id);if(q)setDoc(doc(db,"table",q.id,"vitrine","live"),v&&(v.image||v.texte)?v:{nom:"",image:"",ms:Date.now()}).catch(e=>console.error(e));}
+  {const k=teleKey(false);if(k)setDoc(doc(db,"ecranpub",k+"-vit"),v&&(v.image||v.texte)?v:{nom:"",image:"",ms:Date.now()}).catch(e=>console.error(e));}
   try{await setDoc(doc(db,"prive","vitrine"),v);}catch(e){console.error(e);save={state:"error",msg:"L'écran des joueurs n'a pas pu être mis à jour."};render();}}
 function vitShow(nom,image,texte){if(!isAdmin||!(image||texte))return Promise.resolve();return vitSet({nom:String(nom||"").slice(0,80),image:image||"",texte:String(texte||"").slice(0,3000),ms:Date.now()});}
 function vitHide(){if(!isAdmin)return Promise.resolve();return vitSet({nom:"",image:"",ms:Date.now()});}
@@ -9996,7 +10014,7 @@ function ecTvFiche(){const f=document.getElementById("ec-fiche");if(!f)return;co
   {const w=f.closest(".ectv");if(w)w.classList.toggle("fon",on);}}
 function ecTvUpdate(){if(ui.office!=="ecran")return;const app=document.getElementById("app");if(!document.getElementById("ec-tv"))app.innerHTML=ecTvShell();
   const m=document.getElementById("ec-msg"),st=ecDoc;
-  if(!isAdmin){// un joueur qui ouvre le lien de la télé : on l'envoie vers la carte de sa quête en cours (table virtuelle)
+  if(!isAdmin&&!ui.teleKey){// un joueur qui ouvre le lien de la télé : on l'envoie vers la carte de sa quête en cours (table virtuelle)
     const mineQ=user&&!user.isAnonymous?quetes.filter(q=>q.statut==="encours"&&signupsFor(q.id).some(x=>x.uid===user.uid&&x.statut!=="refusee")):[];
     if(mineQ.length===1){location.hash="#table-"+mineQ[0].id;return;}
     m.innerHTML=!user||user.isAnonymous?'Ce lien est celui de la télé du Maître de la Guilde.<br>Pour jouer à distance, connecte-toi avec ton compte Google : ta carte s\'ouvrira toute seule.<br><br><button class="btn gold" data-a="login">Se connecter avec Google</button>':
@@ -10027,7 +10045,7 @@ function tvBind(r){const cv=r.cv;if(!cv||cv.dataset.bound)return;cv.dataset.boun
   cv.addEventListener("dblclick",()=>{r.free=false;});}
 function tvFreeUi(r){const b=document.getElementById("ec-follow");if(b&&b.hidden===!!r.free)b.hidden=!r.free;}
 let ecTvT=null;
-function ecTvReport(){clearTimeout(ecTvT);ecTvT=setTimeout(()=>{if(!isAdmin||!ecDoc)return;const p=ecPpi(ecDoc),cols=Math.floor(window.innerWidth/p),rows=Math.floor(window.innerHeight/p),tv=ecDoc.tv||{};
+function ecTvReport(){clearTimeout(ecTvT);ecTvT=setTimeout(()=>{if(ui.teleKey&&!isAdmin&&ecDoc){const p=ecPpi(ecDoc);setDoc(doc(db,"ecranpub",ui.teleKey+"-tv"),{cols:Math.floor(window.innerWidth/p),rows:Math.floor(window.innerHeight/p),sw:screen.width,sh:screen.height,ms:Date.now()}).catch(()=>{});return;}if(!isAdmin||!ecDoc)return;const p=ecPpi(ecDoc),cols=Math.floor(window.innerWidth/p),rows=Math.floor(window.innerHeight/p),tv=ecDoc.tv||{};
   if(tv.cols!==cols||tv.rows!==rows||tv.sw!==screen.width||tv.sh!==screen.height)setDoc(doc(db,"prive","ecran"),{tv:{cols,rows,sw:screen.width,sh:screen.height}},{merge:true}).catch(()=>{});},800);}
 window.addEventListener("resize",()=>{if(ui.office==="ecran")ecTvReport();});
 /* ----- Contrôle DM (onglet Écran du Mode Partie) ----- */
@@ -10220,7 +10238,7 @@ function hbSaw(k,d){const h=HB[k],v=d&&+d.vie||0,now=Date.now();if(!v){h.vie=nul
 function hbLive(k){const h=HB[k];if(h.vie==null)return Date.now()-HB_T0<HB_LOST;return !!h.seen&&Date.now()-h.seen<HB_LOST;}
 // Le DM « bat » tant que quelque chose est affiché depuis le Mode Partie, l'Espace DM ou la Mini Guilde ; ailleurs (ou onglet fermé), l'écran se ferme après 2 battements manqués (~1 min).
 function hbDmOn(){if(!isAdmin)return false;const o=ui.office||"";if(o.indexOf("partie-")===0)return !!ui.pt;if(o==="dm"||o==="mini")return vitOn()||!!(ecDoc&&ecDoc.carte)||(o==="dm"&&!!ui.pt&&ui.dmTab==="cartes"&&!!ecP().tv);return false;}
-function hbBeat(){if(!hbDmOn())return;const now=Date.now();setDoc(doc(db,"prive","ecran"),{vie:now},{merge:true}).catch(()=>{});const q=tbQuest();if(q)setDoc(doc(db,"table",q.id),{vie:now},{merge:true}).catch(()=>{});}
+function hbBeat(){if(!hbDmOn())return;const now=Date.now();setDoc(doc(db,"prive","ecran"),{vie:now},{merge:true}).catch(()=>{});{const k=teleKey(false);if(k)setDoc(doc(db,"ecranpub",k),{vie:now},{merge:true}).catch(()=>{});}const q=tbQuest();if(q)setDoc(doc(db,"table",q.id),{vie:now},{merge:true}).catch(()=>{});}
 setInterval(hbBeat,HB_EVERY);
 setInterval(()=>{["ec","tb"].forEach(k=>{const l=hbLive(k);if(l!==HB[k].live){HB[k].live=l;if(k==="ec"&&ui.office==="ecran")ecTvUpdate();if(k==="tb")tbUpdate();}});},5000);
 // Quitter le Mode Partie ferme l'écran des joueurs : la télé et la table virtuelle repassent en attente, la fiche montrée est retirée.
@@ -10228,13 +10246,14 @@ function ecCloseScreens(){if(!isAdmin)return;clearTimeout(ecPushT);clearTimeout(
   try{if(vitOn())vitHide();}catch(e){}
   const blank={carte:null,tokens:[],figs:[],ordre:null,info:"",ms:Date.now()};ecDoc=Object.assign({},ecDoc||{},blank);try{ecBC&&ecBC.postMessage(blank);}catch(e){}
   setDoc(doc(db,"prive","ecran"),blank,{merge:true}).catch(e=>console.error(e));
+  {const k=teleKey(false);if(k)setDoc(doc(db,"ecranpub",k),blank,{merge:true}).catch(e=>console.error(e));}
   if(q)setDoc(doc(db,"table",q.id),{qid:q.id,titre:q.titre,carte:null,ms:Date.now()}).catch(e=>console.error(e));}
 // grille active par défaut tant que le MJ ne l'a pas décochée lui-même
 function ecGridOn(E){return E.gridSet?!!E.grid:true;}
-function ecPush(now){if(ui.ecStopped)return;if(!ptActive())return;if(isAdmin&&ui.pt)try{ptSave();}catch(e){console.error(e);}if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);const wr=()=>fsThr("ec",()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},1000);if(now)wr();else ecPushT=setTimeout(wr,250);}
+function ecPush(now){if(ui.ecStopped)return;if(!ptActive())return;if(isAdmin&&ui.pt)try{ptSave();}catch(e){console.error(e);}if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);const wr=()=>{fsThr("ec",()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},1000);telePush(st);};if(now)wr();else ecPushT=setTimeout(wr,250);}
 function ecReveal(c){const E=ecP();const st=ecState();if(!st)return;const V=ecVision(st);let vu=(c.vu||"").padEnd(c.w*c.h,"0").split("");let ch=false;for(let i=0;i<V.vis.length;i++)if(V.vis[i]&&vu[i]!=="1"){vu[i]="1";ch=true;}if(ch)c.vu=vu.join("");}
 function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc.calib)||{};
-  let h='<div class="ecdm"><p class="ecopen"><a class="btn gold sm" href="#ecran" target="_blank" rel="noopener">Ouvrir l\'écran joueurs ↗</a> '+(ecDoc&&ecDoc.carte?'<button class="btn ghost sm" data-a="ec-stop">■ Arrêter l\'écran joueur</button>':'<button class="btn gold sm" data-a="ec-start"'+(ecState()?'':' disabled title="Ouvre d\'abord une carte ci-dessous"')+'>▶ Démarrer l\'écran joueur</button>')+' <button class="btn ghost sm" data-a="ec-copylink">'+(ui.ecCopied?'✓ Lien copié':'Copier le lien')+'</button> <span class="desc">Ouvre-le sur l\'écran de table, puis F11 pour le plein écran. Sur un autre ordinateur : colle le lien et connecte-toi avec ton compte de DM.'+(tvv?' Écran détecté : '+tvv.cols+' × '+tvv.rows+' cases.':'')+'</span></p>';
+  let h='<div class="ecdm"><p class="ecopen"><a class="btn gold sm" href="#ecran" target="_blank" rel="noopener">Ouvrir l\'écran joueurs ↗</a> '+(ecDoc&&ecDoc.carte?'<button class="btn ghost sm" data-a="ec-stop">■ Arrêter l\'écran joueur</button>':'<button class="btn gold sm" data-a="ec-start"'+(ecState()?'':' disabled title="Ouvre d\'abord une carte ci-dessous"')+'>▶ Démarrer l\'écran joueur</button>')+' <button class="btn gold sm" data-a="tele-copylink" title="Un lien secret, sans connexion : la télé ou un autre ordinateur affiche l\'écran des joueurs sans pouvoir rien modifier">'+(ui.teleCopied?'✓ Lien copié':'📡 Copier le lien télé (sans connexion)')+'</button> <button class="btn ghost sm" data-a="ec-copylink">'+(ui.ecCopied?'✓ Lien copié':'Copier le lien (compte DM)')+'</button> <span class="desc">Sur l\'ordinateur de la télé : colle le <strong>lien télé</strong> (aucune connexion), puis F11 pour le plein écran. Il affiche seulement ce que les joueurs voient et ne modifie jamais la partie.'+(tvv?' Écran détecté : '+tvv.cols+' × '+tvv.rows+' cases.':'')+'</span></p>';
   h+='<details class="eccal"><summary>Calibrage de l\'écran (1 case = 1 pouce)</summary><label for="ec-diag">Diagonale de l\'écran (pouces)<input id="ec-diag" type="number" min="10" max="120" step="0.5" value="'+(cal.diag||"")+'"></label><span class="ecfine">Ajustement fin : <button class="mini" data-a="pt-ec-k" data-v="-0.01">−</button> '+Math.round(((+cal.k)||1)*100)+' % <button class="mini" data-a="pt-ec-k" data-v="0.01">+</button></span><button class="mini" data-a="pt-ec-calshow">'+(cal.show?'Masquer la règle':'Afficher la règle de 5 pouces')+'</button><button class="mini gold" data-a="pt-ec-cal">Enregistrer</button><button class="mini" data-a="pt-ec-mir" aria-pressed="'+(cal.miroir!==false)+'">'+(cal.miroir!==false?'☑':'☐')+' Écran à plat : fiches en double, tête-bêche</button></details>';
   if(q.libre){const sa=ecSaison(),Q=quetes.filter(x=>scMaps(x).length).sort((a,b)=>String(a.titre).localeCompare(String(b.titre),"fr"));
     if(ui.office==="dm"){const sh=!!E.tv&&!!c;const favHere=c&&c.bureau?(ui.pt&&ui.pt.liste||[]).filter(x=>x.kind==="pj"&&x.ref&&favFor(x.ref).some(f=>f.ville===c.bureau)):[];
@@ -11370,6 +11389,7 @@ document.addEventListener("click",async e=>{
   if(a==="ec-start"){ui.ecStopped=false;const st=ecState();if(st){ecDoc=Object.assign({},ecDoc||{},st);ecPush(true);hbBeat();}render();return;}
   if(a==="ec-stop"){ui.ecStopped=true;ecCloseScreens();render();return;}
   if(a==="tb-copylink"){copyText(location.origin+location.pathname+"#table-"+id);ui.tbCopied=true;render();setTimeout(()=>{ui.tbCopied=false;render();},2500);return;}
+  if(a==="tele-copylink"){const L=teleLink();if(!L)return;copyText(L);ui.teleCopied=true;render();setTimeout(()=>{ui.teleCopied=false;render();},2500);try{const st=ecState();if(st)setDoc(doc(db,"ecranpub",teleKey(false)),ecPubState(st)).catch(e=>console.error(e));}catch(e){}return;}
   if(a==="ec-copylink"){copyText(ecLink());ui.ecCopied=true;render();setTimeout(()=>{ui.ecCopied=false;render();},2500);return;}
   if(a==="vit-loot"){const n=b.getAttribute("data-n")||"",rr=b.getAttribute("data-r")||"",o=objets.find(y=>ptNorm(y.nom)===ptNorm(n));b.disabled=true;
     if(o&&(o.image||o.texte)){const hd=o.image?await hdGet("objets",o.id):"";await vitShow(o.nom,hd||o.image||"",o.texte||"");}
