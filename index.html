@@ -3061,7 +3061,7 @@ function ptSync(qid){
   // on ne remplace pas. Ce qu'on a changé ici est gardé, ce que l'autre onglet a changé est repris. Jamais de retour en arrière.
   if(d&&d!==ui.ptSeenObj&&Date.now()-(ui.ptEditMs||0)<=1500){clearTimeout(ptSync.t);ptSync.t=setTimeout(()=>{if(ui.pt&&ui.pt.id===qid&&!document.activeElement.matches("input,textarea,select"))render();},1600);}
   if(d&&d!==ui.ptSeenObj&&Date.now()-(ui.ptEditMs||0)>1500){ui.ptSeenObj=d;const R=Object.assign(ptBlank(qid),ptClone(d)),nk=o=>{const c=Object.assign({},o);delete c.rev;delete c.by;delete c.majLe;delete c.id;return ptStab(c);};
-    if(!ui.ptBase||nk(R)!==nk(ui.ptBase)){ui.pt=ptMerge3(ui.ptBase||R,ui.pt,R);ui.ptBase=R;ui.ptSeen=d.rev;ui.ptRev=Math.max(ui.ptRev||0,d.rev||0);if(ui.ptMapOnly)setTimeout(()=>{try{ecUpd();ecPush(true);}catch(e){}},0);}}
+    if(!ui.ptBase||nk(R)!==nk(ui.ptBase)){ui.pt=ptMerge3(ui.ptBase||R,ui.pt,R);ui.ptBase=R;ui.ptSeen=d.rev;ui.ptRev=Math.max(ui.ptRev||0,d.rev||0);if(ui.ptMapOnly)setTimeout(()=>{try{const b0=ptStab(ecP());ecFoeSync();if(ptStab(ecP())!==b0)ptSave(true);ecUpd();ecPush(true);}catch(e){console.error(e);}},0);}}
 }
 // Fusion à trois voies (base commune, ici, là-bas) : champ par champ ; listes de jetons, cartes et combattants par identifiant.
 // Différences champ par champ entre deux états (les listes sont envoyées en entier)
@@ -3093,7 +3093,23 @@ function ptActive(){return Date.now()-PT_INPUT<20000;}
 // Firestore n'aime pas plus d'une écriture par seconde sur le même document : au-delà, les écritures s'empilent et tout prend du retard.
 // fsThr garde au plus une écriture par « pas » pour chaque document ; la plus récente gagne.
 const FS_THR={};function fsThr(k,fn,gap){const T=FS_THR[k]||(FS_THR[k]={last:0,t:null,fn:null});T.fn=fn;if(T.t)return;const w=Math.max(0,T.last+gap-Date.now());const go=()=>{T.t=null;T.last=Date.now();const f=T.fn;T.fn=null;try{f&&f();}catch(e){console.error(e);}};if(w===0)go();else T.t=setTimeout(go,w);}
-function ptSave(){if(!ui.pt)return;if(!ptActive())return;if(ui.ptWait){ui.ptDirty=true;return;}
+/* ----- Combat ↔ jetons : chaque ennemi/allié du combat reçoit son jeton dans la réserve ; à 0 PV, son jeton quitte la carte ----- */
+function ecFoeSync(){const P=ui.pt;if(!P||!P.liste)return;const E=ecP(),R=ecResOf(),seen=E.foeSeen||(E.foeSeen={}),cards=E.cartes||[];
+  const has=cid=>R.some(t=>t.cid===cid)||cards.some(c=>(c.tokens||[]).some(t=>t.cid===cid));
+  P.liste.forEach(x=>{if(x.kind==="pj")return;
+    if(x.pv<=0&&(+x.pvMax||0)>0){let rm=false;for(let i=R.length-1;i>=0;i--)if(R[i].cid===x.cid){R.splice(i,1);rm=true;}
+      cards.forEach(c=>{const n=(c.tokens||[]).length;c.tokens=(c.tokens||[]).filter(t=>t.cid!==x.cid);if(c.tokens.length!==n)rm=true;});
+      if(rm){ptLog("Écran : le jeton de "+x.nom+" quitte la carte.");if(ui.ecSel&&!cards.some(c=>(c.tokens||[]).some(t=>t.id===ui.ecSel)))ui.ecSel=null;}seen[x.cid]=1;return;}
+    if(!seen[x.cid]&&P.combat&&!has(x.cid))R.push({id:ptUid(),k:x.camp==="allie"?"pnj":"en",n:x.nom,cid:x.cid,vis:true,camp:x.camp==="allie"?"allie":"ennemi"});
+    if(P.combat)seen[x.cid]=1;});}
+// Sélection partagée : choisir un combattant dans l'ordre de bataille sélectionne son jeton sur la carte (halo blanc), et l'inverse — aussi d'un onglet à l'autre
+let ptSelBC=null;try{ptSelBC=new BroadcastChannel("rdv-sel");ptSelBC.onmessage=e=>{const d=e.data||{};if(!ui.pt||d.qid!==ui.pt.id)return;if(d.from==="combat")ecSelCid(d.cid,true);else if(d.from==="carte"&&!ui.ptMapOnly){if(ui.ptSel!==d.cid){ui.ptSel=d.cid;render();}}};}catch(e){}
+function ecSelCid(cid,remote){const c=ecCard();if(!c)return false;const k=(c.tokens||[]).find(t=>t.cid===cid);const R=ecResOf(),rk=!k&&R.find(t=>t.cid===cid);
+  if(k){ui.ecSel=k.id;ui.ecAmb=null;ui.ecLum=null;const rr=ecRenderers["ec-dm"];if(rr)rr.sel=k.id;}else if(rk)ui.ecArm=rk.id;else return false;if(remote||ui.ptMapOnly)render();return true;}
+function ptSelShare(cid,from){if(!ui.pt)return;try{ptSelBC&&ptSelBC.postMessage({qid:ui.pt.id,cid,from});}catch(e){}}
+function ptSave(force){if(!ui.pt)return;if(!ptActive()&&!force)return;if(ui.ptWait){ui.ptDirty=true;return;}
+  // écrans séparés : c'est l'onglet de la carte qui gère les jetons du combat (pas de doublons)
+  if(!(ui.pt.id!=="libre"&&!ui.ptMapOnly&&ptSepOn(ui.pt.id)))try{ecFoeSync();}catch(e){console.error(e);}
   try{ptObjSync();}catch(e){console.error(e);}
   ui.ptEditMs=Date.now();ui.pt.rev=Math.max(Date.now(),(ui.ptRev||0)+1);ui.ptRev=ui.pt.rev;ui.pt.by=PT_CLIENT;
   clearTimeout(ptTimer);const snap=ptClone(ui.pt),qid=snap.id;
@@ -10310,7 +10326,7 @@ function ecAfter(){if(ui.office==="ecran")return;const cv=document.getElementByI
   cv.addEventListener("pointerdown",e=>{if(ui.ecPv)return;if(ui.ecArm){const p0=ecCellAt(e.clientX,e.clientY);if(p0){ecDrop(ui.ecArm,p0);return;}}const p=cell(e),cc=ecCard();cv.setPointerCapture(e.pointerId);const tool=ui.ecTool||"move";
     if(tool==="move"){const k=(cc.tokens||[]).slice().reverse().find(k=>{if(k.deco)return false;const q=EC_ROAMPOS.get(k)||[k.x,k.y];if(Math.hypot(q[0]-p[0],q[1]-p[1])<0.6)return true;return !!k.look&&Math.hypot(q[0]-p[0],q[1]-0.55-p[1])<0.9;});if(k){ecDeselect(k.id);// Pax, un préposé ou un aventurier qui fait sa routine : le DM le prend là où il est, il s'arrête (aussi sur la télé) jusqu'à « Relâcher »
         if(k.look&&!k.held&&cc.type==="bureau"){const q=EC_ROAMPOS.get(k);k.hx=k.x;k.hy=k.y;if(q){k.x=Math.max(0.5,Math.min(cc.w-0.5,Math.floor(q[0])+0.5));k.y=Math.max(0.5,Math.min(cc.h-0.5,Math.floor(q[1])+0.5));}k.held=true;k.autoHeld=true;EC_ROAMPOS.set(k,[k.x,k.y]);ptSave();ecPush(true);}
-        drag={k,dx:k.x-p[0],dy:k.y-p[1],resel:ui.ecSel!==k.id};ui.ecSel=k.id;const rr=ecRenderers["ec-dm"];if(rr)rr.sel=k.id;}
+        drag={k,dx:k.x-p[0],dy:k.y-p[1],resel:ui.ecSel!==k.id};ui.ecSel=k.id;const rr=ecRenderers["ec-dm"];if(rr)rr.sel=k.id;if(k.cid&&ui.ptSel!==k.cid){ui.ptSel=k.cid;ptSelShare(k.cid,"carte");}}
       else if(ecLightAt(cc,p)){const L=ecLightAt(cc,p);ecDeselect();ui.ecLum=L;ptSave();ecPush(true);render();return;}
       else if(ecDoorAt(cc,p)>=0){const i=ecDoorAt(cc,p),o=(cc.ouv||[]).slice(),j=o.indexOf(i);if(j>=0)o.splice(j,1);else{o.push(i);const Z=ecZones(cc);if(Z&&Z.doors[i])Z.doors[i].forEach(k=>ecZoneSet(cc,k,"1"));}cc.ouv=o;ecUpd();ptSave();ecPush(true);return;}
       else if(ecPromote(p))return;
@@ -11142,7 +11158,7 @@ async function partyAction(a,id,b,e){
   else if(a==="pt-libre-go"){const E=ecP();E.tv=true;E.fog=true;const cc=ecCard();if(cc){cc.vu="";ecReveal(cc);}ptSave();ecPush(true);ui.ptTab="ecran";location.hash="#partie-libre";return;}
   else if(a.indexOf("pt-shop")===0){ch=await shopAction(a,id,b,v,q);}
   else if(a.indexOf("pt-ec-")===0){if(ui.office==="dm"&&["pt-ec-bureau","pt-ec-scene","pt-ec-rand","pt-ec-pick","pt-ec-new"].indexOf(a)>=0){ecP().tv=false;ecP().fog=false;}ch=await ecAction(a,id,b,v,q);}
-  else if(a==="pt-sel"){ui.ptSel=ui.ptSel===id?null:id;ui.ptCond=null;ui.ptEditC=null;render();const el=document.getElementById("pt-"+(ui.ptSel===P.cur?P.cur:ui.ptSel));if(el&&ui.ptSel)el.scrollIntoView({block:"nearest",behavior:"smooth"});return;}
+  else if(a==="pt-sel"){ui.ptSel=ui.ptSel===id?null:id;ui.ptCond=null;ui.ptEditC=null;if(ui.ptSel){ecSelCid(ui.ptSel,false);ptSelShare(ui.ptSel,"combat");}render();const el=document.getElementById("pt-"+(ui.ptSel===P.cur?P.cur:ui.ptSel));if(el&&ui.ptSel)el.scrollIntoView({block:"nearest",behavior:"smooth"});return;}
   else if(a==="pt-selx"){ui.ptSel=null;ch=false;}
   else if(a==="pt-findadd"||a==="pt-findnew"){const g=k=>document.getElementById(k),nb=Math.max(1,Math.min(20,+(g("pt-find-nb")||{}).value||1)),camp=(g("pt-find-camp")||{}).value||"",bf=ptIds();let added=[];
     if(a==="pt-findadd"&&b.getAttribute("data-k")==="m"){const m=monstres.find(x=>x.id===id);if(!m)return;for(let i=0;i<nb;i++)ptAddMonster(m);added=P.liste.filter(c=>bf.indexOf(c.cid)<0);ptLog(nb+" × "+m.nom+(nb>1?" entrent":" entre")+" en scène.");}
