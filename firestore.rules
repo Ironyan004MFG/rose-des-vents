@@ -264,10 +264,6 @@ service cloud.firestore {
     match /evolutions/{id} {
       allow read, write: if isAdmin();
     }
-    // ---------- Mini Guilde : la table des enfants (DM seulement, cachée de l'accueil) ----------
-    match /mini/{id} {
-      allow read, write: if isAdmin();
-    }
     // ---------- Manuel du DM : dossiers des personnages (Don, notes…), PNJ, bestiaire, rencontres, scénarios ----------
     match /dossiers/{id} {
       allow read, write: if isAdmin();
@@ -358,6 +354,19 @@ service cloud.firestore {
     }
     match /prive/{id} {
       allow read, write: if isAdmin();
+    }
+    // Télé sans connexion : copie publique de l'écran des joueurs, à une adresse secrète (#tele-CLE).
+    // On peut lire un document seulement si on connaît sa clé (pas de liste). Seul le DM écrit l'écran ;
+    // la télé peut seulement signaler sa taille (document « CLE-tv »).
+    match /ecranpub/{id} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if isAdmin();
+      allow create, update: if id.matches('^[a-z0-9]{8,40}-tv$')
+        && request.resource.data.keys().hasOnly(['cols', 'rows', 'sw', 'sh', 'ms'])
+        && request.resource.data.cols is int && request.resource.data.cols > 0 && request.resource.data.cols < 1000
+        && request.resource.data.rows is int && request.resource.data.rows > 0 && request.resource.data.rows < 1000
+        && request.resource.data.sw is number && request.resource.data.sh is number && request.resource.data.ms is number;
     }
     // Historique public des changements de rang
     match /rangs/{id} {
