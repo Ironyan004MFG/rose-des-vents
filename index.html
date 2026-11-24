@@ -4824,12 +4824,14 @@ const T90_ROLE={villageois:["m_v_","f_v_","m_s_marin"],fermier:["m_s_fermier","f
   mendiant:["m_s_mendiant","m_s_capuche","f_s_capuche"],noble:["m_s_noble_","f_n_"],garde:["m_c_","f_c_"],cuisinier:["m_s_toque"],serveuse:["f_v_"],barde:["m_s_barde","f_s_barde"],vendeur:["m_v_","f_v_","f_s_marchande"],
   guerrier:["m_c_","f_c_"],paladin:["m_c_","f_c_"],rodeur:["m_s_rodeur","f_s_capuche"],mage:["m_s_erudit","f_s_erudite"],clerc:["m_s_moine"],moine:["m_s_moine"],roublard:["m_s_roublard","m_s_capuche"],druide:["m_s_druide"]};
 function t90Pick(race,role,R){const M=T90M.r[race];if(!M)return null;const P=T90_ROLE[role]||T90_ROLE.villageois;const L=Object.keys(M).filter(k=>P.some(p=>k.startsWith(p)));const A=L.length?L:Object.keys(M).filter(k=>k.startsWith("m_v_"));return A[Math.floor(R()*A.length)];}
-function t90Head(o){if(o._hc)return o._hc;if(!T90GD)return null;const m=T90M.r[o.race]&&T90M.r[o.race][o.hk];if(!m)return null;const [sx,sy,w,h]=m;
+// têtes vues de dessus : gardées en mémoire par apparence (les figurines copiées à chaque image ne les redessinent plus pixel par pixel)
+const T90HC=new Map();
+function t90Head(o){if(o._hc)return o._hc;if(!T90GD)return null;const m=T90M.r[o.race]&&T90M.r[o.race][o.hk];if(!m)return null;const hck=o.race+"|"+o.hk+"|"+(o.hc||[]).join(",");{const c0=T90HC.get(hck);if(c0){o._hc=c0;return c0;}}const [sx,sy,w,h]=m;
   const cv=document.createElement("canvas");cv.width=w;cv.height=h;const c=cv.getContext("2d"),D=c.createImageData(w,h),d=D.data;
   const rgb=s=>{const n=parseInt(s.slice(1),16);return[n>>16&255,n>>8&255,n&255];},P=[null].concat(o.hc.map(rgb));
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=((sy+y)*T90W+sx+x)*4,j=(y*w+x)*4,a=T90GD[i+3];if(!a)continue;const cl=Math.round(T90CD[i]/40)||2,col=P[cl]||P[2],l=T90GD[i]/255,f=0.18+1.12*l;
     d[j]=Math.min(255,col[0]*f+l*l*40);d[j+1]=Math.min(255,col[1]*f+l*l*40);d[j+2]=Math.min(255,col[2]*f+l*l*40);d[j+3]=a;}
-  c.putImageData(D,0,0);o._hc=cv;return cv;}
+  c.putImageData(D,0,0);o._hc=cv;T90HC.set(hck,cv);return cv;}
 function t90Draw(x,o,k){const cv=t90Head(o);if(!cv)return false;const m=T90M.r[o.race][o.hk],u=0.5*k/T90M.tw;x.save();x.translate(0,0.29*k);x.rotate(Math.PI);x.drawImage(cv,-m[4]*u,-m[5]*u,m[2]*u,m[3]*u);x.restore();return true;}
 // ===== Armes vues de dessus (repère de la figurine : +y = vers l'avant, main droite en x≈0.38) =====
 const WPN_POLE=["spear","staff","halberd","glaive","trident","pitchfork","greataxe","maul"];
@@ -9012,7 +9014,13 @@ const spTreeCache={};
 // Ombre portée qui suit la silhouette d'un sprite (arbre nu : ombre des branches seulement)
 const spShadowCache=new WeakMap();function spShadowOf(spr){let o=spShadowCache.get(spr);if(o)return o;o=document.createElement("canvas");o.width=spr.width;o.height=spr.height;const q=o.getContext("2d");q.filter="blur(1px)";q.drawImage(spr,0,0);q.filter="none";q.globalCompositeOperation="source-in";q.fillStyle="rgba(20,30,10,.4)";q.fillRect(0,0,o.width,o.height);spShadowCache.set(spr,o);return o;}
 function spLeaf(x,px,py,a,L,W,col){x.save();x.translate(px,py);x.rotate(a);x.fillStyle=col;x.beginPath();x.moveTo(L,0);x.quadraticCurveTo(L*0.3,-W,-L*0.5,0);x.quadraticCurveTo(L*0.3,W,L,0);x.fill();x.restore();}
-function spTree(r,col,seed,s,kind,snow){const key=r.toFixed(2)+"|"+[].concat(col).join()+"|"+seed+"|"+Math.round(s)+"|"+kind+"|"+!!snow;if(spTreeCache[key])return spTreeCache[key];
+// arbres : une quinzaine de variantes par taille au lieu d'un dessin par arbre (une forêt s'ouvre en une fraction de seconde)
+// Les dessins manquants se font petit à petit (25 ms par image au plus) : en attendant, une cime simple prend leur place.
+const SPT_B={t:0,used:0},spTreeQuick={};
+function spTree(r,col,seed,s,kind,snow){r=Math.round(r*8)/8;seed=((seed%10)+10)%10;const key=r.toFixed(2)+"|"+[].concat(col).join()+"|"+seed+"|"+Math.round(s)+"|"+kind+"|"+!!snow;if(spTreeCache[key])return spTreeCache[key];
+  {const now=performance.now();if(now-SPT_B.t>45){SPT_B.t=now;SPT_B.used=0;}if(SPT_B.used>25){const qk=r.toFixed(2)+"|"+[].concat(col).join()+"|"+Math.round(s)+"|"+kind;let q=spTreeQuick[qk];if(!q){const S=Math.ceil(r*s*2.5);q=document.createElement("canvas");q.width=q.height=S;const z=q.getContext("2d"),C=[].concat(col);if(kind!=="nu"){z.fillStyle=C[0]||"#3a5a2a";z.beginPath();z.arc(S/2,S/2,r*s*0.95,0,6.283);z.fill();z.fillStyle=C[1]||C[0]||"#4a6a3a";z.beginPath();z.arc(S/2-r*s*0.2,S/2-r*s*0.2,r*s*0.6,0,6.283);z.fill();}spTreeQuick[qk]=q;}return q;}
+    const t0=now,out=spTreeGen(r,col,seed,s,kind,snow,key);SPT_B.used+=performance.now()-t0;return out;}}
+function spTreeGen(r,col,seed,s,kind,snow,key){
   const S=Math.ceil(r*s*2.5),cv=document.createElement("canvas");cv.width=cv.height=S;const x=cv.getContext("2d"),c=S/2,R=ecRng(seed),rr=r*s,lit=(px,py)=>Math.max(0,Math.min(1,0.5-((px-c)+(py-c))/(rr*2.2)));
   x.lineCap="round";x.lineJoin="round";
   if(kind==="conifere"){// sapin vu du dessus : masse sombre dentelée, rameaux irréguliers qui rayonnent et s'éclaircissent vers le centre, hachures d'aiguilles, cœur lumineux
@@ -10186,7 +10194,7 @@ function ecCloseScreens(){if(!isAdmin)return;clearTimeout(ecPushT);clearTimeout(
   if(q)setDoc(doc(db,"table",q.id),{qid:q.id,titre:q.titre,carte:null,ms:Date.now()}).catch(e=>console.error(e));}
 // grille active par défaut tant que le MJ ne l'a pas décochée lui-même
 function ecGridOn(E){return E.gridSet?!!E.grid:true;}
-function ecPush(now){if(ui.ecStopped)return;if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);ecPushT=setTimeout(()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},now?0:250);}
+function ecPush(now){if(ui.ecStopped)return;if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);const wr=()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));};if(now)wr();else ecPushT=setTimeout(wr,250);}
 function ecReveal(c){const E=ecP();const st=ecState();if(!st)return;const V=ecVision(st);let vu=(c.vu||"").padEnd(c.w*c.h,"0").split("");let ch=false;for(let i=0;i<V.vis.length;i++)if(V.vis[i]&&vu[i]!=="1"){vu[i]="1";ch=true;}if(ch)c.vu=vu.join("");}
 function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc.calib)||{};
   let h='<div class="ecdm"><p class="ecopen"><a class="btn gold sm" href="#ecran" target="_blank" rel="noopener">Ouvrir l\'écran joueurs ↗</a> '+(ecDoc&&ecDoc.carte?'<button class="btn ghost sm" data-a="ec-stop">■ Arrêter l\'écran joueur</button>':'<button class="btn gold sm" data-a="ec-start"'+(ecState()?'':' disabled title="Ouvre d\'abord une carte ci-dessous"')+'>▶ Démarrer l\'écran joueur</button>')+' <button class="btn ghost sm" data-a="ec-copylink">'+(ui.ecCopied?'✓ Lien copié':'Copier le lien')+'</button> <span class="desc">Ouvre-le sur l\'écran de table, puis F11 pour le plein écran. Sur un autre ordinateur : colle le lien et connecte-toi avec ton compte de DM.'+(tvv?' Écran détecté : '+tvv.cols+' × '+tvv.rows+' cases.':'')+'</span></p>';
