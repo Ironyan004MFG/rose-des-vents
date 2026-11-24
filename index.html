@@ -127,6 +127,8 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .eccamp{display:inline-flex;gap:4px;margin:0 6px}.eccamp .mini.red{border-color:#c0392b;color:#c0392b}.eccamp .mini.green{border-color:#2e8b57;color:#2e8b57}.eccamp .mini.red.on{background:#c0392b;color:#fff}.eccamp .mini.green.on{background:#2e8b57;color:#fff}
 .exph{font-family:var(--display);margin:6px 0 12px}.livebadge{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:#2e8b57;color:#fff;font-size:12px;letter-spacing:.05em}.explive{outline:2px solid rgba(46,139,87,.5)}
 .ptmaponly .ptmapbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:0 0 10px}.ptmaponly .ptmapbar .desc{flex:1}.ptsepbox{padding:16px;border:2px dashed #d8b45e;border-radius:10px;background:rgba(216,180,94,.1)}.pttabs button.ptsepbtn{flex:0 0 auto;margin:6px 8px 6px auto;align-self:center;min-height:32px;border:1px solid #b89a5a;border-bottom:1px solid #b89a5a;background:#d8b45e;color:#2b1d0e;border-radius:999px;padding:4px 12px;font-weight:600}.pttabs button.ptsepbtn.on{background:#2b1d0e;color:#f6ecd0;border-color:#2b1d0e}
+.sheetstats{border:1px solid var(--parch-3);border-radius:8px;padding:10px 12px}.sheetstats legend{font-weight:700;padding:0 6px}.sheetstats-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}.sheetstats-g .desc{font-size:12px}
+.sheetstatsv{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}.sheetstatsv div{border:1px solid var(--parch-3);border-radius:8px;padding:6px 12px;background:rgba(255,255,255,.35);text-align:center}.sheetstatsv dt{font-size:12px;color:var(--ink-soft)}.sheetstatsv dd{margin:0;font-size:20px;font-weight:700}
 .ecselbox{border:2px solid #d8b45e;border-radius:10px;background:rgba(216,180,94,.12);padding:6px 10px;margin:8px 0}.ecselbox h4{margin:2px 0;font-size:14px}.ecselbox .ecsel{margin:4px 0}.ecdm .ecbar,.ecdm .ecrow,.ecdm .ecsel{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:8px 0}.ecdm label{display:flex;flex-direction:column;font-size:13px}.ecdm label.ecck{flex-direction:row;align-items:center;gap:5px}.ecdm .ecsp{flex:1}
 /* Agrandir une image de fiche ; la montrer sur l'écran des joueurs */
 img.zoomable{cursor:zoom-in}img.zoomable:focus-visible{outline:3px solid #2a6fb0;outline-offset:2px}
@@ -1958,6 +1960,8 @@ function sheetForm(a){
     '<label for="p-nom">Nom du personnage<input id="p-nom" required maxlength="60" value="'+esc(a.nom)+'"></label>'+
     '<label for="p-espece">Espèce<input id="p-espece" maxlength="60" placeholder="ex. Elfe, Goliath, Giff…" value="'+esc(a.espece)+'"></label>'+
     '<label for="p-classe">Classe<input id="p-classe" maxlength="60" placeholder="ex. Guerrier, Magicien…" value="'+esc(a.classe)+'"></label>'+
+    (()=>{const S=a.stats||{},f=(k,l,ph,mx,hint)=>'<label for="p-st-'+k+'">'+l+'<input id="p-st-'+k+'" type="number" inputmode="numeric" min="0" max="'+mx+'" placeholder="'+ph+'" value="'+(S[k]==null?'':esc(S[k]))+'">'+(hint?'<span class="desc">'+hint+'</span>':'')+'</label>';
+      return '<fieldset class="wide sheetstats"><legend>Statistiques de jeu <span class="desc">(facultatif : le DM les reprend en partie)</span></legend><div class="sheetstats-g">'+f("pv","Points de vie max","ex. 24",999)+f("ca","Classe d'armure (CA)","ex. 15",40)+f("pp","Perception passive","ex. 13",40)+f("dv","Vision dans le noir (pieds)","0 si aucune",300,"Ex. 60 pi pour un elfe ou un nain.")+'</div></fieldset>';})()+
     '<label class="wide" for="p-desc">Description<textarea id="p-desc" maxlength="2000" placeholder="Apparence, personnalité…">'+esc(a.description)+'</textarea></label>'+
     (ui.dm&&isAdmin?'<label class="pickrow wide" for="p-pnj"><input type="checkbox" id="p-pnj"'+(a.pnj?' checked':'')+'><span>PNJ de la Guilde : hors classement de renommée et hors galerie (réservé au DM)</span></label>':'')+
     '<label class="wide" for="p-bg">Background (facultatif)<textarea id="p-bg" maxlength="7000" data-count="p-bg-n" placeholder="D\'où vient ton personnage ? Outerworlder ou natif de la Sword Coast ?">'+esc(a.background)+'</textarea><span class="charcount" id="p-bg-n" aria-live="polite">'+(a.background||"").length.toLocaleString("fr-CA")+' / 7\u202f000 caractères</span></label>'+
@@ -1974,6 +1978,8 @@ function sheetView(id){
   h+='<div class="sheet-top">'+(a.image?zimg("portrait",a.image,a.nom,"aventuriers",a.id):'<span class="portrait ph" aria-hidden="true">'+esc(String(a.nom||"?").charAt(0))+'</span>')+
     '<div class="sheet-id"><h2>'+esc(a.nom)+'</h2><p class="sheet-sub">'+esc([a.espece,a.classe,"Niveau "+charLevel(a)].filter(Boolean).join(" · "))+'</p>'+(a.joueur?'<p class="sheet-pl">Joué par '+esc(a.joueur)+'</p>':'')+'</div></div>';
   h+=gPlaque(a);
+  {const S=a.stats||{},L=[["pv","PV max",""],["ca","CA",""],["pp","Perception passive",""],["dv","Vision dans le noir"," pi"]].filter(x=>S[x[0]]!=null);
+    if(L.length)h+='<dl class="sheetstatsv">'+L.map(x=>'<div><dt>'+x[1]+'</dt><dd>'+esc(S[x[0]])+x[2]+'</dd></div>').join("")+'</dl>';}
   if(a.token)h+='<div class="sheettok"><img src="'+esc(a.token)+'" alt="Token de '+esc(a.nom)+'" width="96" height="96"><div><strong>Token (jeu virtuel)</strong>'+(mine||ui.dm?'<p class="desc">À téléverser dans Roll20, Discord ou ton outil de table virtuelle.</p><a class="btn ghost" download="token-'+esc(a.id)+(String(a.token).indexOf("image/webp")>0?'.webp':'.png')+'" href="'+esc(a.token)+'">Télécharger le token</a>':'')+'</div></div>';
   if(mine||ui.dm)h+='<h3>Expérience</h3>'+xpLine(a)+'<details class="crrep"><summary>Historique d\'XP</summary>'+xpHist(a)+'</details>';
   if(ui.dm&&isAdmin){const cap=meritCap(a),nx=examReady(a);
@@ -3094,7 +3100,10 @@ function ptActive(){return Date.now()-PT_INPUT<20000;}
 // fsThr garde au plus une écriture par « pas » pour chaque document ; la plus récente gagne.
 const FS_THR={};function fsThr(k,fn,gap){const T=FS_THR[k]||(FS_THR[k]={last:0,t:null,fn:null});T.fn=fn;if(T.t)return;const w=Math.max(0,T.last+gap-Date.now());const go=()=>{T.t=null;T.last=Date.now();const f=T.fn;T.fn=null;try{f&&f();}catch(e){console.error(e);}};if(w===0)go();else T.t=setTimeout(go,w);}
 /* ----- Combat ↔ jetons : chaque ennemi/allié du combat reçoit son jeton dans la réserve ; à 0 PV, son jeton quitte la carte ----- */
+// Vision dans le noir des jetons joueurs : reprise de la fiche publique (pieds ÷ 5 = cases) tant que le DM ne l'a pas réglée
+function ecPjDv(t){if(!t||t.k!=="pj"||t.dv!=null)return false;const k=ptNorm(t.n).trim(),a=aventuriers.find(x=>!x.pnj&&ptNorm(x.nom).trim()===k);if(!a||!a.stats||a.stats.dv==null)return false;t.dv=Math.round(+a.stats.dv/5);return true;}
 function ecFoeSync(){const P=ui.pt;if(!P||!P.liste)return;const E=ecP(),R=ecResOf(),seen=E.foeSeen||(E.foeSeen={}),cards=E.cartes||[];
+  R.forEach(ecPjDv);cards.forEach(c=>(c.tokens||[]).forEach(ecPjDv));
   const has=cid=>R.some(t=>t.cid===cid)||cards.some(c=>(c.tokens||[]).some(t=>t.cid===cid));
   P.liste.forEach(x=>{if(x.kind==="pj")return;
     if(x.pv<=0&&(+x.pvMax||0)>0){let rm=false;for(let i=R.length-1;i>=0;i--)if(R[i].cid===x.cid){R.splice(i,1);rm=true;}
@@ -3138,7 +3147,7 @@ function ptEncounters(q){const s=scenarios[q.id]||{};return (s.rencontres||[]).m
 function ptAddPC(s){
   if(s.aventurier&&ui.pt.liste.some(c=>c.ref===s.aventurier))return false;
   if(s.mini){const m=miniDocs.find(x=>x.id===s.mini)||{},mx=+m.pvMax||0;ui.pt.liste.push({cid:ptUid(),kind:"pj",ref:s.mini,nom:m.nom||"Aventurier",ca:m.ca==null?"":+m.ca,pvMax:mx,pv:typeof m.pv==="number"?m.pv:mx,tmp:0,init:"",dex:0,pp:"",conds:[],conc:false,ds:{s:0,f:0}});return true;}
-  const a=aventuriers.find(x=>x.id===s.aventurier)||{},d=dossiers[s.aventurier]||{};
+  const a=aventuriers.find(x=>x.id===s.aventurier)||{},d0=dossiers[s.aventurier]||{},S=a.stats||{},d={ca:S.ca!=null?S.ca:d0.ca,pv:S.pv!=null?S.pv:d0.pv,percPassive:S.pp!=null?S.pp:d0.percPassive};
   ui.pt.liste.push({cid:ptUid(),kind:"pj",ref:s.aventurier||"",nom:a.nom||s.nom||"Aventurier",ca:d.ca==null?"":+d.ca,pvMax:d.pv==null?0:+d.pv,pv:d.pv==null?0:+d.pv,tmp:0,init:"",dex:0,pp:d.percPassive==null?"":+d.percPassive,conds:[],conc:false,ds:{s:0,f:0}});return true;
 }
 function ptAddMonster(m,label){
@@ -10488,8 +10497,8 @@ async function ecAction(a,id,b,v,q){const E=ecP(),c=ecCard();
   if(a==="pt-ec-resdel"){ecP().reserve=ecResOf().filter(t=>t.id!==id);if(ui.ecArm===id)ui.ecArm=null;return true;}
   if(a==="pt-ec-resadd"){const R=ecResOf(),kk=b.getAttribute("data-k"),add=o=>{o.id=ptUid();R.push(o);};
     const pjCol=()=>EC_COLORS[((c.tokens||[]).concat(R).filter(t=>t.k==="pj").length)%EC_COLORS.length];
-    if(kk==="pj"){if(!ecHasPj(c,R,v))add({k:"pj",n:v,c:pjCol()});}
-    else if(kk==="pjs"){ecPlayersInGame(q).forEach(nm=>{if(!ecHasPj(c,R,nm))add({k:"pj",n:nm,c:pjCol()});});}
+    if(kk==="pj"){if(!ecHasPj(c,R,v)){const t={k:"pj",n:v,c:pjCol()};ecPjDv(t);add(t);}}
+    else if(kk==="pjs"){ecPlayersInGame(q).forEach(nm=>{if(!ecHasPj(c,R,nm)){const t={k:"pj",n:nm,c:pjCol()};ecPjDv(t);add(t);}});}
     else if(kk==="foe"||kk==="foes"){const sel=(document.getElementById("ec-foe")||{}).value,L=((ui.pt&&ui.pt.liste)||[]).filter(x=>x.kind!=="pj"&&!(x.pv<=0)&&!R.some(t=>t.cid===x.cid)&&!(c.tokens||[]).some(t=>t.cid===x.cid)&&(kk==="foes"||x.cid===sel));L.forEach(x=>add({k:x.camp==="allie"?"pnj":"en",n:x.nom,cid:x.cid,vis:true}));}
     else if(kk==="m"){const m=monstres.find(x=>x.id===id);if(m)add({k:"en",n:m.nom,ref:m.id,vis:true});ui.ecFind="";}
     else if(kk==="p"){const x=pnjs.find(y=>y.id===id);if(x)add({k:x.attitude==="hostile"?"en":"pnj",n:x.nom,ref:x.id,vis:true});ui.ecFind="";}
@@ -11752,6 +11761,7 @@ document.addEventListener("submit",async e=>{
     const img=ui.sheetImg!==undefined?ui.sheetImg:(cur&&cur.image)||"";data.image=img;
     if(img&&ui.tokCadre){const tk=tokMake(img,ui.tokCadre);if(tk&&tk.length<150000){data.token=tk;data.tokenCadre={x:+ui.tokCadre.x.toFixed(4),y:+ui.tokCadre.y.toFixed(4),z:+ui.tokCadre.z.toFixed(3)};}}else if(!img&&cur&&cur.token){data.token="";}
     ui.tokCadre=null;
+    {const st={},lim={pv:999,ca:40,pp:40,dv:300};Object.keys(lim).forEach(k=>{const el=document.getElementById("p-st-"+k);if(!el||el.value==="")return;const n=Math.round(+el.value);if(isFinite(n)&&n>=0&&n<=lim[k])st[k]=n;});if(Object.keys(st).length||(cur&&cur.stats))data.stats=st;}
     const pc=document.getElementById("p-pnj");if(pc&&isAdmin)data.pnj=pc.checked;
     let id=cur?cur.id:(nom.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"perso").slice(0,40)+"-"+Date.now().toString(36).slice(-4);
     ui.sheetEdit=null;ui.sheetImg=undefined;
