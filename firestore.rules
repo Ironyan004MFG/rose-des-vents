@@ -264,6 +264,10 @@ service cloud.firestore {
     match /evolutions/{id} {
       allow read, write: if isAdmin();
     }
+    // ---------- Mini Guilde : la table des enfants (DM seulement, cachée de l'accueil) ----------
+    match /mini/{id} {
+      allow read, write: if isAdmin();
+    }
     // ---------- Manuel du DM : dossiers des personnages (Don, notes…), PNJ, bestiaire, rencontres, scénarios ----------
     match /dossiers/{id} {
       allow read, write: if isAdmin();
@@ -368,6 +372,7 @@ service cloud.firestore {
         && request.resource.data.rows is int && request.resource.data.rows > 0 && request.resource.data.rows < 1000
         && request.resource.data.sw is number && request.resource.data.sh is number && request.resource.data.ms is number;
     }
+    // Historique public des changements de rang
     // Historique public des changements de rang
     match /rangs/{id} {
       allow read: if true;
