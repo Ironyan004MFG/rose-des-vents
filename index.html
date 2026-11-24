@@ -3100,16 +3100,33 @@ function ptActive(){return Date.now()-PT_INPUT<20000;}
 // fsThr garde au plus une écriture par « pas » pour chaque document ; la plus récente gagne.
 const FS_THR={};function fsThr(k,fn,gap){const T=FS_THR[k]||(FS_THR[k]={last:0,t:null,fn:null});T.fn=fn;if(T.t)return;const w=Math.max(0,T.last+gap-Date.now());const go=()=>{T.t=null;T.last=Date.now();const f=T.fn;T.fn=null;try{f&&f();}catch(e){console.error(e);}};if(w===0)go();else T.t=setTimeout(go,w);}
 /* ----- Combat ↔ jetons : chaque ennemi/allié du combat reçoit son jeton dans la réserve ; à 0 PV, son jeton quitte la carte ----- */
+/* ----- Jetons illustrés : PNJ, monstres (et Mini Guilde) avec leur token cadré ----- */
+// Clé d'image d'un jeton : « pnj/ID », « monstres/ID » ou « mini/ID »
+function ecImgDoc(key){const i=String(key||"").indexOf("/");if(i<0)return null;const c=key.slice(0,i),id=key.slice(i+1),L=c==="pnj"?pnjs:c==="monstres"?monstres:c==="mini"?miniDocs:[];return (L||[]).find(x=>x.id===id)||null;}
+function ecImgOfCombatant(x){if(!x||!x.ref)return "";if(x.kind==="monstre")return "monstres/"+x.ref;if(x.kind==="pnj")return "pnj/"+x.ref;return "";}
+const EC_TOKIMG=new Map();
+// Côté DM : depuis le compendium ; ailleurs (télé, joueurs) : copie publiée sous la clé secrète de l'écran (jk)
+function ecTokImg(key,jk){let e=EC_TOKIMG.get(key);if(e)return e.ok?e.im:null;
+  if(isAdmin){const d=ecImgDoc(key),src=d&&(d.token||d.image);if(!src)return null;e={ok:false,im:new Image()};EC_TOKIMG.set(key,e);
+    // pas encore de token cadré : on cadre le portrait automatiquement (haut du portrait, là où est le visage)
+    if(d.token){e.im.onload=()=>{e.ok=true;};e.im.src=src;}else{const raw=new Image();raw.onload=()=>{const cv=document.createElement("canvas");cv.width=cv.height=192;const im2={naturalWidth:raw.naturalWidth,naturalHeight:raw.naturalHeight};const z=1.8,rad=Math.min(raw.naturalWidth,raw.naturalHeight)/z/2;
+      const c={x:0.5,y:Math.max(rad/raw.naturalHeight,0.28),z};tokPaint(cv.getContext("2d"),192,raw,c,false);e.im=cv;e.ok=true;e.url=cv.toDataURL("image/webp",0.85);};raw.src=src;}return null;}
+  if(!jk)return null;e={ok:false,im:new Image()};EC_TOKIMG.set(key,e);getDoc(doc(db,"ecranpub",jk+"-j-"+key.replace("/","~"))).then(sn=>{const d=sn.exists()?sn.data():null;if(d&&d.img){e.im.onload=()=>{e.ok=true;};e.im.src=d.img;}}).catch(()=>{});return null;}
+// Publie (une fois) l'image d'un jeton visible, pour la télé et les joueurs à distance
+const EC_IMGPUB=new Set();
+function ecImgPub(tokens){if(!isAdmin)return null;const keys=[...new Set((tokens||[]).filter(k=>k.img&&k.k!=="pj").map(k=>k.img))];if(!keys.length)return teleKey(false);const jk=teleKey(true);if(!jk)return null;
+  keys.forEach(key=>{if(EC_IMGPUB.has(jk+key))return;const d=ecImgDoc(key),e0=EC_TOKIMG.get(key),src=(d&&d.token)||(e0&&e0.url);if(!src)return;EC_IMGPUB.add(jk+key);setDoc(doc(db,"ecranpub",jk+"-j-"+key.replace("/","~")),{img:src}).catch(e=>{EC_IMGPUB.delete(jk+key);console.error(e);});});return jk;}
 // Vision dans le noir des jetons joueurs : reprise de la fiche publique (pieds ÷ 5 = cases) tant que le DM ne l'a pas réglée
 function ecPjDv(t){if(!t||t.k!=="pj"||t.dv!=null)return false;const k=ptNorm(t.n).trim(),a=aventuriers.find(x=>!x.pnj&&ptNorm(x.nom).trim()===k);if(!a||!a.stats||a.stats.dv==null)return false;t.dv=Math.round(+a.stats.dv/5);return true;}
 function ecFoeSync(){const P=ui.pt;if(!P||!P.liste)return;const E=ecP(),R=ecResOf(),seen=E.foeSeen||(E.foeSeen={}),cards=E.cartes||[];
   R.forEach(ecPjDv);cards.forEach(c=>(c.tokens||[]).forEach(ecPjDv));
+  {const byCid={};P.liste.forEach(x=>{const im=ecImgOfCombatant(x);if(im)byCid[x.cid]=im;});const fix=t=>{if(!t.img&&t.cid&&byCid[t.cid])t.img=byCid[t.cid];if(!t.img&&t.ref&&t.k!=="pj"&&!t.look){if(monstres.some(m=>m.id===t.ref))t.img="monstres/"+t.ref;else if(pnjs.some(m=>m.id===t.ref))t.img="pnj/"+t.ref;}};R.forEach(fix);cards.forEach(c=>(c.tokens||[]).forEach(fix));}
   const has=cid=>R.some(t=>t.cid===cid)||cards.some(c=>(c.tokens||[]).some(t=>t.cid===cid));
   P.liste.forEach(x=>{if(x.kind==="pj")return;
     if(x.pv<=0&&(+x.pvMax||0)>0){let rm=false;for(let i=R.length-1;i>=0;i--)if(R[i].cid===x.cid){R.splice(i,1);rm=true;}
       cards.forEach(c=>{const n=(c.tokens||[]).length;c.tokens=(c.tokens||[]).filter(t=>t.cid!==x.cid);if(c.tokens.length!==n)rm=true;});
       if(rm){ptLog("Écran : le jeton de "+x.nom+" quitte la carte.");if(ui.ecSel&&!cards.some(c=>(c.tokens||[]).some(t=>t.id===ui.ecSel)))ui.ecSel=null;}seen[x.cid]=1;return;}
-    if(!seen[x.cid]&&P.combat&&!has(x.cid))R.push({id:ptUid(),k:x.camp==="allie"?"pnj":"en",n:x.nom,cid:x.cid,vis:true,camp:x.camp==="allie"?"allie":"ennemi"});
+    if(!seen[x.cid]&&P.combat&&!has(x.cid)){const t={id:ptUid(),k:x.camp==="allie"?"pnj":"en",n:x.nom,cid:x.cid,vis:true,camp:x.camp==="allie"?"allie":"ennemi"},im=ecImgOfCombatant(x);if(im)t.img=im;R.push(t);}
     if(P.combat)seen[x.cid]=1;});}
 // Sélection partagée : choisir un combattant dans l'ordre de bataille sélectionne son jeton sur la carte (halo blanc), et l'inverse — aussi d'un onglet à l'autre
 let ptSelBC=null;try{ptSelBC=new BroadcastChannel("rdv-sel");ptSelBC.onmessage=e=>{const d=e.data||{};if(!ui.pt||d.qid!==ui.pt.id)return;if(d.from==="combat")ecSelCid(d.cid,true);else if(d.from==="carte"&&!ui.ptMapOnly){if(ui.ptSel!==d.cid){ui.ptSel=d.cid;render();}}};}catch(e){}
@@ -9987,6 +10004,13 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),p
 
         if(k.k==="pnj"&&k.look){const TT=Date.now()/1000;if(c.type==="bureau"){const gg=ecGenGeo(c);gg.pjPos=(st.tokens||[]).filter(q=>q.k==="pj").map(q=>[q.x,q.y]);}let k2=k,X2=X,Y2=Y;if(k.held)EC_ROAMPOS.set(k,[k.x,k.y]);if(c.type==="bureau"&&!k.held){const m=ecRoam(k,ecGenGeo(c),c,TT);if(m){EC_ROAMPOS.set(k,[m.x,m.y]);k2=Object.assign({},k,{x:m.x,y:m.y,a:m.a!=null?m.a:k.a,walk:!m.still,talk:!!(k.look.pax&&m.still&&m.a!=null),scene:m.scene,at:m.at,busy:m.busy,kind:m.kind});X2=m.x*s;Y2=m.y*s;}}
       if(tv){if(st.fog&&st.fog.on&&!(V&&V.tokSeen(k2.x,k2.y)))return;}ecNamedTok(x,k2,X2,Y2,s,TT,r.sel===k.id,!tv&&!k.vis);return;}
+    if(k.img&&k.k!=="pj"){const im=ecTokImg(k.img,st.jk);if(im){const R0=s*0.46,dim=!tv&&!k.vis,rc=k.camp==="ennemi"||k.k==="en"?"#c0392b":k.camp==="allie"?"#2e8b57":"#4a8ab8";x.globalAlpha=dim?0.55:1;
+      x.fillStyle="rgba(0,0,0,.35)";x.beginPath();x.arc(X+s*0.04,Y+s*0.06,R0,0,6.283);x.fill();x.save();x.beginPath();x.arc(X,Y,R0,0,6.283);x.clip();x.fillStyle="#2a2420";x.fillRect(X-R0,Y-R0,2*R0,2*R0);x.drawImage(im,X-R0,Y-R0,2*R0,2*R0);if(k.mort){x.fillStyle="rgba(0,0,0,.45)";x.fillRect(X-R0,Y-R0,2*R0,2*R0);}x.restore();
+      if(r.sel===k.id){x.strokeStyle="#fff";x.lineWidth=Math.max(3,s*0.1);x.beginPath();x.arc(X,Y,R0+s*0.07,0,6.283);x.stroke();}
+      x.strokeStyle=rc;x.lineWidth=Math.max(2,s*0.07);if(dim)x.setLineDash([5,4]);x.beginPath();x.arc(X,Y,R0,0,6.283);x.stroke();x.setLineDash([]);
+      // numéro (Loup 3 → 3) pour s'y retrouver dans un groupe
+      const num=(String(k.n||"").match(/(\d+)\s*$/)||[])[1];if(num){const bx=X+R0*0.72,by=Y+R0*0.72,br=s*0.17;x.fillStyle=rc;x.beginPath();x.arc(bx,by,br,0,6.283);x.fill();x.strokeStyle="#fff";x.lineWidth=Math.max(1,s*0.03);x.stroke();x.fillStyle="#fff";x.font="700 "+Math.round(s*0.2)+"px sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText(num,bx,by+1);}
+      x.globalAlpha=1;return;}}
     x.globalAlpha=(!tv&&k.k!=="pj"&&!k.vis)?0.55:1;x.fillStyle="rgba(0,0,0,.35)";x.beginPath();x.arc(X+s*0.04,Y+s*0.06,s*0.42,0,6.283);x.fill();
     x.fillStyle=k.k==="pj"?(k.c||"#d8b45e"):k.k==="en"?"#9b2c22":"#3f6b8a";x.beginPath();x.arc(X,Y,s*0.4,0,6.283);x.fill();x.strokeStyle=r.sel===k.id?"#fff":"rgba(0,0,0,.6)";x.lineWidth=r.sel===k.id?3:1.5;if(!tv&&k.k!=="pj"&&!k.vis)x.setLineDash([4,3]);x.stroke();x.setLineDash([]);
     x.fillStyle=k.k==="pj"?"#1b140c":"#fff";x.font="700 "+Math.round(s*0.42)+"px serif";x.textAlign="center";x.textBaseline="middle";x.fillText(String(k.n||"?").slice(0,1).toUpperCase(),X,Y+1);x.globalAlpha=1;
@@ -10164,7 +10188,7 @@ function ecState(){const E=ecP(),c=ecCard(),q=ui.pt;if(!c)return null;
   let ordre=null;if(E.ordre&&E.ordre.mode==="combat"&&q.combat&&q.combat.phase==="combat"){ordre={titre:"Ordre de combat · round "+(q.round||1),liste:ptOrder().filter(x=>!(x.kind!=="pj"&&x.pv<=0)&&!x.cache).map(x=>({n:x.nom,k:x.kind==="pj"?"pj":"en",cur:x.cid===q.cur}))};}
   else if(E.ordre&&E.ordre.mode==="parole"&&ptParActive()){ordre={titre:"Ordre de parole",liste:ptParNames().map(o=>({n:o.n,k:"pj",cur:o.cur}))};}
   else if(E.ordre&&E.ordre.mode==="parole"){const L=String(E.ordre.parole||"").split("\n").map(x=>x.trim()).filter(Boolean),i=(E.ordre.idx||0)%Math.max(1,L.length);ordre={titre:"Ordre de parole",liste:L.map((n,j)=>({n,k:"pj",cur:j===i}))};}
-  return {vie:Date.now(),qid:q.id,carte:{id:c.id,nom:c.nom,type:c.type,seed:c.seed,w:c.w,h:c.h,url:c.url||"",gone:c.gone||[],back:c.back||{},vie:c.vie||"",bureau:c.bureau||"",etage:+c.etage||0,niv:c.niv||null,ouv:c.ouv||[],don:c.don||null,env:c.env||null,opt:c.opt||"",kraken:!!c.kraken,off:c.off||[]},cam:ecCam(E,c),tokens:c.tokens||[],fog:{on:E.fog!==false,vu:c.vu||""},lum:E.lum||"jour",meteo:(c.abri||ecIndoor(c.type))?"clair":(E.meteo||"clair"),date:calLabel(calNow()),jour:E.jour||1,grid:ecGridOn(E),info:E.info||"",ordre,figs:tbFigList(tbQuest(),c),calib:(ecDoc&&ecDoc.calib)||{},ms:Date.now()};}
+  return {vie:Date.now(),qid:q.id,jk:(monde&&monde.teleKey)||"",carte:{id:c.id,nom:c.nom,type:c.type,seed:c.seed,w:c.w,h:c.h,url:c.url||"",gone:c.gone||[],back:c.back||{},vie:c.vie||"",bureau:c.bureau||"",etage:+c.etage||0,niv:c.niv||null,ouv:c.ouv||[],don:c.don||null,env:c.env||null,opt:c.opt||"",kraken:!!c.kraken,off:c.off||[]},cam:ecCam(E,c),tokens:c.tokens||[],fog:{on:E.fog!==false,vu:c.vu||""},lum:E.lum||"jour",meteo:(c.abri||ecIndoor(c.type))?"clair":(E.meteo||"clair"),date:calLabel(calNow()),jour:E.jour||1,grid:ecGridOn(E),info:E.info||"",ordre,figs:tbFigList(tbQuest(),c),calib:(ecDoc&&ecDoc.calib)||{},ms:Date.now()};}
 /* ---------- Table virtuelle : l'écran de table, ouvert à distance par les inscrits d'une quête en cours ----------
    Comme à la table : chaque joueur à distance pose UNE figurine virtuelle (pion plein, à l'image de son personnage) et la déplace.
    Elle ne donne aucune vision : c'est le DM qui ajuste l'anneau du personnage dessous, comme sous une figurine posée sur l'écran.
@@ -10286,7 +10310,8 @@ function ecCloseScreens(){if(!isAdmin)return;clearTimeout(ecPushT);clearTimeout(
 // grille active par défaut tant que le MJ ne l'a pas décochée lui-même
 function ecGridOn(E){return E.gridSet?!!E.grid:true;}
 function ecPush(now){if(ui.ecStopped)return;if(!ptActive()&&!ui.ptMapOnly)return;if(isAdmin&&ui.pt)try{ptSave();}catch(e){console.error(e);}
-  if(ui.pt&&ui.pt.id!=="libre"&&!ui.ptMapOnly&&ptSepOn(ui.pt.id))return;if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);const wr=()=>{fsThr("ec",()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},1000);telePush(st);};if(now)wr();else ecPushT=setTimeout(wr,250);}
+  if(ui.pt&&ui.pt.id!=="libre"&&!ui.ptMapOnly&&ptSepOn(ui.pt.id))return;if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();if(st)try{ecImgPub(st.tokens);st.jk=teleKey(false)||"";}catch(e){console.error(e);}tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);
+  const wr=()=>{fsThr("ec",()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},1000);telePush(st);};if(now)wr();else ecPushT=setTimeout(wr,250);}
 function ecReveal(c){const E=ecP();const st=ecState();if(!st)return;const V=ecVision(st);let vu=(c.vu||"").padEnd(c.w*c.h,"0").split("");let ch=false;for(let i=0;i<V.vis.length;i++)if(V.vis[i]&&vu[i]!=="1"){vu[i]="1";ch=true;}if(ch)c.vu=vu.join("");}
 function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc.calib)||{};
   let h='<div class="ecdm"><p class="ecopen"><a class="btn gold sm" href="#ecran" target="_blank" rel="noopener">Ouvrir l\'écran joueurs ↗</a> '+(ecDoc&&ecDoc.carte?'<button class="btn ghost sm" data-a="ec-stop">■ Arrêter l\'écran joueur</button>':'<button class="btn gold sm" data-a="ec-start"'+(ecState()?'':' disabled title="Ouvre d\'abord une carte ci-dessous"')+'>▶ Démarrer l\'écran joueur</button>')+' <button class="btn gold sm" data-a="tele-copylink" title="Un lien secret, sans connexion : la télé ou un autre ordinateur affiche l\'écran des joueurs sans pouvoir rien modifier">'+(ui.teleCopied?'✓ Lien copié':'📡 Copier le lien télé (sans connexion)')+'</button> <button class="btn ghost sm" data-a="ec-copylink">'+(ui.ecCopied?'✓ Lien copié':'Copier le lien (compte DM)')+'</button> <span class="desc">Sur l\'ordinateur de la télé : colle le <strong>lien télé</strong> (aucune connexion), puis F11 pour le plein écran. Il affiche seulement ce que les joueurs voient et ne modifie jamais la partie.'+(tvv?' Écran détecté : '+tvv.cols+' × '+tvv.rows+' cases.':'')+'</span></p>';
@@ -10509,8 +10534,8 @@ async function ecAction(a,id,b,v,q){const E=ecP(),c=ecCard();
     if(kk==="pj"){if(!ecHasPj(c,R,v)){const t={k:"pj",n:v,c:pjCol()};ecPjDv(t);add(t);}}
     else if(kk==="pjs"){ecPlayersInGame(q).forEach(nm=>{if(!ecHasPj(c,R,nm)){const t={k:"pj",n:nm,c:pjCol()};ecPjDv(t);add(t);}});}
     else if(kk==="foe"||kk==="foes"){const sel=(document.getElementById("ec-foe")||{}).value,L=((ui.pt&&ui.pt.liste)||[]).filter(x=>x.kind!=="pj"&&!(x.pv<=0)&&!R.some(t=>t.cid===x.cid)&&!(c.tokens||[]).some(t=>t.cid===x.cid)&&(kk==="foes"||x.cid===sel));L.forEach(x=>add({k:x.camp==="allie"?"pnj":"en",n:x.nom,cid:x.cid,vis:true}));}
-    else if(kk==="m"){const m=monstres.find(x=>x.id===id);if(m)add({k:"en",n:m.nom,ref:m.id,vis:true});ui.ecFind="";}
-    else if(kk==="p"){const x=pnjs.find(y=>y.id===id);if(x)add({k:x.attitude==="hostile"?"en":"pnj",n:x.nom,ref:x.id,vis:true});ui.ecFind="";}
+    else if(kk==="m"){const m=monstres.find(x=>x.id===id);if(m)add({k:"en",n:m.nom,ref:m.id,img:"monstres/"+m.id,vis:true});ui.ecFind="";}
+    else if(kk==="p"){const x=pnjs.find(y=>y.id===id);if(x)add({k:x.attitude==="hostile"?"en":"pnj",n:x.nom,ref:x.id,img:"pnj/"+x.id,vis:true});ui.ecFind="";}
     else if(kk==="lum"){const lp=(document.getElementById("ec-lp")||{}).value||"torche",L=EC_LIGHTS[lp]||EC_LIGHTS.torche;ui.ecLp=lp;add({k:"lum",n:L.l,r:L.r,flamme:L.mag?false:true,lp});}
     ptSave();return true;}
   if(a==="pt-ec-tokdel"){{const t0=(c.tokens||[]).find(k=>k.id===ui.ecSel);if(t0&&t0.k==="pj"&&tbVirt(t0.n))tbFigDel(q,t0.n);}c.tokens=(c.tokens||[]).filter(k=>k.id!==ui.ecSel);ui.ecSel=null;ecPush(true);return true;}
