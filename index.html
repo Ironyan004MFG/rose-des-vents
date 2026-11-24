@@ -1434,7 +1434,7 @@ function listenPrivate(on){
   privUnsubs.push(onSnapshot(doc(db,"prive","renommee"),snap=>{priv=snap.exists()?snap.data():null;render();},err));
   const arr=(c,set)=>privUnsubs.push(onSnapshot(collection(db,c),snap=>{set(snap.docs.map(d=>Object.assign({id:d.id},d.data())));render();},err));
   arr("dossiers",l=>{dossiers={};l.forEach(x=>{dossiers[x.id]=x;});syncDons();});arr("dons",l=>{donsAll={};l.forEach(x=>{donsAll[x.id]=x;});syncDons();});arr("scenarios",l=>{scenarios={};l.forEach(x=>{scenarios[x.id]=x;});});
-  arr("mini",l=>{miniDocs=l;});arr("pnj",l=>{pnjs=l;});arr("objets",l=>{objets=l;});arr("factions",l=>{factions=l;});arr("parties",l=>{parties=l;});arr("modules",l=>{modules=l;});arr("butins",l=>{butins=l;});arr("relations",l=>{relations=l;});arr("faveurs",l=>{faveurs=l;});arr("monstres",l=>{monstres=l;});arr("rencontres",l=>{rencontres=l;});
+  arr("mini",l=>{miniDocs=l;});arr("pnj",l=>{pnjs=l;});arr("objets",l=>{objets=l;});arr("factions",l=>{factions=l;});arr("parties",l=>{parties=l;loaded.pa=true;});arr("modules",l=>{modules=l;});arr("butins",l=>{butins=l;});arr("relations",l=>{relations=l;});arr("faveurs",l=>{faveurs=l;});arr("monstres",l=>{monstres=l;});arr("rencontres",l=>{rencontres=l;});
   privUnsubs.push(onSnapshot(collection(db,"notesdm"),snap=>{notesDm=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(collection(db,"evolutions"),snap=>{evols=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},err));
   privUnsubs.push(onSnapshot(doc(db,"prive","monde"),snap=>{monde=snap.exists()?snap.data():null;render();},err));
@@ -3034,11 +3034,27 @@ function ptStats(){const P=ui.pt;P.stats=Object.assign({combats:0,rounds:0,vainc
 function ptClone(o){return JSON.parse(JSON.stringify(o));}
 function ptSync(qid){
   const d=parties.find(p=>p.id===qid);
-  if(!ui.pt||ui.pt.id!==qid){ui.pt=d?Object.assign(ptBlank(qid),ptClone(d)):ptBlank(qid);ui.ptRev=ui.pt.rev||0;if(isAdmin&&qid!=="libre")setTimeout(tbPush,0);return;}
-  // On ne reprend la version enregistrée que si elle est PLUS RÉCENTE que la nôtre (jamais de retour en arrière).
-  // Si elle vient d'un autre onglet ou appareil, on prévient : les deux se remplacent l'un l'autre.
-  if(d&&d.rev&&d.rev>(ui.ptRev||0)&&Date.now()-(ui.ptEditMs||0)>4000){ui.pt=Object.assign(ptBlank(qid),ptClone(d));ui.ptRev=d.rev;if(d.by&&d.by!==PT_CLIENT)ui.ptAlert="⚠ Cette partie est aussi ouverte dans un autre onglet ou sur un autre appareil : ses changements remplacent les tiens. Garde la partie ouverte à un seul endroit (la télé, elle, doit afficher l'écran des joueurs).";}
+  // Tant que les parties enregistrées ne sont pas arrivées, on n'enregistre rien (sinon un nouvel onglet écraserait la partie avec une page blanche)
+  if(ui.pt&&ui.pt.id===qid&&ui.ptWait&&loaded.pa){const R=d?Object.assign(ptBlank(qid),ptClone(d)):ptBlank(qid);ui.pt=ptMerge3(ui.ptBase||ptBlank(qid),ui.pt,R);ui.ptBase=R;ui.ptWait=false;ui.ptRev=Math.max(ui.ptRev||0,R.rev||0);if(ui.ptDirty){ui.ptDirty=false;setTimeout(ptSave,0);}return;}
+  if(!ui.pt||ui.pt.id!==qid){ui.pt=d?Object.assign(ptBlank(qid),ptClone(d)):ptBlank(qid);ui.ptWait=!loaded.pa;ui.ptRev=ui.pt.rev||0;ui.ptBase=ptClone(ui.pt);if(isAdmin&&qid!=="libre")setTimeout(tbPush,0);return;}
+  // Une version plus récente vient d'un autre onglet (ex. scénario dans un onglet, carte dans l'autre) : on COMBINE,
+  // on ne remplace pas. Ce qu'on a changé ici est gardé, ce que l'autre onglet a changé est repris. Jamais de retour en arrière.
+  if(d&&d!==ui.ptSeenObj&&Date.now()-(ui.ptEditMs||0)<=1500){clearTimeout(ptSync.t);ptSync.t=setTimeout(()=>{if(ui.pt&&ui.pt.id===qid&&!document.activeElement.matches("input,textarea,select"))render();},1600);}
+  if(d&&d!==ui.ptSeenObj&&Date.now()-(ui.ptEditMs||0)>1500){ui.ptSeenObj=d;const R=Object.assign(ptBlank(qid),ptClone(d)),nk=o=>{const c=Object.assign({},o);delete c.rev;delete c.by;delete c.majLe;delete c.id;return ptStab(c);};
+    if(!ui.ptBase||nk(R)!==nk(ui.ptBase)){ui.pt=ptMerge3(ui.ptBase||R,ui.pt,R);ui.ptBase=R;ui.ptSeen=d.rev;ui.ptRev=Math.max(ui.ptRev||0,d.rev||0);}}
 }
+// Fusion à trois voies (base commune, ici, là-bas) : champ par champ ; listes de jetons, cartes et combattants par identifiant.
+// Différences champ par champ entre deux états (les listes sont envoyées en entier)
+function ptDiff(b,l,pa,out){const isO=v=>!!v&&typeof v==="object"&&!Array.isArray(v);if(ptStab(b)===ptStab(l))return;
+  if(isO(b)&&isO(l)&&pa.length<4){new Set(Object.keys(b).concat(Object.keys(l))).forEach(k=>{if(k==="majLe")return;ptDiff(b[k],l[k],pa.concat([k]),out);});return;}out.push([pa,l]);}
+function ptStab(v){return v===undefined?"u":JSON.stringify(v,(k,x)=>x&&typeof x==="object"&&!Array.isArray(x)?Object.keys(x).sort().reduce((o,k2)=>{o[k2]=x[k2];return o;},{}):x);}
+function ptMerge3(b,l,r){const eq=(x,y)=>ptStab(x)===ptStab(y),isO=v=>!!v&&typeof v==="object"&&!Array.isArray(v);
+  if(eq(l,b))return r===undefined?undefined:ptClone(r);if(eq(r,b)||eq(l,r))return l;
+  if(isO(l)&&isO(r)){const o={},B=isO(b)?b:{};new Set(Object.keys(l).concat(Object.keys(r),Object.keys(B))).forEach(k=>{if(k==="rev"||k==="by"||k==="majLe"){if(r[k]!==undefined)o[k]=r[k];return;}const v=ptMerge3(B[k],l[k],r[k]);if(v!==undefined)o[k]=v;});return o;}
+  const idA=a=>Array.isArray(a)&&a.length>0&&a.every(x=>isO(x)&&(x.id!=null||x.cid!=null)),kid=x=>x.id!=null?"i"+x.id:"c"+x.cid;
+  if(Array.isArray(l)&&Array.isArray(r)&&(idA(l)||!l.length)&&(idA(r)||!r.length)&&(l.length||r.length)){const BB=new Map((Array.isArray(b)?b:[]).filter(x=>isO(x)&&(x.id!=null||x.cid!=null)).map(x=>[kid(x),x])),L=new Map(l.map(x=>[kid(x),x])),RR=new Map(r.map(x=>[kid(x),x])),out=[];
+    r.map(kid).concat(l.map(kid).filter(k=>!RR.has(k))).forEach(k=>{const inB=BB.has(k),inL=L.has(k),inR=RR.has(k);if(inL&&inR)out.push(ptMerge3(BB.get(k),L.get(k),RR.get(k)));else if(inL&&!inB)out.push(L.get(k));else if(inR&&!inB)out.push(ptClone(RR.get(k)));});return out;}
+  return l;}
 let ptTimer=null;
 // Objectifs d'élimination : chaque ennemi vaincu coche l'élément correspondant (même nom, sans le numéro).
 function objBase(n){return String(n||"").replace(/\s+\d+$/,"").trim().toLowerCase();}
@@ -3050,11 +3066,21 @@ function ptObjSync(){const P=ui.pt,q=P&&questById(P.id);if(!q)return;const ob=ob
     o.sub.forEach((x,k)=>{const b=objBase(x);seen[b]=(seen[b]||0)+1;if(seen[b]<=(cnt[b]||0)&&L.indexOf(k)<0){L.push(k);ptLog("✔ "+x+" (objectif : "+o.txt+")");}});
     if(o.sub.every((_,k)=>L.indexOf(k)>=0)&&F.indexOf(o.i)<0){F.push(o.i);ptLog("🎯 Objectif rempli : "+o.txt);}});}
 const PT_CLIENT=Math.random().toString(36).slice(2,10);
-function ptSave(){
+function ptSave(){if(!ui.pt)return;if(ui.ptWait){ui.ptDirty=true;return;}
   try{ptObjSync();}catch(e){console.error(e);}
   ui.ptEditMs=Date.now();ui.pt.rev=Math.max(Date.now(),(ui.ptRev||0)+1);ui.ptRev=ui.pt.rev;ui.pt.by=PT_CLIENT;
-  clearTimeout(ptTimer);const st=ptClone(ui.pt),qid=st.id;delete st.id;
-  ptTimer=setTimeout(()=>{setDoc(doc(db,"parties",qid),Object.assign(st,{majLe:serverTimestamp()})).catch(e=>{console.error(e);save={state:"error",msg:errText(e)};render();});},500);
+  clearTimeout(ptTimer);const snap=ptClone(ui.pt),qid=snap.id;
+  ptTimer=setTimeout(()=>{let st=snap;
+    // juste avant d'écrire : si un autre onglet a enregistré entre-temps, on combine d'abord avec sa version
+    const fail=e=>{console.error(e);save={state:"error",msg:errText(e)};render();};
+    if(ui.pt&&ui.pt.id===qid){const d=parties.find(p=>p.id===qid);if(d&&d.rev&&d.by!==PT_CLIENT&&d.rev!==ui.ptSeen){const R=Object.assign(ptBlank(qid),ptClone(d));ui.pt=ptMerge3(ui.ptBase||R,ui.pt,R);ui.ptBase=R;ui.ptSeen=d.rev;}
+      ui.pt.rev=Math.max(Date.now(),(d&&d.rev||0)+1,(ui.ptRev||0));ui.ptRev=ui.pt.rev;ui.pt.by=PT_CLIENT;
+      // on n'envoie que ce qui a changé ici (champ par champ) : deux onglets qui changent des choses différentes ne s'effacent plus
+      if(d&&ui.ptBase){const P=[];ptDiff(ui.ptBase,ui.pt,[],P);const args=[];P.forEach(([pa,v])=>{if(pa[0]==="id")return;args.push(new FieldPath(...pa),v===undefined?deleteField():ptClone(v));});args.push("majLe",serverTimestamp());
+        ui.ptBase=ptClone(ui.pt);if(args.length>2)updateDoc(doc(db,"parties",qid),...args).catch(fail);return;}
+      st=ptClone(ui.pt);ui.ptBase=ptClone(ui.pt);}
+    st=Object.assign({},st);delete st.id;
+    setDoc(doc(db,"parties",qid),Object.assign(st,{majLe:serverTimestamp()})).catch(fail);},500);
 }
 function ptLog(t){const j=ui.pt.journal||(ui.pt.journal=[]);const d=new Date(),e={h:String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"),t:String(t).slice(0,500)};j.push(e);if(ui.pt.combat){const L=ui.pt.combat.log||(ui.pt.combat.log=[]);L.push(e);if(L.length>200)L.splice(0,L.length-200);}if(j.length>300)j.splice(0,j.length-300);}
 function ptOrder(){return (ui.pt.liste||[]).slice().sort((a,b)=>((+b.init||0)-(+a.init||0))||(((+b.dex||0)+(+b.dx||0))-((+a.dex||0)+(+a.dx||0)))||String(a.nom).localeCompare(String(b.nom),"fr"));}
