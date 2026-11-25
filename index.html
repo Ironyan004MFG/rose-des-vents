@@ -3117,8 +3117,9 @@ function ptObjSync(){const P=ui.pt,q=P&&questById(P.id);if(!q)return;const ob=ob
 const PT_CLIENT=Math.random().toString(36).slice(2,10);
 // Une page de Mode Partie laissée ouverte sans qu'on y touche (ex. sur l'ordinateur de la télé) n'écrit rien :
 // seule la page où le DM clique ou tape enregistre la partie et l'écran. Sinon elle renverrait sa vieille carte.
-let PT_INPUT=0;["pointerdown","keydown","wheel"].forEach(ev=>document.addEventListener(ev,()=>{PT_INPUT=Date.now();},true));
-function ptActive(){return Date.now()-PT_INPUT<20000;}
+let PT_INPUT=0;const PT_ME=Math.random().toString(36).slice(2);["pointerdown","keydown","wheel"].forEach(ev=>document.addEventListener(ev,()=>{PT_INPUT=Date.now();try{localStorage.setItem("rdv-last-tab",PT_ME+"|"+PT_INPUT);}catch(e){}},true));
+// Actif : une action dans les 20 dernières secondes, OU le dernier onglet utilisé sur cet appareil tant qu'il est affiché (le DM regarde sans cliquer pendant que les joueurs bougent)
+function ptActive(){if(Date.now()-PT_INPUT<20000)return true;if(document.visibilityState!=="visible")return false;let v="";try{v=localStorage.getItem("rdv-last-tab")||"";}catch(e){}const i=v.indexOf("|");return i>0&&v.slice(0,i)===PT_ME&&Date.now()-(+v.slice(i+1)||0)<30*60000;}
 // Firestore n'aime pas plus d'une écriture par seconde sur le même document : au-delà, les écritures s'empilent et tout prend du retard.
 // fsThr garde au plus une écriture par « pas » pour chaque document ; la plus récente gagne.
 const FS_THR={};function fsThr(k,fn,gap){const T=FS_THR[k]||(FS_THR[k]={last:0,t:null,fn:null});T.fn=fn;if(T.t)return;const w=Math.max(0,T.last+gap-Date.now());const go=()=>{T.t=null;T.last=Date.now();const f=T.fn;T.fn=null;try{f&&f();}catch(e){console.error(e);}};if(w===0)go();else T.t=setTimeout(go,w);}
@@ -10282,8 +10283,11 @@ function tbState(q,st){const c=st&&st.carte;if(!c)return {qid:q.id,titre:q.titre
   // chaque joueur relié à un jeton de la carte : sa couleur sert aussi à ses dessins
   signupsFor(q.id).forEach(sg=>{if(!sg.uid||sg.statut==="refusee"||roster[sg.uid])return;const ring=tbRing(cR,sg);if(ring)roster[sg.uid]={a:sg.aventurier||"",n:ring.n,c:ring.c||"#d8b45e",d:ring.down?1:0,nf:1};});
   const out=Object.assign({},st,{vie:Date.now(),qid:q.id,titre:q.titre,tokens,figs:pres,roster,vue:(ecDoc&&ecDoc.tv)?{cols:ecDoc.tv.cols,rows:ecDoc.tv.rows}:{cols:40,rows:22},ms:Date.now()});delete out.calib;delete out.tvv;delete out.dessins;delete out.trait;return JSON.parse(JSON.stringify(out));}
-function tbPush(){const q=tbQuest();if(!q||!isAdmin||!ptActive())return;tbListen(q.id);clearTimeout(tbPushT);tbPushT=setTimeout(()=>fsThr("tb|"+q.id,()=>{if(tbQuest()!==q)return;let st=null;try{st=ecState();}catch(e){}
-  setDoc(doc(db,"table",q.id),tbState(q,st)).catch(e=>console.error(e));},1500),600);}
+// Envoi régulier (au plus ~1 fois par seconde), jamais repoussé indéfiniment : avant, chaque action du DM repoussait l'envoi (jusqu'à 15 s de retard)
+function tbPush(){const q=tbQuest();if(!q||!isAdmin)return;tbListen(q.id);if(!ptActive()&&!ui.ptMapOnly)return;if(tbPushT)return;tbPushT=setTimeout(()=>{tbPushT=null;fsThr("tb|"+q.id,()=>{if(tbQuest()!==q)return;let st=null;try{st=ecState();}catch(e){console.error(e);}
+  // jamais de carte vide publiée par accident (ex. juste après un rechargement, avant que la partie soit chargée) : seule la fermeture volontaire des écrans la vide
+  if(!st||!st.carte)return;
+  setDoc(doc(db,"table",q.id),tbState(q,st)).catch(e=>console.error(e));},1000);},150);}
 // Côté DM : écoute les figurines des joueurs, pour les montrer sur sa vue, la télé et la copie publiée.
 function tbListen(qid){if(tbFigQ===qid)return;if(tbFigUnsub){try{tbFigUnsub();}catch(e){}tbFigUnsub=null;}if(tbDesUnsub){try{tbDesUnsub();}catch(e){}tbDesUnsub=null;}tbFigQ=qid;tbFigs={};tbDesDM={};if(!qid||!isAdmin)return;
   tbDesUnsub=onSnapshot(collection(db,"table",qid,"dessins"),snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data();});const cnt=D=>Object.keys(D).reduce((n,u)=>n+((D[u]||{}).traits||[]).length,0),had=cnt(tbDesDM),has=cnt(o);tbDesDM=o;const q=tbQuest();if(q&&q.id===qid){try{ecUpdLocal();ecPush(false,true);}catch(e){}if(had!==has&&ui.office&&ui.office.indexOf("partie-")===0&&ui.ptTab==="ecran"&&!document.activeElement.matches("input,textarea,select"))render();}},e=>console.error(e));
@@ -10416,7 +10420,8 @@ function ecGridOn(E){return E.gridSet?!!E.grid:true;}
 // lite : seulement l'affichage (télé, onglet télé) — pas d'enregistrement de la partie ni de copie publiée aux joueurs (ex. figurines des joueurs)
 function ecPush(now,lite){if(ui.ecStopped)return;if(!ptActive()&&!ui.ptMapOnly)return;if(isAdmin&&ui.pt&&!lite)try{ptSave();}catch(e){console.error(e);}
   if(ui.pt&&ui.pt.id!=="libre"&&!ui.ptMapOnly&&ptSepOn(ui.pt.id))return;if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();if(st)try{ecImgPub(st.tokens);st.jk=teleKey(false)||"";}catch(e){console.error(e);}if(!lite)tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);
-  const wr=()=>{fsThr("ec",()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},1000);telePush(st);};if(now)wr();else ecPushT=setTimeout(wr,250);}
+  ecPushSt=st;const wr=()=>{const s2=ecPushSt||st;fsThr("ec",()=>{setDoc(doc(db,"prive","ecran"),ecPushSt||s2,{merge:true}).catch(e=>console.error(e));},1000);telePush(s2);};if(now){clearTimeout(ecPushT);ecPushT=null;wr();}else if(!ecPushT)ecPushT=setTimeout(()=>{ecPushT=null;wr();},250);}
+let ecPushSt=null;
 function ecReveal(c){const E=ecP();const st=ecState();if(!st)return;const V=ecVision(st);let vu=(c.vu||"").padEnd(c.w*c.h,"0").split("");let ch=false;for(let i=0;i<V.vis.length;i++)if(V.vis[i]&&vu[i]!=="1"){vu[i]="1";ch=true;}if(ch)c.vu=vu.join("");}
 function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc.calib)||{};
   let h='<div class="ecdm"><p class="ecopen"><a class="btn gold sm" href="#ecran" target="_blank" rel="noopener">Ouvrir l\'écran joueurs ↗</a> '+(ecDoc&&ecDoc.carte?'<button class="btn ghost sm" data-a="ec-stop">■ Arrêter l\'écran joueur</button>':'<button class="btn gold sm" data-a="ec-start"'+(ecState()?'':' disabled title="Ouvre d\'abord une carte ci-dessous"')+'>▶ Démarrer l\'écran joueur</button>')+' <button class="btn gold sm" data-a="tele-copylink" title="Un lien secret, sans connexion : la télé ou un autre ordinateur affiche l\'écran des joueurs sans pouvoir rien modifier">'+(ui.teleCopied?'✓ Lien copié':'📡 Copier le lien télé (sans connexion)')+'</button> <button class="btn ghost sm" data-a="ec-copylink">'+(ui.ecCopied?'✓ Lien copié':'Copier le lien (compte DM)')+'</button> <span class="desc">Sur l\'ordinateur de la télé : colle le <strong>lien télé</strong> (aucune connexion), puis F11 pour le plein écran. Il affiche seulement ce que les joueurs voient et ne modifie jamais la partie.'+(tvv?' Écran détecté : '+tvv.cols+' × '+tvv.rows+' cases.':'')+'</span></p>';
