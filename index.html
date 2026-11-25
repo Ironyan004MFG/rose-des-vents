@@ -11307,6 +11307,31 @@ function lootDefeated(){const C=ui.pt.combat,out=[];if(!C)return out;(ui.pt.list
   if(c.kind==="monstre"){const m=monstres.find(x=>x.id===c.ref);if(m)out.push({c:c,m:m});return;}
   const pn=pnjs.find(x=>x.id===c.ref);if(pn){const mm=monstres.find(x=>x.id===(pn.monstre||c.mon))||{};out.push({c:c,m:mm,pnj:pn});return;}
   if((c.qitems||[]).length)out.push({c:c,m:{nom:c.nom,fp:"1",id:""},libre:1});});return out;}
+
+/* ---------- Générer un butin après coup (onglet Butin du Mode Partie) ---------- */
+function lgRowOf(nom){const k=ptNorm(nom).trim();const m=monstres.find(x=>ptNorm(x.nom).trim()===k);if(m)return {k:"m",id:m.id,nom:m.nom};const pn=pnjs.find(x=>ptNorm(x.nom).trim()===k);if(pn)return {k:"p",id:pn.id,nom:pn.nom};return {k:"l",id:"",nom:String(nom).slice(0,60)};}
+function lgSources(q){const P=ui.pt,out=[];(P.combats||[]).forEach((x,i)=>{if(Object.keys(x.vaincus||{}).length)out.push({v:"c"+i,g:"Combats livrés",t:x.nom+(x.h?" ("+x.h+")":"")+((x.butin||[]).length?" · butin déjà pris":"")});});
+  ptEncounters(q).forEach(r=>{if((r.monstres||[]).length)out.push({v:"r"+r.id,g:"Rencontres prévues",t:r.nom});});return out;}
+function lgModal(q){const G=ui.lootGen;if(!G)return "";const src=lgSources(q);
+  let h='<div class="modal-bg" data-a="pt-lg-cancel"><div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="lg-t"><h2 id="lg-t">🎲 Générer du butin</h2>';
+  if(G.items){h+='<p class="desc">Pour : '+esc(G.rows.map(r=>r.nom).join(", "))+'. Décoche ce que les joueurs ne prennent pas.</p><div class="lootbox"><h3>💰 Butin</h3>'+lootChecklist(G.items,"lg")+'</div>';
+    return h+'<div class="actions"><button class="btn gold" data-a="pt-lg-save"'+(G.items.length?'':' disabled')+'>Ajouter au butin</button><button class="btn ghost" data-a="pt-lg-run">🎲 Relancer</button><button class="btn ghost" data-a="pt-lg-back">Modifier la liste</button><button class="btn ghost" data-a="pt-lg-cancel">Annuler</button></div></div></div>';}
+  h+='<p class="desc">Pour un combat clos sans fouiller les corps. Choisis un combat pour remplir la liste, ou ajoute les ennemis à la main.</p>';
+  if(src.length){const gs=[...new Set(src.map(x=>x.g))];h+='<label for="lg-src">Combat de la quête<select id="lg-src"><option value="">Choisir un combat…</option>'+gs.map(g=>'<optgroup label="'+esc(g)+'">'+src.filter(x=>x.g===g).map(x=>'<option value="'+esc(x.v)+'">'+esc(x.t)+'</option>').join("")+'</optgroup>').join("")+'</select></label>';}
+  const k=ptNorm(G.find||"").trim();
+  h+='<div class="ptfind"><label for="lg-find">Ajouter un ennemi ou un PNJ<input id="lg-find" type="search" autocomplete="off" value="'+esc(G.find||"")+'" placeholder="Ex. gobelin, Skratch…"></label>';
+  if(k.length>=2){const ms=monstres.filter(m=>ptNorm(m.nom).indexOf(k)>=0).slice(0,8),ps=pnjs.filter(x=>ptNorm(x.nom).indexOf(k)>=0||ptNorm(x.role).indexOf(k)>=0).slice(0,6);
+    h+='<ul class="ptfindres" role="listbox">'+ms.map(m=>'<li><button data-a="pt-lg-add" data-k="m" data-id="'+esc(m.id)+'"><span class="ccat">Bestiaire</span> <strong>'+esc(m.nom)+'</strong> <span class="desc">FP '+esc(m.fp||"?")+(m.butinTable?' · 💰':'')+'</span></button></li>').join("")+ps.map(x=>'<li><button data-a="pt-lg-add" data-k="p" data-id="'+esc(x.id)+'"><span class="ccat">PNJ</span> <strong>'+esc(x.nom)+'</strong> <span class="desc">'+esc(x.role||"")+(x.butinTable?' · 💰':'')+'</span></button></li>').join("")+(ms.length||ps.length?'':'<li class="desc">Rien de trouvé.</li>')+'</ul>';}
+  h+='</div>';
+  h+='<h3>Ennemis à fouiller ('+G.rows.length+')</h3>'+(G.rows.length?'<ul class="lootlist lgrows">'+G.rows.map((r,i)=>'<li><span><span class="ccat">'+(r.k==="m"?"Bestiaire":r.k==="p"?"PNJ":"Sans fiche")+'</span> <strong>'+esc(r.nom)+'</strong></span><button class="mini" data-a="pt-lg-del" data-v="'+i+'" title="Retirer de la liste" aria-label="Retirer '+esc(r.nom)+'">🗑</button></li>').join("")+'</ul>':'<p class="desc">Personne pour l\'instant.</p>');
+  if((G.prevu||[]).length)h+='<p class="desc">+ butin prévu de la rencontre : '+esc(G.prevu.map(x=>x.nom).join(", "))+'</p>';
+  return h+'<div class="actions"><button class="btn gold" data-a="pt-lg-run"'+(G.rows.length||(G.prevu||[]).length?'':' disabled')+'>🎲 Générer le butin</button><button class="btn ghost" data-a="pt-lg-cancel">Annuler</button></div></div></div>';}
+function lgRoll(G){const out=[],qid=(ptQuest()||{}).id;ui.ltSess={};ui.ltCnt={};(G.prevu||[]).forEach(x=>out.push(Object.assign({},x)));
+  G.rows.forEach(r=>{const cr={nom:r.nom};let items=[];
+    if(r.k==="m"){const m=monstres.find(x=>x.id===r.id);if(m)items=lootFor(m,cr);}
+    else if(r.k==="p"){const pn=pnjs.find(x=>x.id===r.id);if(pn){const mm=monstres.find(x=>x.id===pn.monstre)||{};items=(ltRoll(pn,fpNum(mm.fp||1),pn.nom,"pnj",cr)||[]).concat(mm.id?lootFor(mm).filter(i=>!i.quete).map(i=>Object.assign(i,{source:pn.nom})):[]);}}
+    else items=ltRoll({nom:r.nom,id:"",butinTable:""},1,r.nom,"",cr)||lootFor({nom:r.nom,fp:"1",id:""},cr);
+    items.forEach(it=>out.push(it));});return out;}
 function lootTotal(l){return l.reduce((t,x)=>t+(+x.valeur||0),0);}
 /* ---------- relations entre personnes (DM, axe réputation seulement) ---------- */
 const REL_T={perso:"Personnage",pnj:"PNJ",faction:"Faction"};
@@ -11349,7 +11374,7 @@ function secLoot(){
 function lootTvBtn(nom,rar,quete){if(!quete&&(!rar||rar==="classique"||rar==="mediocre"))return "";return '<button class="ptvit" data-a="vit-loot" data-n="'+esc(nom)+'" data-r="'+esc(quete?"quete":rar)+'" title="Montrer sur l\'écran des joueurs" aria-label="Montrer '+esc(nom)+' sur l\'écran des joueurs">📺</button>';}
 function ptLootTab(q){
   const mine=butins.filter(x=>x.quete===q.id),r=ui.pt.combat&&ui.pt.combat.ref?rencontres.find(x=>x.id===ui.pt.combat.ref):null;
-  let h='<p class="desc">Le butin se distribue en clôturant une rencontre. Le Loot Box complet est dans le Manuel du DM.</p>';
+  let h='<p class="desc">Le butin se distribue en clôturant une rencontre. Le Loot Box complet est dans le Manuel du DM.</p><p><button class="btn gold sm" data-a="pt-lg-open">🎲 Générer</button> <span class="desc">Pour un combat clos sans avoir fouillé les corps.</span></p>';
   const qls=ltQuestStatus(q);if(qls.length)h+='<h3>Objets de quête</h3><ul class="lootlist">'+qls.map(x=>'<li><span>'+rarName({nom:x.e.nom,quete:x.e.garanti,rar:x.e.rar})+' <span class="desc">· '+esc(x.who)+' · '+esc(x.how)+(x.e.unique?'':' · '+x.n+(x.e.max?'/'+x.e.max:''))+'</span></span>'+(x.pris?'<span class="ccat">'+(x.e.unique?'Obtenu':'Complet')+'</span>':'')+lootTvBtn(x.e.nom,x.e.rar,true)+'</li>').join("")+'</ul>';
   if(r&&r.butin)h+='<h3>Butin prévu : '+esc(r.nom)+'</h3><div class="wikibody">'+md(r.butin)+'</div>';
   h+='<h3>Récupéré pendant cette quête</h3>'+(mine.length?'<ul class="lootlist">'+mine.map(x=>'<li><span><strong>'+(x.rar?rarName({nom:x.nom,rar:x.rar,quete:x.rar==="quete"}):esc(x.nom))+'</strong>'+(x.valeur?' <em>'+esc(lootPo(x.valeur))+'</em>':'')+'<span class="desc"> · '+esc(x.pourNom||"le groupe")+'</span></span>'+lootTvBtn(x.nom,x.rar,x.rar==="quete")+'</li>').join("")+'</ul><p class="desc">Valeur estimée : '+esc(lootPo(lootTotal(mine))||"0 po")+'</p>':'<p class="desc">Rien pour l\'instant.</p>');
@@ -11374,6 +11399,7 @@ function partyView(){
   else if(q.mini)h+='<div class="ptfoot"><a class="btn ghost" href="#mini">Retour à la Mini Guilde</a>'+(q.statut==="mini-encours"?'<button class="btn gold" data-a="mini-st" data-id="'+esc(q.id)+'" data-v="reussie">Quête réussie !</button>':'')+'</div>';
   else h+='<div class="ptfoot"><a class="btn ghost" href="#'+esc(q.bureau)+'" data-a="goto-quest" data-id="'+esc(q.id)+'">Voir la quête sur le babillard</a>'+(q.statut==="encours"?'<button class="btn gold" data-a="complete" data-id="'+esc(q.id)+'">Terminer la quête</button>':'')+'</div>';
   if(ui.ptClose&&P.combat)h+=ptCloseModal();
+  if(ui.lootGen)h+=lgModal(q);
   if(ui.ptSb){const m=monstres.find(x=>x.id===ui.ptSb);if(m)h+='<div class="modal-bg" data-a="pt-sbclose"><div class="modal wide" role="dialog" aria-modal="true" aria-label="Bloc de stats">'+statblock(m)+'<button class="btn" data-a="pt-sbclose">Fermer</button></div></div>';}
   {const pres=bgPresent(q);if(!q.libre&&(ui.ptBg||(!(P.bg&&P.bg.vu)&&bgOf(q).some(e=>e.aid&&pres[e.aid]&&!bgLocked(e)))))h+=bgModal(q);}
   return h+'</section>';
@@ -11444,6 +11470,14 @@ async function partyAction(a,id,b,e){
   else if(a==="pt-lootgen"){const L=ui.ptLootItems=ui.ptLootItems||[];const dz=lootDefeated(),qid=(ptQuest()||{}).id,PL=P.pnjLoot=P.pnjLoot||{};dz.forEach(x=>{
       if(!x.pnj&&x.m.id){const pn=pnjs.find(y=>y.monstre===x.m.id&&(y.quetes||[]).indexOf(qid)>=0&&y.butinTable&&!PL[y.id]&&(y.attitude==="hostile"||String(x.c.nom).indexOf(y.nom)>=0));if(pn){x.pnj=pn;PL[pn.id]=1;}}
       const items=x.libre?(ltRoll({nom:x.c.nom,id:"",butinTable:""},1,x.c.nom,"",x.c)||[]):x.pnj?(ltRoll(x.pnj,fpNum(x.m.fp||1),x.pnj.nom,"pnj",x.c)||[]).concat(x.m.id?lootFor(x.m).filter(i=>!i.quete).map(i=>Object.assign(i,{source:x.pnj.nom})):[]):lootFor(x.m,x.c);items.forEach(it=>L.push(it));x.c.lootGen=1;});if(!dz.length&&!L.length)ui.ptAlert="Aucun ennemi vaincu : rien à fouiller.";ch=false;}
+  else if(a==="pt-lg-open"){ui.lootGen={rows:[],find:"",prevu:[],items:null,renc:""};ch=false;}
+  else if(a==="pt-lg-cancel"){if(e.target!==b)return;ui.lootGen=null;ch=false;}
+  else if(a==="pt-lg-add"){const G=ui.lootGen;if(!G)return;const r=b.getAttribute("data-k")==="m"?monstres.find(x=>x.id===id):pnjs.find(x=>x.id===id);if(r)G.rows.push({k:b.getAttribute("data-k"),id:r.id,nom:r.nom});G.find="";ch=false;}
+  else if(a==="pt-lg-del"){const G=ui.lootGen;if(G)G.rows.splice(+v,1);ch=false;}
+  else if(a==="pt-lg-run"){const G=ui.lootGen;if(!G)return;G.items=lgRoll(G);if(!G.items.length)ui.ptAlert="Les corps n'avaient rien d'intéressant. Tu peux relancer.";ch=false;}
+  else if(a==="pt-lg-back"){const G=ui.lootGen;if(G)G.items=null;ch=false;}
+  else if(a==="pt-lg-save"){const G=ui.lootGen;if(!G||!G.items)return;const got=lootCollect(G.items,"lg",{quete:q.id,rencontre:G.renc||"Butin généré après coup"});ui.lootGen=null;
+    if(got.length){ptLog("💰 Butin"+(G.renc?" (« "+G.renc+" »)":"")+" : "+got.map(x=>x.nom+(x.pourNom?" ("+x.pourNom+")":"")).join(", ")+".");lootSave(got).catch(err=>{save={state:"error",msg:errText(err)};render();});}}
   else if(a==="pt-close-cancel"){if(e.target!==b)return;ui.ptClose=false;ch=false;}
   else if(a==="pt-enc-cancel"){if(P.combat)ptLog("Rencontre « "+P.combat.nom+" » annulée.");P.combat=null;P.round=0;P.cur=null;}
   else if(a==="pt-group"){const bf=ptIds();let n=0;ptSignups(q).forEach(s=>{if(ptAddPC(s))n++;});if(n)ptLog(n+" aventurier"+(n>1?"s":"")+" entre"+(n>1?"nt":"")+" en scène.");ptJoin(bf);}
@@ -11881,6 +11915,10 @@ document.addEventListener("click",async e=>{
 });
 document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.matches&&d.matches("details.cart"))ui.cartOpen=d.open;if(d&&d.matches&&d.matches("details.shop")){const S=((ui.pt&&ui.pt.boutiques)||[]).find(x=>x.id===d.getAttribute("data-shopid"));if(S)S.ouvert=d.open;}},true);
 document.addEventListener("change",e=>{
+  if(e.target.id==="lg-src"&&ui.lootGen){const G=ui.lootGen,v=e.target.value,P=ui.pt;if(!v)return;
+    if(v[0]==="c"){const x=(P.combats||[])[+v.slice(1)];if(x){Object.keys(x.vaincus||{}).forEach(k=>{for(let i=0;i<(x.vaincus[k].n||1);i++)G.rows.push(lgRowOf(k));});G.renc=x.nom;const r=rencontres.find(y=>y.nom===x.nom);G.prevu=r&&!(x.butin||[]).length?lootParse(r.butin):[];}}
+    else{const r=rencontres.find(y=>y.id===v.slice(1));if(r){(r.monstres||[]).forEach(z=>{const m=monstres.find(y=>y.id===z.id);if(m)for(let i=0;i<(z.nb||1);i++)G.rows.push({k:"m",id:m.id,nom:m.nom});});G.renc=r.nom;G.prevu=lootParse(r.butin);}}
+    render();return;}
   if(e.target.id==="ec-t"){const m=document.getElementById("ec-menv");if(m)m.hidden=e.target.value!=="maison";return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-ec")){ecChange(e.target);return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-cart")==="rank"){ui.cartRank=e.target.value;ui.cartOpen=true;render();return;}
@@ -11915,7 +11953,7 @@ document.addEventListener("change",e=>{
     file.text().then(t=>{try{ui.importPreview=previewImport(JSON.parse(t));ui.dmTab="outils";}catch(err){save={state:"error",msg:"Import impossible : "+err.message};}render();});
   }
 });
-document.addEventListener("input",e=>{if(e.target.getAttribute&&e.target.getAttribute("data-sc")==="n"){const c=(ui.sheetComp||[])[+e.target.getAttribute("data-i")];if(c)c.n=e.target.value;return;}if(e.target.id==="pt-find"){ui.ptFind=e.target.value;render();return;}if(e.target.id==="ec-find"){ui.ecFind=e.target.value;render();return;}if(e.target.id==="pt-objq"){ui.ptObjQ=e.target.value;render();return;}if(e.target.id==="pt-cq"){ui.ptCq=e.target.value;render();return;}if(e.target.id==="man-q"){ui.manQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("man-q");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}return;}
+document.addEventListener("input",e=>{if(e.target.getAttribute&&e.target.getAttribute("data-sc")==="n"){const c=(ui.sheetComp||[])[+e.target.getAttribute("data-i")];if(c)c.n=e.target.value;return;}if(e.target.id==="pt-find"){ui.ptFind=e.target.value;render();return;}if(e.target.id==="lg-find"&&ui.lootGen){ui.lootGen.find=e.target.value;render();return;}if(e.target.id==="ec-find"){ui.ecFind=e.target.value;render();return;}if(e.target.id==="pt-objq"){ui.ptObjQ=e.target.value;render();return;}if(e.target.id==="pt-cq"){ui.ptCq=e.target.value;render();return;}if(e.target.id==="man-q"){ui.manQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("man-q");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}return;}
   if(e.target.id==="pa-nb"||e.target.id==="pa-niv"){ui.party[e.target.id==="pa-nb"?"nb":"niv"]=e.target.value;if(e.target.value){const id=e.target.id;render();const el=document.getElementById(id);if(el){el.focus();}}return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-ml")!=null){syncML();return;}
   if(e.target.id==="n-search"){ui.noteQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("n-search");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}return;}if(e.target.id==="c-search"){ui.compQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("c-search");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}}});
