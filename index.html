@@ -172,7 +172,13 @@ img.zoomable{cursor:zoom-in}img.zoomable:focus-visible{outline:3px solid #2a6fb0
 .tbbar .btn.on{background:#d8b45e;color:#1b140c}#ec-pl.draw,#ec-dm.draw{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M3 25l2-7L19 4l5 5L10 23z' fill='%23f2d27a' stroke='%23000' stroke-width='1.5'/%3E%3Cpath d='M3 25l2-7 5 5z' fill='%23333'/%3E%3C/svg%3E") 2 26,crosshair}#ec-pl:not(.draw){cursor:grab}
 @media (max-width:760px),(max-height:520px){.tbbar{top:4px;padding:3px 6px;gap:4px;border-radius:8px}.tbbar .btn{min-height:30px;padding:2px 8px;font-size:12px;letter-spacing:0}.tbbar .tbt,.tbhint{display:none}}
 .tbbar.min{left:8px;top:8px;transform:none;padding:3px;gap:0;background:rgba(14,22,26,.7)}.tbbar.min>*:not(.tbmin){display:none!important}.tbbar .tbmin{min-width:36px;font-size:15px}
-#tb-fiche{display:contents}.tbbar .tbt{color:#d8b45e;font-family:var(--display);letter-spacing:.04em;padding:0 6px}.tbbar .btn{min-height:36px}.tbhint{flex-basis:100%;text-align:center;color:#e9dfc6;font-size:13px}
+#tb-fiche{display:contents}.tbinipos{position:absolute;left:50%;top:76px;transform:translateX(-50%);z-index:6;width:min(460px,calc(100% - 24px))}
+.tbini{display:flex;flex-direction:column;gap:6px;background:rgba(14,22,26,.94);border:2px solid #d8b45e;border-radius:12px;padding:12px 14px;color:#f1e9d2;box-shadow:0 10px 30px rgba(0,0,0,.6);font-size:16px}
+.tbini strong{color:#d8b45e;font-family:var(--display)}.tbini.sent{flex-direction:row;align-items:center;gap:10px;font-size:15px;border-width:1px;padding:8px 12px}
+.tbinirow{display:flex;gap:8px}.tbinirow input{flex:1;font-size:22px;text-align:center;padding:6px;border-radius:8px;border:1px solid #d8b45e;background:#f6efdb;color:#2a2219;min-width:0}
+.tbinierr{color:#ff9b8a;margin:0}
+.ptinidem{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:8px 0}
+.tbbar .tbt{color:#d8b45e;font-family:var(--display);letter-spacing:.04em;padding:0 6px}.tbbar .btn{min-height:36px}.tbhint{flex-basis:100%;text-align:center;color:#e9dfc6;font-size:13px}
 .tbv .ectv-met{top:auto;bottom:2vh}.tbv .ectv-ord{top:auto;bottom:2vh}
 .ectray{margin:8px 0 10px;padding:10px 12px;border:1px solid rgba(216,180,94,.55);border-radius:8px;background:rgba(216,180,94,.07)}.ectray h4{margin:0 0 6px;font-family:var(--display);font-size:14px}
 .ecrestoks{display:flex;flex-wrap:wrap;gap:6px;min-height:40px;padding:6px;border:1px dashed rgba(216,180,94,.6);border-radius:8px;margin-bottom:8px;align-items:center}
@@ -10567,7 +10573,7 @@ function tbRing(c,sg){if(!c||!sg)return null;const N=v=>ptNorm(v).trim(),av=sg.a
 function tbFigList(q,c){if(!q||!c)return [];return Object.keys(tbFigs).map(uid=>{const f=tbFigs[uid],sg=tbSign(q,uid);if(!f||!sg||f.carte!==c.id)return null;const av=sg.aventurier&&aventuriers.find(a=>a.id===sg.aventurier),ring=tbRing(c,sg);
   return {u:uid,a:av?av.id:"",n:av?av.nom:sg.nom,x:+f.x,y:+f.y,c:ring?(ring.c||"#d8b45e"):"#d8b45e",d:ring&&ring.down?1:0};}).filter(Boolean);}
 // Copie publiée : les ennemis, alliés et objets cachés ou hors de vue n'y sont pas du tout (pas seulement masqués à l'affichage).
-function tbState(q,st){const c=st&&st.carte;if(!c)return {qid:q.id,titre:q.titre,carte:null,ms:Date.now()};
+function tbState(q,st){const iD=(ui.pt&&ui.pt.id===q.id&&ui.pt.combat&&ui.pt.initDem)||null,c=st&&st.carte;if(!c)return {qid:q.id,titre:q.titre,carte:null,initDem:iD,ms:Date.now()};
   const fogOn=!!(st.fog&&st.fog.on),V=fogOn?ecVision(st):null;
   const tokens=(st.tokens||[]).filter(k=>{if(k.k==="pj"||k.k==="lum"||k.k==="inv")return true;if(!k.vis)return false;if(!fogOn)return true;return !!(V&&V.tokSeen(k.x,k.y));})
     // invocation : on y note le compte du joueur qui l'a invoquée, lui seul peut la déplacer
@@ -10579,7 +10585,7 @@ function tbState(q,st){const c=st&&st.carte;if(!c)return {qid:q.id,titre:q.titre
   const cR=(typeof ecCard==="function"&&ecCard()&&ecCard().id===c.id)?ecCard():Object.assign({},c,{tokens:st.tokens||[]}),roster={};tbFigList(q,cR).forEach(f=>{roster[f.u]={a:f.a,n:f.n,c:f.c,d:f.d||0};});
   // chaque joueur relié à un jeton de la carte : sa couleur sert aussi à ses dessins
   signupsFor(q.id).forEach(sg=>{if(!sg.uid||sg.statut==="refusee"||roster[sg.uid])return;const ring=tbRing(cR,sg);if(ring)roster[sg.uid]={a:sg.aventurier||"",n:ring.n,c:ring.c||"#d8b45e",d:ring.down?1:0,nf:1};});
-  const out=Object.assign({},st,{vie:Date.now(),qid:q.id,titre:q.titre,tokens,figs:pres,roster,vue:(ecDoc&&ecDoc.tv)?{cols:ecDoc.tv.cols,rows:ecDoc.tv.rows}:{cols:40,rows:22},ms:Date.now()});delete out.calib;delete out.tvv;delete out.dessins;delete out.trait;return JSON.parse(JSON.stringify(out));}
+  const out=Object.assign({},st,{initDem:iD,vie:Date.now(),qid:q.id,titre:q.titre,tokens,figs:pres,roster,vue:(ecDoc&&ecDoc.tv)?{cols:ecDoc.tv.cols,rows:ecDoc.tv.rows}:{cols:40,rows:22},ms:Date.now()});delete out.calib;delete out.tvv;delete out.dessins;delete out.trait;return JSON.parse(JSON.stringify(out));}
 // Envoi régulier (au plus ~1 fois par seconde), jamais repoussé indéfiniment : avant, chaque action du DM repoussait l'envoi (jusqu'à 15 s de retard)
 function tbPush(){const q=tbQuest();if(!q||!isAdmin||ui.ptInfoOnly)return;tbListen(q.id);if(!ptActive()&&!ui.ptMapOnly)return;if(tbPushT)return;tbPushT=setTimeout(()=>{tbPushT=null;fsThr("tb|"+q.id,()=>{if(tbQuest()!==q)return;let st=null;try{st=ecState();}catch(e){console.error(e);}
   // jamais de carte vide publiée par accident (ex. juste après un rechargement, avant que la partie soit chargée) : seule la fermeture volontaire des écrans la vide
@@ -10626,18 +10632,38 @@ function tbUnsub(){tbSubs.forEach(f=>{try{f();}catch(e){}});tbSubs=[];tbSubQ=nul
 function tbSub(qid){if(tbSubQ===qid)return;tbUnsub();tbSubQ=qid;const er=e=>{console.error(e);tbErr=e&&e.code==="permission-denied"?"Cette carte est réservée aux aventuriers inscrits à la quête.":"La carte n'a pas pu être chargée.";tbUpdate();};
   tbSubs.push(onSnapshot(doc(db,"table",qid),s=>{tbDoc=s.exists()?s.data():null;hbSaw("tb",tbDoc);tbErr="";tbUpdate();},er));
   tbSubs.push(onSnapshot(doc(db,"table",qid,"vitrine","live"),s=>{tbVit=s.exists()?s.data():null;tbUpdate();},()=>{}));
+  tbSubs.push(onSnapshot(doc(db,"table",qid,"actions",user.uid),s=>{tbMyAct=s.exists()?s.data():null;tbIniUpdate();},()=>{}));
   tbSubs.push(onSnapshot(doc(db,"table",qid,"figs",user.uid),s=>{tbMine=s.exists()?s.data():null;tbUpdate();},()=>{}));
   // les figurines des autres joueurs, directement (sans attendre que le DM republie la carte)
   tbSubs.push(onSnapshot(collection(db,"table",qid,"figs"),snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data();});tbAll=o;tbUpdate();},()=>{tbAll={};}));
   tbSubs.push(onSnapshot(collection(db,"table",qid,"dessins"),snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data();});tbDes=o;tbUpdate();},()=>{}));}
 // Vue transmise par le DM : le cadre de la télé, ajusté à la fenêtre du joueur.
 function tbFollow(r,st,cw,ch){const v=st.vue||{cols:40,rows:22},cam=st.cam||{x:0,y:0};return {x:cam.x+v.cols/2,y:cam.y+v.rows/2,s:Math.max(6,Math.min(cw/v.cols,ch/v.rows))};}
-function tbShell(qid){const q=questById(qid);return '<div class="ectv tbv"><canvas id="ec-pl" aria-label="Carte de la partie"></canvas><div class="ectv-met" id="pl-met"></div><div class="ectv-info" id="pl-info"></div><div class="ectv-ord" id="pl-ord"></div><div class="ectv-msg" id="pl-msg"></div><div class="ectv-fiche" id="pl-fiche"></div>'+
+function tbShell(qid){const q=questById(qid);return '<div class="ectv tbv"><canvas id="ec-pl" aria-label="Carte de la partie"></canvas><div class="ectv-met" id="pl-met"></div><div class="ectv-info" id="pl-info"></div><div class="ectv-ord" id="pl-ord"></div><div class="ectv-msg" id="pl-msg"></div><div class="ectv-fiche" id="pl-fiche"></div><div class="tbinipos" id="pl-ini"></div>'+
   '<div class="tbbar'+(tbMinOn()?' min':'')+'" role="toolbar" aria-label="Carte"><button class="btn sm tbmin" data-a="tb-min" aria-expanded="'+!tbMinOn()+'" title="'+(tbMinOn()?'Afficher la barre':'Réduire la barre pour voir toute la carte')+'">'+(tbMinOn()?'☰':'▴')+'</button><a class="btn sm" href="#'+esc(q?q.bureau:"")+'">← Quitter</a><strong class="tbt">'+esc(q?q.titre:"Carte")+'</strong><span id="tb-fiche">'+tbFicheLink(qid)+'</span><button class="btn sm gold" data-a="tb-follow">🎯 Vue du DM</button><button class="btn sm" data-a="tb-draw" id="tb-draw" aria-pressed="false" title="Dessiner sur la carte (aura, cône, direction) : seulement pour montrer, sans effet sur le jeu">✏️ Dessiner</button><button class="btn sm" data-a="tb-erase" id="tb-erase" hidden title="Effacer tous mes dessins">✖ Mes dessins</button><button class="btn sm" data-a="tb-zoom" data-v="1.25" aria-label="Zoomer">＋</button><button class="btn sm" data-a="tb-zoom" data-v="0.8" aria-label="Dézoomer">－</button><span class="tbhint" id="pl-hint"></span></div></div>';}
 // Barre du haut réductible (mémorisé sur l'appareil du joueur) : elle cachait une partie de ce que le DM montre
 // Lien vers la fiche joueur du personnage inscrit (nouvel onglet : changer l'équipement ou voir ses stats sans quitter la carte)
 function tbFicheLink(qid){const mc=myChars();if(!mc.length)return "";const ins=signupsFor(qid).filter(x=>x.statut!=="refusee").map(x=>x.aventurier),L=mc.filter(a=>ins.indexOf(a.id)>=0),list=L.length?L:mc.length===1?mc:[];
   return list.map(a=>'<a class="btn sm" href="#feuille-'+esc(a.id)+'" target="_blank" rel="noopener" title="Ouvrir la fiche joueur de '+esc(a.nom)+' dans un nouvel onglet">📜 '+(list.length>1?esc(a.nom):'Ma fiche')+'</a>').join("");}
+
+/* ---------- Initiative demandée aux joueurs (ils lancent leurs dés chez eux et inscrivent le total) ---------- */
+// Chaque joueur écrit dans table/{quête}/actions/{uid} ; le DM écoute pendant le Mode Partie.
+let ptActQ=null,ptActUnsub=null,ptActs={};
+function ptActListen(qid){if(!isAdmin||ui.ptInfoOnly||ptActQ===qid)return;if(ptActUnsub){try{ptActUnsub();}catch(e){}}ptActQ=qid;ptActs={};
+  const un=onSnapshot(collection(db,"table",qid,"actions"),snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data();});ptActs=o;if(ptIniApply())render();},e=>console.error(e));ptActUnsub=un;}
+function ptIniPend(P){const D=P&&P.initDem;if(!D||!P.combat)return [];return (D.l||[]).filter(x=>{const c=P.liste.find(y=>y.kind==="pj"&&y.ref===x.a);return c&&(c.init===""||c.init==null);});}
+function ptIniApply(){const P=ui.pt,D=P&&P.initDem;if(!D||!P.combat||P.id!==ptActQ)return false;let ch=false;
+  Object.keys(ptActs).forEach(u=>{const I=(ptActs[u]||{}).ini;if(!I||!(I.ms>=D.ms)||I.v==null)return;const c=P.liste.find(y=>y.kind==="pj"&&y.ref===I.a);if(!c||c.iniMs===I.ms)return;
+    c.init=Math.round(+I.v);c.iniMs=I.ms;ptLog("🎲 "+c.nom+" : initiative "+c.init+" (lancée par le joueur).");ch=true;});
+  if(ch)ptSave();return ch;}
+function ptIniPublish(qid,D){setDoc(doc(db,"table",qid),{initDem:D||null},{merge:true}).catch(e=>console.error(e));}
+// Joueur : la demande arrive sur sa carte
+let tbMyAct=null;
+function tbIniBox(){const st=tbDoc,D=st&&st.initDem;if(!D||!user)return "";const mine=myChars().map(a=>a.id),me=(D.l||[]).find(x=>mine.indexOf(x.a)>=0);if(!me)return "";
+  const I=tbMyAct&&tbMyAct.ini,sent=I&&I.ms>=D.ms&&I.a===me.a;
+  if(sent)return '<div class="tbini sent">🎲 Initiative envoyée : <strong>'+esc(I.v)+'</strong> <button class="btn sm" data-a="tb-ini-edit">Corriger</button></div>';
+  return '<form class="tbini" id="tb-ini-f" onsubmit="return false"><strong>🎲 Initiative !</strong><span>Le DM demande l\'initiative de <strong>'+esc(me.n)+'</strong>. Lance ton d20, ajoute ton bonus et inscris le total.</span><span class="tbinirow"><input id="tb-ini-v" type="number" inputmode="numeric" min="-10" max="60" aria-label="Total de ton initiative" required><button class="btn gold sm" data-a="tb-ini" data-v="'+esc(me.a)+'">Envoyer</button></span></form>';}
+function tbIniUpdate(){const el=document.getElementById("pl-ini");if(!el)return;if(document.activeElement&&document.activeElement.id==="tb-ini-v")return;const h=ui.tbIniEdit?"":tbIniBox();if(el.innerHTML!==h)el.innerHTML=h;}
 function tbMinOn(){try{return localStorage.getItem("rdv-tbmin")==="1";}catch(e){return false;}}
 function tbView(qid){const app=document.getElementById("app");if(!document.getElementById("ec-pl"))app.innerHTML=tbShell(qid);
   if(!user||user.isAnonymous){tbUnsub();document.getElementById("pl-msg").textContent="Connecte-toi pour ouvrir la carte de la partie.";return;}
@@ -10645,7 +10671,7 @@ function tbView(qid){const app=document.getElementById("app");if(!document.getEl
   tbSub(qid);tbUpdate();}
 // Ma figurine sur la carte affichée : la position déposée, ou celle que je suis en train de glisser.
 function tbMyFig(st,r){if(r.drag)return {x:r.drag[0],y:r.drag[1]};if(tbMine&&st.carte&&tbMine.carte===st.carte.id)return {x:+tbMine.x,y:+tbMine.y};return null;}
-function tbUpdate(){if(!ui.office||ui.office.indexOf("table-")!==0)return;const m=document.getElementById("pl-msg");if(!m)return;const st=tbDoc;
+function tbUpdate(){if(!ui.office||ui.office.indexOf("table-")!==0)return;tbIniUpdate();const m=document.getElementById("pl-msg");if(!m)return;const st=tbDoc;
   const off=!!(st&&st.carte)&&!hbLive("tb"),f=document.getElementById("pl-fiche"),v=tbVit&&(tbVit.image||tbVit.texte)&&!off?tbVit:null,fk=v?v.ms+"|"+v.nom:"";if(f.getAttribute("data-k")!==fk){f.setAttribute("data-k",fk);if(v){f.innerHTML=ecFicheHtml(v);f.classList.add("on");}else{f.classList.remove("on");f.innerHTML="";}const w=f.closest(".ectv");if(w)w.classList.toggle("fon",!!v);}
   const q=questById(tbSubQ),sg=q&&user?tbSign(q,user.uid):null;
   if(tbErr||!st||!st.carte||off){if(off)["pl-met","pl-info","pl-ord"].forEach(k=>{const el=document.getElementById(k);if(el)el.innerHTML="";});m.textContent=tbErr||(off?"Le Maître de la Guilde s'est déconnecté. La carte reviendra dès qu'il rouvrira la partie.":v?"":"En attente du Maître de la Guilde… La carte apparaîtra dès qu'il en ouvre une.");const r=ecBind("ec-pl","joueur");if(r)r.st=null;return;}
@@ -11462,6 +11488,7 @@ function ptCombatCol(q){
     h+='<p class="desc">Lance l\'initiative de chacun et inscris le résultat. Le 🎲 la lance pour toi (d20 + DEX).</p>';
     h+='<ol class="ptminis init">'+o.map(c=>ptMini(c,"init")).join("")+'</ol>';
     if(ui.ptSel&&ptC(ui.ptSel))h+='<div class="ptselcard"><div class="ptlbl">Fiche ouverte <button class="ptx" data-a="pt-selx" aria-label="Fermer la fiche">✕</button></div><ol class="ptlist">'+ptRow(ptC(ui.ptSel))+'</ol></div>';
+    {const pjs=P.liste.filter(c=>c.kind==="pj"&&c.ref),pend=ptIniPend(P);if(pjs.length)h+='<div class="ptinidem"><button class="btn gold" data-a="pt-inidem">📣 '+(P.initDem?'Redemander':'Demander')+' l\'initiative aux joueurs</button>'+(P.initDem?(pend.length?'<span class="desc">En attente : '+esc(pend.map(x=>x.n).join(", "))+'</span>':'<span class="desc">✓ Tout le monde a répondu.</span>'):'<span class="desc">Chaque joueur inscrit son total sur sa carte ; il arrive ici tout seul.</span>')+'</div>';}
     h+='<div class="ptbar"><button class="btn ghost" data-a="pt-rollinit"'+(P.liste.some(c=>c.kind!=="pj"&&(c.init===""||c.init==null))?'':' disabled')+'>🎲 Lancer pour les monstres restants</button><button class="btn gold" data-a="pt-fight"'+(P.liste.length?'':' disabled')+'>⚔ Lancer le combat'+(miss?' ('+miss+' sans initiative)':'')+'</button></div>';
     h+=ptNotesBox()+ptAddBox(q,false)+'<p><button class="linkbtn" data-a="pt-enc-cancel">Annuler la rencontre</button></p>';
     return h;
@@ -11670,7 +11697,7 @@ function ptLootTab(q){
 function partyView(){
   if(!isAdmin)return '<p class="empty">Le Mode Partie est réservé au DM.</p>';
   const q=ptQuest();if(!q)return '<p class="empty">Quête introuvable.</p>';
-  ptSync(q.id);const P=ui.pt,o=ptOrder(),b=office(q.bureau)||{};
+  ptSync(q.id);ptActListen(q.id);const P=ui.pt,o=ptOrder(),b=office(q.bureau)||{};
   if(ui.ptLaunch){const rid=ui.ptLaunch;ui.ptLaunch=null;if(P.combat)ui.ptAlert="Clos d'abord la rencontre « "+P.combat.nom+" ».";else{ptStartEnc(q,rid,"",true);ptSave();}}
   const xp=P.liste.filter(c=>c.kind==="monstre"&&c.pv<=0).reduce((t,c)=>t+(+c.xp||0),0),npj=P.liste.filter(c=>c.kind==="pj").length;
   if(ui.ptInfoOnly)return '<section class="partie ptinfoonly"><div class="ptmapbar"><strong>📖 '+esc(q.titre)+' · Infos</strong><span class="desc">La carte et la bataille sont dans l\'autre fenêtre. Cette fenêtre ne fait que lire : elle n\'envoie rien aux écrans.</span><button class="btn gold sm" data-a="pt-sep-off">⧉ Rapatrier les infos</button></div><div class="ptside">'+ptSide(q)+'</div></section>';
@@ -11751,7 +11778,8 @@ async function partyAction(a,id,b,e){
   else if(a==="pt-launch"){if(P.combat){ui.ptAlert="Clos d'abord la rencontre « "+P.combat.nom+" ».";ch=false;}else{ptStartEnc(q,id,"",true);ui.ptTab=ui.ptTab||"scenario";render();window.scrollTo({top:0,behavior:"smooth"});ptSave();return;}}
   else if(a==="pt-time"){const n=+v;(P.liste||[]).forEach(x=>{const keep=[];(x.effets||[]).forEach(e=>{if(e.type==="rounds"){e.r-=n;if(e.r<=0){ptEffExpire(x,e);return;}}else if(e.type==="debut"||e.type==="fin"){ptEffExpire(x,e);return;}keep.push(e);});x.effets=keep;});ptLog("⏩ "+(n>=100?n/10+" minutes passent":n/10+" minute passe")+".");}
   else if(a==="pt-roll1"&&c){c.init=ptD(20)+(+c.dex||0);}
-  else if(a==="pt-fight"){if(!P.combat)return;const o=ptOrder().filter(ptAlive);if(!o.length)return;P.combat.phase="combat";P.round=1;P.cur=o[0].cid;ui.ptSel=null;ptStats().combats++;ptLog("⚔ Début du combat — Round 1 —");
+  else if(a==="pt-inidem"){if(!P.combat)return;const L=P.liste.filter(x=>x.kind==="pj"&&x.ref).map(x=>({a:x.ref,n:x.nom}));if(!L.length)return;P.initDem={ms:Date.now(),l:L};ptIniPublish(q.id,P.initDem);ptLog("📣 Initiative demandée aux joueurs.");ptIniApply();}
+  else if(a==="pt-fight"){if(!P.combat)return;if(P.initDem){P.initDem=null;ptIniPublish(q.id,null);}const o=ptOrder().filter(ptAlive);if(!o.length)return;P.combat.phase="combat";P.round=1;P.cur=o[0].cid;ui.ptSel=null;ptStats().combats++;ptLog("⚔ Début du combat — Round 1 —");
     const miss=P.liste.filter(x=>x.init===""||x.init==null).map(x=>x.nom);if(miss.length)ui.ptAlert="Sans initiative (placés en fin de tour) : "+miss.join(", ")+". Tu peux encore la saisir sur leur fiche.";}
   else if(a==="pt-close"){ui.ptClose=true;ui.ltSess={};ui.ltCnt={};const r=P.combat&&P.combat.ref?rencontres.find(x=>x.id===P.combat.ref):null;ui.ptLootItems=r?lootParse(r.butin):[];ch=false;}
   else if(a==="pt-lootgen"){const L=ui.ptLootItems=ui.ptLootItems||[];const dz=lootDefeated(),qid=(ptQuest()||{}).id,PL=P.pnjLoot=P.pnjLoot||{};dz.forEach(x=>{
@@ -11766,7 +11794,7 @@ async function partyAction(a,id,b,e){
   else if(a==="pt-lg-save"){const G=ui.lootGen;if(!G||!G.items)return;const got=lootCollect(G.items,"lg",{quete:q.id,rencontre:G.renc||"Butin généré après coup"});ui.lootGen=null;
     if(got.length){ptLog("💰 Butin"+(G.renc?" (« "+G.renc+" »)":"")+" : "+got.map(x=>x.nom+(x.pourNom?" ("+x.pourNom+")":"")).join(", ")+".");lootSave(got).catch(err=>{save={state:"error",msg:errText(err)};render();});}}
   else if(a==="pt-close-cancel"){if(e.target!==b)return;ui.ptClose=false;ch=false;}
-  else if(a==="pt-enc-cancel"){if(P.combat)ptLog("Rencontre « "+P.combat.nom+" » annulée.");P.combat=null;P.round=0;P.cur=null;}
+  else if(a==="pt-enc-cancel"){if(P.initDem){P.initDem=null;ptIniPublish(q.id,null);}if(P.combat)ptLog("Rencontre « "+P.combat.nom+" » annulée.");P.combat=null;P.round=0;P.cur=null;}
   else if(a==="pt-group"){const bf=ptIds();let n=0;ptSignups(q).forEach(s=>{if(ptAddPC(s))n++;});if(n)ptLog(n+" aventurier"+(n>1?"s":"")+" entre"+(n>1?"nt":"")+" en scène.");ptJoin(bf);}
   else if(a==="pt-enc"){const r=rencontres.find(x=>x.id===id);if(!r)return;const bf=ptIds();(r.monstres||[]).forEach(x=>{const m=monstres.find(y=>y.id===x.id);if(m)for(let i=0;i<(x.nb||1);i++)ptAddMonster(m);});ptLog("Renfort : "+r.nom+".");ptJoin(bf);}
   else if(a==="pt-rollinit"){ptRollInit(false);}
@@ -11829,7 +11857,7 @@ function partySubmit(e){
     ptStats().rounds+=(P.round||0);
     const d=new Date();(P.combats=P.combats||[]).push({butin:C.butin||[],nom:C.nom,notes:C.notes,rounds:P.round||0,xp:xp,vaincus:v,ko:C.ko||[],crits:C.crits||{},fails:C.fails||{},log:C.log||[],h:String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")});
     if(clean)P.liste=P.liste.filter(x=>x.kind==="pj"||x.pv>0);
-    P.combat=null;P.round=0;P.cur=null;ui.ptClose=false;ui.ptSel=null;ptSave();render();return true;}
+    if(P.initDem){P.initDem=null;ptIniPublish(q().id,null);}P.combat=null;P.round=0;P.cur=null;ui.ptClose=false;ui.ptSel=null;ptSave();render();return true;}
   if(f.id==="pt-expr"){const el=document.getElementById("pt-expr-in"),r=ptRoll(el.value);if(r){(ui.ptDice=ui.ptDice||[]).unshift(r);ui.ptDice=ui.ptDice.slice(0,12);}render();const n=document.getElementById("pt-expr-in");if(n){n.value=el.value;n.focus();}return true;}
   if(f.id==="pt-note"){const ni=document.getElementById("pt-note-in"),t=ni.value.trim();ni.value="";if(t){ptLog(t);ptSave();}render();const n=document.getElementById("pt-note-in");if(n)n.focus();return true;}
   if(f.id==="pt-pj"){const a=aventuriers.find(x=>x.id===document.getElementById("pt-pj-sel").value);if(!a)return true;const bf=ptIds();ptAddPC({aventurier:a.id,nom:a.nom});ptLog(a.nom+" entre en scène.");ptJoin(bf);ui.ptAddOpen=true;ptSave();render();return true;}
@@ -11976,6 +12004,10 @@ document.addEventListener("click",async e=>{
     if(o&&(o.image||o.texte)){const hd=o.image?await hdGet("objets",o.id):"";await vitShow(o.nom,hd||o.image||"",o.texte||"");}
     else await vitShow(n,"",rr==="quete"?"Objet de quête":((RAR[rr]||[,"Objet"])[1]+" · trésor"));b.disabled=false;return;}
   if(a==="tv-follow"){const r=ecRenderers["ec-tv"];if(r)r.free=false;return;}
+  if(a==="tb-ini"){const el=document.getElementById("tb-ini-v"),v=el?Math.round(+el.value):NaN,qid=tbSubQ;if(!el||el.value===""||isNaN(v)||v<-10||v>60){if(el)el.focus();return;}
+    const av=aventuriers.find(x=>x.id===b.getAttribute("data-v"));ui.tbIniEdit=false;tbMyAct=Object.assign({},tbMyAct,{ini:{v,ms:Date.now(),a:av?av.id:"",n:av?av.nom:""}});el.blur();tbIniUpdate();
+    setDoc(doc(db,"table",qid,"actions",user.uid),{ini:tbMyAct.ini,ms:Date.now()},{merge:true}).catch(e=>{console.error(e);const h=document.getElementById("pl-ini");if(h)h.insertAdjacentHTML("beforeend",'<p class="tbinierr">Envoi impossible, réessaie.</p>');});return;}
+  if(a==="tb-ini-edit"){tbMyAct=Object.assign({},tbMyAct,{ini:null});tbIniUpdate();const el=document.getElementById("tb-ini-v");if(el)el.focus();return;}
   if(a==="tb-min"){const on=!tbMinOn();try{localStorage.setItem("rdv-tbmin",on?"1":"0");}catch(e){}const bar=b.closest(".tbbar");if(bar)bar.classList.toggle("min",on);b.textContent=on?"☰":"▴";b.setAttribute("aria-expanded",String(!on));b.title=on?"Afficher la barre":"Réduire la barre pour voir toute la carte";return;}
   if(a==="tb-draw"){const r=ecRenderers["ec-pl"];if(!r)return;r.drawOn=!r.drawOn;b.classList.toggle("on",r.drawOn);b.setAttribute("aria-pressed",String(r.drawOn));r.cv.classList.toggle("draw",r.drawOn);const h=document.getElementById("pl-hint");if(h)h.textContent=r.drawOn?"Dessine avec le doigt ou la souris : les autres le voient quand tu lèves le crayon. Reclique sur ✏️ pour reprendre la main.":"";return;}
   if(a==="tb-erase"){tbDesWrite([]);return;}

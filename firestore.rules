@@ -465,6 +465,19 @@ service cloud.firestore {
             && request.resource.data.ms is number);
         allow delete: if isAdmin() || (signedIn() && request.auth.uid == uid);
       }
+      // Actions des joueurs (son uid) : pour l'instant l'initiative demandée par le DM (ini) ; plus tard, les actions de son tour (act).
+      // Le joueur lit et écrit seulement son document ; le DM lit tout et peut effacer.
+      match /actions/{uid} {
+        allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+        allow create, update: if isAdmin()
+          || (signedIn() && request.auth.uid == uid && inscritA(qid)
+            && request.resource.data.keys().hasOnly(['ini', 'act', 'ms'])
+            && (!('ini' in request.resource.data) || request.resource.data.ini == null
+              || (request.resource.data.ini is map && request.resource.data.ini.keys().hasOnly(['v', 'ms', 'a', 'n'])
+                && request.resource.data.ini.v is int && request.resource.data.ini.v >= -10 && request.resource.data.ini.v <= 60))
+            && (!('act' in request.resource.data) || request.resource.data.act == null || request.resource.data.act is map));
+        allow delete: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      }
       // Figurine virtuelle : une par joueur (son uid). Le DM la pose, la remplace ou la retire ;
       // le joueur peut seulement la déplacer sur la même carte. Elle ne donne aucune vision.
       // Champ inv : positions des invocations du joueur (Main de mage, familier…), qu'il déplace lui-même.
