@@ -2178,8 +2178,10 @@ function feuListen(id){if(feuId===id)return;if(feuUnsub){try{feuUnsub();}catch(e
     else if(ui.feu&&feuAbsorb(ui.feu,(feuDoc||{}).recus))feuSaveSoon();},e=>{console.error(e);feuLoaded=true;feuDoc=null;ui.feuErr=errText(e);if(!ui.feu)ui.feu=feuBlank();render();});if(feuId===id)feuUnsub=un;else un();}
 // Butin attribué par le DM (recus) : déposé directement dans l'inventaire ; les pièces vont dans la bourse.
 function feuAbsorb(F,R){if(!F||!R)return false;let ch=false;F.inv=F.inv||[];F.absorbes=F.absorbes||[];F.bourse=F.bourse||{};
-  if(R.pv&&R.pv.ms){const tk="pv@"+R.pv.ms;if(F.absorbes.indexOf(tk)<0){F.absorbes=F.absorbes.filter(x=>String(x).indexOf("pv@")!==0);F.absorbes.push(tk);F.pv=F.pv||{};F.pv.act=+R.pv.pv;ch=true;}}
+  if(R.pv&&R.pv.ms){const tk="pv@"+R.pv.ms;if(F.absorbes.indexOf(tk)<0){F.absorbes=F.absorbes.filter(x=>String(x).indexOf("pv@")!==0);F.absorbes.push(tk);F.pv=F.pv||{};const g=R.pv;
+    if("pv" in g)F.pv.act=g.pv;if("max" in g&&g.max!=="")F.pv.max=g.max;if("temp" in g)F.pv.temp=g.temp===0?"":g.temp;if("ca" in g&&g.ca!=="")F.ca=g.ca;ch=true;}}
   Object.keys(R).forEach(bid=>{if(bid==="pv")return;const r=R[bid]||{},had=F.absorbes.indexOf(bid)>=0;
+    if(r.repos){if(had)return;F.absorbes.push(bid);ch=true;feuLongRest(F);return;}
     if(r.use){if(had)return;F.absorbes.push(bid);ch=true;const i=F.inv.findIndex(x=>x.n===r.use&&(+x.qte||0)>0);if(i>=0){F.inv[i].qte=(+F.inv[i].qte||1)-1;if(F.inv[i].qte<=0)F.inv.splice(i,1);}return;}
     if(r.annule){if(had){F.absorbes=F.absorbes.filter(x=>x!==bid);const i=F.inv.findIndex(x=>x.bid===bid);if(i>=0)F.inv.splice(i,1);
       if(r.coins)Object.keys(r.coins).forEach(k=>{F.bourse[k]=Math.max(0,(+F.bourse[k]||0)-r.coins[k]);});ch=true;}return;}
@@ -2187,6 +2189,7 @@ function feuAbsorb(F,R){if(!F||!R)return false;let ch=false;F.inv=F.inv||[];F.ab
     if(r.coins){Object.keys(r.coins).forEach(k=>{F.bourse[k]=(+F.bourse[k]||0)+(+r.coins[k]||0);});return;}
     F.inv.push({n:String(r.n||"Objet"),qte:1,valeur:+r.valeur||0,notes:"",rar:r.rar||"",quete:r.quete||"",src:r.src||"",bid:bid});});
   return ch;}
+function feuLongRest(F){Object.keys((F.sorts||{}).empl||{}).forEach(n=>{const e=F.sorts.empl[n];if(e&&e.u)e.u=e.u.map(()=>false);});F.pv=F.pv||{};if(F.pv.max!==""&&F.pv.max!=null)F.pv.act=F.pv.max;F.pv.temp="";F.dv=F.dv||{};F.dv.util=0;F.mort={s:[false,false,false],e:[false,false,false]};}
 function feuCoins(nom){const m=String(nom||"").trim().match(/^(\d+)\s*(pc|pa|pe|po|pp)\b/i);return m?{[m[2].toLowerCase()]:+m[1]}:null;}
 // DM : chaque butin attribué à un personnage part dans sa fiche joueur (et se retire de l'ancienne si on le réattribue)
 const LD=new Set();
@@ -10674,7 +10677,7 @@ function tbMyAid(qid){const mine=myChars().map(a=>a.id),sg=signupsFor(qid).find(
 function tbFeuSub(aid){if(tbFeuA===aid)return;if(tbFeuUn){try{tbFeuUn();}catch(e){}}tbFeuA=aid;tbFeuD=null;tbFeuUn=null;if(!aid)return;
   tbFeuUn=onSnapshot(doc(db,"feuilles",aid),sn=>{tbFeuD=sn.exists()?sn.data():null;
     // butin reçu ou objet consommé pendant la partie : rangé tout de suite dans la fiche
-    if(tbFeuD&&tbFeuD.recus){const F=feuMerge(feuBlank(),tbFeuD);if(feuAbsorb(F,tbFeuD.recus)){const o=feuClean(F);setDoc(doc(db,"feuilles",aid),{inv:o.inv,absorbes:o.absorbes,bourse:o.bourse,pv:o.pv},{mergeFields:["inv","absorbes","bourse","pv"]}).catch(e=>console.error(e));}}
+    if(tbFeuD&&tbFeuD.recus){const F=feuMerge(feuBlank(),tbFeuD);if(feuAbsorb(F,tbFeuD.recus)){const o=feuClean(F);setDoc(doc(db,"feuilles",aid),{inv:o.inv,absorbes:o.absorbes,bourse:o.bourse,pv:o.pv,ca:o.ca,sorts:o.sorts,dv:o.dv,mort:o.mort},{mergeFields:["inv","absorbes","bourse","pv","ca","sorts","dv","mort"]}).catch(e=>console.error(e));}}
     tbTourUpdate();},()=>{tbFeuD=null;});}
 function tbAtkList(F,a){const R=feuCalcs(a,F),hand=F.inv.filter(x=>x.eq==="md"||x.eq==="mg"||x.eq==="2m"),N=v=>ptNorm(v).trim(),L=[];
   hand.forEach(x=>{const w=F.armes.find(r=>N(r.n)&&(N(r.n)===N(x.n)||N(x.n).indexOf(N(r.n))>=0||N(r.n).indexOf(N(x.n))>=0));L.push({n:x.n,f:w?[w.att,w.deg].filter(Boolean).join(" · "):"",eq:FEU_EQL[x.eq]});});
@@ -10739,16 +10742,27 @@ function ptFeuSync(){const P=ui.pt;if(!isAdmin||ui.ptInfoOnly||!P)return;const w
   want.forEach(id=>{if(ptFeuUn[id])return;ptFeuUn[id]=()=>{};const un=onSnapshot(doc(db,"feuilles",id),sn=>{ptFeus[id]=sn.exists()?sn.data():null;if(ptFeuFill())ptSave(true);if(ui.office&&ui.office.indexOf("partie-")===0&&!document.activeElement.matches("input,textarea,select"))render();},()=>{ptFeus[id]=null;});if(ptFeuUn[id])ptFeuUn[id]=un;else un();});}
 function ptFeuOf(c){const d=c&&c.ref&&ptFeus[c.ref];return d&&d.car?feuMerge(feuBlank(),d):null;}
 // Ce qui manque au combattant (CA, PV max, DEX) est pris dans sa fiche
-function ptFeuFill(){const P=ui.pt;if(!P)return false;let ch=false;P.liste.forEach(c=>{if(c.kind!=="pj")return;const F=ptFeuOf(c);if(!F)return;
-  if((c.ca===""||c.ca==null)&&F.ca!==""&&F.ca!=null){c.ca=+F.ca;ch=true;}
-  if(!(+c.pvMax)&&+F.pv.max){c.pvMax=+F.pv.max;c.pv=F.pv.act!==""&&F.pv.act!=null?+F.pv.act:c.pvMax;c.pvPub=c.pv;ch=true;}
-  // au début, les PV actuels de la fiche font foi (blessures d'avant la rencontre)
-  if(c.pvPub===undefined&&F.pv.act!==""&&F.pv.act!=null&&+c.pvMax){c.pv=Math.min(+c.pvMax,+F.pv.act);c.pvPub=c.pv;ch=true;}
-  const dx=feuMod(F.car.dex);if(!c.dex&&dx){c.dex=dx;ch=true;}});return ch;}
+// La fiche du joueur fait foi : le combat ne fait que la LIRE (CA, PV max, PV, PV temporaires, DEX).
+// Quand le DM change une de ces valeurs en combat, il la dépose dans la fiche (comme le butin) ; tant que le joueur ne l'a pas rangée, on lit ce dépôt.
+const ptNum=v=>v===""||v==null||isNaN(+v)?"":Math.round(+v);
+function ptFeuEff(d){const F=feuMerge(feuBlank(),d),g=d.recus&&d.recus.pv,pend=g&&g.ms&&(d.absorbes||[]).indexOf("pv@"+g.ms)<0;
+  const e={ca:ptNum(F.ca),max:ptNum(F.pv.max),pv:ptNum(F.pv.act),temp:ptNum(F.pv.temp),ms:pend?g.ms:0};
+  if(pend){["ca","max","pv","temp"].forEach(k=>{if(k in g&&g[k]!=="")e[k]=ptNum(g[k]);});if("temp" in g&&g.temp==="")e.temp="";}return e;}
+function ptFeuFill(){const P=ui.pt;if(!P)return false;let ch=false;P.liste.forEach(c=>{if(c.kind!=="pj")return;const d=c.ref&&ptFeus[c.ref];if(!d||!d.car)return;
+  const e=ptFeuEff(d);if(c.pvMs&&((d.recus&&d.recus.pv&&d.recus.pv.ms)||0)<c.pvMs)return;// notre dernier dépôt n'est pas encore revenu : on garde l'affichage local
+  const set=(k,v)=>{if(v!==""&&c[k]!==v){c[k]=v;ch=true;}};set("ca",e.ca);set("pvMax",e.max);if(e.pv!=="")set("pv",Math.min(e.pv,e.max||e.pv));if((+c.tmp||0)!==(+e.temp||0)){c.tmp=+e.temp||0;ch=true;}
+  const dx=feuMod(F_DEX(d));if(c.dex!==dx){c.dex=dx;ch=true;}});return ch;}
+function F_DEX(d){return (d.car||{}).dex==null?10:d.car.dex;}
 function ptPjSave(t,car){const F=ptFeuOf(t),a=t&&aventuriers.find(x=>x.id===t.ref);if(!F||!a)return null;return feuCalcs(a,F).sauv[car];}
-// PV du combat -> fiche du joueur (déposés comme le butin : le joueur ne les écrase jamais)
-function ptPvPush(){const P=ui.pt,q=ptQuest();if(!isAdmin||ui.ptInfoOnly||!P||!q||P.id!==q.id)return;P.liste.forEach(c=>{if(c.kind!=="pj"||!c.ref||!ptFeuUn[c.ref]||!ptFeus[c.ref]||!ptFeus[c.ref].car||!(+c.pvMax))return;const v=Math.round(+c.pv||0);if(c.pvPub===v)return;c.pvPub=v;
-  const a=aventuriers.find(x=>x.id===c.ref)||{};setDoc(doc(db,"feuilles",c.ref),{proprietaire:a.proprietaire||"",recus:{pv:{pv:v,ms:Date.now()}}},{merge:true}).catch(e=>console.error(e));});}
+// Combat -> fiche : seulement quand le DM a changé quelque chose (un dépôt, pas un aller-retour)
+function ptPvPush(){const P=ui.pt,q=ptQuest();if(!isAdmin||ui.ptInfoOnly||!P||!q||P.id!==q.id)return;P.liste.forEach(c=>{if(c.kind!=="pj")return;const d=c.ref&&ptFeus[c.ref];if(!d||!d.car)return;
+  const e=ptFeuEff(d),now={ca:ptNum(c.ca),max:ptNum(c.pvMax),pv:ptNum(c.pv),temp:+c.tmp||0};if(c.pvMs&&((d.recus&&d.recus.pv&&d.recus.pv.ms)||0)<c.pvMs)return;
+  if(now.ca===e.ca&&now.max===e.max&&now.pv===e.pv&&now.temp===(+e.temp||0))return;
+  const out={ms:Date.now()};["ca","max","pv"].forEach(k=>{if(now[k]!=="")out[k]=now[k];});out.temp=now.temp||"";c.pvMs=out.ms;
+  const a=aventuriers.find(x=>x.id===c.ref)||{};setDoc(doc(db,"feuilles",c.ref),{proprietaire:a.proprietaire||"",recus:{pv:out}},{merge:true}).catch(e=>console.error(e));});}
+// Fin de la quête : repos long pour tout le monde (le temps de la timeline ×5 passe entre deux quêtes)
+async function ptRestAll(aids){const ms=Date.now();for(const id of aids){try{const a=aventuriers.find(x=>x.id===id)||{};
+  await setDoc(doc(db,"feuilles",id),{proprietaire:a.proprietaire||"",recus:{["repos-"+ms]:{repos:true,annule:false}}},{merge:true});}catch(e){console.error(e);}}}
 
 /* ---------- Initiative demandée aux joueurs (ils lancent leurs dés chez eux et inscrivent le total) ---------- */
 // Chaque joueur écrit dans table/{quête}/actions/{uid} ; le DM écoute pendant le Mode Partie.
@@ -12172,8 +12186,7 @@ document.addEventListener("click",async e=>{
     await run("Fiche supprimée",async()=>{await deleteDoc(doc(db,"aventuriers",id));if(dossiers[id])await deleteDoc(doc(db,"dossiers",id)).catch(()=>{});await deleteDoc(doc(db,"feuilles",id)).catch(()=>{});});location.hash="#";return;}
   else if(a==="feu-uneq"){if(!ui.feu)return;ui.feuEqMsg="";feuRead();const it=ui.feu.inv[+b.getAttribute("data-v")];if(it)it.eq="";ui.feuEqAsk=null;feuSaveSoon();render();return;}
   else if(a==="feu-eq-ok"||a==="feu-eq-no"){const A=ui.feuEqAsk;ui.feuEqAsk=null;if(a==="feu-eq-ok"&&A&&ui.feu&&ui.feu.inv[A.i]){feuRead();feuEqSet(ui.feu,A.i,A.slot,A.conf);feuSaveSoon();}render();return;}
-  else if(a==="feu-rest"){if(!ui.feu)return;feuRead();const F=ui.feu;Object.keys(F.sorts.empl||{}).forEach(n=>{const e=F.sorts.empl[n];if(e&&e.u)e.u=e.u.map(()=>false);});
-    if(F.pv.max!==""&&F.pv.max!=null)F.pv.act=F.pv.max;F.pv.temp="";F.dv.util=0;F.mort={s:[false,false,false],e:[false,false,false]};feuSaveSoon();render();const el=document.getElementById("feusave");if(el)el.textContent="🌙 Repos long : tout est revenu";return;}
+  else if(a==="feu-rest"){if(!ui.feu)return;feuRead();feuLongRest(ui.feu);feuSaveSoon();render();const el=document.getElementById("feusave");if(el)el.textContent="🌙 Repos long : tout est revenu";return;}
   else if(a==="feu-add"||a==="feu-del"){if(!ui.feu)return;feuRead();const k=b.getAttribute("data-k"),L=k==="armes"?(ui.feu.armes=ui.feu.armes||[]):k==="inv"?(ui.feu.inv=ui.feu.inv||[]):(ui.feu.sorts.liste=ui.feu.sorts.liste||[]);
     if(a==="feu-add")L.push(k==="armes"?{n:"",att:"",deg:"",notes:""}:k==="inv"?{n:"",qte:1,valeur:"",notes:""}:{niv:1,n:"",prep:false,notes:""});else L.splice(+b.getAttribute("data-v"),1);feuSaveSoon();render();const ins=document.querySelectorAll('#feuform [data-f^="'+k+'."]');if(a==="feu-add"&&ins.length){const r=ins[ins.length-1].closest("tr");const f=r&&r.querySelector('input:not([type=number]):not([type=checkbox])');if(f)f.focus();}return;}
   else if(a==="ql-save"){const q=questById(id),E=(ui.qlEdit||{})[id]||{},L=q?qlList(q):[],P=questParts(q);if(!q||!qlCanEdit(q))return;
@@ -12539,6 +12552,7 @@ document.addEventListener("submit",async e=>{
       bt.set(doc(db,"quetes",q.id),{statut:"terminee",rapport,majLe:serverTimestamp()},{merge:true});
       if(C.notesDM!=null&&C.notesDM!==ptNotesDM(q))bt.set(doc(db,"parties",q.id),{notesDM:C.notesDM},{merge:true});
       if(C.writer)bt.set(doc(db,"quetes",q.id),{redacteur:C.writer},{merge:true});
+      setTimeout(()=>ptRestAll([...new Set(C.parts.map(x=>x.aventurier).filter(Boolean))]),0);
       if(C.resp)bt.set(doc(db,"quetes",q.id),{respButin:C.resp},{merge:true});
       if(C.paie>0&&!butins.some(x=>x.quete===q.id&&x.contrat))bt.set(doc(db,"butins",Date.now().toString(36)+"-contrat"),{nom:C.paie+" po (paiement du contrat)",valeur:C.paie,quete:q.id,rencontre:"Règlement de la quête",source:"Paiement du contrat",contrat:true,pour:"",pourNom:"",creeMs:Date.now(),creeLe:serverTimestamp()});
       const obm=objsOf(q).filter(o=>(C.obj||[]).indexOf(o.i)<0&&o.csq).map(o=>o.csq).concat(C.rapport.resultat==="reussite"?csqWin(q).map(c=>c.txt):[]);
