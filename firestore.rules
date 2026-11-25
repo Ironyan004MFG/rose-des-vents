@@ -417,6 +417,17 @@ service cloud.firestore {
         allow read: if isAdmin() || inscritA(qid);
         allow write: if isAdmin();
       }
+      // Dessins des joueurs (aura, cône, direction) : une couche au-dessus de la carte, juste pour montrer.
+      // Chaque inscrit écrit seulement son document ; tous les inscrits le voient ; le DM peut tout effacer.
+      match /dessins/{uid} {
+        allow read: if isAdmin() || inscritA(qid);
+        allow create, update: if isAdmin()
+          || (signedIn() && request.auth.uid == uid && inscritA(qid)
+            && request.resource.data.keys().hasOnly(['traits', 'ms'])
+            && request.resource.data.traits is list && request.resource.data.traits.size() <= 40
+            && request.resource.data.ms is number);
+        allow delete: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      }
       // Figurine virtuelle : une par joueur (son uid). Le DM la pose, la remplace ou la retire ;
       // le joueur peut seulement la déplacer sur la même carte. Elle ne donne aucune vision.
       // Champ inv : positions des invocations du joueur (Main de mage, familier…), qu'il déplace lui-même.
