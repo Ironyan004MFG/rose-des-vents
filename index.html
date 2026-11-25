@@ -1099,6 +1099,12 @@ footer .who a{color:var(--gold)}
 .tokrow{display:flex;gap:1em;align-items:center;flex-wrap:wrap}#tok-cv{width:180px;height:180px;border-radius:12px;background:rgba(0,0,0,.25);cursor:grab;touch-action:none}#tok-cv:active{cursor:grabbing}.sheettok{display:flex;gap:1em;align-items:center;margin:1em 0}.sheettok img{border-radius:50%}
 .sheetdon{border:1px solid rgba(201,162,74,.5);border-radius:10px;padding:.6em .9em;margin:1em 0;background:rgba(201,162,74,.08)}.sheetdon h3{margin-top:.2em}
 .sheet-top{display:flex;flex-wrap:wrap;gap:20px;align-items:center}
+.calbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:8px 0}
+.calgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.calm{background:#f6efdb;color:var(--ink);border:1px solid #c9b98f;border-radius:8px;padding:8px 10px}.calm h4{margin:0 0 6px;font-family:var(--display);letter-spacing:.06em}
+.calw,.cald7{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}.calw span{font-size:12px;color:var(--ink-soft);font-weight:700}
+.cald{font:inherit;font-size:14px;border:1px solid transparent;border-radius:6px;background:#fbf6e8;color:var(--ink);min-height:32px;cursor:pointer;padding:0}
+.cald:hover:not([disabled]){border-color:#a07a22}.cald.on{background:#d8b45e;color:#1b140c;font-weight:700;border-color:#a07a22}.cald.today{outline:2px solid #2f6d43;outline-offset:-2px}.cald[disabled]{opacity:.35;cursor:default}
 .feulink{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:4px 0}
 .feu{background:var(--parch);color:var(--ink);border-radius:4px;padding:20px clamp(14px,3vw,30px);box-shadow:0 10px 24px rgba(0,0,0,.45);max-width:1040px;display:flex;flex-direction:column;gap:12px}
 .feu{color-scheme:light;accent-color:#8a5b12}.feu2 .feumaitr{flex:none}
@@ -1567,6 +1573,7 @@ function listen(){
   onSnapshot(collection(db,"boutique"),snap=>{gsAll=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},onErr);
   onSnapshot(collection(db,"nouvelles"),snap=>{nouvelles=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},onErr);
   onSnapshot(collection(db,"planif"),snap=>{planifs=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},onErr);
+  onSnapshot(doc(db,"calendrier","dm"),sn=>{calDM=(sn.exists()&&sn.data().jours)||{};render();},()=>{});
   onSnapshot(collection(db,"wiki"),snap=>{
     wikiPages=snap.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>((a.ordre==null?999:a.ordre)-(b.ordre==null?999:b.ordre))||String(a.titre).localeCompare(String(b.titre),"fr"));loaded.w=true;render();
   },onErr);
@@ -1759,7 +1766,8 @@ function planModal(q){
     h+=rows.slice().sort((x,y)=>(y.uid===me)-(x.uid===me)).map(r=>'<tr'+(r.uid===me?' class="merow"':'')+'><th scope="row">'+esc(r.nom)+(r.uid===me?' <em>(toi)</em>':'')+'</th>'+ds.map(p=>cell(p,r.uid,false)).join("")+'</tr>').join("");
     h+='<tr class="tot"><th scope="row">Total</th>'+ds.map(p=>{const y=rows.filter(r=>(p.dispo||{})[r.uid]==="oui").length,m=rows.filter(r=>(p.dispo||{})[r.uid]==="peut").length;return '<td>'+y+' ✓'+(m?' · '+m+' ?':'')+'</td>';}).join("")+'</tr></tbody></table></div>';
   }
-  if(open&&ds.length<6)h+='<form class="inline planadd" id="planform"><label for="pl-date">Proposer une date<input id="pl-date" type="date" required min="'+todayIso()+'"></label><label for="pl-heure">Heure (facultatif)<input id="pl-heure" maxlength="30" placeholder="ex. 19 h"></label><button class="btn" type="submit">Proposer</button></form>';
+  if(open&&ds.length<6&&!ui.dm){const L=calFree().filter(k=>!ds.some(p=>p.date===k));h+=L.length?'<form class="inline planadd" id="planform"><label for="pl-date">Proposer une date (disponibilités du DM)<select id="pl-date" required><option value="">Choisir…</option>'+L.map(k=>'<option value="'+k+'">'+esc(fmtPlan({date:k}))+'</option>').join("")+'</select></label><label for="pl-heure">Heure (facultatif)<input id="pl-heure" maxlength="30" placeholder="ex. 19 h"></label><button class="btn" type="submit">Proposer</button></form>':'<p class="hint">📅 Le DM n\'a pas encore indiqué d\'autres disponibilités. Les dates qu\'il ouvre dans son calendrier apparaîtront ici.</p>';}
+  else if(open&&ds.length<6)h+='<form class="inline planadd" id="planform"><label for="pl-date">Proposer une date<input id="pl-date" type="date" required min="'+todayIso()+'"></label><label for="pl-heure">Heure (facultatif)<input id="pl-heure" maxlength="30" placeholder="ex. 19 h"></label><button class="btn" type="submit">Proposer</button></form>';
   else if(!open)h+='<p class="hint">'+(user&&!user.isAnonymous?'Inscris-toi à la quête pour proposer des dates et répondre.':'Connecte-toi et inscris-toi à la quête pour participer.')+'</p>';
   return h+'<div class="actions"><button class="btn ghost" type="button" data-a="plan-close">Fermer</button></div></div></div>';
 }
@@ -2949,12 +2957,25 @@ function dmStats(){
 }
 // Cartes prégénérées : bureaux (avec étages), scènes de tous les scénarios, cartes aléatoires. Aperçu vivant ; la télé ne suit qu'après « Montrer aux joueurs ».
 function dmCartes(){ptSync("libre");return '<p class="desc">Ouvre une carte pour la voir vivre ici (vie, météo, lumière, étages). Les cartes s\'ouvrent révélées (sans brouillard) pour que tu puisses les tester ; « Vue joueurs » montre ce que la télé afficherait. Rien ne change sur l\'écran de table tant que tu n\'as pas cliqué « Montrer aux joueurs ». « Créer une partie libre » ouvre le Mode Partie hors quête avec cette carte (combat, dés, règles, boutique) : le brouillard revient et la vue des joueurs suit leurs jetons.</p>'+ecTab(PT_LIBRE);}
+/* ---------- Calendrier du DM : ses disponibilités ; les joueurs ne proposent que ces dates ---------- */
+let calDM={};
+const MOIS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+function isoOf(y,m,d){return y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");}
+function calFree(){const t=todayIso();return Object.keys(calDM).filter(k=>calDM[k]&&k>=t).sort();}
+function dmCalendar(){const Y=ui.calY||2026,t=todayIso(),n=calFree().length;
+  let h='<p class="desc">Touche un jour pour te rendre <strong>disponible</strong> (doré), touche-le encore pour l\'enlever. Dans la planification des quêtes, les joueurs ne peuvent proposer <strong>que ces dates</strong>.</p>';
+  h+='<div class="calbar"><div class="chips">'+[2026,2027].map(y=>'<button class="chip" data-a="cal-y" data-v="'+y+'" aria-pressed="'+(Y===y)+'">'+y+'</button>').join("")+'</div><span class="desc">'+n+' jour'+(n>1?'s':'')+' disponible'+(n>1?'s':'')+' à venir</span></div>';
+  h+='<div class="calgrid">'+MOIS.map((mn,m)=>{const first=new Date(Y,m,1).getDay(),nd=new Date(Y,m+1,0).getDate(),cells=[];for(let i=0;i<first;i++)cells.push('<span class="calx"></span>');
+    for(let d=1;d<=nd;d++){const k=isoOf(Y,m,d),on=!!calDM[k],past=k<t;cells.push('<button class="cald'+(on?' on':'')+(k===t?' today':'')+'" data-a="cal-d" data-v="'+k+'"'+(past?' disabled':'')+' aria-pressed="'+on+'" aria-label="'+d+' '+mn+' '+Y+(on?', disponible':'')+'">'+d+'</button>');}
+    const cnt=Object.keys(calDM).filter(k=>calDM[k]&&k.indexOf(isoOf(Y,m,1).slice(0,7))===0).length;
+    return '<section class="calm"><h4>'+mn.charAt(0).toUpperCase()+mn.slice(1)+(cnt?' <span class="desc">· '+cnt+'</span>':'')+'</h4><div class="calw">'+["D","L","M","M","J","V","S"].map(x=>'<span>'+x+'</span>').join("")+'</div><div class="cald7">'+cells.join("")+'</div></section>';}).join("")+'</div>';
+  return h;}
 function dmSpaceView(){
   if(!isAdmin)return '<p class="empty">L\'Espace DM est réservé au Maître de la Guilde.</p>'+(user&&!user.isAnonymous?'':'<p><button class="btn board" data-a="dm">Mode DM</button></p>');
   const n=todoItems().length;
-  const tabs=[["todo","À traiter"+(n?' <span class="n">'+n+'</span>':'')],["evol","Évolution du monde"+(dueRegions().length?' <span class="n warn">!</span>':'')],["manuel","Manuel du DM"],["cartes","Cartes"],["stats","Vue d'ensemble"],["outils","Outils"]];
+  const tabs=[["todo","À traiter"+(n?' <span class="n">'+n+'</span>':'')],["evol","Évolution du monde"+(dueRegions().length?' <span class="n warn">!</span>':'')],["manuel","Manuel du DM"],["cartes","Cartes"],["calendrier","📅 Calendrier du DM"],["stats","Vue d'ensemble"],["outils","Outils"]];
   let h=ecOpenBar()+'<div class="chips dmtabs" role="tablist" aria-label="Espace DM">'+tabs.map(t=>'<button class="chip" role="tab" data-a="dmtab" data-v="'+t[0]+'" aria-selected="'+(ui.dmTab===t[0])+'" aria-pressed="'+(ui.dmTab===t[0])+'">'+t[1]+'</button>').join("")+'</div>';
-  h+='<div class="dmspace" role="tabpanel">'+(ui.dmTab==="cartes"?dmCartes():ui.dmTab==="evol"?dmEvol():ui.dmTab==="manuel"?dmManual():ui.dmTab==="notes"?dmNotes():ui.dmTab==="stats"?dmStats():ui.dmTab==="outils"?dmTools():dmTodo())+'</div>';
+  h+='<div class="dmspace" role="tabpanel">'+(ui.dmTab==="cartes"?dmCartes():ui.dmTab==="evol"?dmEvol():ui.dmTab==="manuel"?dmManual():ui.dmTab==="notes"?dmNotes():ui.dmTab==="calendrier"?dmCalendar():ui.dmTab==="stats"?dmStats():ui.dmTab==="outils"?dmTools():dmTodo())+'</div>';
   return h;
 }
 
@@ -12184,6 +12205,9 @@ document.addEventListener("click",async e=>{
   else if(a==="adv-del-no"){ui.advDel=null;}
   else if(a==="adv-del-ok"){if(!isAdmin)return;const av=aventuriers.find(x=>x.id===id);ui.advDel=null;
     await run("Fiche supprimée",async()=>{await deleteDoc(doc(db,"aventuriers",id));if(dossiers[id])await deleteDoc(doc(db,"dossiers",id)).catch(()=>{});await deleteDoc(doc(db,"feuilles",id)).catch(()=>{});});location.hash="#";return;}
+  else if(a==="cal-y"){ui.calY=+b.getAttribute("data-v")||2026;render();return;}
+  else if(a==="cal-d"){if(!isAdmin)return;const k=b.getAttribute("data-v");if(!/^\d{4}-\d{2}-\d{2}$/.test(k))return;const on=!calDM[k];calDM=Object.assign({},calDM);if(on)calDM[k]=true;else delete calDM[k];render();
+    setDoc(doc(db,"calendrier","dm"),{jours:{[k]:on?true:deleteField()},majLe:serverTimestamp()},{merge:true}).catch(e=>{save={state:"error",msg:errText(e)};render();});return;}
   else if(a==="feu-uneq"){if(!ui.feu)return;ui.feuEqMsg="";feuRead();const it=ui.feu.inv[+b.getAttribute("data-v")];if(it)it.eq="";ui.feuEqAsk=null;feuSaveSoon();render();return;}
   else if(a==="feu-eq-ok"||a==="feu-eq-no"){const A=ui.feuEqAsk;ui.feuEqAsk=null;if(a==="feu-eq-ok"&&A&&ui.feu&&ui.feu.inv[A.i]){feuRead();feuEqSet(ui.feu,A.i,A.slot,A.conf);feuSaveSoon();}render();return;}
   else if(a==="feu-rest"){if(!ui.feu)return;feuRead();feuLongRest(ui.feu);feuSaveSoon();render();const el=document.getElementById("feusave");if(el)el.textContent="🌙 Repos long : tout est revenu";return;}
@@ -12633,6 +12657,7 @@ document.addEventListener("submit",async e=>{
   if(e.target.id==="planform"){
     const q=questById(ui.plan);if(!q)return;const date=v("pl-date"),heure=v("pl-heure").slice(0,30);
     if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date<todayIso())return;
+    if(!ui.dm&&!calDM[date]){save={state:"error",msg:"Choisis une date où le DM est disponible."};render();return;}
     if(planDates(q.id).some(p=>p.date===date&&(p.heure||"")===heure)){save={state:"error",msg:"Cette date est déjà proposée."};render();return;}
     const by={uid:user.uid,nom:String(ui.dm?"Le DM":((signupsFor(q.id).find(x=>x.uid===user.uid)||{}).nom||user.displayName||"Aventurier")).slice(0,60)};
     const ref=doc(collection(db,"planif"));const d={quete:q.id,date,heure,par:by,dispo:{},creeLe:serverTimestamp()};
