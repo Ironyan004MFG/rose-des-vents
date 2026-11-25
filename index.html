@@ -2178,7 +2178,8 @@ function feuListen(id){if(feuId===id)return;if(feuUnsub){try{feuUnsub();}catch(e
     else if(ui.feu&&feuAbsorb(ui.feu,(feuDoc||{}).recus))feuSaveSoon();},e=>{console.error(e);feuLoaded=true;feuDoc=null;ui.feuErr=errText(e);if(!ui.feu)ui.feu=feuBlank();render();});if(feuId===id)feuUnsub=un;else un();}
 // Butin attribué par le DM (recus) : déposé directement dans l'inventaire ; les pièces vont dans la bourse.
 function feuAbsorb(F,R){if(!F||!R)return false;let ch=false;F.inv=F.inv||[];F.absorbes=F.absorbes||[];F.bourse=F.bourse||{};
-  Object.keys(R).forEach(bid=>{const r=R[bid]||{},had=F.absorbes.indexOf(bid)>=0;
+  if(R.pv&&R.pv.ms){const tk="pv@"+R.pv.ms;if(F.absorbes.indexOf(tk)<0){F.absorbes=F.absorbes.filter(x=>String(x).indexOf("pv@")!==0);F.absorbes.push(tk);F.pv=F.pv||{};F.pv.act=+R.pv.pv;ch=true;}}
+  Object.keys(R).forEach(bid=>{if(bid==="pv")return;const r=R[bid]||{},had=F.absorbes.indexOf(bid)>=0;
     if(r.use){if(had)return;F.absorbes.push(bid);ch=true;const i=F.inv.findIndex(x=>x.n===r.use&&(+x.qte||0)>0);if(i>=0){F.inv[i].qte=(+F.inv[i].qte||1)-1;if(F.inv[i].qte<=0)F.inv.splice(i,1);}return;}
     if(r.annule){if(had){F.absorbes=F.absorbes.filter(x=>x!==bid);const i=F.inv.findIndex(x=>x.bid===bid);if(i>=0)F.inv.splice(i,1);
       if(r.coins)Object.keys(r.coins).forEach(k=>{F.bourse[k]=Math.max(0,(+F.bourse[k]||0)-r.coins[k]);});ch=true;}return;}
@@ -3478,7 +3479,7 @@ let ptSelBC=null;try{ptSelBC=new BroadcastChannel("rdv-sel");ptSelBC.onmessage=e
 function ecSelCid(cid,remote){const c=ecCard();if(!c)return false;const k=(c.tokens||[]).find(t=>t.cid===cid);const R=ecResOf(),rk=!k&&R.find(t=>t.cid===cid);
   if(k){ui.ecSel=k.id;ui.ecAmb=null;ui.ecLum=null;const rr=ecRenderers["ec-dm"];if(rr)rr.sel=k.id;}else if(rk)ui.ecArm=rk.id;else return false;if(remote||ui.ptMapOnly)render();return true;}
 function ptSelShare(cid,from){if(!ui.pt)return;try{ptSelBC&&ptSelBC.postMessage({qid:ui.pt.id,cid,from});}catch(e){}}
-function ptSave(force){if(!ui.pt)return;if(!ptActive()&&!force)return;if(ui.ptWait){ui.ptDirty=true;return;}
+function ptSave(force){if(!ui.pt)return;try{ptPvPush();}catch(e){}if(!ptActive()&&!force)return;if(ui.ptWait){ui.ptDirty=true;return;}
   // écrans séparés : c'est l'onglet de la carte qui gère les jetons du combat (pas de doublons)
   if(!ui.ptInfoOnly)try{ecFoeSync();}catch(e){console.error(e);}
   try{ptObjSync();}catch(e){console.error(e);}
@@ -10673,7 +10674,7 @@ function tbMyAid(qid){const mine=myChars().map(a=>a.id),sg=signupsFor(qid).find(
 function tbFeuSub(aid){if(tbFeuA===aid)return;if(tbFeuUn){try{tbFeuUn();}catch(e){}}tbFeuA=aid;tbFeuD=null;tbFeuUn=null;if(!aid)return;
   tbFeuUn=onSnapshot(doc(db,"feuilles",aid),sn=>{tbFeuD=sn.exists()?sn.data():null;
     // butin reçu ou objet consommé pendant la partie : rangé tout de suite dans la fiche
-    if(tbFeuD&&tbFeuD.recus){const F=feuMerge(feuBlank(),tbFeuD);if(feuAbsorb(F,tbFeuD.recus)){const o=feuClean(F);setDoc(doc(db,"feuilles",aid),{inv:o.inv,absorbes:o.absorbes,bourse:o.bourse},{mergeFields:["inv","absorbes","bourse"]}).catch(e=>console.error(e));}}
+    if(tbFeuD&&tbFeuD.recus){const F=feuMerge(feuBlank(),tbFeuD);if(feuAbsorb(F,tbFeuD.recus)){const o=feuClean(F);setDoc(doc(db,"feuilles",aid),{inv:o.inv,absorbes:o.absorbes,bourse:o.bourse,pv:o.pv},{mergeFields:["inv","absorbes","bourse","pv"]}).catch(e=>console.error(e));}}
     tbTourUpdate();},()=>{tbFeuD=null;});}
 function tbAtkList(F,a){const R=feuCalcs(a,F),hand=F.inv.filter(x=>x.eq==="md"||x.eq==="mg"||x.eq==="2m"),N=v=>ptNorm(v).trim(),L=[];
   hand.forEach(x=>{const w=F.armes.find(r=>N(r.n)&&(N(r.n)===N(x.n)||N(x.n).indexOf(N(r.n))>=0||N(r.n).indexOf(N(x.n))>=0));L.push({n:x.n,f:w?[w.att,w.deg].filter(Boolean).join(" · "):"",eq:FEU_EQL[x.eq]});});
@@ -10706,7 +10707,7 @@ async function tbActSend(b){const T=tbDoc&&tbDoc.tour,qid=tbSubQ;if(!T||!user)re
   ui.tbTourV="";ui.tbSpell=null;tbMyAct=Object.assign({},tbMyAct,{act:A});tbTourUpdate();
   setDoc(doc(db,"table",qid,"actions",user.uid),{act:A,ms:Date.now()},{mergeFields:["act","ms"]}).catch(e=>console.error(e));}
 // DM : l'action reçue, dans le combat
-function ptSaveBonus(t,car){if(!t||!car)return null;const m=t.kind==="monstre"?monstres.find(x=>x.id===t.ref):t.kind==="pnj"?(()=>{const pn=pnjs.find(x=>x.id===t.ref);return pn&&monstres.find(x=>x.id===(pn.monstre||t.mon));})():null;if(!m)return null;
+function ptSaveBonus(t,car){if(!t||!car)return null;if(t.kind==="pj"){const v=ptPjSave(t,car);return v==null?null:v;}const m=t.kind==="monstre"?monstres.find(x=>x.id===t.ref):t.kind==="pnj"?(()=>{const pn=pnjs.find(x=>x.id===t.ref);return pn&&monstres.find(x=>x.id===(pn.monstre||t.mon));})():null;if(!m)return null;
   const ab={for:["for","str"],dex:["dex"],con:["con"],int:["int"],sag:["sag","wis"],cha:["cha"]}[car],re=new RegExp("\\b("+ab.join("|")+")[a-zé]*\\.?\\s*([+−-]\\s*\\d+)","i"),mm=String(m.jets||"").match(re);
   if(mm)return +mm[2].replace("−","-").replace(/\s/g,"");return m[car]!=null&&m[car]!==""?feuMod(m[car]):null;}
 function ptActOf(c){if(!c||c.kind!=="pj"||!c.ref)return null;const P=ui.pt;for(const u of Object.keys(ptActs)){const A=(ptActs[u]||{}).act;if(A&&!A.done&&A.a===c.ref&&A.k!=="fin"&&P.combat&&A.r>=((P.round||1)-1))return Object.assign({},A,{uid:u});}return null;}
@@ -10729,6 +10730,25 @@ function ptActDone(A,extra){const q=ptQuest();if(!q||!A)return;setDoc(doc(db,"ta
 // DM : « J'ai fini mon tour » passe au suivant tout seul
 function ptActFin(){const P=ui.pt;if(!P||!P.combat||P.combat.phase!=="combat")return false;let ch=false;Object.keys(ptActs).forEach(u=>{const A=(ptActs[u]||{}).act;if(!A||A.done||A.k!=="fin")return;const c=ptC(P.cur);
   ptActDone(Object.assign({},A,{uid:u}));if(c&&c.ref===A.a&&c.cid===A.cid){ptLog("✅ "+c.nom+" a fini son tour.");ptNext(1);ch=true;}});if(ch)ptSave();return ch;}
+
+/* ---------- Fiches joueurs reliées au combat (DM) ---------- */
+// Le DM lit la fiche de chaque PJ du combat : CA, PV, DEX et bonus de sauvegarde. Les PV du combat repartent vers la fiche du joueur.
+let ptFeus={},ptFeuUn={};
+function ptFeuSync(){const P=ui.pt;if(!isAdmin||ui.ptInfoOnly||!P)return;const want=[...new Set(P.liste.filter(c=>c.kind==="pj"&&c.ref&&aventuriers.some(a=>a.id===c.ref)).map(c=>c.ref))];
+  Object.keys(ptFeuUn).forEach(k=>{if(want.indexOf(k)<0){try{ptFeuUn[k]();}catch(e){}delete ptFeuUn[k];delete ptFeus[k];}});
+  want.forEach(id=>{if(ptFeuUn[id])return;ptFeuUn[id]=()=>{};const un=onSnapshot(doc(db,"feuilles",id),sn=>{ptFeus[id]=sn.exists()?sn.data():null;if(ptFeuFill())ptSave(true);if(ui.office&&ui.office.indexOf("partie-")===0&&!document.activeElement.matches("input,textarea,select"))render();},()=>{ptFeus[id]=null;});if(ptFeuUn[id])ptFeuUn[id]=un;else un();});}
+function ptFeuOf(c){const d=c&&c.ref&&ptFeus[c.ref];return d&&d.car?feuMerge(feuBlank(),d):null;}
+// Ce qui manque au combattant (CA, PV max, DEX) est pris dans sa fiche
+function ptFeuFill(){const P=ui.pt;if(!P)return false;let ch=false;P.liste.forEach(c=>{if(c.kind!=="pj")return;const F=ptFeuOf(c);if(!F)return;
+  if((c.ca===""||c.ca==null)&&F.ca!==""&&F.ca!=null){c.ca=+F.ca;ch=true;}
+  if(!(+c.pvMax)&&+F.pv.max){c.pvMax=+F.pv.max;c.pv=F.pv.act!==""&&F.pv.act!=null?+F.pv.act:c.pvMax;c.pvPub=c.pv;ch=true;}
+  // au début, les PV actuels de la fiche font foi (blessures d'avant la rencontre)
+  if(c.pvPub===undefined&&F.pv.act!==""&&F.pv.act!=null&&+c.pvMax){c.pv=Math.min(+c.pvMax,+F.pv.act);c.pvPub=c.pv;ch=true;}
+  const dx=feuMod(F.car.dex);if(!c.dex&&dx){c.dex=dx;ch=true;}});return ch;}
+function ptPjSave(t,car){const F=ptFeuOf(t),a=t&&aventuriers.find(x=>x.id===t.ref);if(!F||!a)return null;return feuCalcs(a,F).sauv[car];}
+// PV du combat -> fiche du joueur (déposés comme le butin : le joueur ne les écrase jamais)
+function ptPvPush(){const P=ui.pt,q=ptQuest();if(!isAdmin||ui.ptInfoOnly||!P||!q||P.id!==q.id)return;P.liste.forEach(c=>{if(c.kind!=="pj"||!c.ref||!ptFeuUn[c.ref]||!ptFeus[c.ref]||!ptFeus[c.ref].car||!(+c.pvMax))return;const v=Math.round(+c.pv||0);if(c.pvPub===v)return;c.pvPub=v;
+  const a=aventuriers.find(x=>x.id===c.ref)||{};setDoc(doc(db,"feuilles",c.ref),{proprietaire:a.proprietaire||"",recus:{pv:{pv:v,ms:Date.now()}}},{merge:true}).catch(e=>console.error(e));});}
 
 /* ---------- Initiative demandée aux joueurs (ils lancent leurs dés chez eux et inscrivent le total) ---------- */
 // Chaque joueur écrit dans table/{quête}/actions/{uid} ; le DM écoute pendant le Mode Partie.
@@ -11789,7 +11809,7 @@ function ptLootTab(q){
 function partyView(){
   if(!isAdmin)return '<p class="empty">Le Mode Partie est réservé au DM.</p>';
   const q=ptQuest();if(!q)return '<p class="empty">Quête introuvable.</p>';
-  ptSync(q.id);ptActListen(q.id);ptTourSync(q);const P=ui.pt,o=ptOrder(),b=office(q.bureau)||{};
+  ptSync(q.id);ptActListen(q.id);ptTourSync(q);ptFeuSync();ptPvPush();const P=ui.pt,o=ptOrder(),b=office(q.bureau)||{};
   if(ui.ptLaunch){const rid=ui.ptLaunch;ui.ptLaunch=null;if(P.combat)ui.ptAlert="Clos d'abord la rencontre « "+P.combat.nom+" ».";else{ptStartEnc(q,rid,"",true);ptSave();}}
   const xp=P.liste.filter(c=>c.kind==="monstre"&&c.pv<=0).reduce((t,c)=>t+(+c.xp||0),0),npj=P.liste.filter(c=>c.kind==="pj").length;
   if(ui.ptInfoOnly)return '<section class="partie ptinfoonly"><div class="ptmapbar"><strong>📖 '+esc(q.titre)+' · Infos</strong><span class="desc">La carte et la bataille sont dans l\'autre fenêtre. Cette fenêtre ne fait que lire : elle n\'envoie rien aux écrans.</span><button class="btn gold sm" data-a="pt-sep-off">⧉ Rapatrier les infos</button></div><div class="ptside">'+ptSide(q)+'</div></section>';
