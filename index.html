@@ -197,7 +197,7 @@ img.zoomable{cursor:zoom-in}img.zoomable:focus-visible{outline:3px solid #2a6fb0
 details.shop{border:1px solid var(--parch-3,#d9c9a0);border-radius:8px;padding:8px 12px;margin:10px 0;background:rgba(255,255,255,.25)}details.shop>summary{cursor:pointer;font-size:16px}
 .shopcash .coins,.shopoffer .coins{font-size:13px;color:var(--ink-soft)}.shopwho{margin:6px 0;font-size:14.5px}.shopcash{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:14px;padding:6px 10px;background:#efe4c6;border-radius:6px}
 .shophaggle{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0;font-size:13.5px}.shophaggle .chip{font-size:12px;padding:3px 9px;color:var(--ink,#2a2118);border-color:var(--ink-soft,#6b5a44)}.shophaggle .chip.on{background:var(--ink,#2a2118);color:#f6ecd0}
-.ecnw{white-space:nowrap}
+.ecnw{white-space:nowrap}.advdel{margin-top:10px;padding:10px 12px;border:1px solid #a3161c;border-radius:8px;background:rgba(163,22,28,.08)}.btn.danger{background:#a3161c;color:#fff;border-color:#a3161c}.btn.ghost.danger{background:none;color:#a3161c}
 .sheetcomp .sccl{list-style:none;margin:0 0 8px;padding:0;display:grid;gap:8px}.sheetcomp li{display:flex;flex-wrap:wrap;gap:8px;align-items:end;padding:6px;border:1px solid rgba(0,0,0,.1);border-radius:8px}.sheetcomp li label{flex:1 1 140px;margin:0}.sctok{width:56px;height:56px;border-radius:50%;flex:none;border:2px solid #c9a24a;object-fit:cover}.sctok.ph{display:inline-flex;align-items:center;justify-content:center;font-size:26px;background:#2a2238}.scbtns{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .sheetcompv ul{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:10px}.sheetcompv li{display:flex;gap:8px;align-items:center}.sheetcompv img{border-radius:50%;border:2px solid #c9a24a}.sheetcompv .desc{display:block}.sheetcompv .sctok{width:48px;height:48px}.ecinv{display:inline-flex;gap:4px;align-items:center}.ecinv select{font-size:13px;padding:2px 4px}
 .shopinv{list-style:none;margin:6px 0;padding:0}.shopinv li{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,.08);font-size:14.5px}.shopinv .sn{flex:1;min-width:0}.shopinv .sp{white-space:nowrap;font-variant-numeric:tabular-nums}.shopinv .sq{width:56px;text-align:right;font-size:13px;color:var(--ink-soft)}.shopinv li.out .sn,.shopinv li.out .sp{opacity:.45;text-decoration:line-through}
@@ -2015,7 +2015,9 @@ function sheetView(id){
   const qs=questsOf(a);
   h+='<h3>Quêtes accomplies</h3>'+(qs.length?'<ul class="sheetq">'+qs.map(q=>'<li>'+rankSeal(q.rang)+' <a href="#chroniques">'+esc(q.titre)+'</a>'+(office(q.bureau)?' <em>('+esc(office(q.bureau).nom)+')</em>':'')+'</li>').join("")+'</ul>':'<p class="desc">Aucune pour le moment.</p>');
   h+=sheetNews(a.id);
-  if(mine||ui.dm)h+='<div class="actions"><button class="btn ghost" data-a="sheet-edit" data-id="'+esc(a.id)+'">Modifier la fiche</button>'+(ui.dm&&isAdmin?'<button class="btn gold" data-a="man-open" data-sec="perso" data-id="'+esc(a.id)+'">Dossier DM</button>':'')+'</div>';
+  if(mine||ui.dm)h+='<div class="actions"><button class="btn ghost" data-a="sheet-edit" data-id="'+esc(a.id)+'">Modifier la fiche</button>'+(ui.dm&&isAdmin?'<button class="btn gold" data-a="man-open" data-sec="perso" data-id="'+esc(a.id)+'">Dossier DM</button>'+(ui.advDel===a.id?'':'<button class="btn ghost danger" data-a="adv-del" data-id="'+esc(a.id)+'">🗑 Supprimer la fiche</button>'):'')+'</div>'
+    // suppression d'une fiche créée par erreur (DM seulement), en deux temps
+    +(ui.dm&&isAdmin&&ui.advDel===a.id?'<div class="advdel" role="alert"><p><strong>Supprimer définitivement la fiche de '+esc(a.nom)+' ?</strong> Son dossier DM est supprimé aussi. Ses inscriptions et l\'historique des quêtes gardent seulement son nom. On ne peut pas revenir en arrière.</p><button class="btn danger" data-a="adv-del-ok" data-id="'+esc(a.id)+'">Oui, supprimer</button> <button class="btn ghost" data-a="adv-del-no">Annuler</button></div>':'');
   return h+'</article>';
 }
 function myCharsView(){
@@ -10685,10 +10687,18 @@ async function ecAction(a,id,b,v,q){const E=ecP(),c=ecCard();
     for(const d of [[1,0],[0,1],[-1,0],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1],[2,0],[0,2],[-2,0],[0,-2]]){const X=pj.x+d[0],Y=pj.y+d[1];if(X>0&&Y>0&&X<c.w&&Y<c.h&&!busy(X,Y)){px=X;py=Y;break;}}
     const base=cp?cp.n:I.l,nb=(c.tokens||[]).filter(k=>k.k==="inv"&&k.ow===pj.n&&String(k.n||"").indexOf(base)===0).length,o={id:ptUid(),k:"inv",t,n:base+(nb?" "+(nb+1):""),ow:pj.n,c:pj.c||"#d8b45e",x:px,y:py,vis:true,ms:Date.now()};if(I.sens){o.sens=false;o.dv=I.dv||0;}if(cp&&cp.token)o.img="avc/"+av.id+"~"+cp.id;
     c.tokens=(c.tokens||[]).concat([o]);ui.ecSel=o.id;ptLog("✨ "+pj.n+" invoque : "+o.n+".");
+    // l'invocation rejoint le groupe et l'ordre de bataille, juste après son invocateur (même initiative)
+    {const P=ui.pt;if(P&&P.liste){const ow=P.liste.find(x=>x.kind==="pj"&&ptNorm(x.nom).trim()===ptNorm(pj.n).trim()),fight=P.combat&&P.combat.phase==="combat";
+      const cb={cid:ptUid(),kind:"pnj",ref:"",inv:1,owner:ow?ow.cid:"",nom:o.n,camp:"allie",ca:"",pvMax:1,pv:1,tmp:0,init:ow?ow.init:"",dex:ow?+ow.dex||0:0,dx:ow?(+ow.dx||0)-0.001:0,xp:0,conds:[],conc:false};
+      P.liste.push(cb);o.cid=cb.cid;const E=ecP();(E.foeSeen||(E.foeSeen={}))[cb.cid]=1;
+      if(fight)ptLog(o.n+" rejoint le combat (round "+P.round+")"+(ow?", juste après "+ow.nom:"")+".");
+      ui.ptAlert="Inscris les PV et la CA de "+o.n+" dans l'ordre de bataille."+(ow&&(ow.init===""||ow.init==null)?" Son initiative suivra celle de "+ow.nom+".":"");}}
     // joueur à distance : sa fiche de figurine doit exister pour qu'il puisse déplacer son invocation
     if(tbVirt(pj.n)){const sg=tbSignByName(q,pj.n);if(sg&&!tbFigs[sg.uid])setDoc(doc(db,"table",q.id,"figs",sg.uid),{x:px,y:py,carte:"",ms:Date.now()}).catch(e=>console.error(e));}
     ecReveal(c);ecPush(true);return true;}
-  if(a==="pt-ec-tokdel"){{const t0=(c.tokens||[]).find(k=>k.id===ui.ecSel);if(t0&&t0.k==="pj"&&tbVirt(t0.n))tbFigDel(q,t0.n);}c.tokens=(c.tokens||[]).filter(k=>k.id!==ui.ecSel);ui.ecSel=null;ecPush(true);return true;}
+  if(a==="pt-ec-tokdel"){{const t0=(c.tokens||[]).find(k=>k.id===ui.ecSel);if(t0&&t0.k==="pj"&&tbVirt(t0.n))tbFigDel(q,t0.n);
+      // renvoyer une invocation la retire aussi de l'ordre de bataille
+      if(t0&&t0.k==="inv"&&t0.cid&&ui.pt&&ui.pt.liste){const cb=ui.pt.liste.find(x=>x.cid===t0.cid&&x.inv);if(cb){ui.pt.liste=ui.pt.liste.filter(x=>x!==cb);ptLog(cb.nom+" est renvoyé.");}}}c.tokens=(c.tokens||[]).filter(k=>k.id!==ui.ecSel);ui.ecSel=null;ecPush(true);return true;}
   if(a==="pt-ec-next"){E.ordre.idx=(E.ordre.idx||0)+1;ecPush(true);return true;}
   return false;}
 function ecChange(el){const E=ecP(),c=ecCard(),k=el.getAttribute("data-ec"),sel=c&&(c.tokens||[]).find(t=>t.id===ui.ecSel);
@@ -11645,6 +11655,10 @@ document.addEventListener("click",async e=>{
   else if(a==="sign-tosheet"){ui.signup=null;ui.sheetEdit="new";ui.sheetImg=undefined;}
   else if(a==="prompt-go"||a==="prompt-later"){ui.promptSheet=false;try{sessionStorage.setItem("rdv-prompt-"+user.uid,"1");}catch(e){}if(a==="prompt-go"){ui.sheetEdit="new";ui.sheetImg=undefined;}}
   else if(a==="sheet-new"){ui.sheetEdit="new";ui.sheetImg=undefined;ui.tokCadre=null;ui.sheetComp=undefined;}
+  else if(a==="adv-del"){ui.advDel=id;}
+  else if(a==="adv-del-no"){ui.advDel=null;}
+  else if(a==="adv-del-ok"){if(!isAdmin)return;const av=aventuriers.find(x=>x.id===id);ui.advDel=null;
+    await run("Fiche supprimée",async()=>{await deleteDoc(doc(db,"aventuriers",id));if(dossiers[id])await deleteDoc(doc(db,"dossiers",id)).catch(()=>{});});location.hash="#";return;}
   else if(a==="sheet-edit"){ui.sheetEdit=id;ui.sheetImg=undefined;ui.tokCadre=null;ui.sheetComp=undefined;}
   else if(a==="sheet-cancel"){ui.sheetEdit=null;ui.sheetImg=undefined;ui.tokCadre=null;ui.sheetComp=undefined;}
   else if(a==="sc-add"){const L=ui.sheetComp||[];if(L.length<SC_MAX)L.push({id:ptUid(),n:"",t:"familier"});ui.sheetComp=L;sheetCompRefresh();const el=document.getElementById("sc-n-"+(L.length-1));if(el)el.focus();return;}
