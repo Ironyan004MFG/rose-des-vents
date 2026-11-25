@@ -246,12 +246,19 @@ service cloud.firestore {
     function myDispoOk(d) {
       return !(request.auth.uid in d.dispo) || d.dispo[request.auth.uid] in ['oui', 'peut', 'non'];
     }
+    // Calendrier du DM : ses jours disponibles, lisibles par tous ; lui seul les change.
+    match /calendrier/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     match /planif/{id} {
       allow read: if true;
       allow create, update: if isAdmin() && validPlan(request.resource.data);
       allow create: if validPlan(request.resource.data) && planner(request.resource.data.quete)
         && byMe(request.resource.data.par) && !('dm' in request.resource.data)
-        && request.resource.data.dispo.keys().hasOnly([request.auth.uid]) && myDispoOk(request.resource.data);
+        && request.resource.data.dispo.keys().hasOnly([request.auth.uid]) && myDispoOk(request.resource.data)
+        // un joueur ne propose que les jours où le DM s'est rendu disponible (Calendrier du DM)
+        && request.resource.data.date in get(/databases/$(database)/documents/calendrier/dm).data.jours;
       allow update: if validPlan(request.resource.data) && planner(resource.data.quete)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['dispo'])
         && request.resource.data.dispo.diff(resource.data.dispo).affectedKeys().hasOnly([request.auth.uid])

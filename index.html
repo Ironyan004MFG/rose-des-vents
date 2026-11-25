@@ -1099,6 +1099,15 @@ footer .who a{color:var(--gold)}
 .tokrow{display:flex;gap:1em;align-items:center;flex-wrap:wrap}#tok-cv{width:180px;height:180px;border-radius:12px;background:rgba(0,0,0,.25);cursor:grab;touch-action:none}#tok-cv:active{cursor:grabbing}.sheettok{display:flex;gap:1em;align-items:center;margin:1em 0}.sheettok img{border-radius:50%}
 .sheetdon{border:1px solid rgba(201,162,74,.5);border-radius:10px;padding:.6em .9em;margin:1em 0;background:rgba(201,162,74,.08)}.sheetdon h3{margin-top:.2em}
 .sheet-top{display:flex;flex-wrap:wrap;gap:20px;align-items:center}
+.cald{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;position:relative}.cald small{font-size:9.5px;font-weight:600}.cald i{position:absolute;top:1px;right:3px;font-size:9px;font-style:normal;opacity:.75}
+.calrecs{list-style:none;padding:0;margin:4px 0 10px;display:flex;flex-direction:column;gap:4px}.calrecs li{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.calpop{max-width:420px}.calpop label{display:flex;flex-direction:column;gap:4px;margin:8px 0}
+.calbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:8px 0}
+.calgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.calm{background:#f6efdb;color:var(--ink);border:1px solid #c9b98f;border-radius:8px;padding:8px 10px}.calm h4{margin:0 0 6px;font-family:var(--display);letter-spacing:.06em}
+.calw,.cald7{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}.calw span{font-size:12px;color:var(--ink-soft);font-weight:700}
+.cald{font:inherit;font-size:14px;border:1px solid transparent;border-radius:6px;background:#fbf6e8;color:var(--ink);min-height:32px;cursor:pointer;padding:0}
+.cald:hover:not([disabled]){border-color:#a07a22}.cald.on{background:#d8b45e;color:#1b140c;font-weight:700;border-color:#a07a22}.cald.today{outline:2px solid #2f6d43;outline-offset:-2px}.cald[disabled]{opacity:.35;cursor:default}
 .feulink{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:4px 0}
 .feu{background:var(--parch);color:var(--ink);border-radius:4px;padding:20px clamp(14px,3vw,30px);box-shadow:0 10px 24px rgba(0,0,0,.45);max-width:1040px;display:flex;flex-direction:column;gap:12px}
 .feu{color-scheme:light;accent-color:#8a5b12}.feu2 .feumaitr{flex:none}
@@ -1567,6 +1576,7 @@ function listen(){
   onSnapshot(collection(db,"boutique"),snap=>{gsAll=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},onErr);
   onSnapshot(collection(db,"nouvelles"),snap=>{nouvelles=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},onErr);
   onSnapshot(collection(db,"planif"),snap=>{planifs=snap.docs.map(d=>Object.assign({id:d.id},d.data()));render();},onErr);
+  onSnapshot(doc(db,"calendrier","dm"),sn=>{const d=sn.exists()?sn.data():{};calDM=d.jours||{};calRec=d.rec||{};render();},()=>{});
   onSnapshot(collection(db,"wiki"),snap=>{
     wikiPages=snap.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>((a.ordre==null?999:a.ordre)-(b.ordre==null?999:b.ordre))||String(a.titre).localeCompare(String(b.titre),"fr"));loaded.w=true;render();
   },onErr);
@@ -1759,7 +1769,8 @@ function planModal(q){
     h+=rows.slice().sort((x,y)=>(y.uid===me)-(x.uid===me)).map(r=>'<tr'+(r.uid===me?' class="merow"':'')+'><th scope="row">'+esc(r.nom)+(r.uid===me?' <em>(toi)</em>':'')+'</th>'+ds.map(p=>cell(p,r.uid,false)).join("")+'</tr>').join("");
     h+='<tr class="tot"><th scope="row">Total</th>'+ds.map(p=>{const y=rows.filter(r=>(p.dispo||{})[r.uid]==="oui").length,m=rows.filter(r=>(p.dispo||{})[r.uid]==="peut").length;return '<td>'+y+' ✓'+(m?' · '+m+' ?':'')+'</td>';}).join("")+'</tr></tbody></table></div>';
   }
-  if(open&&ds.length<6)h+='<form class="inline planadd" id="planform"><label for="pl-date">Proposer une date<input id="pl-date" type="date" required min="'+todayIso()+'"></label><label for="pl-heure">Heure (facultatif)<input id="pl-heure" maxlength="30" placeholder="ex. 19 h"></label><button class="btn" type="submit">Proposer</button></form>';
+  if(open&&ds.length<6&&!ui.dm){const L=calFree().filter(k=>!ds.some(p=>p.date===k));h+=L.length?'<form class="inline planadd" id="planform"><label for="pl-date">Proposer une date (disponibilités du DM)<select id="pl-date" required data-plh="1"><option value="">Choisir…</option>'+L.map(k=>'<option value="'+k+'" data-h="'+esc(calHtxt(calH(k)))+'">'+esc(fmtPlan({date:k}))+(calH(k)?' · '+esc(calHtxt(calH(k))):'')+'</option>').join("")+'</select></label><label for="pl-heure">Heure (facultatif)<input id="pl-heure" maxlength="30" placeholder="ex. 19 h"></label><button class="btn" type="submit">Proposer</button></form>':'<p class="hint">📅 Le DM n\'a pas encore indiqué d\'autres disponibilités. Les dates qu\'il ouvre dans son calendrier apparaîtront ici.</p>';}
+  else if(open&&ds.length<6)h+='<form class="inline planadd" id="planform"><label for="pl-date">Proposer une date<input id="pl-date" type="date" required min="'+todayIso()+'"></label><label for="pl-heure">Heure (facultatif)<input id="pl-heure" maxlength="30" placeholder="ex. 19 h"></label><button class="btn" type="submit">Proposer</button></form>';
   else if(!open)h+='<p class="hint">'+(user&&!user.isAnonymous?'Inscris-toi à la quête pour proposer des dates et répondre.':'Connecte-toi et inscris-toi à la quête pour participer.')+'</p>';
   return h+'<div class="actions"><button class="btn ghost" type="button" data-a="plan-close">Fermer</button></div></div></div>';
 }
@@ -2949,12 +2960,55 @@ function dmStats(){
 }
 // Cartes prégénérées : bureaux (avec étages), scènes de tous les scénarios, cartes aléatoires. Aperçu vivant ; la télé ne suit qu'après « Montrer aux joueurs ».
 function dmCartes(){ptSync("libre");return '<p class="desc">Ouvre une carte pour la voir vivre ici (vie, météo, lumière, étages). Les cartes s\'ouvrent révélées (sans brouillard) pour que tu puisses les tester ; « Vue joueurs » montre ce que la télé afficherait. Rien ne change sur l\'écran de table tant que tu n\'as pas cliqué « Montrer aux joueurs ». « Créer une partie libre » ouvre le Mode Partie hors quête avec cette carte (combat, dés, règles, boutique) : le brouillard revient et la vue des joueurs suit leurs jetons.</p>'+ecTab(PT_LIBRE);}
+/* ---------- Calendrier du DM : ses disponibilités (avec l'heure et des récurrences) ; les joueurs ne proposent que ces dates ---------- */
+let calDM={},calRec={};
+const MOIS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"],JOURS=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"],CAL_FIN="2027-12-31";
+const CAL_FREQ=[["","Aucune (ce jour seulement)"],["s1","Chaque semaine"],["s2","Aux deux semaines"],["mj","Chaque mois, même date"],["mw","Chaque mois, même jour de la semaine"]];
+function isoOf(y,m,d){return y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");}
+function calFree(){const t=todayIso();return Object.keys(calDM).filter(k=>calDM[k]&&k>=t).sort();}
+function calH(k){const v=calDM[k];return v&&typeof v==="object"&&v.h?v.h:"";}
+function calHtxt(h){if(!h)return "";const m=String(h).match(/^(\d{1,2}):(\d{2})$/);return m?"vers "+(+m[1])+" h"+(m[2]!=="00"?" "+m[2]:""):h;}
+function calRecTxt(r){if(!r)return "";const d=new Date(r.debut+"T12:00:00"),jw=JOURS[d.getDay()],n=Math.ceil(d.getDate()/7),ord=n===1?"1er":n+"e";
+  return (r.f==="s1"?"Chaque "+jw:r.f==="s2"?"Un "+jw+" sur deux":r.f==="mj"?"Le "+d.getDate()+" de chaque mois":"Le "+ord+" "+jw+" du mois")+(r.h?" "+calHtxt(r.h):"")+(r.fin&&r.fin<CAL_FIN?", jusqu'au "+new Date(r.fin+"T12:00:00").toLocaleDateString("fr-CA",{day:"numeric",month:"long",year:"numeric"}):"");}
+// Toutes les dates d'une récurrence (jusqu'à la fin du calendrier)
+function calExpand(r){const out=[],fin=r.fin&&r.fin<CAL_FIN?r.fin:CAL_FIN,d0=new Date(r.debut+"T12:00:00"),iso=d=>isoOf(d.getFullYear(),d.getMonth(),d.getDate());
+  if(r.f==="s1"||r.f==="s2"){const st=r.f==="s1"?7:14;for(let d=new Date(d0);iso(d)<=fin;d.setDate(d.getDate()+st))out.push(iso(d));}
+  else if(r.f==="mj"){for(let k=0;k<30;k++){const d=new Date(d0.getFullYear(),d0.getMonth()+k,1,12);if(d0.getDate()>new Date(d.getFullYear(),d.getMonth()+1,0).getDate())continue;d.setDate(d0.getDate());if(iso(d)>fin)break;out.push(iso(d));}}
+  else if(r.f==="mw"){const wd=d0.getDay(),n=Math.ceil(d0.getDate()/7);for(let k=0;k<30;k++){const d=new Date(d0.getFullYear(),d0.getMonth()+k,1,12);d.setDate(1+((wd-d.getDay()+7)%7)+7*(n-1));if(d.getMonth()!==(d0.getMonth()+k)%12)continue;if(iso(d)>fin)break;out.push(iso(d));}}
+  return out.filter(x=>x>=r.debut);}
+function dmCalendar(){const Y=ui.calY||2026,t=todayIso(),n=calFree().length,R=Object.keys(calRec).map(id=>Object.assign({id},calRec[id]));
+  let h='<p class="desc">Touche un jour pour te rendre <strong>disponible</strong> : tu choisis vers quelle heure, et si ça revient (chaque semaine, chaque mois…). Dans la planification des quêtes, les joueurs ne peuvent proposer <strong>que ces dates</strong>.</p>';
+  h+='<div class="calbar"><div class="chips">'+[2026,2027].map(y=>'<button class="chip" data-a="dcal-y" data-v="'+y+'" aria-pressed="'+(Y===y)+'">'+y+'</button>').join("")+'</div><span class="desc">'+n+' jour'+(n>1?'s':'')+' disponible'+(n>1?'s':'')+' à venir</span></div>';
+  if(R.length)h+='<ul class="calrecs">'+R.map(r=>'<li>↻ '+esc(calRecTxt(r))+' <button class="mini" data-a="dcal-recdel" data-v="'+esc(r.id)+'">Retirer</button></li>').join("")+'</ul>';
+  h+='<div class="calgrid">'+MOIS.map((mn,m)=>{const first=new Date(Y,m,1).getDay(),nd=new Date(Y,m+1,0).getDate(),cells=[];for(let i=0;i<first;i++)cells.push('<span class="calx"></span>');
+    for(let d=1;d<=nd;d++){const k=isoOf(Y,m,d),v=calDM[k],on=!!v,past=k<t,hh=calH(k),rc=v&&v.r;cells.push('<button class="cald'+(on?' on':'')+(k===t?' today':'')+'" data-a="dcal-d" data-v="'+k+'"'+(past?' disabled':'')+' aria-pressed="'+on+'" aria-label="'+d+' '+mn+' '+Y+(on?', disponible '+calHtxt(hh):'')+'" title="'+(on?esc(calHtxt(hh)||"Disponible")+(rc?" · récurrent":""):'')+'">'+d+(on&&hh?'<small>'+esc(hh.replace(/^0/,"").replace(/:00$/,"h").replace(":","h"))+'</small>':'')+(rc?'<i aria-hidden="true">↻</i>':'')+'</button>');}
+    const cnt=Object.keys(calDM).filter(k=>calDM[k]&&k.indexOf(isoOf(Y,m,1).slice(0,7))===0).length;
+    return '<section class="calm"><h4>'+mn.charAt(0).toUpperCase()+mn.slice(1)+(cnt?' <span class="desc">· '+cnt+'</span>':'')+'</h4><div class="calw">'+["D","L","M","M","J","V","S"].map(x=>'<span>'+x+'</span>').join("")+'</div><div class="cald7">'+cells.join("")+'</div></section>';}).join("")+'</div>';
+  if(ui.calPop)h+=calPop(ui.calPop);
+  return h;}
+function calPop(k){const v=calDM[k],on=!!v,hh=calH(k),rc=v&&v.r&&calRec[v.r]?Object.assign({id:v.r},calRec[v.r]):null,d=new Date(k+"T12:00:00");
+  let h='<div class="modal-bg" data-a="dcal-x"><form class="modal calpop" id="dcalform" data-v="'+k+'" role="dialog" aria-modal="true" aria-labelledby="calp-t"><h2 id="calp-t">'+esc(d.toLocaleDateString("fr-CA",{weekday:"long",day:"numeric",month:"long",year:"numeric"}))+'</h2>';
+  if(rc)h+='<p class="desc">↻ Ce jour fait partie de : <strong>'+esc(calRecTxt(rc))+'</strong>.</p>';
+  h+='<label class="ptchk" for="dcal-on"><input type="checkbox" id="dcal-on"'+(on||!v?' checked':'')+'><span>Disponible</span></label>';
+  h+='<label for="dcal-h">Vers quelle heure (environ)<input type="time" id="dcal-h" step="900" value="'+esc(hh||"19:00")+'"></label>';
+  if(!rc)h+='<label for="dcal-f">Récurrence<select id="dcal-f">'+CAL_FREQ.map(f=>'<option value="'+f[0]+'">'+esc(f[0]==="mj"?"Chaque mois, le "+d.getDate():f[0]==="mw"?"Chaque mois, le "+(Math.ceil(d.getDate()/7)===1?"1er":Math.ceil(d.getDate()/7)+"e")+" "+JOURS[d.getDay()]:f[0]==="s1"?"Chaque "+JOURS[d.getDay()]:f[0]==="s2"?"Un "+JOURS[d.getDay()]+" sur deux":f[1])+'</option>').join("")+'</select></label><label for="dcal-fin">Jusqu\'au (facultatif)<input type="date" id="dcal-fin" min="'+k+'" max="'+CAL_FIN+'"></label>';
+  h+='<div class="actions"><button class="btn gold" type="submit">Enregistrer</button>'+(rc?'<button class="btn ghost" type="button" data-a="dcal-recdel" data-v="'+esc(rc.id)+'">Retirer toute la récurrence</button>':'')+'<button class="btn ghost" type="button" data-a="dcal-x">Annuler</button></div></form></div>';
+  return h;}
+async function calSave(k){const g=id=>document.getElementById(id),on=g("dcal-on").checked,hh=String(g("dcal-h").value||"").slice(0,5),f=g("dcal-f")?g("dcal-f").value:"",fin=g("dcal-fin")?g("dcal-fin").value:"",v=calDM[k];
+  const J={};if(!on){J[k]=deleteField();}
+  else if(f){const id=Date.now().toString(36),r={debut:k,f,h:hh};if(fin)r.fin=fin;calRec=Object.assign({},calRec,{[id]:r});calExpand(r).forEach(x=>{if(x>=todayIso())J[x]={h:hh,r:id};});
+    ui.calPop=null;Object.keys(J).forEach(x=>{calDM[x]=J[x];});render();return setDoc(doc(db,"calendrier","dm"),{jours:J,rec:{[id]:r},majLe:serverTimestamp()},{merge:true});}
+  else J[k]=Object.assign({h:hh},v&&v.r?{r:v.r}:{});
+  ui.calPop=null;calDM=Object.assign({},calDM);Object.keys(J).forEach(x=>{if(on)calDM[x]=J[x];else delete calDM[x];});render();
+  return setDoc(doc(db,"calendrier","dm"),{jours:J,majLe:serverTimestamp()},{merge:true});}
+async function calRecDel(id){const J={};Object.keys(calDM).forEach(k=>{const v=calDM[k];if(v&&v.r===id&&k>=todayIso()){J[k]=deleteField();delete calDM[k];}});calRec=Object.assign({},calRec);delete calRec[id];ui.calPop=null;render();
+  return setDoc(doc(db,"calendrier","dm"),{jours:J,rec:{[id]:deleteField()},majLe:serverTimestamp()},{merge:true});}
 function dmSpaceView(){
   if(!isAdmin)return '<p class="empty">L\'Espace DM est réservé au Maître de la Guilde.</p>'+(user&&!user.isAnonymous?'':'<p><button class="btn board" data-a="dm">Mode DM</button></p>');
   const n=todoItems().length;
-  const tabs=[["todo","À traiter"+(n?' <span class="n">'+n+'</span>':'')],["evol","Évolution du monde"+(dueRegions().length?' <span class="n warn">!</span>':'')],["manuel","Manuel du DM"],["cartes","Cartes"],["stats","Vue d'ensemble"],["outils","Outils"]];
+  const tabs=[["todo","À traiter"+(n?' <span class="n">'+n+'</span>':'')],["evol","Évolution du monde"+(dueRegions().length?' <span class="n warn">!</span>':'')],["manuel","Manuel du DM"],["cartes","Cartes"],["calendrier","📅 Calendrier du DM"],["stats","Vue d'ensemble"],["outils","Outils"]];
   let h=ecOpenBar()+'<div class="chips dmtabs" role="tablist" aria-label="Espace DM">'+tabs.map(t=>'<button class="chip" role="tab" data-a="dmtab" data-v="'+t[0]+'" aria-selected="'+(ui.dmTab===t[0])+'" aria-pressed="'+(ui.dmTab===t[0])+'">'+t[1]+'</button>').join("")+'</div>';
-  h+='<div class="dmspace" role="tabpanel">'+(ui.dmTab==="cartes"?dmCartes():ui.dmTab==="evol"?dmEvol():ui.dmTab==="manuel"?dmManual():ui.dmTab==="notes"?dmNotes():ui.dmTab==="stats"?dmStats():ui.dmTab==="outils"?dmTools():dmTodo())+'</div>';
+  h+='<div class="dmspace" role="tabpanel">'+(ui.dmTab==="cartes"?dmCartes():ui.dmTab==="evol"?dmEvol():ui.dmTab==="manuel"?dmManual():ui.dmTab==="notes"?dmNotes():ui.dmTab==="calendrier"?dmCalendar():ui.dmTab==="stats"?dmStats():ui.dmTab==="outils"?dmTools():dmTodo())+'</div>';
   return h;
 }
 
@@ -12184,6 +12238,10 @@ document.addEventListener("click",async e=>{
   else if(a==="adv-del-no"){ui.advDel=null;}
   else if(a==="adv-del-ok"){if(!isAdmin)return;const av=aventuriers.find(x=>x.id===id);ui.advDel=null;
     await run("Fiche supprimée",async()=>{await deleteDoc(doc(db,"aventuriers",id));if(dossiers[id])await deleteDoc(doc(db,"dossiers",id)).catch(()=>{});await deleteDoc(doc(db,"feuilles",id)).catch(()=>{});});location.hash="#";return;}
+  else if(a==="dcal-y"){ui.calY=+b.getAttribute("data-v")||2026;render();return;}
+  else if(a==="dcal-d"){if(!isAdmin)return;const k=b.getAttribute("data-v");if(!/^\d{4}-\d{2}-\d{2}$/.test(k))return;ui.calPop=k;render();const h=document.getElementById("dcal-h");if(h)h.focus();return;}
+  else if(a==="dcal-x"){if(e&&e.target!==b)return;ui.calPop=null;render();return;}
+  else if(a==="dcal-recdel"){if(!isAdmin)return;calRecDel(b.getAttribute("data-v")).catch(err=>{save={state:"error",msg:errText(err)};render();});return;}
   else if(a==="feu-uneq"){if(!ui.feu)return;ui.feuEqMsg="";feuRead();const it=ui.feu.inv[+b.getAttribute("data-v")];if(it)it.eq="";ui.feuEqAsk=null;feuSaveSoon();render();return;}
   else if(a==="feu-eq-ok"||a==="feu-eq-no"){const A=ui.feuEqAsk;ui.feuEqAsk=null;if(a==="feu-eq-ok"&&A&&ui.feu&&ui.feu.inv[A.i]){feuRead();feuEqSet(ui.feu,A.i,A.slot,A.conf);feuSaveSoon();}render();return;}
   else if(a==="feu-rest"){if(!ui.feu)return;feuRead();feuLongRest(ui.feu);feuSaveSoon();render();const el=document.getElementById("feusave");if(el)el.textContent="🌙 Repos long : tout est revenu";return;}
@@ -12385,6 +12443,7 @@ document.addEventListener("click",async e=>{
 });
 document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.matches&&d.matches("details.cart"))ui.cartOpen=d.open;if(d&&d.matches&&d.matches("details.shop")){const S=((ui.pt&&ui.pt.boutiques)||[]).find(x=>x.id===d.getAttribute("data-shopid"));if(S)S.ouvert=d.open;}},true);
 document.addEventListener("change",e=>{
+  if(e.target.getAttribute&&e.target.getAttribute("data-plh")){const o=e.target.selectedOptions[0],h=document.getElementById("pl-heure");if(o&&h&&!h.value)h.value=o.getAttribute("data-h")||"";return;}
   if(e.target.classList&&e.target.classList.contains("ql-to")){const q=e.target.getAttribute("data-q");((ui.qlEdit=ui.qlEdit||{})[q]=ui.qlEdit[q]||{})[e.target.getAttribute("data-id")]=e.target.value;render();return;}
   if(e.target.classList&&e.target.classList.contains("ql-resp")){if(!isAdmin)return;const id=e.target.getAttribute("data-id");run("Responsable du butin",()=>setDoc(doc(db,"quetes",id),{respButin:e.target.value,majLe:serverTimestamp()},{merge:true}));return;}
   if(e.target.classList&&e.target.classList.contains("feueq")&&ui.feu){feuRead();const i=+e.target.getAttribute("data-eqi"),slot=e.target.value,F=ui.feu;if(!F.inv[i])return;
@@ -12630,9 +12689,11 @@ document.addEventListener("submit",async e=>{
   }
   if(e.target.id==="bgform"){if(!ui.pt)return;const on=Array.from(e.target.querySelectorAll("input[data-bg]")).filter(c=>c.checked).map(c=>+c.getAttribute("data-bg"));
     ui.pt.bg={vu:true,on:on};ui.ptBg=false;ptLog(on.length?"Éléments de background retenus : "+on.length+".":"Aucun élément de background retenu.");ptSave();render();return;}
+  if(e.target.id==="dcalform"){if(!isAdmin)return;calSave(e.target.getAttribute("data-v")).catch(err=>{save={state:"error",msg:errText(err)};render();});return;}
   if(e.target.id==="planform"){
     const q=questById(ui.plan);if(!q)return;const date=v("pl-date"),heure=v("pl-heure").slice(0,30);
     if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date<todayIso())return;
+    if(!ui.dm&&!calDM[date]){save={state:"error",msg:"Choisis une date où le DM est disponible."};render();return;}
     if(planDates(q.id).some(p=>p.date===date&&(p.heure||"")===heure)){save={state:"error",msg:"Cette date est déjà proposée."};render();return;}
     const by={uid:user.uid,nom:String(ui.dm?"Le DM":((signupsFor(q.id).find(x=>x.uid===user.uid)||{}).nom||user.displayName||"Aventurier")).slice(0,60)};
     const ref=doc(collection(db,"planif"));const d={quete:q.id,date,heure,par:by,dispo:{},creeLe:serverTimestamp()};
