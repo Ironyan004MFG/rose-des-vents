@@ -10282,7 +10282,9 @@ function tbState(q,st){const c=st&&st.carte;if(!c)return {qid:q.id,titre:q.titre
   // chaque joueur relié à un jeton de la carte : sa couleur sert aussi à ses dessins
   signupsFor(q.id).forEach(sg=>{if(!sg.uid||sg.statut==="refusee"||roster[sg.uid])return;const ring=tbRing(cR,sg);if(ring)roster[sg.uid]={a:sg.aventurier||"",n:ring.n,c:ring.c||"#d8b45e",d:ring.down?1:0,nf:1};});
   const out=Object.assign({},st,{vie:Date.now(),qid:q.id,titre:q.titre,tokens,figs:pres,roster,vue:(ecDoc&&ecDoc.tv)?{cols:ecDoc.tv.cols,rows:ecDoc.tv.rows}:{cols:40,rows:22},ms:Date.now()});delete out.calib;delete out.tvv;delete out.dessins;delete out.trait;return JSON.parse(JSON.stringify(out));}
-function tbPush(){const q=tbQuest();if(!q||!isAdmin||!ptActive())return;tbListen(q.id);clearTimeout(tbPushT);tbPushT=setTimeout(()=>fsThr("tb|"+q.id,()=>{if(tbQuest()!==q)return;let st=null;try{st=ecState();}catch(e){}
+function tbPush(){const q=tbQuest();if(!q||!isAdmin||!ptActive())return;tbListen(q.id);clearTimeout(tbPushT);tbPushT=setTimeout(()=>fsThr("tb|"+q.id,()=>{if(tbQuest()!==q)return;let st=null;try{st=ecState();}catch(e){console.error(e);}
+  // jamais de carte vide publiée par accident (ex. juste après un rechargement, avant que la partie soit chargée) : seule la fermeture volontaire des écrans la vide
+  if(!st||!st.carte)return;
   setDoc(doc(db,"table",q.id),tbState(q,st)).catch(e=>console.error(e));},1500),600);}
 // Côté DM : écoute les figurines des joueurs, pour les montrer sur sa vue, la télé et la copie publiée.
 function tbListen(qid){if(tbFigQ===qid)return;if(tbFigUnsub){try{tbFigUnsub();}catch(e){}tbFigUnsub=null;}if(tbDesUnsub){try{tbDesUnsub();}catch(e){}tbDesUnsub=null;}tbFigQ=qid;tbFigs={};tbDesDM={};if(!qid||!isAdmin)return;
