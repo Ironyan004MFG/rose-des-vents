@@ -64,7 +64,7 @@ service cloud.firestore {
     function validQuest(d) {
       return d.keys().hasOnly(['bureau', 'titre', 'type', 'rang', 'statut', 'lieu', 'recompense', 'niveau',
                                'joueurs', 'joueursMin', 'joueursMax', 'supercharged', 'date', 'description',
-                               'pointsRenommee', 'rapport', 'redacteur', 'rapportBrouillon', 'maj', 'creeLe', 'majLe'])
+                               'pointsRenommee', 'rapport', 'redacteur', 'rapportBrouillon', 'respButin', 'maj', 'creeLe', 'majLe'])
         && d.keys().hasAll(['bureau', 'titre', 'rang', 'statut'])
         && exists(/databases/$(database)/documents/bureaux/$(d.bureau))
         && str(d.titre, 1, 120)
@@ -316,8 +316,18 @@ service cloud.firestore {
     match /modules/{id} {
       allow read, write: if isAdmin();
     }
+    // Butin : le DM gère tout. Les membres confirmés d'une quête lisent le butin de cette quête ;
+    // le responsable du butin (quetes.respButin) choisit seulement les destinataires.
     match /butins/{id} {
       allow read, write: if isAdmin();
+      allow read: if realAccount() && resource.data.quete is string
+        && get(/databases/$(database)/documents/inscriptions/$(resource.data.quete + '__' + request.auth.uid)).data.statut == 'confirmee';
+      allow update: if realAccount() && resource.data.quete is string
+        && get(/databases/$(database)/documents/quetes/$(resource.data.quete)).data.respButin == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pour', 'pourNom', 'attribuePar'])
+        && request.resource.data.pour is string && request.resource.data.pour.size() <= 80
+        && request.resource.data.pourNom is string && request.resource.data.pourNom.size() <= 80
+        && (!('attribuePar' in request.resource.data) || (request.resource.data.attribuePar is string && request.resource.data.attribuePar.size() <= 60));
     }
     match /relations/{id} {
       allow read, write: if isAdmin();
