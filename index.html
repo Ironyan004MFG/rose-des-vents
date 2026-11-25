@@ -172,7 +172,18 @@ img.zoomable{cursor:zoom-in}img.zoomable:focus-visible{outline:3px solid #2a6fb0
 .tbbar .btn.on{background:#d8b45e;color:#1b140c}#ec-pl.draw,#ec-dm.draw{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M3 25l2-7L19 4l5 5L10 23z' fill='%23f2d27a' stroke='%23000' stroke-width='1.5'/%3E%3Cpath d='M3 25l2-7 5 5z' fill='%23333'/%3E%3C/svg%3E") 2 26,crosshair}#ec-pl:not(.draw){cursor:grab}
 @media (max-width:760px),(max-height:520px){.tbbar{top:4px;padding:3px 6px;gap:4px;border-radius:8px}.tbbar .btn{min-height:30px;padding:2px 8px;font-size:12px;letter-spacing:0}.tbbar .tbt,.tbhint{display:none}}
 .tbbar.min{left:8px;top:8px;transform:none;padding:3px;gap:0;background:rgba(14,22,26,.7)}.tbbar.min>*:not(.tbmin){display:none!important}.tbbar .tbmin{min-width:36px;font-size:15px}
-#tb-fiche{display:contents}.tbinipos{position:absolute;left:50%;top:76px;transform:translateX(-50%);z-index:6;width:min(460px,calc(100% - 24px))}
+#tb-fiche{display:contents}.tbtourban{position:absolute;left:50%;top:84px;transform:translateX(-50%);z-index:5;background:#d8b45e;color:#1b140c;font-family:var(--display);font-weight:700;letter-spacing:.06em;padding:6px 18px;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.5);animation:tbpulse 1.6s ease-in-out infinite;pointer-events:none}.tbtourban[hidden]{display:none}@keyframes tbpulse{50%{box-shadow:0 0 0 8px rgba(216,180,94,.25),0 6px 20px rgba(0,0,0,.5)}}@media (prefers-reduced-motion:reduce){.tbtourban{animation:none}}
+.tbtourpos{position:absolute;right:12px;bottom:12px;z-index:6;width:min(420px,calc(100% - 24px));max-height:70%;overflow:auto}
+.tbtour{background:rgba(14,22,26,.95);border:2px solid #d8b45e;border-radius:12px;padding:10px 12px;color:#f1e9d2;box-shadow:0 10px 30px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:8px}
+.tbtour.min{padding:6px 10px}.tbtourh{display:flex;align-items:center;justify-content:space-between;gap:8px}.tbtourh strong{color:#d8b45e;font-family:var(--display);font-size:17px}
+.tbtourb{display:flex;flex-wrap:wrap;gap:6px}.tbtourb .btn.on{background:#d8b45e;color:#1b140c}
+.tbtourl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}.tbtourl .btn{width:100%;text-align:left;display:block;text-transform:none;letter-spacing:0;font-family:var(--body);font-size:15px}.tbtourl em{opacity:.8}.tbtourl span{opacity:.85;font-size:13px}
+.tbtourw{margin:0}.tbtourw span{opacity:.85}
+.tbcap{display:flex;flex-direction:column;gap:6px}.tbcap label{display:flex;flex-direction:column;font-size:13px;gap:2px}.tbcap input,.tbcap select{font-size:15px;padding:5px;border-radius:6px;border:1px solid #d8b45e;background:#f6efdb;color:#2a2219}.tbcaprow{display:flex;gap:8px}.tbcaprow label{flex:1}
+.ptjact{width:100%;box-sizing:border-box;color-scheme:light;accent-color:#8a5b12;border:2px solid #d8b45e;border-radius:8px;background:#fff4d6;color:var(--ink);padding:8px 10px;margin:8px 0;display:flex;flex-direction:column;gap:6px}.ptacth{font-size:15px}
+.ptjact .pttgt{display:flex;flex-wrap:wrap;gap:4px}.ptjact .ptchk input{width:18px;height:18px}.ptsav{display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px;margin:2px 6px 2px 0}.ptsavr{display:inline-flex;gap:4px}
+.ptactdmg{display:flex;flex-wrap:wrap;gap:10px;align-items:end}.ptactdmg input[type=number]{width:90px}
+.tbinipos{position:absolute;left:50%;top:76px;transform:translateX(-50%);z-index:6;width:min(460px,calc(100% - 24px))}
 .tbini{display:flex;flex-direction:column;gap:6px;background:rgba(14,22,26,.94);border:2px solid #d8b45e;border-radius:12px;padding:12px 14px;color:#f1e9d2;box-shadow:0 10px 30px rgba(0,0,0,.6);font-size:16px}
 .tbini strong{color:#d8b45e;font-family:var(--display)}.tbini.sent{flex-direction:row;align-items:center;gap:10px;font-size:15px;border-width:1px;padding:8px 12px}
 .tbinirow{display:flex;gap:8px}.tbinirow input{flex:1;font-size:22px;text-align:center;padding:6px;border-radius:8px;border:1px solid #d8b45e;background:#f6efdb;color:#2a2219;min-width:0}
@@ -1122,7 +1133,7 @@ footer .who a{color:var(--gold)}
 .feuline{flex-direction:row!important;align-items:center;gap:6px!important;font-size:14px!important;color:var(--ink)!important}
 .feuline span{flex:1}.feuline b{min-width:30px;text-align:right}.feuline input[type=checkbox]{width:18px;height:18px}
 .feulv{padding:0 2px!important;width:40px}
-.feutab{width:100%;border-collapse:collapse}.feutab th{font-size:12px;text-align:left;color:var(--ink-soft);padding:2px 4px}.feutab td{padding:2px 4px}.feutab input:not([type=checkbox]){width:100%}.feutab .feun{width:52px}
+.feutab{width:100%;border-collapse:collapse}.feutab th{font-size:12px;text-align:left;color:var(--ink-soft);padding:2px 4px}.feutab td{padding:2px 4px}.feutab input:not([type=checkbox]){width:100%}.feutab .feun{width:52px}.feueff{min-width:150px}.feueff select{width:100%}.feueff input{width:100%;margin-top:3px}
 .feu2 label{width:100%}
 .feuempl{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}
 .feuemp{border:1px solid #c9b98f;border-radius:6px;padding:4px 6px;background:#fbf6e8;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:13px}
@@ -2155,6 +2166,7 @@ function sheetView(id){
 /* ---------- Fiche joueur (privée : le joueur propriétaire et le DM) ---------- */
 const FEU_CAR=[["for","FOR","Force"],["dex","DEX","Dextérité"],["con","CON","Constitution"],["int","INT","Intelligence"],["sag","SAG","Sagesse"],["cha","CHA","Charisme"]];
 const FEU_COMP=[["Acrobaties","dex"],["Arcanes","int"],["Athlétisme","for"],["Discrétion","dex"],["Dressage","sag"],["Escamotage","dex"],["Histoire","int"],["Intimidation","cha"],["Intuition","sag"],["Investigation","int"],["Médecine","sag"],["Nature","int"],["Perception","sag"],["Persuasion","cha"],["Religion","int"],["Représentation","cha"],["Survie","sag"],["Tromperie","cha"]];
+const FEU_JET=[["","Aucun"],["att","Attaque"],["for","Sauv. FOR"],["dex","Sauv. DEX"],["con","Sauv. CON"],["int","Sauv. INT"],["sag","Sauv. SAG"],["cha","Sauv. CHA"]],FEU_JETK=FEU_JET.map(j=>j[0]);
 const FEU_PIECES=[["pc","pc","cuivre"],["pa","pa","argent"],["pe","pe","électrum"],["po","po","or"],["pp","pp","platine"]];
 let feuDoc=null,feuId=null,feuUnsub=null,feuLoaded=false,feuT=null,feuDirty=false;
 function feuBlank(){return {sousclasse:"",historique:"",car:{for:10,dex:10,con:10,int:10,sag:10,cha:10},sauv:{},comp:{},pv:{act:"",max:"",temp:""},dv:{total:"",util:0},mort:{s:[false,false,false],e:[false,false,false]},ca:"",vitesse:"9 m",taille:"Moyenne",inspi:false,armes:[],traits:{espece:"",classe:"",dons:""},maitr:{armures:"",armes:"",outils:"",langues:""},sorts:{car:"",empl:{},liste:[]},equip:"",inv:[],absorbes:[],bourse:{pc:0,pa:0,pe:0,po:0,pp:0},notes:""};}
@@ -2167,6 +2179,7 @@ function feuListen(id){if(feuId===id)return;if(feuUnsub){try{feuUnsub();}catch(e
 // Butin attribué par le DM (recus) : déposé directement dans l'inventaire ; les pièces vont dans la bourse.
 function feuAbsorb(F,R){if(!F||!R)return false;let ch=false;F.inv=F.inv||[];F.absorbes=F.absorbes||[];F.bourse=F.bourse||{};
   Object.keys(R).forEach(bid=>{const r=R[bid]||{},had=F.absorbes.indexOf(bid)>=0;
+    if(r.use){if(had)return;F.absorbes.push(bid);ch=true;const i=F.inv.findIndex(x=>x.n===r.use&&(+x.qte||0)>0);if(i>=0){F.inv[i].qte=(+F.inv[i].qte||1)-1;if(F.inv[i].qte<=0)F.inv.splice(i,1);}return;}
     if(r.annule){if(had){F.absorbes=F.absorbes.filter(x=>x!==bid);const i=F.inv.findIndex(x=>x.bid===bid);if(i>=0)F.inv.splice(i,1);
       if(r.coins)Object.keys(r.coins).forEach(k=>{F.bourse[k]=Math.max(0,(+F.bourse[k]||0)-r.coins[k]);});ch=true;}return;}
     if(had)return;F.absorbes.push(bid);ch=true;
@@ -2268,9 +2281,9 @@ function feuView(id){
   const S=F.sorts;h+='<section class="feubox"><h3>Sorts</h3><div class="feustats"><label class="feustat">Caractéristique d\'incantation<select data-f="sorts.car"><option value="">—</option>'+FEU_CAR.filter(c=>c[0]!=="for"&&c[0]!=="dex"&&c[0]!=="con").map(c=>'<option value="'+c[0]+'"'+(S.car===c[0]?' selected':'')+'>'+c[2]+'</option>').join("")+'</select></label>'+
     '<div class="feustat"><span>DD des sorts</span><strong data-calc="dd">'+(R.dd==null?"—":R.dd)+'</strong></div><div class="feustat"><span>Attaque de sort</span><strong data-calc="att">'+(R.att==null?"—":feuSg(R.att))+'</strong></div></div>';
   h+='<div class="feuempl">'+[1,2,3,4,5,6,7,8,9].map(n=>{const e=S.empl[n]||{},mx=Math.max(0,Math.min(4,+e.max||0));return '<div class="feuemp"><span>Niv. '+n+'</span><label class="sr" for="fe-mx-'+n+'">Emplacements de niveau '+n+'</label><input id="fe-mx-'+n+'" data-f="sorts.empl.'+n+'.max" data-rr="1" type="number" min="0" max="4" value="'+mx+'" inputmode="numeric"><span class="feudots">'+Array.from({length:mx},(_,i)=>feuChk("sorts.empl."+n+".u."+i,(e.u||[])[i],"Emplacement "+(i+1)+" de niveau "+n+" dépensé")).join("")+'</span></div>';}).join("")+'</div><p class="feurest"><button class="btn ghost sm" type="button" data-a="feu-rest" title="Repos long (5.5) : tous les emplacements de sorts, tous les PV et tous les dés de vie reviennent">🌙 Repos long</button><span class="desc">Coche un emplacement quand tu le dépenses. Le repos long remet les emplacements, les PV et les dés de vie.</span></p>';
-  h+=(S.liste.length?'<table class="feutab"><thead><tr><th scope="col">Niv.</th><th scope="col">Sort</th><th scope="col">Préparé</th><th scope="col">Notes (portée, durée, C/R)</th><th scope="col"><span class="sr">Retirer</span></th></tr></thead><tbody>'+
-    S.liste.map((x,i)=>'<tr><td>'+feuIn("sorts.liste."+i+".niv",x.niv,' type="number" min="0" max="9" aria-label="Niveau (0 = tour de magie)" class="feun"')+'</td><td>'+feuIn("sorts.liste."+i+".n",x.n,' maxlength="60" aria-label="Sort"')+'</td><td>'+feuChk("sorts.liste."+i+".prep",x.prep,"Préparé")+'</td><td>'+feuIn("sorts.liste."+i+".notes",x.notes,' maxlength="160" aria-label="Notes"')+'</td><td><button class="mini" type="button" data-a="feu-del" data-k="sorts.liste" data-v="'+i+'" aria-label="Retirer">🗑</button></td></tr>').join("")+'</tbody></table>':'')+
-    '<button class="btn ghost sm" type="button" data-a="feu-add" data-k="sorts.liste">＋ Ajouter un sort</button><p class="desc">Niveau 0 = tour de magie.</p></section>';
+  h+=(S.liste.length?'<table class="feutab"><thead><tr><th scope="col">Niv.</th><th scope="col">Sort</th><th scope="col">Préparé</th><th scope="col">Jet</th><th scope="col">Effet sur la cible</th><th scope="col">Durée (rounds)</th><th scope="col" title="Concentration">C</th><th scope="col">Notes (portée, dégâts…)</th><th scope="col"><span class="sr">Retirer</span></th></tr></thead><tbody>'+
+    S.liste.map((x,i)=>'<tr><td>'+feuIn("sorts.liste."+i+".niv",x.niv,' type="number" min="0" max="9" aria-label="Niveau (0 = tour de magie)" class="feun"')+'</td><td>'+feuIn("sorts.liste."+i+".n",x.n,' maxlength="60" aria-label="Sort"')+'</td><td>'+feuChk("sorts.liste."+i+".prep",x.prep,"Préparé")+'</td><td><select data-f="sorts.liste.'+i+'.jet" aria-label="Jet">'+FEU_JET.map(j=>'<option value="'+j[0]+'"'+((x.jet||"")===j[0]?' selected':'')+'>'+j[1]+'</option>').join("")+'</select></td><td class="feueff"><select data-f="sorts.liste.'+i+'.eff" data-rr="1" aria-label="Effet sur la cible"><option value="">—</option>'+PT_CONDS.filter(k=>k[0]!=="unconscious"&&k[0]!=="exhaustion").map(k=>'<option value="'+k[0]+'"'+(x.eff===k[0]?' selected':'')+'>'+esc(k[1])+'</option>').join("")+'<option value="txt"'+(x.eff==="txt"?' selected':'')+'>Autre (texte)…</option></select>'+(x.eff==="txt"?feuIn("sorts.liste."+i+".efx",x.efx,' maxlength="80" aria-label="Effet (texte)" placeholder="ex. −1d4 aux attaques"'):'')+'</td><td>'+feuIn("sorts.liste."+i+".dur",x.dur,' type="number" min="0" max="999" class="feun" aria-label="Durée en rounds (10 = 1 minute)"')+'</td><td>'+feuChk("sorts.liste."+i+".conc",x.conc,"Concentration")+'</td><td>'+feuIn("sorts.liste."+i+".notes",x.notes,' maxlength="160" aria-label="Notes"')+'</td><td><button class="mini" type="button" data-a="feu-del" data-k="sorts.liste" data-v="'+i+'" aria-label="Retirer">🗑</button></td></tr>').join("")+'</tbody></table>':'')+
+    '<button class="btn ghost sm" type="button" data-a="feu-add" data-k="sorts.liste">＋ Ajouter un sort</button><p class="desc">Niveau 0 = tour de magie. <strong>Jet</strong> : attaque ou sauvegarde de la cible (avec ton DD). <strong>Effet</strong> : il s\'appliquera tout seul sur la cible touchée, ou qui rate sa sauvegarde, pendant la durée indiquée (10 rounds = 1 minute).</p></section>';
   // inventaire
   h+='<section class="feubox"><h3>Inventaire et bourse</h3><div class="feubourse">'+FEU_PIECES.map(p=>'<label class="feupiece p-'+p[0]+'"><span>'+p[1]+'</span>'+feuIn("bourse."+p[0],F.bourse[p[0]],' type="number" min="0" max="9999999" inputmode="numeric" aria-label="Pièces de '+p[2]+'"')+'</label>').join("")+'</div>'+
     '<div class="feueqbox"><strong>Équipement porté</strong> <span class="desc">Choisis la case d\'un objet dans la colonne « Équipé » de l\'inventaire. Touche un objet porté pour le remettre dans le sac.</span>'+
@@ -2297,7 +2310,7 @@ function feuClean(F){const n=(v,lo,hi)=>{if(v===""||v==null)return "";v=Math.rou
     mort:{s:[0,1,2].map(i=>!!F.mort.s[i]),e:[0,1,2].map(i=>!!F.mort.e[i])},ca:n(F.ca,0,40),vitesse:s(F.vitesse,20),taille:s(F.taille,20),inspi:!!F.inspi,
     armes:(F.armes||[]).slice(0,30).map(w=>({n:s(w.n,60),att:s(w.att,20),deg:s(w.deg,40),notes:s(w.notes,120)})),
     traits:{espece:s(F.traits.espece,8000),classe:s(F.traits.classe,8000),dons:s(F.traits.dons,8000)},maitr:{armures:s(F.maitr.armures,200),armes:s(F.maitr.armes,200),outils:s(F.maitr.outils,200),langues:s(F.maitr.langues,200)},
-    sorts:{car:["int","sag","cha"].indexOf(F.sorts.car)>=0?F.sorts.car:"",empl:{},liste:(F.sorts.liste||[]).slice(0,150).map(x=>({niv:n(x.niv,0,9)||0,n:s(x.n,60),prep:!!x.prep,notes:s(x.notes,160)}))},
+    sorts:{car:["int","sag","cha"].indexOf(F.sorts.car)>=0?F.sorts.car:"",empl:{},liste:(F.sorts.liste||[]).slice(0,150).map(x=>{const o={niv:n(x.niv,0,9)||0,n:s(x.n,60),prep:!!x.prep,notes:s(x.notes,160)};if(FEU_JETK.indexOf(x.jet)>0)o.jet=x.jet;if(x.eff&&(x.eff==="txt"||PT_COND[x.eff]))o.eff=x.eff;if(x.eff==="txt"&&x.efx)o.efx=s(x.efx,80);const d=n(x.dur,0,999);if(d)o.dur=d;if(x.conc)o.conc=true;return o;})},
     equip:s(F.equip,8000),bourse:{},notes:s(F.notes,8000),
     inv:(F.inv||[]).slice(0,200).map(x=>{const o={n:s(x.n,120),qte:n(x.qte,0,999),valeur:Math.max(0,Math.round((+x.valeur||0)*100)/100),notes:s(x.notes,160)};if(o.qte==="")o.qte=1;['rar','quete','src','bid'].forEach(k=>{if(x[k])o[k]=s(x[k],160);});if(x.eq&&FEU_EQL[x.eq])o.eq=x.eq;return o;}),absorbes:(F.absorbes||[]).slice(-600).map(x=>s(x,80))};
   FEU_CAR.forEach(c=>{o.car[c[0]]=n(F.car[c[0]],1,30)||10;if(F.sauv[c[0]])o.sauv[c[0]]=true;});FEU_COMP.forEach(c=>{const lv=+F.comp[c[0]]||0;if(lv)o.comp[c[0]]=lv===2?2:1;});
@@ -10304,7 +10317,7 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),p
   let s,ox=0,oy=0;if(r.mode==="tv"){const s0=ecPpi(st),cam=st.cam||{x:0,y:0};if(r.tvCarte!==c.id){r.tvCarte=c.id;r.free=false;}
     if(r.cx==null||Math.abs(r.cx-cam.x)>60){r.cx=cam.x;r.cy=cam.y;}if(!r.free){r.cx+=(cam.x-r.cx)*Math.min(1,dt*2.5);r.cy+=(cam.y-r.cy)*Math.min(1,dt*2.5);r.ts=r.ts==null?s0:r.ts+(s0-r.ts)*Math.min(1,dt*2.5);}
     s=r.ts||s0;ox=-r.cx*s;oy=-r.cy*s;tvFreeUi(r);}
-  else if(pl){const f=tbFollow(r,st,cw,ch);if(!r.free){const k=Math.min(1,dt*2.5);if(r.vx==null||Math.abs(r.vx-f.x)>60){r.vx=f.x;r.vy=f.y;r.vs=f.s;}r.vx+=(f.x-r.vx)*k;r.vy+=(f.y-r.vy)*k;r.vs+=(f.s-r.vs)*k;}s=r.vs;ox=cw/2-r.vx*s;oy=ch/2-r.vy*s;}
+  else if(pl){const f=tbFollow(r,st,cw,ch),me=tbMine&&st.carte&&tbMine.carte===st.carte.id?{x:+tbMine.x+0.5,y:+tbMine.y+0.5}:null;if(!r.free){/* la vue suit la figurine du joueur (sinon le cadre de la table) tant qu'il ne déplace pas la carte lui-même */const k=Math.min(1,dt*2.5),tx=me?me.x:f.x,ty=me?me.y:f.y;if(r.vx==null||Math.abs(r.vx-tx)>60){r.vx=tx;r.vy=ty;r.vs=f.s;}r.vx+=(tx-r.vx)*k;r.vy+=(ty-r.vy)*k;if(!me)r.vs+=(f.s-r.vs)*k;}s=r.vs;ox=cw/2-r.vx*s;oy=ch/2-r.vy*s;}
   else{const V=ecDmView(cw,ch,c);s=V.s;ox=V.ox;oy=V.oy;}
   // Le décor fixe est préparé à une échelle arrondie (le zoom libre du joueur ne le redessine pas à chaque cran), sans dépasser la taille d'un canevas.
   const sq=pl||(r.mode==="tv"&&r.free)||(r.mode==="dm"&&(ui.ecZoom||1)>1)?Math.min(Math.pow(2,Math.round(Math.log2(Math.max(1,s))*3)/3),3800/(Math.max(c.w,c.h)*dpr)):s;
@@ -10573,7 +10586,7 @@ function tbRing(c,sg){if(!c||!sg)return null;const N=v=>ptNorm(v).trim(),av=sg.a
 function tbFigList(q,c){if(!q||!c)return [];return Object.keys(tbFigs).map(uid=>{const f=tbFigs[uid],sg=tbSign(q,uid);if(!f||!sg||f.carte!==c.id)return null;const av=sg.aventurier&&aventuriers.find(a=>a.id===sg.aventurier),ring=tbRing(c,sg);
   return {u:uid,a:av?av.id:"",n:av?av.nom:sg.nom,x:+f.x,y:+f.y,c:ring?(ring.c||"#d8b45e"):"#d8b45e",d:ring&&ring.down?1:0};}).filter(Boolean);}
 // Copie publiée : les ennemis, alliés et objets cachés ou hors de vue n'y sont pas du tout (pas seulement masqués à l'affichage).
-function tbState(q,st){const iD=(ui.pt&&ui.pt.id===q.id&&ui.pt.combat&&ui.pt.initDem)||null,c=st&&st.carte;if(!c)return {qid:q.id,titre:q.titre,carte:null,initDem:iD,ms:Date.now()};
+function tbState(q,st){const tR=ui.pt&&ui.pt.id===q.id?ptTourNow(ui.pt):null,iD=(ui.pt&&ui.pt.id===q.id&&ui.pt.combat&&ui.pt.initDem)||null,c=st&&st.carte;if(!c)return {qid:q.id,titre:q.titre,carte:null,initDem:iD,tour:tR,ms:Date.now()};
   const fogOn=!!(st.fog&&st.fog.on),V=fogOn?ecVision(st):null;
   const tokens=(st.tokens||[]).filter(k=>{if(k.k==="pj"||k.k==="lum"||k.k==="inv")return true;if(!k.vis)return false;if(!fogOn)return true;return !!(V&&V.tokSeen(k.x,k.y));})
     // invocation : on y note le compte du joueur qui l'a invoquée, lui seul peut la déplacer
@@ -10585,12 +10598,14 @@ function tbState(q,st){const iD=(ui.pt&&ui.pt.id===q.id&&ui.pt.combat&&ui.pt.ini
   const cR=(typeof ecCard==="function"&&ecCard()&&ecCard().id===c.id)?ecCard():Object.assign({},c,{tokens:st.tokens||[]}),roster={};tbFigList(q,cR).forEach(f=>{roster[f.u]={a:f.a,n:f.n,c:f.c,d:f.d||0};});
   // chaque joueur relié à un jeton de la carte : sa couleur sert aussi à ses dessins
   signupsFor(q.id).forEach(sg=>{if(!sg.uid||sg.statut==="refusee"||roster[sg.uid])return;const ring=tbRing(cR,sg);if(ring)roster[sg.uid]={a:sg.aventurier||"",n:ring.n,c:ring.c||"#d8b45e",d:ring.down?1:0,nf:1};});
-  const out=Object.assign({},st,{initDem:iD,vie:Date.now(),qid:q.id,titre:q.titre,tokens,figs:pres,roster,vue:(ecDoc&&ecDoc.tv)?{cols:ecDoc.tv.cols,rows:ecDoc.tv.rows}:{cols:40,rows:22},ms:Date.now()});delete out.calib;delete out.tvv;delete out.dessins;delete out.trait;return JSON.parse(JSON.stringify(out));}
+  const out=Object.assign({},st,{initDem:iD,tour:tR,vie:Date.now(),qid:q.id,titre:q.titre,tokens,figs:pres,roster,vue:(ecDoc&&ecDoc.tv)?{cols:ecDoc.tv.cols,rows:ecDoc.tv.rows}:{cols:40,rows:22},ms:Date.now()});delete out.calib;delete out.tvv;delete out.dessins;delete out.trait;return JSON.parse(JSON.stringify(out));}
 // Envoi régulier (au plus ~1 fois par seconde), jamais repoussé indéfiniment : avant, chaque action du DM repoussait l'envoi (jusqu'à 15 s de retard)
 function tbPush(){const q=tbQuest();if(!q||!isAdmin||ui.ptInfoOnly)return;tbListen(q.id);if(!ptActive()&&!ui.ptMapOnly)return;if(tbPushT)return;tbPushT=setTimeout(()=>{tbPushT=null;fsThr("tb|"+q.id,()=>{if(tbQuest()!==q)return;let st=null;try{st=ecState();}catch(e){console.error(e);}
   // jamais de carte vide publiée par accident (ex. juste après un rechargement, avant que la partie soit chargée) : seule la fermeture volontaire des écrans la vide
   if(!st||!st.carte)return;
-  setDoc(doc(db,"table",q.id),tbState(q,st)).catch(e=>console.error(e));},1000);},150);}
+  const out=tbState(q,st),k=JSON.stringify(Object.assign({},out,{vie:0,ms:0,cam:0}));if(k===tbLastK&&Date.now()-tbLastMs<20000)return;tbLastK=k;tbLastMs=Date.now();
+  setDoc(doc(db,"table",q.id),out).catch(e=>console.error(e));},1000);},150);}
+let tbLastK="",tbLastMs=0;
 // Côté DM : écoute les figurines des joueurs, pour les montrer sur sa vue, la télé et la copie publiée.
 function tbListen(qid){if(tbFigQ===qid)return;if(tbFigUnsub){try{tbFigUnsub();}catch(e){}tbFigUnsub=null;}if(tbDesUnsub){try{tbDesUnsub();}catch(e){}tbDesUnsub=null;}tbFigQ=qid;tbFigs={};tbDesDM={};if(!qid||!isAdmin)return;
   tbDesUnsub=onSnapshot(collection(db,"table",qid,"dessins"),snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data();});const cnt=D=>Object.keys(D).reduce((n,u)=>n+((D[u]||{}).traits||[]).length,0),had=cnt(tbDesDM),has=cnt(o);tbDesDM=o;const q=tbQuest();if(q&&q.id===qid){try{ecUpdLocal();ecPush(false,true);}catch(e){}if(had!==has&&ui.office&&ui.office.indexOf("partie-")===0&&ui.ptTab==="ecran"&&!document.activeElement.matches("input,textarea,select"))render();}},e=>console.error(e));
@@ -10632,25 +10647,94 @@ function tbUnsub(){tbSubs.forEach(f=>{try{f();}catch(e){}});tbSubs=[];tbSubQ=nul
 function tbSub(qid){if(tbSubQ===qid)return;tbUnsub();tbSubQ=qid;const er=e=>{console.error(e);tbErr=e&&e.code==="permission-denied"?"Cette carte est réservée aux aventuriers inscrits à la quête.":"La carte n'a pas pu être chargée.";tbUpdate();};
   tbSubs.push(onSnapshot(doc(db,"table",qid),s=>{tbDoc=s.exists()?s.data():null;hbSaw("tb",tbDoc);tbErr="";tbUpdate();},er));
   tbSubs.push(onSnapshot(doc(db,"table",qid,"vitrine","live"),s=>{tbVit=s.exists()?s.data():null;tbUpdate();},()=>{}));
-  tbSubs.push(onSnapshot(doc(db,"table",qid,"actions",user.uid),s=>{tbMyAct=s.exists()?s.data():null;tbIniUpdate();},()=>{}));
+  tbSubs.push(onSnapshot(doc(db,"table",qid,"actions",user.uid),s=>{tbMyAct=s.exists()?s.data():null;tbIniUpdate();tbTourUpdate();},()=>{}));
   tbSubs.push(onSnapshot(doc(db,"table",qid,"figs",user.uid),s=>{tbMine=s.exists()?s.data():null;tbUpdate();},()=>{}));
   // les figurines des autres joueurs, directement (sans attendre que le DM republie la carte)
   tbSubs.push(onSnapshot(collection(db,"table",qid,"figs"),snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data();});tbAll=o;tbUpdate();},()=>{tbAll={};}));
   tbSubs.push(onSnapshot(collection(db,"table",qid,"dessins"),snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data();});tbDes=o;tbUpdate();},()=>{}));}
 // Vue transmise par le DM : le cadre de la télé, ajusté à la fenêtre du joueur.
 function tbFollow(r,st,cw,ch){const v=st.vue||{cols:40,rows:22},cam=st.cam||{x:0,y:0};return {x:cam.x+v.cols/2,y:cam.y+v.rows/2,s:Math.max(6,Math.min(cw/v.cols,ch/v.rows))};}
-function tbShell(qid){const q=questById(qid);return '<div class="ectv tbv"><canvas id="ec-pl" aria-label="Carte de la partie"></canvas><div class="ectv-met" id="pl-met"></div><div class="ectv-info" id="pl-info"></div><div class="ectv-ord" id="pl-ord"></div><div class="ectv-msg" id="pl-msg"></div><div class="ectv-fiche" id="pl-fiche"></div><div class="tbinipos" id="pl-ini"></div>'+
-  '<div class="tbbar'+(tbMinOn()?' min':'')+'" role="toolbar" aria-label="Carte"><button class="btn sm tbmin" data-a="tb-min" aria-expanded="'+!tbMinOn()+'" title="'+(tbMinOn()?'Afficher la barre':'Réduire la barre pour voir toute la carte')+'">'+(tbMinOn()?'☰':'▴')+'</button><a class="btn sm" href="#'+esc(q?q.bureau:"")+'">← Quitter</a><strong class="tbt">'+esc(q?q.titre:"Carte")+'</strong><span id="tb-fiche">'+tbFicheLink(qid)+'</span><button class="btn sm gold" data-a="tb-follow">🎯 Vue du DM</button><button class="btn sm" data-a="tb-draw" id="tb-draw" aria-pressed="false" title="Dessiner sur la carte (aura, cône, direction) : seulement pour montrer, sans effet sur le jeu">✏️ Dessiner</button><button class="btn sm" data-a="tb-erase" id="tb-erase" hidden title="Effacer tous mes dessins">✖ Mes dessins</button><button class="btn sm" data-a="tb-zoom" data-v="1.25" aria-label="Zoomer">＋</button><button class="btn sm" data-a="tb-zoom" data-v="0.8" aria-label="Dézoomer">－</button><span class="tbhint" id="pl-hint"></span></div></div>';}
+function tbShell(qid){const q=questById(qid);return '<div class="ectv tbv"><canvas id="ec-pl" aria-label="Carte de la partie"></canvas><div class="ectv-met" id="pl-met"></div><div class="ectv-info" id="pl-info"></div><div class="ectv-ord" id="pl-ord"></div><div class="ectv-msg" id="pl-msg"></div><div class="ectv-fiche" id="pl-fiche"></div><div class="tbinipos" id="pl-ini"></div><div class="tbtourpos" id="pl-tour"></div><div class="tbtourban" id="pl-tourban" hidden></div>'+
+  '<div class="tbbar'+(tbMinOn()?' min':'')+'" role="toolbar" aria-label="Carte"><button class="btn sm tbmin" data-a="tb-min" aria-expanded="'+!tbMinOn()+'" title="'+(tbMinOn()?'Afficher la barre':'Réduire la barre pour voir toute la carte')+'">'+(tbMinOn()?'☰':'▴')+'</button><a class="btn sm" href="#'+esc(q?q.bureau:"")+'">← Quitter</a><strong class="tbt">'+esc(q?q.titre:"Carte")+'</strong><span id="tb-fiche">'+tbFicheLink(qid)+'</span><button class="btn sm" data-a="tb-follow" title="Recentrer la carte sur ta figurine">📍 Ma figurine</button><button class="btn sm" data-a="tb-draw" id="tb-draw" aria-pressed="false" title="Dessiner sur la carte (aura, cône, direction) : seulement pour montrer, sans effet sur le jeu">✏️ Dessiner</button><button class="btn sm" data-a="tb-erase" id="tb-erase" hidden title="Effacer tous mes dessins">✖ Mes dessins</button><button class="btn sm" data-a="tb-zoom" data-v="1.25" aria-label="Zoomer">＋</button><button class="btn sm" data-a="tb-zoom" data-v="0.8" aria-label="Dézoomer">－</button><span class="tbhint" id="pl-hint"></span></div></div>';}
 // Barre du haut réductible (mémorisé sur l'appareil du joueur) : elle cachait une partie de ce que le DM montre
 // Lien vers la fiche joueur du personnage inscrit (nouvel onglet : changer l'équipement ou voir ses stats sans quitter la carte)
 function tbFicheLink(qid){const mc=myChars();if(!mc.length)return "";const ins=signupsFor(qid).filter(x=>x.statut!=="refusee").map(x=>x.aventurier),L=mc.filter(a=>ins.indexOf(a.id)>=0),list=L.length?L:mc.length===1?mc:[];
   return list.map(a=>'<a class="btn sm" href="#feuille-'+esc(a.id)+'" target="_blank" rel="noopener" title="Ouvrir la fiche joueur de '+esc(a.nom)+' dans un nouvel onglet">📜 '+(list.length>1?esc(a.nom):'Ma fiche')+'</a>').join("");}
 
+/* ---------- Tour du joueur : sa carte lui dit « C'est ton tour », il choisit son action ; le DM la reçoit dans le combat ---------- */
+const CAR_L={for:"Force",dex:"Dextérité",con:"Constitution",int:"Intelligence",sag:"Sagesse",cha:"Charisme"};
+// DM : publie à qui c'est le tour (personnage du registre), sans attendre la carte
+let ptTourK="";
+function ptTourNow(P){const c=P&&P.combat&&P.combat.phase==="combat"?ptC(P.cur):null;return c&&c.kind==="pj"&&c.ref?{a:c.ref,n:c.nom,cid:c.cid,r:P.round||1,ms:Date.now()}:null;}
+function ptTourSync(q){const P=ui.pt;if(!isAdmin||ui.ptInfoOnly||!P||P.id!==q.id)return;const T=ptTourNow(P),k=T?T.a+"|"+T.cid+"|"+T.r:"";if(k===ptTourK)return;ptTourK=k;setDoc(doc(db,"table",q.id),{tour:T},{merge:true}).catch(e=>console.error(e));}
+// Joueur : sa fiche joueur (armes, sorts, objets) lue depuis la carte
+let tbFeuA=null,tbFeuUn=null,tbFeuD=null;
+function tbMyAid(qid){const mine=myChars().map(a=>a.id),sg=signupsFor(qid).find(x=>user&&x.uid===user.uid&&x.statut!=="refusee"&&mine.indexOf(x.aventurier)>=0);return sg?sg.aventurier:(mine.length===1?mine[0]:"");}
+function tbFeuSub(aid){if(tbFeuA===aid)return;if(tbFeuUn){try{tbFeuUn();}catch(e){}}tbFeuA=aid;tbFeuD=null;tbFeuUn=null;if(!aid)return;
+  tbFeuUn=onSnapshot(doc(db,"feuilles",aid),sn=>{tbFeuD=sn.exists()?sn.data():null;
+    // butin reçu ou objet consommé pendant la partie : rangé tout de suite dans la fiche
+    if(tbFeuD&&tbFeuD.recus){const F=feuMerge(feuBlank(),tbFeuD);if(feuAbsorb(F,tbFeuD.recus)){const o=feuClean(F);setDoc(doc(db,"feuilles",aid),{inv:o.inv,absorbes:o.absorbes,bourse:o.bourse},{mergeFields:["inv","absorbes","bourse"]}).catch(e=>console.error(e));}}
+    tbTourUpdate();},()=>{tbFeuD=null;});}
+function tbAtkList(F,a){const R=feuCalcs(a,F),hand=F.inv.filter(x=>x.eq==="md"||x.eq==="mg"||x.eq==="2m"),N=v=>ptNorm(v).trim(),L=[];
+  hand.forEach(x=>{const w=F.armes.find(r=>N(r.n)&&(N(r.n)===N(x.n)||N(x.n).indexOf(N(r.n))>=0||N(r.n).indexOf(N(x.n))>=0));L.push({n:x.n,f:w?[w.att,w.deg].filter(Boolean).join(" · "):"",eq:FEU_EQL[x.eq]});});
+  F.armes.forEach(w=>{if(w.n&&!L.some(x=>N(x.n)===N(w.n)||N(x.n).indexOf(N(w.n))>=0))L.push({n:w.n,f:[w.att,w.deg].filter(Boolean).join(" · ")});});
+  const m=R.mod.for;L.push({n:"Frappe à mains nues",f:feuSg(m+R.pb)+" · "+Math.max(1,1+m)+" contondant"+(1+m>1?"s":"")});return L;}
+function tbTourBox(){const st=tbDoc,T=st&&st.tour;if(!T||!user)return "";const mine=myChars().map(a=>a.id);if(mine.indexOf(T.a)<0)return "";
+  const a=aventuriers.find(x=>x.id===T.a),F=feuMerge(feuBlank(),tbFeuA===T.a&&tbFeuD||{}),A=tbMyAct&&tbMyAct.act,pend=A&&!A.done&&A.r===T.r&&A.cid===T.cid,V=ui.tbTourV||"",min=(()=>{try{return localStorage.getItem("rdv-tourmin")==="1";}catch(e){return false;}})();
+  let h='<div class="tbtour'+(min?' min':'')+'"><div class="tbtourh"><strong>⚔ C\'est ton tour'+(a?', '+esc(a.nom):'')+' !</strong><button class="btn sm" data-a="tb-tour-min" aria-expanded="'+!min+'">'+(min?'▾ Ouvrir':'▴ Réduire')+'</button></div>';
+  if(min)return h+'</div>';
+  if(pend)return h+'<p class="tbtourw">📣 <strong>'+esc(A.n)+'</strong>'+(A.f?' <span>'+esc(A.f)+'</span>':'')+'<br><em>Envoyé au DM, il s\'en occupe…</em></p><div class="tbtourb"><button class="btn sm" data-a="tb-act-x">Annuler mon action</button><button class="btn sm gold" data-a="tb-act" data-k="fin">✅ J\'ai fini mon tour</button></div></div>';
+  h+='<div class="tbtourb">'+[["atk","🗡 Attaque"],["sort","✨ Sort"],["obj","🎒 Objet"],["cap","📜 Capacité"]].map(x=>'<button class="btn sm'+(V===x[0]?' on':'')+'" data-a="tb-tourv" data-v="'+x[0]+'">'+x[1]+'</button>').join("")+'<button class="btn sm gold" data-a="tb-act" data-k="fin">✅ J\'ai fini mon tour</button></div>';
+  if(V==="atk"&&a)h+='<ul class="tbtourl">'+tbAtkList(F,a).map((x,i)=>'<li><button class="btn sm" data-a="tb-act" data-k="atk" data-v="'+i+'"><strong>'+esc(x.n)+'</strong>'+(x.eq?' <em>('+esc(x.eq.toLowerCase())+')</em>':'')+(x.f?' <span>'+esc(x.f)+'</span>':'')+'</button></li>').join("")+'</ul>';
+  if(V==="sort"&&a){const R=feuCalcs(a,F),Ls=F.sorts.liste.map((x,i)=>Object.assign({i},x)).filter(x=>x.n&&(x.niv===0||x.prep)).sort((x,y)=>x.niv-y.niv);
+    const free=n=>{const e=F.sorts.empl[n]||{};return (e.u||[]).filter(u=>!u).length;},sp=ui.tbSpell!=null?Ls.find(x=>x.i===ui.tbSpell):null;
+    if(sp&&sp.niv>0){const lv=[1,2,3,4,5,6,7,8,9].filter(n=>n>=sp.niv&&free(n)>0);h+='<p class="tbtourw">✨ <strong>'+esc(sp.n)+'</strong> : avec quel emplacement ?</p><div class="tbtourb">'+(lv.length?lv.map(n=>'<button class="btn sm" data-a="tb-act" data-k="sort" data-v="'+sp.i+'" data-n="'+n+'">Niv. '+n+' ('+free(n)+')</button>').join(""):'<em>Plus d\'emplacement libre de ce niveau.</em>')+'<button class="btn sm" data-a="tb-spell" data-v="">Retour</button></div>';}
+    else h+=Ls.length?'<ul class="tbtourl">'+Ls.map(x=>'<li><button class="btn sm" data-a="'+(x.niv===0?'tb-act" data-k="sort" data-n="0':'tb-spell')+'" data-v="'+x.i+'"><strong>'+esc(x.n)+'</strong> <em>'+(x.niv===0?'tour de magie':'niv. '+x.niv)+'</em> <span>'+esc(x.jet==="att"?"Attaque "+(R.att==null?"":feuSg(R.att)):x.jet?"DD "+(R.dd==null?"?":R.dd)+" "+CAR_L[x.jet]:"")+'</span></button></li>').join("")+'</ul>':'<p class="tbtourw"><em>Aucun sort préparé dans ta fiche.</em></p>';}
+  if(V==="obj"){const L=F.inv.map((x,i)=>Object.assign({i},x)).filter(x=>x.n&&(+x.qte||0)>0);h+=L.length?'<ul class="tbtourl">'+L.map(x=>'<li><button class="btn sm" data-a="tb-act" data-k="obj" data-v="'+x.i+'"><strong>'+esc(x.n)+'</strong>'+((+x.qte||1)>1?' <em>×'+x.qte+'</em>':'')+'</button></li>').join("")+'</ul>':'<p class="tbtourw"><em>Inventaire vide.</em></p>';}
+  if(V==="cap")h+='<form class="tbcap" onsubmit="return false"><label>Capacité ou action<input id="tb-cap-n" maxlength="80" placeholder="ex. Cri de guerre, Second souffle"></label><span class="tbcaprow"><label>DD (facultatif)<input id="tb-cap-dd" type="number" min="1" max="40" inputmode="numeric"></label><label>Sauvegarde<select id="tb-cap-car"><option value="">—</option>'+Object.keys(CAR_L).map(k=>'<option value="'+k+'">'+CAR_L[k]+'</option>').join("")+'</select></label></span><button class="btn sm gold" data-a="tb-act" data-k="cap">Envoyer au DM</button></form>';
+  return h+'</div>';}
+function tbTourUpdate(){const bn=document.getElementById("pl-tourban");if(bn){const T=tbDoc&&tbDoc.tour,on=!!(T&&user&&myChars().some(a=>a.id===T.a));bn.hidden=!on;if(on)bn.textContent="⚔ C'est ton tour !";}const el=document.getElementById("pl-tour");if(!el)return;const ae=document.activeElement;if(ae&&el.contains(ae)&&ae.matches("input,select"))return;const h=tbTourBox();if(el.innerHTML!==h)el.innerHTML=h;}
+async function tbActSend(b){const T=tbDoc&&tbDoc.tour,qid=tbSubQ;if(!T||!user)return;const k=b.getAttribute("data-k"),i=+b.getAttribute("data-v"),a=aventuriers.find(x=>x.id===T.a),F=feuMerge(feuBlank(),tbFeuD||{});
+  let A={id:Date.now().toString(36),k,a:T.a,cid:T.cid,r:T.r,ms:Date.now(),done:false};
+  if(k==="atk"){const x=tbAtkList(F,a)[i];if(!x)return;A.n="Attaque avec "+x.n;A.f=x.f||"";}
+  else if(k==="sort"){const x=F.sorts.liste[i],R=feuCalcs(a,F),lv=+b.getAttribute("data-n")||0;if(!x)return;A.n="Lance "+x.n+(lv?" (niv. "+lv+")":"");A.jet=x.jet||"";if(x.jet==="att")A.f="Attaque "+(R.att==null?"?":feuSg(R.att));if(x.jet&&x.jet!=="att"){A.dd=R.dd;A.car=x.jet;A.f="DD "+(R.dd==null?"?":R.dd)+" "+CAR_L[x.jet];}
+    if(x.eff){A.eff=x.eff;if(x.eff==="txt")A.efx=x.efx||x.n;}if(x.dur)A.dur=x.dur;if(x.conc)A.conc=true;A.sp=x.n;if(x.notes)A.f=[A.f,x.notes].filter(Boolean).join(" · ");
+    if(lv>0){const e=F.sorts.empl[lv]||{},u=(e.u||[]).slice(),j=u.indexOf(false);if(j>=0){u[j]=true;const S=feuClean(F).sorts;S.empl[lv]=Object.assign({},S.empl[lv]||{max:u.length},{u});await setDoc(doc(db,"feuilles",T.a),{sorts:S},{mergeFields:["sorts"]}).catch(e=>console.error(e));}}}
+  else if(k==="obj"){const x=F.inv[i];if(!x)return;A.n="Utilise "+x.n;A.obj=x.n;}
+  else if(k==="cap"){const g=id=>document.getElementById(id),n=String((g("tb-cap-n")||{}).value||"").trim().slice(0,80);if(!n){const el=g("tb-cap-n");if(el)el.focus();return;}const dd=Math.round(+(g("tb-cap-dd")||{}).value||0),car=(g("tb-cap-car")||{}).value||"";A.n=n;if(dd){A.dd=dd;A.car=car;A.f="DD "+dd+(car?" "+CAR_L[car]:"");}}
+  else if(k==="fin"){A.n="J'ai fini mon tour";}
+  ui.tbTourV="";ui.tbSpell=null;tbMyAct=Object.assign({},tbMyAct,{act:A});tbTourUpdate();
+  setDoc(doc(db,"table",qid,"actions",user.uid),{act:A,ms:Date.now()},{mergeFields:["act","ms"]}).catch(e=>console.error(e));}
+// DM : l'action reçue, dans le combat
+function ptSaveBonus(t,car){if(!t||!car)return null;const m=t.kind==="monstre"?monstres.find(x=>x.id===t.ref):t.kind==="pnj"?(()=>{const pn=pnjs.find(x=>x.id===t.ref);return pn&&monstres.find(x=>x.id===(pn.monstre||t.mon));})():null;if(!m)return null;
+  const ab={for:["for","str"],dex:["dex"],con:["con"],int:["int"],sag:["sag","wis"],cha:["cha"]}[car],re=new RegExp("\\b("+ab.join("|")+")[a-zé]*\\.?\\s*([+−-]\\s*\\d+)","i"),mm=String(m.jets||"").match(re);
+  if(mm)return +mm[2].replace("−","-").replace(/\s/g,"");return m[car]!=null&&m[car]!==""?feuMod(m[car]):null;}
+function ptActOf(c){if(!c||c.kind!=="pj"||!c.ref)return null;const P=ui.pt;for(const u of Object.keys(ptActs)){const A=(ptActs[u]||{}).act;if(A&&!A.done&&A.a===c.ref&&A.k!=="fin"&&P.combat&&A.r>=((P.round||1)-1))return Object.assign({},A,{uid:u});}return null;}
+function ptActCard(c){const A=ptActOf(c);if(!A)return "";const S=(ui.ptAS&&ui.ptAS.id===A.id)?ui.ptAS:null,isAtk=A.k==="atk"||(A.k==="sort"&&A.jet==="att"),isSav=!!(A.dd&&A.car),eff=A.eff?(A.eff==="txt"?A.efx:(PT_COND[A.eff]||[])[1]):"";
+  let h='<div class="ptjact"><div class="ptacth">📣 <strong>'+esc(c.nom)+'</strong> : '+esc(A.n)+(A.f?' <span class="desc">'+esc(A.f)+'</span>':'')+(eff?' <span class="ccat">Effet : '+esc(eff)+(A.dur?' · '+A.dur+' r':'')+(A.conc?' · C':'')+'</span>':'')+'</div>';
+  if(isAtk)return h+'<div class="ptbtns"><button class="btn gold sm" data-a="pt-actatk" data-id="'+c.cid+'" data-v="'+esc(A.id)+'">🎯 Choisir la cible</button><button class="btn ghost sm" data-a="pt-actok" data-id="'+c.cid+'" data-v="'+esc(A.id)+'">Conclure sans cible</button></div></div>';
+  if(isSav||(A.k==="sort"&&eff)){const me=ptCamp(c),others=ptOrder().filter(x=>x.cid!==c.cid&&(x.pv>0||x.kind==="pj")).sort((x,y)=>(ptCamp(x)===me)-(ptCamp(y)===me)),T=(S&&S.t)||{};
+    h+='<p class="desc">'+(isSav?'Chaque cible fait une sauvegarde de <strong>'+esc(CAR_L[A.car]||"")+'</strong> contre <strong>DD '+esc(A.dd)+'</strong>. ':'')+'Choisis les cibles'+(isSav?', puis réussi ou échoué':'')+'.</p><div class="pttgt">'+others.map(x=>{const on=T[x.cid]!==undefined,sb=isSav?ptSaveBonus(x,A.car):null;
+      return '<div class="ptsav'+(on?' on':'')+'"><button class="ptadd tgt'+(on?' on':'')+'" data-a="pt-actt" data-id="'+c.cid+'" data-v="'+x.cid+'" aria-pressed="'+on+'">'+esc(x.nom)+(ptCamp(x)===me?' <span class="desc">(allié)</span>':'')+(isSav?' <span class="desc">'+esc(CAR_L[A.car].slice(0,3))+' '+(sb==null?'?':feuSg(sb))+'</span>':'')+'</button>'+
+        (on&&isSav?'<span class="ptsavr"><button class="mini'+(T[x.cid]==="ok"?' gold':'')+'" data-a="pt-actsr" data-id="'+x.cid+'" data-v="ok">Réussi</button><button class="mini'+(T[x.cid]==="ko"?' gold':'')+'" data-a="pt-actsr" data-id="'+x.cid+'" data-v="ko">Échoué</button></span>':'')+'</div>';}).join("")+'</div>';
+    h+='<div class="ptactdmg"><label for="pt-act-dmg">Dégâts (facultatif)<input id="pt-act-dmg" type="number" min="0" inputmode="numeric" value="'+esc(S&&S.dmg!=null?S.dmg:"")+'"></label>'+(isSav?'<label class="ptchk" for="pt-act-half"><input type="checkbox" id="pt-act-half"'+(S&&S.half?' checked':'')+'><span>Moitié si réussi</span></label>':'')+'</div>';
+    return h+'<div class="ptbtns"><button class="btn gold sm" data-a="pt-actsave" data-id="'+c.cid+'" data-v="'+esc(A.id)+'">Conclure</button></div></div>';}
+  return h+'<div class="ptbtns"><button class="btn gold sm" data-a="pt-actok" data-id="'+c.cid+'" data-v="'+esc(A.id)+'">Conclure</button></div></div>';}
+function ptActEffect(A,t,caster){if(!A.eff||!t)return;if(A.eff==="txt"){(t.effets=t.effets||[]).push({id:ptUid(),nom:String(A.efx||A.sp||"Effet").slice(0,60),conc:false,type:A.dur?"rounds":"indef",r:A.dur||0});}
+  else if(PT_COND[A.eff]&&!(t.conds||[]).some(x=>x.k===A.eff))(t.conds=t.conds||[]).push({k:A.eff,d:A.dur||0,timed:(A.dur||0)>0});
+  if(A.conc&&caster&&!(caster.effets||[]).some(e=>e.conc&&e.nom===A.sp)){if(caster.conc||(caster.effets||[]).some(x=>x.conc))ptLoseConc(caster,"nouveau sort de concentration");(caster.effets=caster.effets||[]).push({id:ptUid(),nom:String(A.sp||"Concentration").slice(0,60),conc:true,type:A.dur?"rounds":"indef",r:A.dur||0});caster.conc=true;}}
+function ptActDone(A,extra){const q=ptQuest();if(!q||!A)return;setDoc(doc(db,"table",q.id,"actions",A.uid),{act:Object.assign({},A,{done:true},extra||{},{uid:null})},{mergeFields:["act"]}).catch(e=>console.error(e));
+  if(A.k==="obj"&&A.obj){const a=aventuriers.find(x=>x.id===A.a)||{};setDoc(doc(db,"feuilles",A.a),{proprietaire:a.proprietaire||"",recus:{["use-"+A.id]:{use:A.obj,annule:false}}},{merge:true}).catch(e=>console.error(e));}
+  const loc=ptActs[A.uid];if(loc&&loc.act)loc.act.done=true;}
+// DM : « J'ai fini mon tour » passe au suivant tout seul
+function ptActFin(){const P=ui.pt;if(!P||!P.combat||P.combat.phase!=="combat")return false;let ch=false;Object.keys(ptActs).forEach(u=>{const A=(ptActs[u]||{}).act;if(!A||A.done||A.k!=="fin")return;const c=ptC(P.cur);
+  ptActDone(Object.assign({},A,{uid:u}));if(c&&c.ref===A.a&&c.cid===A.cid){ptLog("✅ "+c.nom+" a fini son tour.");ptNext(1);ch=true;}});if(ch)ptSave();return ch;}
+
 /* ---------- Initiative demandée aux joueurs (ils lancent leurs dés chez eux et inscrivent le total) ---------- */
 // Chaque joueur écrit dans table/{quête}/actions/{uid} ; le DM écoute pendant le Mode Partie.
 let ptActQ=null,ptActUnsub=null,ptActs={};
 function ptActListen(qid){if(!isAdmin||ui.ptInfoOnly||ptActQ===qid)return;if(ptActUnsub){try{ptActUnsub();}catch(e){}}ptActQ=qid;ptActs={};
-  const un=onSnapshot(collection(db,"table",qid,"actions"),snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data();});ptActs=o;if(ptIniApply())render();},e=>console.error(e));ptActUnsub=un;}
+  const un=onSnapshot(collection(db,"table",qid,"actions"),snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data();});ptActs=o;const a1=ptIniApply(),a2=ptActFin();render();},e=>console.error(e));ptActUnsub=un;}
 function ptIniPend(P){const D=P&&P.initDem;if(!D||!P.combat)return [];return (D.l||[]).filter(x=>{const c=P.liste.find(y=>y.kind==="pj"&&y.ref===x.a);return c&&(c.init===""||c.init==null);});}
 function ptIniApply(){const P=ui.pt,D=P&&P.initDem;if(!D||!P.combat||P.id!==ptActQ)return false;let ch=false;
   Object.keys(ptActs).forEach(u=>{const I=(ptActs[u]||{}).ini;if(!I||!(I.ms>=D.ms)||I.v==null)return;const c=P.liste.find(y=>y.kind==="pj"&&y.ref===I.a);if(!c||c.iniMs===I.ms)return;
@@ -10671,7 +10755,7 @@ function tbView(qid){const app=document.getElementById("app");if(!document.getEl
   tbSub(qid);tbUpdate();}
 // Ma figurine sur la carte affichée : la position déposée, ou celle que je suis en train de glisser.
 function tbMyFig(st,r){if(r.drag)return {x:r.drag[0],y:r.drag[1]};if(tbMine&&st.carte&&tbMine.carte===st.carte.id)return {x:+tbMine.x,y:+tbMine.y};return null;}
-function tbUpdate(){if(!ui.office||ui.office.indexOf("table-")!==0)return;tbIniUpdate();const m=document.getElementById("pl-msg");if(!m)return;const st=tbDoc;
+function tbUpdate(){if(!ui.office||ui.office.indexOf("table-")!==0)return;tbIniUpdate();if(tbSubQ&&user)tbFeuSub(tbMyAid(tbSubQ));tbTourUpdate();const m=document.getElementById("pl-msg");if(!m)return;const st=tbDoc;
   const off=!!(st&&st.carte)&&!hbLive("tb"),f=document.getElementById("pl-fiche"),v=tbVit&&(tbVit.image||tbVit.texte)&&!off?tbVit:null,fk=v?v.ms+"|"+v.nom:"";if(f.getAttribute("data-k")!==fk){f.setAttribute("data-k",fk);if(v){f.innerHTML=ecFicheHtml(v);f.classList.add("on");}else{f.classList.remove("on");f.innerHTML="";}const w=f.closest(".ectv");if(w)w.classList.toggle("fon",!!v);}
   const q=questById(tbSubQ),sg=q&&user?tbSign(q,user.uid):null;
   if(tbErr||!st||!st.carte||off){if(off)["pl-met","pl-info","pl-ord"].forEach(k=>{const el=document.getElementById(k);if(el)el.innerHTML="";});m.textContent=tbErr||(off?"Le Maître de la Guilde s'est déconnecté. La carte reviendra dès qu'il rouvrira la partie.":v?"":"En attente du Maître de la Guilde… La carte apparaîtra dès qu'il en ouvre une.");const r=ecBind("ec-pl","joueur");if(r)r.st=null;return;}
@@ -11496,6 +11580,7 @@ function ptCombatCol(q){
   const cur=ptC(P.cur),sel=ui.ptSel&&ui.ptSel!==P.cur?ptC(ui.ptSel):null;
   h+='<div class="ptphase"><span class="ptlbl">Rencontre</span><strong>'+esc(C.nom)+'</strong><span class="ptround sm"><span>Round</span><strong>'+P.round+'</strong></span></div>';
   h+=ptFoesUp()?'<div class="ptbar"><button class="btn ghost" data-a="pt-prev">◀ Précédent</button><button class="btn gold" data-a="pt-next">Tour suivant ▶</button><button class="btn ghost" data-a="pt-close">Clore la rencontre</button></div>':'<div class="ptvictory"><span>🏁 Plus aucun ennemi debout.</span><button class="btn gold" data-a="pt-close">Clore la rencontre</button></div>';
+  h+=P.liste.filter(x=>x.kind==="pj").map(ptActCard).join("");
   if(cur)h+='<div class="ptturncard"><div class="ptlbl">C\'est le tour de</div><ol class="ptlist">'+ptRow(cur)+'</ol></div>';
   if(sel)h+='<div class="ptselcard"><div class="ptlbl">Fiche ouverte <button class="ptx" data-a="pt-selx" aria-label="Fermer la fiche">✕</button></div><ol class="ptlist">'+ptRow(sel)+'</ol></div>';
   h+='<h3>Ordre d\'initiative <span class="desc">(touche un nom pour ouvrir sa fiche)</span></h3><ol class="ptminis">'+o.map(c=>ptMini(c,"")).join("")+'</ol>';
@@ -11697,7 +11782,7 @@ function ptLootTab(q){
 function partyView(){
   if(!isAdmin)return '<p class="empty">Le Mode Partie est réservé au DM.</p>';
   const q=ptQuest();if(!q)return '<p class="empty">Quête introuvable.</p>';
-  ptSync(q.id);ptActListen(q.id);const P=ui.pt,o=ptOrder(),b=office(q.bureau)||{};
+  ptSync(q.id);ptActListen(q.id);ptTourSync(q);const P=ui.pt,o=ptOrder(),b=office(q.bureau)||{};
   if(ui.ptLaunch){const rid=ui.ptLaunch;ui.ptLaunch=null;if(P.combat)ui.ptAlert="Clos d'abord la rencontre « "+P.combat.nom+" ».";else{ptStartEnc(q,rid,"",true);ptSave();}}
   const xp=P.liste.filter(c=>c.kind==="monstre"&&c.pv<=0).reduce((t,c)=>t+(+c.xp||0),0),npj=P.liste.filter(c=>c.kind==="pj").length;
   if(ui.ptInfoOnly)return '<section class="partie ptinfoonly"><div class="ptmapbar"><strong>📖 '+esc(q.titre)+' · Infos</strong><span class="desc">La carte et la bataille sont dans l\'autre fenêtre. Cette fenêtre ne fait que lire : elle n\'envoie rien aux écrans.</span><button class="btn gold sm" data-a="pt-sep-off">⧉ Rapatrier les infos</button></div><div class="ptside">'+ptSide(q)+'</div></section>';
@@ -11768,6 +11853,7 @@ async function partyAction(a,id,b,e){
     else if(A.res==="miss")ptLog("⚔ "+f.nom+" rate "+t.nom+".");
     else if(A.res==="hit")ptLog("⚔ "+f.nom+" touche "+t.nom+dm+".");
     else if(A.res==="crit"){const k=txt("atk-desc");ptLog("✨ Coup critique de "+f.nom+" contre "+t.nom+dm+(k?". "+k:"")+".");if(C){C.crits=C.crits||{};C.crits[f.nom]=(C.crits[f.nom]||0)+1;}}
+    if(A.act){if(A.act.eff&&(A.res==="hit"||A.res==="crit"))ptActEffect(A.act,t,f);ptLog("📣 "+f.nom+" : "+A.act.n+(A.act.f?" ("+A.act.f+")":"")+".");ptActDone(A.act);}
     ui.ptA=null;ui.ptAtkOpen=null;}
   else if(a==="pt-atkto"&&c){const A=ui.ptA;if(!A||A.res)return;A.to=A.to===v?null:v;ch=false;}
   else if(a==="pt-paropen"){ui.ptParOpen=true;{const E=ecP();if(!E.ordre||!E.ordre.mode||E.ordre.mode==="aucun"){E.ordre=Object.assign({},E.ordre||{},{mode:"parole"});}}ecPush(true);}
@@ -11778,6 +11864,14 @@ async function partyAction(a,id,b,e){
   else if(a==="pt-launch"){if(P.combat){ui.ptAlert="Clos d'abord la rencontre « "+P.combat.nom+" ».";ch=false;}else{ptStartEnc(q,id,"",true);ui.ptTab=ui.ptTab||"scenario";render();window.scrollTo({top:0,behavior:"smooth"});ptSave();return;}}
   else if(a==="pt-time"){const n=+v;(P.liste||[]).forEach(x=>{const keep=[];(x.effets||[]).forEach(e=>{if(e.type==="rounds"){e.r-=n;if(e.r<=0){ptEffExpire(x,e);return;}}else if(e.type==="debut"||e.type==="fin"){ptEffExpire(x,e);return;}keep.push(e);});x.effets=keep;});ptLog("⏩ "+(n>=100?n/10+" minutes passent":n/10+" minute passe")+".");}
   else if(a==="pt-roll1"&&c){c.init=ptD(20)+(+c.dex||0);}
+  else if(a==="pt-actatk"){const A=ptActOf(c);if(!A)return;ui.ptAtkOpen=c.cid;ui.ptA={from:c.cid,to:null,res:null,dmg:0,act:A};ch=false;}
+  else if(a==="pt-actok"){const A=ptActOf(c);if(!A)return;ptLog("📣 "+c.nom+" : "+A.n+(A.f?" ("+A.f+")":"")+".");ptActDone(A);ui.ptAS=null;}
+  else if(a==="pt-actt"){const A=ptActOf(c);if(!A)return;const S=ui.ptAS=ui.ptAS&&ui.ptAS.id===A.id?ui.ptAS:{id:A.id,t:{}};const el=document.getElementById("pt-act-dmg");if(el&&el.value!=="")S.dmg=el.value;if(S.t[v]!==undefined)delete S.t[v];else S.t[v]="";ch=false;}
+  else if(a==="pt-actsr"){const S=ui.ptAS;if(!S)return;const el=document.getElementById("pt-act-dmg");if(el&&el.value!=="")S.dmg=el.value;const hf=document.getElementById("pt-act-half");if(hf)S.half=hf.checked;S.t[id]=v;ch=false;}
+  else if(a==="pt-actsave"){const A=ptActOf(c);if(!A)return;const S=ui.ptAS&&ui.ptAS.id===A.id?ui.ptAS:{t:{}},el=document.getElementById("pt-act-dmg"),hf=document.getElementById("pt-act-half"),dmg=Math.max(0,Math.round(+((el&&el.value)||0))),half=!!(hf&&hf.checked),isSav=!!(A.dd&&A.car);
+    const ids=Object.keys(S.t);if(isSav&&ids.some(k=>!S.t[k])){ui.ptAlert="Indique Réussi ou Échoué pour chaque cible.";ch=false;}
+    else{const parts=ids.map(k=>{const t=ptC(k);if(!t)return "";const ok=S.t[k]==="ok",d=isSav?(ok?(half?Math.floor(dmg/2):0):dmg):dmg;if(d>0)ptDamage(t,d,true);if(!isSav||!ok)ptActEffect(A,t,c);return t.nom+(isSav?(ok?" réussit":" échoue"):"")+(d>0?" ("+d+" dégâts)":"");}).filter(Boolean);
+      ptLog("📣 "+c.nom+" : "+A.n+(isSav?" — DD "+A.dd+" "+(CAR_L[A.car]||""):"")+(parts.length?" → "+parts.join(", "):"")+".");ptActDone(A);ui.ptAS=null;}}
   else if(a==="pt-inidem"){if(!P.combat)return;const L=P.liste.filter(x=>x.kind==="pj"&&x.ref).map(x=>({a:x.ref,n:x.nom}));if(!L.length)return;P.initDem={ms:Date.now(),l:L};ptIniPublish(q.id,P.initDem);ptLog("📣 Initiative demandée aux joueurs.");ptIniApply();}
   else if(a==="pt-fight"){if(!P.combat)return;if(P.initDem){P.initDem=null;ptIniPublish(q.id,null);}const o=ptOrder().filter(ptAlive);if(!o.length)return;P.combat.phase="combat";P.round=1;P.cur=o[0].cid;ui.ptSel=null;ptStats().combats++;ptLog("⚔ Début du combat — Round 1 —");
     const miss=P.liste.filter(x=>x.init===""||x.init==null).map(x=>x.nom);if(miss.length)ui.ptAlert="Sans initiative (placés en fin de tour) : "+miss.join(", ")+". Tu peux encore la saisir sur leur fiche.";}
@@ -12004,6 +12098,11 @@ document.addEventListener("click",async e=>{
     if(o&&(o.image||o.texte)){const hd=o.image?await hdGet("objets",o.id):"";await vitShow(o.nom,hd||o.image||"",o.texte||"");}
     else await vitShow(n,"",rr==="quete"?"Objet de quête":((RAR[rr]||[,"Objet"])[1]+" · trésor"));b.disabled=false;return;}
   if(a==="tv-follow"){const r=ecRenderers["ec-tv"];if(r)r.free=false;return;}
+  if(a==="tb-tourv"){const v=b.getAttribute("data-v");ui.tbTourV=ui.tbTourV===v?"":v;ui.tbSpell=null;tbTourUpdate();return;}
+  if(a==="tb-spell"){const v=b.getAttribute("data-v");ui.tbSpell=v===""?null:+v;tbTourUpdate();return;}
+  if(a==="tb-tour-min"){let on=false;try{on=localStorage.getItem("rdv-tourmin")==="1";localStorage.setItem("rdv-tourmin",on?"0":"1");}catch(e){}tbTourUpdate();return;}
+  if(a==="tb-act"){tbActSend(b);return;}
+  if(a==="tb-act-x"){const qid=tbSubQ;tbMyAct=Object.assign({},tbMyAct,{act:null});tbTourUpdate();setDoc(doc(db,"table",qid,"actions",user.uid),{act:null,ms:Date.now()},{merge:true}).catch(e=>console.error(e));return;}
   if(a==="tb-ini"){const el=document.getElementById("tb-ini-v"),v=el?Math.round(+el.value):NaN,qid=tbSubQ;if(!el||el.value===""||isNaN(v)||v<-10||v>60){if(el)el.focus();return;}
     const av=aventuriers.find(x=>x.id===b.getAttribute("data-v"));ui.tbIniEdit=false;tbMyAct=Object.assign({},tbMyAct,{ini:{v,ms:Date.now(),a:av?av.id:"",n:av?av.nom:""}});el.blur();tbIniUpdate();
     setDoc(doc(db,"table",qid,"actions",user.uid),{ini:tbMyAct.ini,ms:Date.now()},{merge:true}).catch(e=>{console.error(e);const h=document.getElementById("pl-ini");if(h)h.insertAdjacentHTML("beforeend",'<p class="tbinierr">Envoi impossible, réessaie.</p>');});return;}
