@@ -421,7 +421,8 @@ service cloud.firestore {
       // le joueur peut seulement la déplacer sur la même carte. Elle ne donne aucune vision.
       // Champ inv : positions des invocations du joueur (Main de mage, familier…), qu'il déplace lui-même.
       match /figs/{uid} {
-        allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+        // les inscrits voient les figurines des autres joueurs (couche au-dessus de la carte, sans passer par le DM)
+        allow read: if isAdmin() || (signedIn() && request.auth.uid == uid) || inscritA(qid);
         allow create, delete: if isAdmin();
         allow update: if isAdmin()
           || (signedIn() && request.auth.uid == uid && inscritA(qid)
