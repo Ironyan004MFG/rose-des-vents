@@ -3017,7 +3017,9 @@ function route(){
     {const disp=o=>!!o&&(o.indexOf("partie-")===0||o==="dm"||o==="mini"||o==="ecran");// quitter le Mode Partie, ou aller ailleurs que l'Espace DM / la Mini Guilde, ferme l'écran des joueurs
      if(isPt&&!wasPt)ui.ecStopped=false;
      if(isPt&&isAdmin)setTimeout(hbBeat,800);
-     if((wasPt&&!isPt)||(isAdmin&&disp(ui.office)&&!disp(next)&&(vitOn()||(ecDoc&&ecDoc.carte))))ecCloseScreens();}
+     // écrans séparés : c'est l'onglet de la carte qui tient les écrans ; l'onglet du scénario peut aller ailleurs sans les fermer
+     const sepHere=!!ui.pt&&ui.pt.id!=="libre"&&!ui.ptMapOnly&&ptSepOn(ui.pt.id);
+     if(!sepHere&&((wasPt&&!isPt)||(isAdmin&&disp(ui.office)&&!disp(next)&&(vitOn()||(ecDoc&&ecDoc.carte)))))ecCloseScreens();}
     if(isPt&&!wasPt)setTimeout(()=>{if(ui.pt&&ui.office==="partie-"+ui.pt.id&&ui.pt.id!=="libre")ecPush(true);},400);
     if(next&&next.indexOf("perso-")===0&&!(ui.office&&ui.office.indexOf("perso-")===0))ui.persoFrom=ui.office||"";ui.office=next;if(!(next==="personnages"&&ui.sheetEdit==="new"))ui.sheetEdit=null;if(!(next==="compendium"&&ui.compEdit==="new"))ui.compEdit=null;ui.compHist=null;ui.compVer=null;ui.confirmComp=null;ui.evolve=null;ui.noteEdit=null;ui.newsEdit=null;if(!ui.pendingMan){ui.manEdit=null;}ui.pendingMan=false;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=ui.pendingEdit||null;ui.pendingEdit=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter=ui.pendingFilter||"ouverte";ui.rank="all";const focusQ=ui.pendingQuest;ui.pendingFilter=null;ui.pendingQuest=null;render();
     try{const el=focusQ&&document.getElementById("q-"+focusQ);if(el){el.scrollIntoView({block:"center"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1600);}else window.scrollTo(0,0);}catch(e){}}
