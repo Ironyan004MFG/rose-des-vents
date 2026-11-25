@@ -9999,7 +9999,7 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),p
   else if(pl){const f=tbFollow(r,st,cw,ch);if(!r.free){const k=Math.min(1,dt*2.5);if(r.vx==null||Math.abs(r.vx-f.x)>60){r.vx=f.x;r.vy=f.y;r.vs=f.s;}r.vx+=(f.x-r.vx)*k;r.vy+=(f.y-r.vy)*k;r.vs+=(f.s-r.vs)*k;}s=r.vs;ox=cw/2-r.vx*s;oy=ch/2-r.vy*s;}
   else{s=Math.min(cw/c.w,ch/c.h);}
   // Le décor fixe est préparé à une échelle arrondie (le zoom libre du joueur ne le redessine pas à chaque cran), sans dépasser la taille d'un canevas.
-  const sq=pl||(r.mode==="tv"&&r.free)?Math.min(Math.pow(2,Math.round(Math.log2(Math.max(1,s))*3)/3),6000/(Math.max(c.w,c.h)*dpr)):s;
+  const sq=pl||(r.mode==="tv"&&r.free)?Math.min(Math.pow(2,Math.round(Math.log2(Math.max(1,s))*3)/3),3800/(Math.max(c.w,c.h)*dpr)):s;
   const key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h+"|"+(c.url||"")+"|"+Math.round(sq*dpr*10)+"|"+ecSaison()+"|"+(c.bureau||"")+"|"+(+c.etage||0)+"|"+(c.niv?c.niv.min+":"+c.niv.max:"")+maisonEnvK(c)+"|off"+JSON.stringify(c.off||[]);
   if(r.key!==key){r.key=key;r.A=EC_GEN[c.type]?{}:c.type==="image"?null:ecAnimInit(c);r.stat=null;r.img=null;if(c.type==="image"&&c.url){const im=new Image();im.crossOrigin="anonymous";im.onload=()=>{r.img=im;};im.src=c.url;}else if(EC_GEN[c.type])r.stat=ecStaticGen(c,sq*dpr);else r.stat=ecStatic(c,sq*dpr);}
   x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle="#000";x.fillRect(0,0,cw,ch);x.save();x.translate(ox,oy);x.beginPath();x.rect(0,0,c.w*s,c.h*s);x.clip();
