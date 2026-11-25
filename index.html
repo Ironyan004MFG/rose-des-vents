@@ -54,6 +54,29 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .mk:focus-visible .ring{stroke:#1b1408;stroke-width:5}
 .mk.zero{opacity:.72}
 .offices{display:flex;flex-direction:column;gap:10px;min-width:0}
+/* Accueil large : la carte à gauche, comptoirs et liens en grille à droite (étirés sur la hauteur de la carte), le Crieur sur toute la largeur en dessous */
+.offgrid{display:flex;flex-direction:column;gap:10px}
+.offq{display:none;flex-direction:column;gap:1px;margin-top:4px;font-family:var(--body);font-style:italic;font-size:15px;letter-spacing:0;color:var(--on-board-muted)}.offq span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}.offq span::before{content:"✦ ";color:var(--gold);font-style:normal}
+.office .nm{min-width:0}
+@media (min-width:1300px){
+.wrap.home{max-width:min(2240px,94vw)}
+.wrap.home .mapwrap{grid-template-columns:minmax(0,1.3fr) minmax(360px,1fr);grid-template-areas:"map nav" "gaz gaz";gap:28px}
+.wrap.home .offices{align-self:stretch}
+.wrap.home .offgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(48px,1fr);gap:10px;flex:1 1 auto}
+.wrap.home .offgrid.links{margin-top:10px;flex-grow:1.3}
+.wrap.home .gzcols{columns:3 320px}
+}
+@media (min-width:1900px){
+.wrap.home .offgrid{gap:14px}
+.wrap.home .office{padding:16px 20px}
+.wrap.home .office .nm{font-size:22px}
+.wrap.home .office .tag{font-size:18px}
+.wrap.home .office .count{font-size:17px}
+.wrap.home .offices h2{font-size:21px}
+.wrap.home .office.expe .who{font-size:16px}
+.wrap.home .offq{display:flex}
+}
+
 .offices h2{font-family:var(--display);font-size:16px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin:0 0 4px}
 .office{display:flex;align-items:center;justify-content:space-between;gap:12px;text-decoration:none;color:var(--on-board);background:var(--board-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-height:48px;box-sizing:border-box}
 .office:hover,.office:focus-visible{border-color:var(--gold);outline:none}
@@ -1639,9 +1662,11 @@ function marker(b){
 function mapView(){
   const total=quetes.filter(q=>q.statut==="ouverte").length;
   let h='<div class="mapwrap"><div class="map saison-'+ecSaison()+'">'+calParch()+'<svg viewBox="0 0 1000 1100" role="group" aria-label="Carte de la Sword Coast et comptoirs de la Guilde">'+mapBase()+bureaux.map(marker).join("")+'</svg></div>';
-  h+='<nav class="offices" aria-label="Comptoirs">'+expeSummary()+'<h2>Comptoirs de la Guilde</h2>';
+  h+='<nav class="offices" aria-label="Comptoirs">'+expeSummary()+'<h2>Comptoirs de la Guilde</h2><div class="offgrid">';
   bureaux.forEach(b=>{const n=openCount(b.id),si=signedCount(b.id);
-    h+='<a class="office" href="#'+esc(b.id)+'"><span class="nm">'+esc(b.nom)+(b.siege?'<span class="tag">Siège de la Guilde</span>':'')+'</span><span class="count'+(n?'':' zero')+'">'+n+' quête'+(n>1?'s':'')+(si?'<span class="ins"> · '+si+' inscrit'+(si>1?'s':'')+'</span>':'')+'</span></a>';});
+    const oq=quetes.filter(q=>q.bureau===b.id&&q.statut==="ouverte").slice(0,2);
+    h+='<a class="office" href="#'+esc(b.id)+'"><span class="nm">'+esc(b.nom)+(b.siege?'<span class="tag">Siège de la Guilde</span>':'')+(oq.length?'<span class="offq">'+oq.map(q=>'<span>'+esc(q.titre)+'</span>').join("")+'</span>':'')+'</span><span class="count'+(n?'':' zero')+'">'+n+' quête'+(n>1?'s':'')+(si?'<span class="ins"> · '+si+' inscrit'+(si>1?'s':'')+'</span>':'')+'</span></a>';});
+  h+='</div><div class="offgrid links">';
   h+='<a class="office regl" href="#compendium"><span class="nm">Compendium<span class="tag">PNJ, créatures, lieux, indices…</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#aventuriers"><span class="nm">Les aventuriers de la Guilde<span class="tag">La galerie des personnages</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#boutique"><span class="nm">Boutique de la Guilde<span class="tag">Intendance, services, dépôt, Trésor de la Rose</span></span><span aria-hidden="true">→</span></a>';
@@ -1649,7 +1674,7 @@ function mapView(){
   h+='<a class="office regl" href="#chroniques"><span class="nm">Chroniques de la Guilde<span class="tag">Les missions en cours et accomplies</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#wiki"><span class="nm">Wiki des règles maison<span class="tag">Outerworlders, Supercharged, renommée…</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#renommee"><span class="nm">Registre de renommée<span class="tag">Qui est connu, respecté… ou recherché</span></span><span aria-hidden="true">→</span></a>';
-  h+='<p class="hint">'+(loaded.q?total+' quête'+(total>1?'s':'')+' ouverte'+(total>1?'s':'')+' sur la côte. Choisis un comptoir pour voir son babillard.':'Chargement des quêtes…')+'</p></nav>'+gazette()+'</div>';
+  h+='</div><p class="hint">'+(loaded.q?total+' quête'+(total>1?'s':'')+' ouverte'+(total>1?'s':'')+' sur la côte. Choisis un comptoir pour voir son babillard.':'Chargement des quêtes…')+'</p></nav>'+gazette()+'</div>';
   return h;
 }
 
@@ -3120,7 +3145,7 @@ function render(){
   const gsh=ui.office==="boutique";
   const comp=ui.office==="compendium",compE=!!ui.office&&ui.office.indexOf("compendium-")===0;
   const b=ui.office&&!reg?office(ui.office):null;
-  let h='<div class="wrap">';
+  let h='<div class="wrap'+(!ui.office?' home':'')+'">';
   h+='<header><a class="homelogo" href="#carte" aria-label="Accueil : la carte" title="Accueil"><svg width="72" height="72" viewBox="-110 -110 220 220" aria-hidden="true"><circle r="80" fill="none" stroke="#d8b45e" stroke-width="3" opacity=".6"></circle>'+rose(104,'#0e1b20')+'</svg></a>';
   h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(pty?'Mode Partie':mini?'La Mini Guilde':dms?'Espace DM':gsh?'Boutique de la Guilde':comp||compE?'Compendium de la Guilde':gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?(feuP?'Fiche joueur':'Fiche de personnage'):chr?'Chroniques de la Guilde':exp?'Expéditions':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(mini?'Les petites quêtes de Pax, à Waterdeep':dms?'Le bureau secret du Maître de la Guilde':gsh?'Intendance, services, dépôt et Trésor de la Rose':comp||compE?'Le savoir partagé des aventuriers':gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions en cours et accomplies par les aventuriers':exp?'Les groupes qui se forment sur la Sword Coast':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+dmPill()+statusPill()+'</header>';
   if(pty){const pq=ptQuest();h+=pq&&pq.libre?'<a class="back" href="#dm"><span aria-hidden="true">←</span> Cartes de l\'Espace DM</a>':'<a class="back" href="#'+(pq?esc(pq.bureau):'carte')+'"><span aria-hidden="true">←</span> Retour au babillard</a>';}
