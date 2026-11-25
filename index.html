@@ -3143,10 +3143,12 @@ function ecFoeSync(){const P=ui.pt;if(!P||!P.liste)return;const E=ecP(),R=ecResO
   R.forEach(ecPjDv);cards.forEach(c=>(c.tokens||[]).forEach(ecPjDv));
   {const byCid={};P.liste.forEach(x=>{const im=ecImgOfCombatant(x);if(im)byCid[x.cid]=im;});const fix=t=>{if(!t.img&&t.cid&&byCid[t.cid])t.img=byCid[t.cid];if(!t.img&&t.ref&&t.k!=="pj"&&!t.look){if(monstres.some(m=>m.id===t.ref))t.img="monstres/"+t.ref;else if(pnjs.some(m=>m.id===t.ref))t.img="pnj/"+t.ref;}};R.forEach(fix);cards.forEach(c=>(c.tokens||[]).forEach(fix));}
   const has=cid=>R.some(t=>t.cid===cid)||cards.some(c=>(c.tokens||[]).some(t=>t.cid===cid));
-  P.liste.forEach(x=>{if(x.kind==="pj")return;
-    if(x.pv<=0&&(+x.pvMax||0)>0){let rm=false;for(let i=R.length-1;i>=0;i--)if(R[i].cid===x.cid){R.splice(i,1);rm=true;}
-      cards.forEach(c=>{const n=(c.tokens||[]).length;c.tokens=(c.tokens||[]).filter(t=>t.cid!==x.cid);if(c.tokens.length!==n)rm=true;});
-      if(rm){ptLog("Écran : le jeton de "+x.nom+" quitte la carte.");if(ui.ecSel&&!cards.some(c=>(c.tokens||[]).some(t=>t.id===ui.ecSel)))ui.ecSel=null;}seen[x.cid]=1;return;}
+  // À 0 PV, le jeton reste sur la carte : il pâlit et porte un gros X rouge (ennemi, PNJ) ou le symbole « inconscient » (joueur). Soigné, il redevient normal.
+  const setDown=(t,d,x)=>{if(d){if(t.down)return;t.down=1;if(t.sp&&t.sp.t==="b"&&!t.mort){t.mort=true;t.dmort=1;}if(t.k!=="pj")ptLog("Écran : "+x.nom+" est hors de combat.");}else if(t.down){delete t.down;if(t.dmort){t.mort=false;delete t.dmort;}}};
+  P.liste.forEach(x=>{const d=x.pv<=0&&(+x.pvMax||0)>0;
+    if(x.kind==="pj"){const nk=ptNorm(x.nom).trim();cards.forEach(c=>(c.tokens||[]).forEach(t=>{if(t.k==="pj"&&ptNorm(t.n).trim()===nk)setDown(t,d,x);}));return;}
+    R.forEach(t=>{if(t.cid===x.cid)setDown(t,d,x);});cards.forEach(c=>(c.tokens||[]).forEach(t=>{if(t.cid===x.cid)setDown(t,d,x);}));
+    if(d){seen[x.cid]=1;return;}
     if(!seen[x.cid]&&P.combat&&!has(x.cid)){const t={id:ptUid(),k:x.camp==="allie"?"pnj":"en",n:x.nom,cid:x.cid,vis:true,camp:x.camp==="allie"?"allie":"ennemi"},im=ecImgOfCombatant(x);if(im)t.img=im;R.push(t);}
     if(P.combat)seen[x.cid]=1;});}
 // Sélection partagée : choisir un combattant dans l'ordre de bataille sélectionne son jeton sur la carte (halo blanc), et l'inverse — aussi d'un onglet à l'autre
@@ -9071,6 +9073,10 @@ const EC_LIGHTS={torche:{l:"Torche (4 cases)",r:4},lanterne:{l:"Lanterne (6 case
 // Invocations : jeton lié à un personnage (Main de mage, familier…). Le joueur à distance qui l'a invoqué le déplace lui-même.
 const EC_INV={main:{l:"Main de mage",i:"🖐️"},familier:{l:"Familier",i:"🦉",sens:1,dv:12},compagnon:{l:"Compagnon animal",i:"🐾"},arme:{l:"Arme spirituelle",i:"🗡️"},monture:{l:"Monture",i:"🐴"},autre:{l:"Invocation",i:"✨"}};
 function ecAvOf(nm){const k=ptNorm(nm||"").trim();return aventuriers.find(a=>!a.pnj&&ptNorm(a.nom).trim()===k)||aventuriers.find(a=>!a.pnj&&ptNorm(a.nom).trim().split(" ")[0]===k.split(" ")[0])||null;}
+// Hors de combat : gros X rouge ; joueur inconscient : pastille 💤 (en haut à droite, visible même sous une figurine)
+function ecDownMark(x,X,Y,s,pj){x.save();x.filter="none";
+  if(pj){const bx=X+s*0.4,by=Y-s*0.4,br=Math.max(8,s*0.21);x.fillStyle="#3b2a5c";x.beginPath();x.arc(bx,by,br,0,6.283);x.fill();x.strokeStyle="#fff";x.lineWidth=Math.max(1.5,s*0.035);x.stroke();x.font=Math.round(br*1.1)+"px serif";x.textAlign="center";x.textBaseline="middle";x.fillStyle="#fff";x.fillText("💤",bx,by+1);x.restore();return;}
+  const r=s*0.33;x.lineCap="round";[["rgba(0,0,0,.65)",s*0.17],["#e0261b",s*0.11]].forEach(o=>{x.strokeStyle=o[0];x.lineWidth=Math.max(3,o[1]);x.beginPath();x.moveTo(X-r,Y-r);x.lineTo(X+r,Y+r);x.moveTo(X+r,Y-r);x.lineTo(X-r,Y+r);x.stroke();});x.restore();}
 function ecInvTok(x,k,X,Y,s,r,tv,pl){const col=k.c||"#d8b45e",sel=r.sel===k.id,mine=pl&&k.u&&k.u===r.me;
   // partout (télé comprise) le jeton complet : une vraie figurine se pose simplement dessus
   const R=s*0.36,I=EC_INV[k.t]||EC_INV.autre;
@@ -10027,7 +10033,7 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),p
   {const nf=!!(M.rain||M.wind);(st.tokens||[]).filter(k=>(k.k==="lum"&&!(nf&&k.flamme!==false))||(k.k==="pj"&&k.torche&&!nf)).forEach(k=>{if(Math.min(0.95,(EC_LUM[st.lum]||EC_LUM.jour).dark+M.dk)<0.2)return;const R=(k.k==="lum"?(+k.r||4):4)*s,fl=1+Math.sin(t*9+k.x)*0.04+Math.sin(t*13.7)*0.03,g=x.createRadialGradient(k.x*s,k.y*s,0,k.x*s,k.y*s,R*fl);g.addColorStop(0,"rgba(255,180,90,.28)");g.addColorStop(1,"rgba(255,140,60,0)");x.fillStyle=g;x.fillRect(k.x*s-R,k.y*s-R,R*2,R*2);});}
   if(st.grid){x.strokeStyle=tv?"rgba(255,255,255,.14)":"rgba(255,255,255,.18)";x.lineWidth=1;x.beginPath();for(let i=0;i<=c.w;i++){x.moveTo(i*s,0);x.lineTo(i*s,c.h*s);}for(let j=0;j<=c.h;j++){x.moveTo(0,j*s);x.lineTo(c.w*s,j*s);}x.stroke();}
   // Jetons
-  const V=r.V;(st.tokens||[]).forEach(k=>{const X=k.x*s,Y=k.y*s,i=Math.floor(k.y)*c.w+Math.floor(k.x),seen=(V&&V.tokSeen(k.x,k.y))||!(st.fog&&st.fog.on);
+  const V=r.V,drawTok=k=>{const X=k.x*s,Y=k.y*s,i=Math.floor(k.y)*c.w+Math.floor(k.x),seen=(V&&V.tokSeen(k.x,k.y))||!(st.fog&&st.fog.on);
     if(k.k==="lum"){ecLightSprite(x,k,X,Y,s,t,st,tv);if(!tv){x.strokeStyle=r.sel===k.id?"#fff":"rgba(255,220,140,.55)";x.lineWidth=r.sel===k.id?3:1.5;x.setLineDash(r.sel===k.id?[]:[3,3]);x.beginPath();x.arc(X,Y,s*0.42,0,6.283);x.stroke();x.setLineDash([]);}return;}
     if(k.k==="inv"){ecInvTok(x,k,X,Y,s,r,tv,pl);return;}
     // Télé : les figurines sont posées sur l'écran, on ne dessine qu'un anneau. Joueur à distance : il faut voir les pions.
@@ -10051,7 +10057,10 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),p
     x.globalAlpha=(!tv&&k.k!=="pj"&&!k.vis)?0.55:1;x.fillStyle="rgba(0,0,0,.35)";x.beginPath();x.arc(X+s*0.04,Y+s*0.06,s*0.42,0,6.283);x.fill();
     x.fillStyle=k.k==="pj"?(k.c||"#d8b45e"):k.k==="en"?"#9b2c22":"#3f6b8a";x.beginPath();x.arc(X,Y,s*0.4,0,6.283);x.fill();x.strokeStyle=r.sel===k.id?"#fff":"rgba(0,0,0,.6)";x.lineWidth=r.sel===k.id?3:1.5;if(!tv&&k.k!=="pj"&&!k.vis)x.setLineDash([4,3]);x.stroke();x.setLineDash([]);
     x.fillStyle=k.k==="pj"?"#1b140c":"#fff";x.font="700 "+Math.round(s*0.42)+"px serif";x.textAlign="center";x.textBaseline="middle";x.fillText(String(k.n||"?").slice(0,1).toUpperCase(),X,Y+1);x.globalAlpha=1;
-});
+};
+  (st.tokens||[]).forEach(k=>{if(!k.down||k.deco){drawTok(k);return;}const q=EC_ROAMPOS.get(k)||[k.x,k.y],seen=(V&&V.tokSeen(q[0],q[1]))||!(st.fog&&st.fog.on);
+    x.save();x.filter="grayscale(1) opacity(.5)";drawTok(k);x.restore();
+    if(tv&&k.k!=="pj"&&k.k!=="inv"&&(!k.vis||!seen))return;ecDownMark(x,q[0]*s,q[1]*s,s,k.k==="pj");});
   
   ecFigs(x,st,s,r,pl);
   // halo blanc autour de ce qui est sélectionné (bête ou passant du décor, éclairage)
@@ -10248,7 +10257,7 @@ function tbRing(c,sg){if(!c||!sg)return null;const N=v=>ptNorm(v).trim(),av=sg.a
   const pj=(c.tokens||[]).filter(k=>k.k==="pj");return pj.find(k=>names.indexOf(N(k.n))>=0)||pj.find(k=>names.some(n=>n.split(" ")[0]===N(k.n).split(" ")[0]))||null;}
 // Figurines posées sur la carte active (côté DM : pour la télé, sa vue et la copie publiée).
 function tbFigList(q,c){if(!q||!c)return [];return Object.keys(tbFigs).map(uid=>{const f=tbFigs[uid],sg=tbSign(q,uid);if(!f||!sg||f.carte!==c.id)return null;const av=sg.aventurier&&aventuriers.find(a=>a.id===sg.aventurier),ring=tbRing(c,sg);
-  return {u:uid,a:av?av.id:"",n:av?av.nom:sg.nom,x:+f.x,y:+f.y,c:ring?(ring.c||"#d8b45e"):"#d8b45e"};}).filter(Boolean);}
+  return {u:uid,a:av?av.id:"",n:av?av.nom:sg.nom,x:+f.x,y:+f.y,c:ring?(ring.c||"#d8b45e"):"#d8b45e",d:ring&&ring.down?1:0};}).filter(Boolean);}
 // Copie publiée : les ennemis, alliés et objets cachés ou hors de vue n'y sont pas du tout (pas seulement masqués à l'affichage).
 function tbState(q,st){const c=st&&st.carte;if(!c)return {qid:q.id,titre:q.titre,carte:null,ms:Date.now()};
   const fogOn=!!(st.fog&&st.fog.on),V=fogOn?ecVision(st):null;
@@ -10256,7 +10265,7 @@ function tbState(q,st){const c=st&&st.carte;if(!c)return {qid:q.id,titre:q.titre
     // invocation : on y note le compte du joueur qui l'a invoquée, lui seul peut la déplacer
     .map(k=>{if(k.k!=="inv")return k;const sg=tbSignByName(q,k.ow);return sg?Object.assign({},k,{u:sg.uid}):k;});
   // joueurs autour de la table (pas virtuels) : montrés en figurine complète, que personne ne peut déplacer
-  const N=v=>ptNorm(v).trim(),pres=(st.tokens||[]).filter(k=>k.k==="pj"&&!tbVirt(k.n)).map(k=>{const av=aventuriers.find(a=>!a.pnj&&N(a.nom)===N(k.n));return {u:"pres-"+k.id,a:av?av.id:"",n:k.n,x:k.x,y:k.y,c:k.c||"#d8b45e",pres:1};});
+  const N=v=>ptNorm(v).trim(),pres=(st.tokens||[]).filter(k=>k.k==="pj"&&!tbVirt(k.n)).map(k=>{const av=aventuriers.find(a=>!a.pnj&&N(a.nom)===N(k.n));return {u:"pres-"+k.id,a:av?av.id:"",n:k.n,x:k.x,y:k.y,c:k.c||"#d8b45e",pres:1,d:k.down?1:0};});
   const out=Object.assign({},st,{vie:Date.now(),qid:q.id,titre:q.titre,tokens,figs:(st.figs||[]).concat(pres),vue:(ecDoc&&ecDoc.tv)?{cols:ecDoc.tv.cols,rows:ecDoc.tv.rows}:{cols:40,rows:22},ms:Date.now()});delete out.calib;delete out.tvv;return JSON.parse(JSON.stringify(out));}
 function tbPush(){const q=tbQuest();if(!q||!isAdmin||!ptActive())return;tbListen(q.id);clearTimeout(tbPushT);tbPushT=setTimeout(()=>fsThr("tb|"+q.id,()=>{if(tbQuest()!==q)return;let st=null;try{st=ecState();}catch(e){}
   setDoc(doc(db,"table",q.id),tbState(q,st)).catch(e=>console.error(e));},1500),600);}
@@ -10271,11 +10280,11 @@ function tbInvApply(q){const E=ecP();let ch=false;(E.cartes||[]).forEach(c=>{(c.
 function ecFigImg(aid){if(!aid)return null;let e=EC_FIGIMG.get(aid);if(e)return e.ok?e.im:null;const av=aventuriers.find(a=>a.id===aid);if(!av||!(av.token||av.image))return null;
   // le token du visage (cadré sur la fiche) en priorité, sinon le portrait entier
   e={ok:false,im:new Image()};e.im.onload=()=>{e.ok=true;};e.im.src=av.token||av.image;EC_FIGIMG.set(aid,e);return null;}
-function ecFigs(x,st,s,r,pl){(st.figs||[]).forEach(f=>{const X=f.x*s,Y=f.y*s,R=s*0.42,im=ecFigImg(f.a),mine=pl&&f.u===r.me;
+function ecFigs(x,st,s,r,pl){(st.figs||[]).forEach(f=>{const X=f.x*s,Y=f.y*s,R=s*0.42,im=ecFigImg(f.a),mine=pl&&f.u===r.me;if(f.d){x.save();x.filter="grayscale(1) opacity(.55)";}
   x.fillStyle="rgba(0,0,0,.4)";x.beginPath();x.arc(X+s*0.05,Y+s*0.07,R,0,6.283);x.fill();
   x.save();x.beginPath();x.arc(X,Y,R,0,6.283);x.clip();if(im){const k=Math.max(2*R/im.width,2*R/im.height);x.drawImage(im,X-im.width*k/2,Y-im.height*k/2,im.width*k,im.height*k);}else{x.fillStyle=f.c||"#d8b45e";x.fillRect(X-R,Y-R,2*R,2*R);x.fillStyle="#1b140c";x.font="700 "+Math.round(s*0.42)+"px serif";x.textAlign="center";x.textBaseline="middle";x.fillText(String(f.n||"?").slice(0,1).toUpperCase(),X,Y+1);}x.restore();
   x.strokeStyle=mine?"#fff":(f.c||"#d8b45e");x.lineWidth=Math.max(2,s*(mine?0.09:0.07));x.beginPath();x.arc(X,Y,R,0,6.283);x.stroke();
-  if(mine||s>=46){const fs=Math.max(11,Math.round(s*0.24)),lb=String(f.n||"").split(" ")[0];x.font="600 "+fs+"px sans-serif";x.textAlign="center";x.textBaseline="top";x.lineWidth=3;x.strokeStyle="rgba(0,0,0,.8)";x.strokeText(lb,X,Y+R+2);x.fillStyle=mine?"#ffe9a8":"#f6ecd0";x.fillText(lb,X,Y+R+2);}});}
+  if(mine||s>=46){const fs=Math.max(11,Math.round(s*0.24)),lb=String(f.n||"").split(" ")[0];x.font="600 "+fs+"px sans-serif";x.textAlign="center";x.textBaseline="top";x.lineWidth=3;x.strokeStyle="rgba(0,0,0,.8)";x.strokeText(lb,X,Y+R+2);x.fillStyle=mine?"#ffe9a8":"#f6ecd0";x.fillText(lb,X,Y+R+2);}if(f.d){x.restore();ecDownMark(x,X,Y,s,true);}});}
 // Ligne d'état dans l'onglet Écran du DM.
 function tbDmLine(q){const c=ecCard();if(!c||q.libre)return "";const F=tbFigList(q,c);const nG=(c.tokens||[]).filter(k=>k.k==="pj"&&tbVirt(k.n)&&tbFigOf(q,c,k.n)).length;
   return '<div class="tbdm">🌐 <strong>Table virtuelle</strong> <button class="btn gold sm" data-a="tb-copylink" data-id="'+esc(q.id)+'">'+(ui.tbCopied?'✓ Lien copié':'Copier le lien des joueurs à distance')+'</button>'+(nG?' <button class="btn sm" data-a="pt-ec-gatherall" title="Chaque anneau de joueur à distance va sur la case de sa figurine">🎯 Tout rassembler ('+nG+')</button>':'')+' : '+(q.statut==="encours"?'les inscrits à distance ouvrent cette carte depuis la quête (« Ouvrir la carte ») et y posent leur figurine virtuelle. Coche « Virtuel » pour un joueur à distance : en posant son anneau, sa figurine virtuelle est posée au même endroit ; lui seul la déplace, sans effet sur la vision. Ajuste ensuite l\'anneau dessous, comme pour une figurine sur la table.':'s\'ouvrira aux inscrits quand la quête sera en cours.')+
@@ -10469,6 +10478,7 @@ function ecTray(q,c){const R=ecResOf(),P=ui.pt,pl=ecPlayersInGame(q).filter(nm=>
     h+='<div class="ecresadd">'+(all.length?'<table class="ecpl"><thead><tr><th scope="col">Joueur</th><th scope="col">Virtuel</th><th scope="col"><span class="sr">Jeton</span></th></tr></thead><tbody>'+all.map(nm=>{const kk=ptNorm(nm).trim(),sg=tbSignByName(q,nm),onMap=(c.tokens||[]).some(t=>t.k==="pj"&&ptNorm(t.n).trim()===kk),inRes=R.some(t=>t.k==="pj"&&ptNorm(t.n).trim()===kk);
       return '<tr><th scope="row">'+esc(nm)+'</th><td><label class="ecck" title="'+(sg?'Joue à distance : une figurine virtuelle, qu\'il peut déplacer, est posée avec son anneau':'Pas de compte joueur relié à cette inscription')+'"><input type="checkbox" data-a="pt-ec-virt" data-v="'+esc(nm)+'"'+(V[kk]?' checked':'')+(sg?'':' disabled')+'><span class="sr">'+esc(nm)+' joue en virtuel</span></label></td><td>'+(onMap?'<span class="desc">sur la carte</span>':inRes?'<span class="desc">dans la réserve</span>':'<button class="mini" data-a="pt-ec-resadd" data-k="pj" data-v="'+esc(nm)+'">Ajouter</button>')+'</td></tr>';}).join("")+'</tbody></table>'+(pl.length>1?'<button class="mini gold" data-a="pt-ec-resadd" data-k="pjs">Ajouter tous les joueurs</button>':''):'<p class="desc">Aucun joueur en jeu : ajoute le groupe au combat ou confirme des inscrits.</p>');}
 
+  {const nd=(c.tokens||[]).filter(t=>t.down&&!t.deco&&t.k!=="pj").length;if(nd)h+='<div class="ecrow2"><strong>Hors de combat</strong> <button class="mini" data-a="pt-ec-clrdown" title="Les jetons à 0 PV (X rouge) quittent la carte ; les bêtes restent au sol en carcasse">🗑 Retirer les vaincus ('+nd+')</button></div>';}
   h+='<div class="ecrow2"><strong>Ennemis du combat</strong> '+(foes.length?'<select id="ec-foe" aria-label="Ennemi du combat">'+foes.map(x=>'<option value="'+esc(x.cid)+'">'+esc(x.nom)+'</option>').join("")+'</select><button class="mini" data-a="pt-ec-resadd" data-k="foe">Ajouter</button>'+(foes.length>1?'<button class="mini gold" data-a="pt-ec-resadd" data-k="foes">Tous ('+foes.length+')</button>':''):'<span class="desc">Aucun (ou déjà tous en jeton).</span>')+'</div>';
   const k=ptNorm(ui.ecFind||"").trim();
   h+='<div class="ecrow2 ecfind"><label for="ec-find"><strong>Bestiaire ou PNJ</strong><input id="ec-find" type="search" autocomplete="off" value="'+esc(ui.ecFind||"")+'" placeholder="Ex. loup, gobelin, Brann…"></label>';
@@ -10562,6 +10572,7 @@ async function ecAction(a,id,b,v,q){const E=ecP(),c=ecCard();
     const rep2=faveurs.filter(f=>f.av===av).length,F=favRoll(m,rep2,c.bureau||"",Math.random),fid=ptUid()+ptUid(),now=Date.now()/1000;
     c.don={b:ui.ecBeg.id,t:now,m};ui.ecBeg=null;ptLog("🪙 "+pj.nom+" donne une pièce "+(m==="cuivre"?"de cuivre":m==="argent"?"d'argent":"d'or")+" à un mendiant (faveur secrète en attente).");ptSave();ecPush(true);
     await run("Faveur",()=>setDoc(doc(db,"faveurs",fid),{av,nom:pj.nom,montant:m,ville:c.bureau||"",lieu:c.nom||"",type:F.type,dm:F.dm,pj:F.pj,statut:"attente",quete:ui.pt.id||"",creeLe:serverTimestamp()}));return true;}
+  if(a==="pt-ec-clrdown"){let n=0;(c.tokens||[]).forEach(t=>{if(t.down&&!t.deco&&t.k!=="pj"&&t.sp&&t.sp.t==="b"){t.deco=true;t.vis=true;t.mort=true;delete t.down;n++;}});const L=(c.tokens||[]).filter(t=>t.down&&!t.deco&&t.k!=="pj");n+=L.length;c.tokens=(c.tokens||[]).filter(t=>L.indexOf(t)<0);if(ui.ecSel&&!c.tokens.some(t=>t.id===ui.ecSel))ui.ecSel=null;if(n)ptLog("Écran : "+n+" vaincu"+(n>1?"s":"")+" retiré"+(n>1?"s":"")+" de la carte.");ptSave();ecPush(true);return true;}
   if(a==="pt-ec-carcasse"){const k=(c.tokens||[]).find(x=>x.id===ui.ecSel);if(!k||!k.sp||!k.mort)return false;k.deco=true;k.vis=true;ui.ecSel=null;ptLog("Écran : "+(k.n||"la bête")+" reste au sol (carcasse).");ptSave();ecPush(true);return true;}
   if(a==="pt-ec-amb-camp"){if(!ui.ecAmb)return false;ecPromoteId(ui.ecAmb.id,false,v);return false;}
   if(a==="pt-ec-gather"||a==="pt-ec-gatherall"){const qq=tbQuest();if(!qq)return false;const L=a==="pt-ec-gather"?(c.tokens||[]).filter(k=>k.id===ui.ecSel):(c.tokens||[]).filter(k=>k.k==="pj"&&tbVirt(k.n));let n=0;L.forEach(k=>{if(k.k==="pj"&&tbGather(qq,c,k))n++;});
