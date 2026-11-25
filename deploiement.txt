@@ -1,0 +1,1 @@
+Relance du déploiement GitHub Pages (panne GitHub du 25 novembre 2026, PR #179 restée en file d attente).
