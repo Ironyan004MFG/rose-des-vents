@@ -3089,6 +3089,8 @@ function ptSync(qid){
   // Une version plus récente vient d'un autre onglet (ex. scénario dans un onglet, carte dans l'autre) : on COMBINE,
   // on ne remplace pas. Ce qu'on a changé ici est gardé, ce que l'autre onglet a changé est repris. Jamais de retour en arrière.
   if(d&&d!==ui.ptSeenObj&&Date.now()-(ui.ptEditMs||0)<=1500){clearTimeout(ptSync.t);ptSync.t=setTimeout(()=>{if(ui.pt&&ui.pt.id===qid&&!document.activeElement.matches("input,textarea,select"))render();},1600);}
+  // l'écho d'un de NOS enregistrements (même en retard) n'est jamais un changement venu d'ailleurs : on l'ignore (sinon il ramenait un jeton en arrière)
+  if(d&&d!==ui.ptSeenObj&&d.by===PT_CLIENT){ui.ptSeenObj=d;ui.ptRev=Math.max(ui.ptRev||0,d.rev||0);return;}
   if(d&&d!==ui.ptSeenObj&&Date.now()-(ui.ptEditMs||0)>1500){ui.ptSeenObj=d;const R=Object.assign(ptBlank(qid),ptClone(d)),nk=o=>{const c=Object.assign({},o);delete c.rev;delete c.by;delete c.majLe;delete c.id;return ptStab(c);};
     if(!ui.ptBase||nk(R)!==nk(ui.ptBase)){ui.pt=ptMerge3(ui.ptBase||R,ui.pt,R);ui.ptBase=R;ui.ptSeen=d.rev;ui.ptRev=Math.max(ui.ptRev||0,d.rev||0);if(ui.ptMapOnly)setTimeout(()=>{try{const b0=ptStab(ecP());ecFoeSync();if(ptStab(ecP())!==b0)ptSave(true);ecUpd();ecPush(true);}catch(e){console.error(e);}},0);}}
 }
@@ -3117,9 +3119,9 @@ function ptObjSync(){const P=ui.pt,q=P&&questById(P.id);if(!q)return;const ob=ob
 const PT_CLIENT=Math.random().toString(36).slice(2,10);
 // Une page de Mode Partie laissée ouverte sans qu'on y touche (ex. sur l'ordinateur de la télé) n'écrit rien :
 // seule la page où le DM clique ou tape enregistre la partie et l'écran. Sinon elle renverrait sa vieille carte.
-let PT_INPUT=0;const PT_ME=Math.random().toString(36).slice(2);["pointerdown","keydown","wheel"].forEach(ev=>document.addEventListener(ev,()=>{PT_INPUT=Date.now();try{localStorage.setItem("rdv-last-tab",PT_ME+"|"+PT_INPUT);}catch(e){}},true));
-// Actif : une action dans les 20 dernières secondes, OU le dernier onglet utilisé sur cet appareil tant qu'il est affiché (le DM regarde sans cliquer pendant que les joueurs bougent)
-function ptActive(){if(Date.now()-PT_INPUT<20000)return true;if(document.visibilityState!=="visible")return false;let v="";try{v=localStorage.getItem("rdv-last-tab")||"";}catch(e){}const i=v.indexOf("|");return i>0&&v.slice(0,i)===PT_ME&&Date.now()-(+v.slice(i+1)||0)<30*60000;}
+let PT_INPUT=0;["pointerdown","keydown","wheel"].forEach(ev=>document.addEventListener(ev,()=>{PT_INPUT=Date.now();},true));
+// Actif = une action dans les 20 dernières secondes (un onglet ou un appareil oublié ouvert n'enregistre pas son vieil état). L'onglet carte des écrans séparés envoie toujours la carte.
+function ptActive(){return Date.now()-PT_INPUT<20000;}
 // Firestore n'aime pas plus d'une écriture par seconde sur le même document : au-delà, les écritures s'empilent et tout prend du retard.
 // fsThr garde au plus une écriture par « pas » pour chaque document ; la plus récente gagne.
 const FS_THR={};function fsThr(k,fn,gap){const T=FS_THR[k]||(FS_THR[k]={last:0,t:null,fn:null});T.fn=fn;if(T.t)return;const w=Math.max(0,T.last+gap-Date.now());const go=()=>{T.t=null;T.last=Date.now();const f=T.fn;T.fn=null;try{f&&f();}catch(e){console.error(e);}};if(w===0)go();else T.t=setTimeout(go,w);}
