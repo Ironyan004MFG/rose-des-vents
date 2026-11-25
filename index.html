@@ -11276,7 +11276,11 @@ function ptRow(c){
   if(fight&&!dead){
     const tr=c.tr||{};
     h+='<div class="pttour"'+(cur?'':' data-other="1"')+'>'+      '<div class="pteco">'+(cur?[["a","Action"],["b","Action bonus"],["r","Réaction"]]:[["r","Réaction"]]).map(f=>'<label class="ptchk'+(tr[f[0]]?' used':'')+'" for="tr-'+f[0]+'-'+c.cid+'"><input type="checkbox" class="pt-tr" id="tr-'+f[0]+'-'+c.cid+'" data-id="'+c.cid+'" data-f="'+f[0]+'"'+(tr[f[0]]?' checked':'')+'><span>'+f[1]+'</span></label>').join("")+'</div>'+
-      '<div class="ptbtnrow"><button class="btn gold sm" data-a="pt-atk" data-id="'+c.cid+'"'+(ui.ptA&&ui.ptA.from===c.cid&&ui.ptA.res?' disabled':'')+'>⚔ Attaque</button></div></div>';
+      '<div class="ptbtnrow">'+(()=>{const J=ptActOf(c);
+        // action envoyée par le joueur : le bouton ouvre la même attaque (pas de doublon) ; une sauvegarde ou un objet se règle dans l'encadré « Action du joueur »
+        if(J&&(J.k==="atk"||(J.k==="sort"&&J.jet==="att")))return '<button class="btn gold sm" data-a="pt-actatk" data-id="'+c.cid+'" title="'+esc(J.n)+'">⚔ Attaque du joueur</button>';
+        if(J)return '<span class="desc">📣 Action du joueur en cours : voir l\'encadré en haut.</span>';
+        return '<button class="btn gold sm" data-a="pt-atk" data-id="'+c.cid+'"'+(ui.ptA&&ui.ptA.from===c.cid&&ui.ptA.res?' disabled':'')+'>⚔ Attaque</button>';})()+'</div></div>';
     if(ui.ptAtkOpen===c.cid)h+=ptAtkPicker(c);
   }
   h+=ptAbil(c);
@@ -11853,6 +11857,7 @@ async function partyAction(a,id,b,e){
     else if(A.res==="miss")ptLog("⚔ "+f.nom+" rate "+t.nom+".");
     else if(A.res==="hit")ptLog("⚔ "+f.nom+" touche "+t.nom+dm+".");
     else if(A.res==="crit"){const k=txt("atk-desc");ptLog("✨ Coup critique de "+f.nom+" contre "+t.nom+dm+(k?". "+k:"")+".");if(C){C.crits=C.crits||{};C.crits[f.nom]=(C.crits[f.nom]||0)+1;}}
+    if(!A.act){const J=ptActOf(f);if(J&&(J.k==="atk"||(J.k==="sort"&&J.jet==="att")))A.act=J;}
     if(A.act){if(A.act.eff&&(A.res==="hit"||A.res==="crit"))ptActEffect(A.act,t,f);ptLog("📣 "+f.nom+" : "+A.act.n+(A.act.f?" ("+A.act.f+")":"")+".");ptActDone(A.act);}
     ui.ptA=null;ui.ptAtkOpen=null;}
   else if(a==="pt-atkto"&&c){const A=ui.ptA;if(!A||A.res)return;A.to=A.to===v?null:v;ch=false;}
