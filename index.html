@@ -408,7 +408,7 @@ a.ccat{text-decoration:none}
 .ptphase .ptround.sm strong{font-size:22px}
 .ptlbl{font-family:var(--display);font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px;display:flex;align-items:center;gap:8px}
 .ptphase .ptlbl{color:var(--on-board-muted);margin:0}
-.ptturncard{margin:10px 0}
+.ptturncard{margin:10px 0}.pttourhist{grid-column:1/-1;margin:4px 0 0;padding:8px 10px;border:1px dashed #c9a74f;border-radius:8px;background:#fffaf0}.pttourhist .ptjournal{margin:4px 0 0;max-height:220px;overflow:auto}
 .ptturncard .ptrow{box-shadow:0 0 0 3px var(--gold);background:#fff8e4}
 .ptselcard{margin:10px 0;border:2px dashed #2c5d7c;border-radius:8px;padding:6px}
 .ptx{background:none;border:1px solid var(--parch-3);border-radius:4px;min-width:32px;min-height:32px;cursor:pointer;color:var(--ink)}
@@ -3498,7 +3498,7 @@ function ptSave(force){if(!ui.pt)return;if(!ptActive()&&!force)return;if(ui.ptWa
     st=Object.assign({},st);delete st.id;
     setDoc(doc(db,"parties",qid),Object.assign(st,{majLe:serverTimestamp()})).catch(fail);},1500),500);
 }
-function ptLog(t){const j=ui.pt.journal||(ui.pt.journal=[]);const d=new Date(),e={h:String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"),t:String(t).slice(0,500)};j.push(e);if(ui.pt.combat){const L=ui.pt.combat.log||(ui.pt.combat.log=[]);L.push(e);if(L.length>200)L.splice(0,L.length-200);}if(j.length>300)j.splice(0,j.length-300);}
+function ptLog(t){const j=ui.pt.journal||(ui.pt.journal=[]);const d=new Date(),e={h:String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"),t:String(t).slice(0,500),n:(ui.pt.jn=(ui.pt.jn||0)+1)};j.push(e);if(ui.pt.combat){const L=ui.pt.combat.log||(ui.pt.combat.log=[]);L.push(e);if(L.length>200)L.splice(0,L.length-200);}if(j.length>300)j.splice(0,j.length-300);}
 function ptOrder(){return (ui.pt.liste||[]).slice().sort((a,b)=>((+b.init||0)-(+a.init||0))||(((+b.dex||0)+(+b.dx||0))-((+a.dex||0)+(+a.dx||0)))||String(a.nom).localeCompare(String(b.nom),"fr"));}
 function ptC(cid){return (ui.pt.liste||[]).find(c=>c.cid===cid);}
 function ptUid(){return Math.random().toString(36).slice(2,9);}
@@ -11256,7 +11256,7 @@ function ptAtkPicker(c){
     return h;};
   return '<div class="ptpick"><strong>Qui '+esc(c.nom)+' attaque-t-il ?</strong>'+(grp("adv").length?'<div class="pttgt"><span class="ptlbl">Adversaires</span>'+grp("adv").map(btn).join("")+'</div>':'')+(grp("ami").length?'<div class="pttgt"><span class="ptlbl">Ses alliés</span>'+grp("ami").map(btn).join("")+'</div>':'')+(A&&A.res?'':'<button class="ptadd" data-a="pt-atkx">Fermer</button>')+'</div>';
 }
-function ptRow(c){
+function ptRow(c,hist){
   const P=ui.pt,cur=P.cur===c.cid,dead=c.kind!=="pj"&&c.pv<=0,down=c.kind==="pj"&&c.pv<=0,fight=!!(P.combat&&P.combat.phase==="combat"),camp=ptCamp(c);
   const pct=c.pvMax>0?Math.max(0,Math.min(100,Math.round(100*c.pv/c.pvMax))):0,hc=pct>50?"ok":pct>25?"mid":"low";
   let h='<li class="ptrow'+(cur&&fight?' cur':'')+(dead?' dead':'')+(down?' down':'')+' k-'+c.kind+' c-'+camp+'" id="pt-'+c.cid+'">';
@@ -11288,7 +11288,7 @@ function ptRow(c){
     '<div class="hpsec dmg"><label for="dmg-'+c.cid+'">Dégâts</label><div><input type="number" min="0" inputmode="numeric" id="dmg-'+c.cid+'" placeholder="0"><button data-a="pt-dmg" data-id="'+c.cid+'">Appliquer</button></div></div>'+
     '<div class="hpsec heal"><label for="heal-'+c.cid+'">Soins</label><div><input type="number" min="0" inputmode="numeric" id="heal-'+c.cid+'" placeholder="0"><button data-a="pt-heal" data-id="'+c.cid+'">Appliquer</button></div></div>'+
     '<div class="hpsec tmp"><label for="tmp-'+c.cid+'">PV temporaires</label><div><input type="number" min="0" inputmode="numeric" id="tmp-'+c.cid+'" placeholder="0"><button data-a="pt-tmp" data-id="'+c.cid+'">Donner</button></div></div>'+
-    '<button class="ptdel" data-a="pt-del" data-id="'+c.cid+'">Retirer</button></div></li>';
+    '<button class="ptdel" data-a="pt-del" data-id="'+c.cid+'">Retirer</button></div>'+(hist||'')+'</li>';
   return h;
 }
 function ptStartTurn(c){
@@ -11300,7 +11300,7 @@ function ptNext(dir){
   let i=o.findIndex(c=>c.cid===ui.pt.cur);ui.ptAtk=null;ui.ptAtkOpen=null;ui.ptA=null;
   if(dir>0){ptEndTurn(ptC(ui.pt.cur));i++;if(i>=o.length||i<0){i=0;ui.pt.round=(ui.pt.round||0)+1;ptLog("— Round "+ui.pt.round+" —");}}
   else{i--;if(i<0){i=o.length-1;ui.pt.round=Math.max(1,(ui.pt.round||1)-1);}}
-  ui.pt.cur=o[i].cid;const c=o[i];
+  ui.pt.cur=o[i].cid;const c=o[i];ui.pt.tourN=ui.pt.jn||0;
   if(dir>0)ptStartTurn(c);
   if(c.kind==="pj"&&c.pv<=0)ui.ptAlert=c.nom+" est à 0 PV : jet contre la mort (d20, 10+ = succès).";
   if(ui.ptSel===c.cid)ui.ptSel=null;
@@ -11585,12 +11585,15 @@ function ptCombatCol(q){
   h+='<div class="ptphase"><span class="ptlbl">Rencontre</span><strong>'+esc(C.nom)+'</strong><span class="ptround sm"><span>Round</span><strong>'+P.round+'</strong></span></div>';
   h+=ptFoesUp()?'<div class="ptbar"><button class="btn ghost" data-a="pt-prev">◀ Précédent</button><button class="btn gold" data-a="pt-next">Tour suivant ▶</button><button class="btn ghost" data-a="pt-close">Clore la rencontre</button></div>':'<div class="ptvictory"><span>🏁 Plus aucun ennemi debout.</span><button class="btn gold" data-a="pt-close">Clore la rencontre</button></div>';
   h+=P.liste.filter(x=>x.kind==="pj").map(ptActCard).join("");
-  if(cur)h+='<div class="ptturncard"><div class="ptlbl">C\'est le tour de</div><ol class="ptlist">'+ptRow(cur)+'</ol></div>';
+  if(cur)h+='<div class="ptturncard"><div class="ptlbl">C\'est le tour de</div><ol class="ptlist">'+ptRow(cur,ptTourHist(P))+'</ol></div>';
   if(sel)h+='<div class="ptselcard"><div class="ptlbl">Fiche ouverte <button class="ptx" data-a="pt-selx" aria-label="Fermer la fiche">✕</button></div><ol class="ptlist">'+ptRow(sel)+'</ol></div>';
   h+='<h3>Ordre d\'initiative <span class="desc">(touche un nom pour ouvrir sa fiche)</span></h3><ol class="ptminis">'+o.map(c=>ptMini(c,"")).join("")+'</ol>';
   h+=ptNotesBox()+ptAddBox(q,false);
   return h;
 }
+// Historique du tour : les entrées du journal depuis le début du tour en cours (mêmes textes que le journal)
+function ptTourHist(P){const n0=P.tourN||0,M=((P.combat&&P.combat.log)||[]).filter(e=>e.n>n0);
+  return '<div class="pttourhist"><div class="ptlbl">Ce tour-ci</div>'+(M.length?'<ul class="ptjournal">'+M.map(e=>'<li><span>'+esc(e.h)+'</span>'+esc(e.t)+'</li>').join("")+'</ul>':'<p class="desc">Rien encore.</p>')+'</div>';}
 function ptCloseModal(){
   const P=ui.pt,C=P.combat;if(!C)return "";const v=Object.keys(C.vaincus||{}).map(k=>[k,C.vaincus[k]]),xp=v.reduce((t,x)=>t+(x[1].xp||0),0);
   let h='<div class="modal-bg" data-a="pt-close-cancel"><form class="modal wide" id="pt-closeform" role="dialog" aria-modal="true" aria-labelledby="ptc-t"><h2 id="ptc-t">Clore « '+esc(C.nom)+' »</h2>';
@@ -11850,6 +11853,8 @@ async function partyAction(a,id,b,e){
   else if(a==="pt-atkback"){if(ui.ptA){ui.ptA.res=null;ui.ptA.dmg=0;}ch=false;}
   else if(a==="pt-atkapply"){const A=ui.ptA,t=A&&ptC(A.to),el=document.getElementById("atk-dmg"),raw=el?String(el.value).trim():"",n=Math.max(0,Math.round(+raw||0));if(!t||raw==="")return;if(el)el.value="";ptAtkSet(A,t,n);}
   else if(a==="pt-atkdone"){const A=ui.ptA,f=A&&ptC(A.from),t=A&&ptC(A.to);if(!f||!t)return;const txt=id2=>{const el=document.getElementById(id2);return el?String(el.value).trim().slice(0,300):"";};
+    if(!A.act){const J=ptActOf(f);if(J&&(J.k==="atk"||(J.k==="sort"&&J.jet==="att")))A.act=J;}
+    if(A.act)ptLog("📣 "+f.nom+" : "+A.act.n+(A.act.f?" ("+A.act.f+")":"")+".");
     const el=document.getElementById("atk-dmg"),raw=el?String(el.value).trim():"";if(raw!==""&&(A.res==="hit"||A.res==="crit")){if(el)el.value="";ptAtkSet(A,t,Math.max(0,Math.round(+raw||0)));}
     if(A.dmg>0&&(A.res==="hit"||A.res==="crit"))ptDamage(t,A.dmg,true);
     const dm=A.dmg?" : "+A.dmg+" dégâts ("+t.pv+"/"+(t.pvMax||"?")+" PV)":"",C=P.combat;
@@ -11857,8 +11862,7 @@ async function partyAction(a,id,b,e){
     else if(A.res==="miss")ptLog("⚔ "+f.nom+" rate "+t.nom+".");
     else if(A.res==="hit")ptLog("⚔ "+f.nom+" touche "+t.nom+dm+".");
     else if(A.res==="crit"){const k=txt("atk-desc");ptLog("✨ Coup critique de "+f.nom+" contre "+t.nom+dm+(k?". "+k:"")+".");if(C){C.crits=C.crits||{};C.crits[f.nom]=(C.crits[f.nom]||0)+1;}}
-    if(!A.act){const J=ptActOf(f);if(J&&(J.k==="atk"||(J.k==="sort"&&J.jet==="att")))A.act=J;}
-    if(A.act){if(A.act.eff&&(A.res==="hit"||A.res==="crit"))ptActEffect(A.act,t,f);ptLog("📣 "+f.nom+" : "+A.act.n+(A.act.f?" ("+A.act.f+")":"")+".");ptActDone(A.act);}
+    if(A.act){if(A.act.eff&&(A.res==="hit"||A.res==="crit"))ptActEffect(A.act,t,f);ptActDone(A.act);}
     ui.ptA=null;ui.ptAtkOpen=null;}
   else if(a==="pt-atkto"&&c){const A=ui.ptA;if(!A||A.res)return;A.to=A.to===v?null:v;ch=false;}
   else if(a==="pt-paropen"){ui.ptParOpen=true;{const E=ecP();if(!E.ordre||!E.ordre.mode||E.ordre.mode==="aucun"){E.ordre=Object.assign({},E.ordre||{},{mode:"parole"});}}ecPush(true);}
@@ -11878,7 +11882,7 @@ async function partyAction(a,id,b,e){
     else{const parts=ids.map(k=>{const t=ptC(k);if(!t)return "";const ok=S.t[k]==="ok",d=isSav?(ok?(half?Math.floor(dmg/2):0):dmg):dmg;if(d>0)ptDamage(t,d,true);if(!isSav||!ok)ptActEffect(A,t,c);return t.nom+(isSav?(ok?" réussit":" échoue"):"")+(d>0?" ("+d+" dégâts)":"");}).filter(Boolean);
       ptLog("📣 "+c.nom+" : "+A.n+(isSav?" — DD "+A.dd+" "+(CAR_L[A.car]||""):"")+(parts.length?" → "+parts.join(", "):"")+".");ptActDone(A);ui.ptAS=null;}}
   else if(a==="pt-inidem"){if(!P.combat)return;const L=P.liste.filter(x=>x.kind==="pj"&&x.ref).map(x=>({a:x.ref,n:x.nom}));if(!L.length)return;P.initDem={ms:Date.now(),l:L};ptIniPublish(q.id,P.initDem);ptLog("📣 Initiative demandée aux joueurs.");ptIniApply();}
-  else if(a==="pt-fight"){if(!P.combat)return;if(P.initDem){P.initDem=null;ptIniPublish(q.id,null);}const o=ptOrder().filter(ptAlive);if(!o.length)return;P.combat.phase="combat";P.round=1;P.cur=o[0].cid;ui.ptSel=null;ptStats().combats++;ptLog("⚔ Début du combat — Round 1 —");
+  else if(a==="pt-fight"){if(!P.combat)return;if(P.initDem){P.initDem=null;ptIniPublish(q.id,null);}const o=ptOrder().filter(ptAlive);if(!o.length)return;P.combat.phase="combat";P.round=1;P.cur=o[0].cid;ui.ptSel=null;ptStats().combats++;ptLog("⚔ Début du combat — Round 1 —");P.tourN=P.jn||0;
     const miss=P.liste.filter(x=>x.init===""||x.init==null).map(x=>x.nom);if(miss.length)ui.ptAlert="Sans initiative (placés en fin de tour) : "+miss.join(", ")+". Tu peux encore la saisir sur leur fiche.";}
   else if(a==="pt-close"){ui.ptClose=true;ui.ltSess={};ui.ltCnt={};const r=P.combat&&P.combat.ref?rencontres.find(x=>x.id===P.combat.ref):null;ui.ptLootItems=r?lootParse(r.butin):[];ch=false;}
   else if(a==="pt-lootgen"){const L=ui.ptLootItems=ui.ptLootItems||[];const dz=lootDefeated(),qid=(ptQuest()||{}).id,PL=P.pnjLoot=P.pnjLoot||{};dz.forEach(x=>{
@@ -11897,7 +11901,7 @@ async function partyAction(a,id,b,e){
   else if(a==="pt-group"){const bf=ptIds();let n=0;ptSignups(q).forEach(s=>{if(ptAddPC(s))n++;});if(n)ptLog(n+" aventurier"+(n>1?"s":"")+" entre"+(n>1?"nt":"")+" en scène.");ptJoin(bf);}
   else if(a==="pt-enc"){const r=rencontres.find(x=>x.id===id);if(!r)return;const bf=ptIds();(r.monstres||[]).forEach(x=>{const m=monstres.find(y=>y.id===x.id);if(m)for(let i=0;i<(x.nb||1);i++)ptAddMonster(m);});ptLog("Renfort : "+r.nom+".");ptJoin(bf);}
   else if(a==="pt-rollinit"){ptRollInit(false);}
-  else if(a==="pt-start"){ptRollInit(false);const o=ptOrder().filter(ptAlive);if(!o.length)return;P.round=1;P.cur=o[0].cid;ptStats().combats++;ptLog("⚔ Début du combat — Round 1 —");
+  else if(a==="pt-start"){ptRollInit(false);const o=ptOrder().filter(ptAlive);if(!o.length)return;P.round=1;P.cur=o[0].cid;ptStats().combats++;ptLog("⚔ Début du combat — Round 1 —");P.tourN=P.jn||0;
     const miss=P.liste.filter(x=>x.kind==="pj"&&(x.init===""||x.init==null)).map(x=>x.nom);if(miss.length)ui.ptAlert="Initiative à saisir pour : "+miss.join(", ")+".";}
   else if(a==="pt-next"){ptNext(1);}
   else if(a==="pt-prev"){ptNext(-1);}
