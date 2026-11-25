@@ -21,10 +21,13 @@ service cloud.firestore {
     }
     function validFeuille(d) {
       return d.keys().hasOnly(['proprietaire', 'sousclasse', 'historique', 'car', 'sauv', 'comp', 'pv', 'dv', 'mort', 'ca', 'vitesse',
-                               'taille', 'inspi', 'armes', 'traits', 'maitr', 'sorts', 'equip', 'bourse', 'notes', 'majLe'])
+                               'taille', 'inspi', 'armes', 'traits', 'maitr', 'sorts', 'equip', 'bourse', 'notes', 'majLe',
+                               'inv', 'absorbes', 'recus'])
         && d.proprietaire is string
         && (!('armes' in d) || (d.armes is list && d.armes.size() <= 30))
         && (!('sorts' in d) || (d.sorts is map && (!('liste' in d.sorts) || (d.sorts.liste is list && d.sorts.liste.size() <= 150))))
+        && (!('inv' in d) || (d.inv is list && d.inv.size() <= 200))
+        && (!('absorbes' in d) || (d.absorbes is list && d.absorbes.size() <= 600))
         && (!('equip' in d) || (d.equip is string && d.equip.size() <= 8000))
         && (!('notes' in d) || (d.notes is string && d.notes.size() <= 8000));
     }
@@ -283,14 +286,18 @@ service cloud.firestore {
     }
     // Don d'Outerworlder : copie (nom + description) lisible par le joueur propriétaire du personnage ; seul le DM l'écrit
     // Fiche joueur : privée. Seuls le joueur propriétaire du personnage et le DM la lisent et l'écrivent.
+    // Le DM y dépose le butin attribué (recus) ; le joueur le range dans son inventaire.
     match /feuilles/{id} {
       allow read: if isAdmin() || (request.auth != null && (resource == null || resource.data.proprietaire == request.auth.uid));
       allow create: if isAdmin() || (realAccount() && validFeuille(request.resource.data)
         && request.resource.data.proprietaire == request.auth.uid
+        && !('recus' in request.resource.data)
         && get(/databases/$(database)/documents/aventuriers/$(id)).data.proprietaire == request.auth.uid);
       allow update: if isAdmin() || (realAccount() && validFeuille(request.resource.data)
         && resource.data.proprietaire == request.auth.uid
-        && request.resource.data.proprietaire == request.auth.uid);
+        && request.resource.data.proprietaire == request.auth.uid
+        // le butin reçu (recus) n'est écrit que par le DM
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['recus']));
       allow delete: if isAdmin();
     }
     match /dons/{id} {
