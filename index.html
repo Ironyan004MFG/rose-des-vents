@@ -56,6 +56,8 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 .offices{display:flex;flex-direction:column;gap:10px;min-width:0}
 /* Accueil large : la carte à gauche, comptoirs et liens en grille à droite (étirés sur la hauteur de la carte), le Crieur sur toute la largeur en dessous */
 .offgrid{display:flex;flex-direction:column;gap:10px}
+.offq{display:none;flex-direction:column;gap:1px;margin-top:4px;font-family:var(--body);font-style:italic;font-size:15px;letter-spacing:0;color:var(--on-board-muted)}.offq span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}.offq span::before{content:"✦ ";color:var(--gold);font-style:normal}
+.office .nm{min-width:0}
 @media (min-width:1300px){
 .wrap.home{max-width:min(2240px,94vw)}
 .wrap.home .mapwrap{grid-template-columns:minmax(0,1.3fr) minmax(360px,1fr);grid-template-areas:"map nav" "gaz gaz";gap:28px}
@@ -67,10 +69,12 @@ select,input,textarea{font:inherit;font-family:var(--body);text-transform:none;l
 @media (min-width:1900px){
 .wrap.home .offgrid{gap:14px}
 .wrap.home .office{padding:16px 20px}
-.wrap.home .office .nm{font-size:18px}
-.wrap.home .office .tag{font-size:16px}
-.wrap.home .office .count{font-size:16px}
-.wrap.home .offices h2{font-size:19px}
+.wrap.home .office .nm{font-size:22px}
+.wrap.home .office .tag{font-size:18px}
+.wrap.home .office .count{font-size:17px}
+.wrap.home .offices h2{font-size:21px}
+.wrap.home .office.expe .who{font-size:16px}
+.wrap.home .offq{display:flex}
 }
 
 .offices h2{font-family:var(--display);font-size:16px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin:0 0 4px}
@@ -1660,7 +1664,8 @@ function mapView(){
   let h='<div class="mapwrap"><div class="map saison-'+ecSaison()+'">'+calParch()+'<svg viewBox="0 0 1000 1100" role="group" aria-label="Carte de la Sword Coast et comptoirs de la Guilde">'+mapBase()+bureaux.map(marker).join("")+'</svg></div>';
   h+='<nav class="offices" aria-label="Comptoirs">'+expeSummary()+'<h2>Comptoirs de la Guilde</h2><div class="offgrid">';
   bureaux.forEach(b=>{const n=openCount(b.id),si=signedCount(b.id);
-    h+='<a class="office" href="#'+esc(b.id)+'"><span class="nm">'+esc(b.nom)+(b.siege?'<span class="tag">Siège de la Guilde</span>':'')+'</span><span class="count'+(n?'':' zero')+'">'+n+' quête'+(n>1?'s':'')+(si?'<span class="ins"> · '+si+' inscrit'+(si>1?'s':'')+'</span>':'')+'</span></a>';});
+    const oq=quetes.filter(q=>q.bureau===b.id&&q.statut==="ouverte").slice(0,2);
+    h+='<a class="office" href="#'+esc(b.id)+'"><span class="nm">'+esc(b.nom)+(b.siege?'<span class="tag">Siège de la Guilde</span>':'')+(oq.length?'<span class="offq">'+oq.map(q=>'<span>'+esc(q.titre)+'</span>').join("")+'</span>':'')+'</span><span class="count'+(n?'':' zero')+'">'+n+' quête'+(n>1?'s':'')+(si?'<span class="ins"> · '+si+' inscrit'+(si>1?'s':'')+'</span>':'')+'</span></a>';});
   h+='</div><div class="offgrid links">';
   h+='<a class="office regl" href="#compendium"><span class="nm">Compendium<span class="tag">PNJ, créatures, lieux, indices…</span></span><span aria-hidden="true">→</span></a>';
   h+='<a class="office regl" href="#aventuriers"><span class="nm">Les aventuriers de la Guilde<span class="tag">La galerie des personnages</span></span><span aria-hidden="true">→</span></a>';
