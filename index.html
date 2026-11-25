@@ -1056,6 +1056,52 @@ footer .who a{color:var(--gold)}
 .tokrow{display:flex;gap:1em;align-items:center;flex-wrap:wrap}#tok-cv{width:180px;height:180px;border-radius:12px;background:rgba(0,0,0,.25);cursor:grab;touch-action:none}#tok-cv:active{cursor:grabbing}.sheettok{display:flex;gap:1em;align-items:center;margin:1em 0}.sheettok img{border-radius:50%}
 .sheetdon{border:1px solid rgba(201,162,74,.5);border-radius:10px;padding:.6em .9em;margin:1em 0;background:rgba(201,162,74,.08)}.sheetdon h3{margin-top:.2em}
 .sheet-top{display:flex;flex-wrap:wrap;gap:20px;align-items:center}
+.feulink{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:4px 0}
+.feu{background:var(--parch);color:var(--ink);border-radius:4px;padding:20px clamp(14px,3vw,30px);box-shadow:0 10px 24px rgba(0,0,0,.45);max-width:1040px;display:flex;flex-direction:column;gap:12px}
+.feu{color-scheme:light;accent-color:#8a5b12}.feu2 .feumaitr{flex:none}
+.feu input,.feu select,.feu textarea{font:inherit;color:var(--ink);background:#fbf6e8;border:1px solid #c9b98f;border-radius:4px;padding:4px 6px;min-width:0}
+.feu textarea{width:100%;resize:vertical}
+.feu label{display:flex;flex-direction:column;gap:3px;font-size:14px;color:var(--ink-soft)}
+.feuhead{display:flex;flex-wrap:wrap;gap:16px;align-items:center}
+.feutok{border-radius:50%;object-fit:cover;border:2px solid var(--gold)}
+.feuid{flex:1 1 280px}.feuid h2{margin:0;font-family:var(--display)}
+.feurow{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}.feurow label{flex:1 1 140px}
+.feubadges{display:flex;gap:8px;margin:0}.feubadges div{border:2px solid #b9a982;border-radius:8px;padding:4px 12px;text-align:center;background:#f6efdb}
+.feubadges dt{font-family:var(--display);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}.feubadges dd{margin:0;font-size:22px;font-weight:700}
+.feusave{font-size:13px;color:var(--ink-soft);min-width:90px}
+.feupriv{margin:0}
+.feubox{border:1px solid #c9b98f;border-radius:8px;padding:10px 14px 14px;background:#f6efdb;display:flex;flex-direction:column;gap:10px}
+.feubox h3{font-family:var(--display);font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);margin:0}
+.feustats{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch}
+.feustat{flex:1 1 110px;border:1px solid #c9b98f;border-radius:8px;padding:6px 8px;background:#fbf6e8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;font-size:12px!important;text-transform:uppercase;letter-spacing:.06em}
+.feustat strong{font-size:22px;color:var(--ink)}.feustat input,.feustat select{width:100%;max-width:120px;text-align:center;font-size:18px}
+.feustat.big input{font-size:24px;font-weight:700;max-width:80px}
+.feustat.chk input{width:22px;height:22px}
+.feupv,.feumort,.feumaitr{border:1px solid #c9b98f;border-radius:8px;padding:6px 10px;display:flex;flex-wrap:wrap;gap:8px;flex:1 1 220px;margin:0}
+.feupv legend,.feumort legend,.feumaitr legend{font-family:var(--display);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+.feupv label{flex:1 1 70px}.feupv input{width:100%;font-size:18px;text-align:center}
+.feumort{flex-direction:column}.feumort span{display:flex;align-items:center;gap:6px}.feumort input{width:20px;height:20px}
+.feumaitr label{flex:1 1 200px}
+.feucars{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.feucar{border:1px solid #c9b98f;border-radius:8px;padding:8px;background:#fbf6e8;display:flex;flex-direction:column;gap:3px}
+.feucarv{flex-direction:row!important;align-items:center;justify-content:space-between;gap:6px!important;border-bottom:1px dashed #c9b98f;padding-bottom:6px;margin-bottom:2px}
+.feucarv span{font-family:var(--display);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);flex:1}
+.feucarv strong{font-size:22px;color:var(--ink);min-width:36px;text-align:center}.feucarv input{width:52px;text-align:center}
+.feuline{flex-direction:row!important;align-items:center;gap:6px!important;font-size:14px!important;color:var(--ink)!important}
+.feuline span{flex:1}.feuline b{min-width:30px;text-align:right}.feuline input[type=checkbox]{width:18px;height:18px}
+.feulv{padding:0 2px!important;width:40px}
+.feutab{width:100%;border-collapse:collapse}.feutab th{font-size:12px;text-align:left;color:var(--ink-soft);padding:2px 4px}.feutab td{padding:2px 4px}.feutab input:not([type=checkbox]){width:100%}.feutab .feun{width:52px}
+.feu2 label{width:100%}
+.feuempl{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}
+.feuemp{border:1px solid #c9b98f;border-radius:6px;padding:4px 6px;background:#fbf6e8;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:13px}
+.feuemp input[type=number]{width:46px;text-align:center}.feudots{display:flex;gap:3px;min-height:18px}.feudots input{width:16px;height:16px}
+.feubourse{display:flex;flex-wrap:wrap;gap:8px}
+.feupiece{flex:1 1 90px;flex-direction:row!important;align-items:center;gap:6px!important}
+.feupiece span{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;font-weight:700;font-size:13px;color:#2a2219;border:2px solid rgba(0,0,0,.25)}
+.feupiece input{width:100%;text-align:right}
+.p-pc span{background:#c98b5a}.p-pa span{background:#cfd4d8}.p-pe span{background:#d9cf9a}.p-po span{background:#e3c25c}.p-pp span{background:#eef2f4}
+@media (max-width:600px){.feutab thead{display:none}.feutab tr{display:grid;grid-template-columns:1fr 1fr;gap:4px;border-bottom:1px dashed #c9b98f;padding:4px 0}.feutab td{padding:0}}
+
 .sheet-id h2{font-family:var(--display);font-size:clamp(26px,4vw,36px);margin:0;line-height:1.1}
 .sheet-sub{display:block;font-style:italic;color:var(--ink-soft);margin:4px 0 0}
 .sheet-pl{margin:2px 0 0;font-size:15px;color:var(--ink-soft)}
@@ -2011,6 +2057,7 @@ function sheetView(id){
     if(L.length)h+='<dl class="sheetstatsv">'+L.map(x=>'<div><dt>'+x[1]+'</dt><dd>'+esc(S[x[0]])+x[2]+'</dd></div>').join("")+'</dl>';}
   if((a.compagnons||[]).length)h+='<section class="sheetcompv"><h3>Compagnons</h3><ul>'+a.compagnons.map(c=>'<li>'+(c.token?'<img src="'+esc(c.token)+'" alt="" width="48" height="48">':'<span class="sctok ph" aria-hidden="true">'+(EC_INV[c.t]||EC_INV.autre).i+'</span>')+'<span><strong>'+esc(c.n||"")+'</strong><span class="desc">'+esc((EC_INV[c.t]||EC_INV.autre).l)+'</span></span></li>').join("")+'</ul></section>';
   if(a.token)h+='<div class="sheettok"><img src="'+esc(a.token)+'" alt="Token de '+esc(a.nom)+'" width="96" height="96"><div><strong>Token (jeu virtuel)</strong>'+(mine||ui.dm?'<p class="desc">À téléverser dans Roll20, Discord ou ton outil de table virtuelle.</p><a class="btn ghost" download="token-'+esc(a.id)+(String(a.token).indexOf("image/webp")>0?'.webp':'.png')+'" href="'+esc(a.token)+'">Télécharger le token</a>':'')+'</div></div>';
+  if(mine||(ui.dm&&isAdmin))h+='<p class="feulink"><a class="btn gold" href="#feuille-'+esc(a.id)+'">📜 Fiche joueur</a> <span class="desc">🔒 Stats, sorts, équipement et bourse : visible par '+(mine?'toi et le DM':'le joueur et toi')+'.</span></p>';
   if(mine||ui.dm)h+='<h3>Expérience</h3>'+xpLine(a)+'<details class="crrep"><summary>Historique d\'XP</summary>'+xpHist(a)+'</details>';
   if(ui.dm&&isAdmin){const cap=meritCap(a),nx=examReady(a);
     h+='<p class="gmerit">Mérite '+merit(a)+(cap?' / '+cap:'')+' · niveau '+charLevel(a)+(gNext(grank(a))&&promoCfg()[gNext(grank(a))]?' / '+promoCfg()[gNext(grank(a))].niv:'')+(nx?' · <strong>éligible à l\'examen '+esc(GRANK_LBL[nx])+'</strong>':'')+' <em>(DM)</em></p>'+
@@ -2029,6 +2076,107 @@ function sheetView(id){
     +(ui.dm&&isAdmin&&ui.advDel===a.id?'<div class="advdel" role="alert"><p><strong>Supprimer définitivement la fiche de '+esc(a.nom)+' ?</strong> Son dossier DM est supprimé aussi. Ses inscriptions et l\'historique des quêtes gardent seulement son nom. On ne peut pas revenir en arrière.</p><button class="btn danger" data-a="adv-del-ok" data-id="'+esc(a.id)+'">Oui, supprimer</button> <button class="btn ghost" data-a="adv-del-no">Annuler</button></div>':'');
   return h+'</article>';
 }
+/* ---------- Fiche joueur (privée : le joueur propriétaire et le DM) ---------- */
+const FEU_CAR=[["for","FOR","Force"],["dex","DEX","Dextérité"],["con","CON","Constitution"],["int","INT","Intelligence"],["sag","SAG","Sagesse"],["cha","CHA","Charisme"]];
+const FEU_COMP=[["Acrobaties","dex"],["Arcanes","int"],["Athlétisme","for"],["Discrétion","dex"],["Dressage","sag"],["Escamotage","dex"],["Histoire","int"],["Intimidation","cha"],["Intuition","sag"],["Investigation","int"],["Médecine","sag"],["Nature","int"],["Perception","sag"],["Persuasion","cha"],["Religion","int"],["Représentation","cha"],["Survie","sag"],["Tromperie","cha"]];
+const FEU_PIECES=[["pc","pc","cuivre"],["pa","pa","argent"],["pe","pe","électrum"],["po","po","or"],["pp","pp","platine"]];
+let feuDoc=null,feuId=null,feuUnsub=null,feuLoaded=false,feuT=null,feuDirty=false;
+function feuBlank(){return {sousclasse:"",historique:"",car:{for:10,dex:10,con:10,int:10,sag:10,cha:10},sauv:{},comp:{},pv:{act:"",max:"",temp:""},dv:{total:"",util:0},mort:{s:[false,false,false],e:[false,false,false]},ca:"",vitesse:"9 m",taille:"Moyenne",inspi:false,armes:[],traits:{espece:"",classe:"",dons:""},maitr:{armures:"",armes:"",outils:"",langues:""},sorts:{car:"",empl:{},liste:[]},equip:"",bourse:{pc:0,pa:0,pe:0,po:0,pp:0},notes:""};}
+function feuMerge(b,d){const o=JSON.parse(JSON.stringify(b));Object.keys(d||{}).forEach(k=>{const v=d[k];if(v&&typeof v==="object"&&!Array.isArray(v)&&o[k]&&typeof o[k]==="object"&&!Array.isArray(o[k]))o[k]=feuMerge(o[k],v);else o[k]=v;});return o;}
+function feuListen(id){if(feuId===id)return;if(feuUnsub){try{feuUnsub();}catch(e){}}feuUnsub=null;feuId=id;feuDoc=null;feuLoaded=false;ui.feu=null;feuDirty=false;
+  const un=onSnapshot(doc(db,"feuilles",id),s=>{feuDoc=s.exists()?s.data():null;feuLoaded=true;
+    const ae=document.activeElement,inForm=ae&&ae.closest&&ae.closest("#feuform");
+    if(!feuDirty&&!inForm){ui.feu=feuMerge(feuBlank(),feuDoc||{});render();}},e=>{console.error(e);feuLoaded=true;feuDoc=null;ui.feuErr=errText(e);if(!ui.feu)ui.feu=feuBlank();render();});if(feuId===id)feuUnsub=un;else un();}
+function feuMod(v){return Math.floor(((+v||0)-10)/2);}
+function feuSg(n){return (n>=0?"+":"−")+Math.abs(n);}
+function feuPb(a){return 2+Math.floor(((charLevel(a)||1)-1)/4);}
+function feuCalcs(a,F){const pb=feuPb(a),m={};FEU_CAR.forEach(c=>{m[c[0]]=feuMod(F.car[c[0]]);});const R={pb:pb,mod:m,sauv:{},comp:{}};
+  FEU_CAR.forEach(c=>{R.sauv[c[0]]=m[c[0]]+(F.sauv[c[0]]?pb:0);});
+  FEU_COMP.forEach(c=>{const lv=+F.comp[c[0]]||0;R.comp[c[0]]=m[c[1]]+(lv===2?2*pb:lv===1?pb:0);});
+  R.init=m.dex;R.pp=10+R.comp.Perception;const sc=F.sorts.car;R.dd=sc&&m[sc]!=null?8+pb+m[sc]:null;R.att=sc&&m[sc]!=null?pb+m[sc]:null;return R;}
+function feuIn(f,v,attrs){return '<input data-f="'+f+'" value="'+esc(v==null?"":v)+'"'+(attrs||"")+'>';}
+function feuTa(f,v,rows,ph){return '<textarea data-f="'+f+'" rows="'+(rows||4)+'" maxlength="8000"'+(ph?' placeholder="'+esc(ph)+'"':'')+'>'+esc(v||"")+'</textarea>';}
+function feuChk(f,on,lbl){return '<input type="checkbox" data-f="'+f+'"'+(on?' checked':'')+(lbl?' aria-label="'+esc(lbl)+'"':'')+'>';}
+function feuView(id){
+  const a=aventuriers.find(x=>x.id===id);
+  if(!loaded.a)return '<p class="hint">Chargement…</p>';
+  if(!a)return '<p class="empty">Ce personnage n\'existe pas.</p>';
+  const mine=user&&!user.isAnonymous&&a.proprietaire===user.uid,dm=ui.dm&&isAdmin;
+  if(!mine&&!dm)return '<div class="sheetwrap"><p class="hint">🔒 Cette fiche joueur est privée : seuls le joueur de '+esc(a.nom)+' et le DM peuvent l\'ouvrir.</p><a class="btn ghost" href="#perso-'+esc(a.id)+'">Voir sa fiche publique</a></div>';
+  feuListen(id);
+  if(!feuLoaded||!ui.feu)return '<p class="hint">Chargement de la fiche joueur…</p>';
+  const F=ui.feu,R=feuCalcs(a,F),lvl=charLevel(a)||1;
+  let h='<form class="feu" id="feuform" data-id="'+esc(a.id)+'" autocomplete="off" onsubmit="return false">';
+  h+='<div class="feuhead">'+(a.token?'<img class="feutok" src="'+esc(a.token)+'" alt="" width="72" height="72">':a.image?'<img class="feutok" src="'+esc(a.image)+'" alt="" width="72" height="72">':'')+
+    '<div class="feuid"><h2>'+esc(a.nom)+'</h2><p class="sheet-sub">'+esc([a.espece,a.classe].filter(Boolean).join(" · ")||"Espèce et classe : sur la fiche publique")+'</p>'+
+    '<div class="feurow"><label>Sous-classe'+feuIn("sousclasse",F.sousclasse,' maxlength="60"')+'</label><label>Historique'+feuIn("historique",F.historique,' maxlength="60"')+'</label></div></div>'+
+    '<dl class="feubadges"><div><dt>Niveau</dt><dd>'+lvl+'</dd></div><div><dt>XP</dt><dd>'+esc(charXp(a))+'</dd></div><div><dt>Maîtrise</dt><dd data-calc="pb">'+feuSg(R.pb)+'</dd></div></dl>'+
+    '<span class="feusave" id="feusave" aria-live="polite">'+(ui.feuErr?'⚠ '+esc(ui.feuErr):'')+'</span></div>';
+  h+='<p class="desc feupriv">🔒 Privée : visible seulement par toi'+(dm&&!mine?' (DM) et par le joueur':' et le DM')+'. Les modificateurs se calculent tout seuls ; tout s\'enregistre automatiquement.</p>';
+  // combat
+  h+='<section class="feubox feucombat"><h3>Combat</h3><div class="feustats">'+
+    '<label class="feustat big">CA'+feuIn("ca",F.ca,' type="number" min="0" max="40" inputmode="numeric"')+'</label>'+
+    '<div class="feustat big"><span>Initiative</span><strong data-calc="init">'+feuSg(R.init)+'</strong></div>'+
+    '<label class="feustat">Vitesse'+feuIn("vitesse",F.vitesse,' maxlength="20"')+'</label>'+
+    '<label class="feustat">Taille'+feuIn("taille",F.taille,' maxlength="20"')+'</label>'+
+    '<div class="feustat"><span>Perception passive</span><strong data-calc="pp">'+R.pp+'</strong></div>'+
+    '<label class="feustat chk"><span>Inspiration héroïque</span>'+feuChk("inspi",F.inspi)+'</label></div>'+
+    '<div class="feustats"><fieldset class="feupv"><legend>Points de vie</legend><label>Actuels'+feuIn("pv.act",F.pv.act,' type="number" min="-99" max="999" inputmode="numeric"')+'</label><label>Max'+feuIn("pv.max",F.pv.max,' type="number" min="0" max="999" inputmode="numeric"')+'</label><label>Temporaires'+feuIn("pv.temp",F.pv.temp,' type="number" min="0" max="999" inputmode="numeric"')+'</label></fieldset>'+
+    '<fieldset class="feupv"><legend>Dés de vie</legend><label>Total'+feuIn("dv.total",F.dv.total,' maxlength="20" placeholder="ex. 3d8"')+'</label><label>Dépensés'+feuIn("dv.util",F.dv.util,' type="number" min="0" max="40" inputmode="numeric"')+'</label></fieldset>'+
+    '<fieldset class="feumort"><legend>Jets contre la mort</legend><span>Réussites '+[0,1,2].map(i=>feuChk("mort.s."+i,F.mort.s[i],"Réussite "+(i+1))).join("")+'</span><span>Échecs '+[0,1,2].map(i=>feuChk("mort.e."+i,F.mort.e[i],"Échec "+(i+1))).join("")+'</span></fieldset></div></section>';
+  // caractéristiques + compétences
+  h+='<section class="feubox"><h3>Caractéristiques, sauvegardes et compétences</h3><div class="feucars">'+FEU_CAR.map(c=>{const k=c[0];
+    return '<div class="feucar"><label class="feucarv"><span>'+c[2]+'</span><strong data-calc="mod.'+k+'">'+feuSg(R.mod[k])+'</strong>'+feuIn("car."+k,F.car[k],' type="number" min="1" max="30" inputmode="numeric" aria-label="Valeur de '+c[2]+'"')+'</label>'+
+      '<label class="feuline">'+feuChk("sauv."+k,F.sauv[k],"Maîtrise : sauvegarde de "+c[2])+'<span>Sauvegarde</span><b data-calc="sauv.'+k+'">'+feuSg(R.sauv[k])+'</b></label>'+
+      FEU_COMP.filter(x=>x[1]===k).map(x=>{const lv=+F.comp[x[0]]||0;return '<label class="feuline"><select data-f="comp.'+x[0]+'" class="feulv" aria-label="Maîtrise : '+x[0]+'"><option value="0"'+(lv===0?' selected':'')+'>○</option><option value="1"'+(lv===1?' selected':'')+'>●</option><option value="2"'+(lv===2?' selected':'')+'>◉</option></select><span>'+x[0]+'</span><b data-calc="comp.'+x[0]+'">'+feuSg(R.comp[x[0]])+'</b></label>';}).join("")+'</div>';}).join("")+
+    '</div><p class="desc">○ aucune · ● maîtrise · ◉ expertise (double maîtrise)</p></section>';
+  // armes
+  h+='<section class="feubox"><h3>Armes et sorts offensifs</h3>'+(F.armes.length?'<table class="feutab"><thead><tr><th scope="col">Nom</th><th scope="col">Attaque / DD</th><th scope="col">Dégâts et type</th><th scope="col">Notes</th><th scope="col"><span class="sr">Retirer</span></th></tr></thead><tbody>'+
+    F.armes.map((w,i)=>'<tr><td>'+feuIn("armes."+i+".n",w.n,' maxlength="60" aria-label="Nom"')+'</td><td>'+feuIn("armes."+i+".att",w.att,' maxlength="20" aria-label="Attaque" placeholder="+5"')+'</td><td>'+feuIn("armes."+i+".deg",w.deg,' maxlength="40" aria-label="Dégâts" placeholder="1d8+3 tranchants"')+'</td><td>'+feuIn("armes."+i+".notes",w.notes,' maxlength="120" aria-label="Notes"')+'</td><td><button class="mini" type="button" data-a="feu-del" data-k="armes" data-v="'+i+'" aria-label="Retirer">🗑</button></td></tr>').join("")+'</tbody></table>':'')+
+    '<button class="btn ghost sm" type="button" data-a="feu-add" data-k="armes">＋ Ajouter une arme</button></section>';
+  // traits
+  h+='<section class="feubox feu2"><h3>Traits et capacités</h3><label>Capacités de classe'+feuTa("traits.classe",F.traits.classe,6)+'</label><label>Traits d\'espèce'+feuTa("traits.espece",F.traits.espece,4)+'</label><label>Dons'+feuTa("traits.dons",F.traits.dons,4)+'</label>'+
+    '<fieldset class="feumaitr"><legend>Maîtrises</legend><label>Armures'+feuIn("maitr.armures",F.maitr.armures,' maxlength="200"')+'</label><label>Armes'+feuIn("maitr.armes",F.maitr.armes,' maxlength="200"')+'</label><label>Outils'+feuIn("maitr.outils",F.maitr.outils,' maxlength="200"')+'</label><label>Langues'+feuIn("maitr.langues",F.maitr.langues,' maxlength="200"')+'</label></fieldset></section>';
+  // sorts
+  const S=F.sorts;h+='<section class="feubox"><h3>Sorts</h3><div class="feustats"><label class="feustat">Caractéristique d\'incantation<select data-f="sorts.car"><option value="">—</option>'+FEU_CAR.filter(c=>c[0]!=="for"&&c[0]!=="dex"&&c[0]!=="con").map(c=>'<option value="'+c[0]+'"'+(S.car===c[0]?' selected':'')+'>'+c[2]+'</option>').join("")+'</select></label>'+
+    '<div class="feustat"><span>DD des sorts</span><strong data-calc="dd">'+(R.dd==null?"—":R.dd)+'</strong></div><div class="feustat"><span>Attaque de sort</span><strong data-calc="att">'+(R.att==null?"—":feuSg(R.att))+'</strong></div></div>';
+  h+='<div class="feuempl">'+[1,2,3,4,5,6,7,8,9].map(n=>{const e=S.empl[n]||{},mx=Math.max(0,Math.min(4,+e.max||0));return '<div class="feuemp"><span>Niv. '+n+'</span><label class="sr" for="fe-mx-'+n+'">Emplacements de niveau '+n+'</label><input id="fe-mx-'+n+'" data-f="sorts.empl.'+n+'.max" data-rr="1" type="number" min="0" max="4" value="'+mx+'" inputmode="numeric"><span class="feudots">'+Array.from({length:mx},(_,i)=>feuChk("sorts.empl."+n+".u."+i,(e.u||[])[i],"Emplacement "+(i+1)+" de niveau "+n+" dépensé")).join("")+'</span></div>';}).join("")+'</div><p class="desc">Coche un emplacement quand tu le dépenses ; décoche tout après un repos long.</p>';
+  h+=(S.liste.length?'<table class="feutab"><thead><tr><th scope="col">Niv.</th><th scope="col">Sort</th><th scope="col">Préparé</th><th scope="col">Notes (portée, durée, C/R)</th><th scope="col"><span class="sr">Retirer</span></th></tr></thead><tbody>'+
+    S.liste.map((x,i)=>'<tr><td>'+feuIn("sorts.liste."+i+".niv",x.niv,' type="number" min="0" max="9" aria-label="Niveau (0 = tour de magie)" class="feun"')+'</td><td>'+feuIn("sorts.liste."+i+".n",x.n,' maxlength="60" aria-label="Sort"')+'</td><td>'+feuChk("sorts.liste."+i+".prep",x.prep,"Préparé")+'</td><td>'+feuIn("sorts.liste."+i+".notes",x.notes,' maxlength="160" aria-label="Notes"')+'</td><td><button class="mini" type="button" data-a="feu-del" data-k="sorts.liste" data-v="'+i+'" aria-label="Retirer">🗑</button></td></tr>').join("")+'</tbody></table>':'')+
+    '<button class="btn ghost sm" type="button" data-a="feu-add" data-k="sorts.liste">＋ Ajouter un sort</button><p class="desc">Niveau 0 = tour de magie.</p></section>';
+  // inventaire
+  h+='<section class="feubox"><h3>Équipement et bourse</h3><div class="feubourse">'+FEU_PIECES.map(p=>'<label class="feupiece p-'+p[0]+'"><span>'+p[1]+'</span>'+feuIn("bourse."+p[0],F.bourse[p[0]],' type="number" min="0" max="9999999" inputmode="numeric" aria-label="Pièces de '+p[2]+'"')+'</label>').join("")+'</div>'+
+    '<label>Équipement porté et sac'+feuTa("equip",F.equip,8,"Armure, armes, sac à dos, rations, corde…")+'</label></section>';
+  // compagnons
+  if((a.compagnons||[]).length)h+='<section class="feubox sheetcompv"><h3>Compagnons</h3><ul>'+a.compagnons.map(c=>'<li>'+(c.token?'<img src="'+esc(c.token)+'" alt="" width="48" height="48">':'<span class="sctok ph" aria-hidden="true">'+(EC_INV[c.t]||EC_INV.autre).i+'</span>')+'<span><strong>'+esc(c.n||"")+'</strong><span class="desc">'+esc((EC_INV[c.t]||EC_INV.autre).l)+'</span></span></li>').join("")+'</ul><p class="desc">Ils se gèrent dans « Modifier la fiche » de la fiche publique.</p></section>';
+  h+='<section class="feubox"><h3>Notes</h3>'+feuTa("notes",F.notes,6,"Ce que ton personnage veut retenir : noms, indices, dettes, promesses…")+'</section>';
+  h+='<div class="actions"><a class="btn ghost" href="#perso-'+esc(a.id)+'">← Fiche publique</a></div>';
+  return h+'</form>';
+}
+function feuSet(o,path,val){const p=path.split(".");let c=o;for(let i=0;i<p.length-1;i++){const k=p[i],nk=p[i+1];if(c[k]==null||typeof c[k]!=="object")c[k]=/^\d+$/.test(nk)&&k!=="empl"?[]:{};c=c[k];}c[p[p.length-1]]=val;}
+function feuRead(){const f=document.getElementById("feuform");if(!f||!ui.feu)return;f.querySelectorAll("[data-f]").forEach(el=>{const p=el.getAttribute("data-f");let v;
+  if(el.type==="checkbox")v=el.checked;else if(el.type==="number"){v=el.value===""?"":Math.round(+el.value);if(v!==""&&isNaN(v))v="";}else if(el.tagName==="SELECT"&&p.indexOf("comp.")===0)v=+el.value||0;else v=el.value;feuSet(ui.feu,p,v);});}
+function feuCalcUpd(){const f=document.getElementById("feuform"),a=aventuriers.find(x=>x.id===(f&&f.getAttribute("data-id")));if(!f||!a)return;const R=feuCalcs(a,ui.feu);
+  f.querySelectorAll("[data-calc]").forEach(el=>{const k=el.getAttribute("data-calc");let v;if(k==="pp")v=R.pp;else if(k==="dd")v=R.dd==null?"—":R.dd;else if(k==="att")v=R.att==null?"—":feuSg(R.att);else{const p=k.split(".");v=p.length>1?R[p[0]][p[1]]:R[k];v=feuSg(v);}el.textContent=v;});}
+function feuClean(F){const n=(v,lo,hi)=>{if(v===""||v==null)return "";v=Math.round(+v);return isNaN(v)?"":Math.max(lo,Math.min(hi,v));},s=(v,m)=>String(v==null?"":v).slice(0,m);
+  const o={sousclasse:s(F.sousclasse,60),historique:s(F.historique,60),car:{},sauv:{},comp:{},pv:{act:n(F.pv.act,-99,999),max:n(F.pv.max,0,999),temp:n(F.pv.temp,0,999)},dv:{total:s(F.dv.total,20),util:n(F.dv.util,0,40)||0},
+    mort:{s:[0,1,2].map(i=>!!F.mort.s[i]),e:[0,1,2].map(i=>!!F.mort.e[i])},ca:n(F.ca,0,40),vitesse:s(F.vitesse,20),taille:s(F.taille,20),inspi:!!F.inspi,
+    armes:(F.armes||[]).slice(0,30).map(w=>({n:s(w.n,60),att:s(w.att,20),deg:s(w.deg,40),notes:s(w.notes,120)})),
+    traits:{espece:s(F.traits.espece,8000),classe:s(F.traits.classe,8000),dons:s(F.traits.dons,8000)},maitr:{armures:s(F.maitr.armures,200),armes:s(F.maitr.armes,200),outils:s(F.maitr.outils,200),langues:s(F.maitr.langues,200)},
+    sorts:{car:["int","sag","cha"].indexOf(F.sorts.car)>=0?F.sorts.car:"",empl:{},liste:(F.sorts.liste||[]).slice(0,150).map(x=>({niv:n(x.niv,0,9)||0,n:s(x.n,60),prep:!!x.prep,notes:s(x.notes,160)}))},
+    equip:s(F.equip,8000),bourse:{},notes:s(F.notes,8000)};
+  FEU_CAR.forEach(c=>{o.car[c[0]]=n(F.car[c[0]],1,30)||10;if(F.sauv[c[0]])o.sauv[c[0]]=true;});FEU_COMP.forEach(c=>{const lv=+F.comp[c[0]]||0;if(lv)o.comp[c[0]]=lv===2?2:1;});
+  for(let i=1;i<=9;i++){const e=F.sorts.empl[i]||{},mx=n(e.max,0,4)||0;if(mx)o.sorts.empl[i]={max:mx,u:Array.from({length:mx},(_,j)=>!!(e.u||[])[j])};}
+  FEU_PIECES.forEach(p=>{o.bourse[p[0]]=n(F.bourse[p[0]],0,9999999)||0;});return o;}
+function feuSaveSoon(){feuDirty=true;const el=document.getElementById("feusave");if(el)el.textContent="…";clearTimeout(feuT);feuT=setTimeout(feuSaveNow,1200);}
+async function feuSaveNow(){clearTimeout(feuT);const f=document.getElementById("feuform");const id=f?f.getAttribute("data-id"):feuId;const a=aventuriers.find(x=>x.id===id);if(!a||!ui.feu)return;
+  const o=feuClean(ui.feu);o.proprietaire=a.proprietaire||"";o.majLe=serverTimestamp();
+  try{await setDoc(doc(db,"feuilles",id),o);feuDirty=false;ui.feuErr="";
+    // garde la fiche publique à jour (le Mode Partie lit PV max, CA et Perception passive)
+    const R=feuCalcs(a,ui.feu),st=Object.assign({},a.stats||{}),nw={};if(o.pv.max!=="")nw.pv=o.pv.max;if(o.ca!=="")nw.ca=o.ca;nw.pp=Math.max(0,Math.min(40,R.pp));
+    if(Object.keys(nw).some(k=>st[k]!==nw[k])){Object.assign(st,nw);await updateDoc(doc(db,"aventuriers",id),{stats:st,majLe:serverTimestamp()});}
+    const el=document.getElementById("feusave");if(el)el.textContent="✓ Enregistré";}
+  catch(e){ui.feuErr=errText(e);const el=document.getElementById("feusave");if(el)el.textContent="⚠ "+ui.feuErr;}}
 function myCharsView(){
   if(!user||user.isAnonymous)return '<div class="sheetwrap"><p class="hint">Connecte-toi avec ton compte Google pour créer et retrouver tes personnages.</p><button class="btn gold" data-a="login">Se connecter avec Google</button></div>';
   if(ui.sheetEdit==="new")return '<div class="sheetwrap">'+sheetForm(null)+'</div>';
@@ -2888,10 +3036,10 @@ function render(){
   if(ui.office==="ecran"){document.body.classList.add("ecmode");ecTvUpdate();return;}
   document.body.classList.remove("ecmode");
   const wk=!!ui.office&&(ui.office==="wiki"||ui.office.indexOf("wiki-")===0);
-  if(ui.office&&ui.office!=="renommee"&&ui.office!=="chroniques"&&ui.office!=="expeditions"&&ui.office!=="personnages"&&ui.office!=="aventuriers"&&ui.office!=="dm"&&ui.office!=="mini"&&ui.office!=="compendium"&&ui.office!=="boutique"&&ui.office!=="ecran"&&ui.office.indexOf("compendium-")!==0&&ui.office.indexOf("perso-")!==0&&ui.office.indexOf("partie-")!==0&&!wk&&loaded.b&&!office(ui.office))ui.office=null;
+  if(ui.office&&ui.office!=="renommee"&&ui.office!=="chroniques"&&ui.office!=="expeditions"&&ui.office!=="personnages"&&ui.office!=="aventuriers"&&ui.office!=="dm"&&ui.office!=="mini"&&ui.office!=="compendium"&&ui.office!=="boutique"&&ui.office!=="ecran"&&ui.office.indexOf("compendium-")!==0&&ui.office.indexOf("perso-")!==0&&ui.office.indexOf("feuille-")!==0&&ui.office.indexOf("partie-")!==0&&!wk&&loaded.b&&!office(ui.office))ui.office=null;
   const reg=ui.office==="renommee";
   const chr=ui.office==="chroniques",exp=ui.office==="expeditions";
-  const perso=!!ui.office&&ui.office.indexOf("perso-")===0;
+  const feuP=!!ui.office&&ui.office.indexOf("feuille-")===0,perso=!!ui.office&&(ui.office.indexOf("perso-")===0||feuP);
   const mes=ui.office==="personnages";
   const gal=ui.office==="aventuriers";
   const dms=ui.office==="dm",mini=ui.office==="mini";
@@ -2901,17 +3049,18 @@ function render(){
   const b=ui.office&&!reg?office(ui.office):null;
   let h='<div class="wrap">';
   h+='<header><a class="homelogo" href="#carte" aria-label="Accueil : la carte" title="Accueil"><svg width="72" height="72" viewBox="-110 -110 220 220" aria-hidden="true"><circle r="80" fill="none" stroke="#d8b45e" stroke-width="3" opacity=".6"></circle>'+rose(104,'#0e1b20')+'</svg></a>';
-  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(pty?'Mode Partie':mini?'La Mini Guilde':dms?'Espace DM':gsh?'Boutique de la Guilde':comp||compE?'Compendium de la Guilde':gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?'Fiche de personnage':chr?'Chroniques de la Guilde':exp?'Expéditions':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(mini?'Les petites quêtes de Pax, à Waterdeep':dms?'Le bureau secret du Maître de la Guilde':gsh?'Intendance, services, dépôt et Trésor de la Rose':comp||compE?'Le savoir partagé des aventuriers':gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions en cours et accomplies par les aventuriers':exp?'Les groupes qui se forment sur la Sword Coast':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+dmPill()+statusPill()+'</header>';
+  h+='<div class="head-txt"><span class="eyebrow">Grande Guilde de la Rose des Vents · West Marches</span><h1>'+(pty?'Mode Partie':mini?'La Mini Guilde':dms?'Espace DM':gsh?'Boutique de la Guilde':comp||compE?'Compendium de la Guilde':gal?'Les aventuriers de la Guilde':mes?'Mes personnages':perso?(feuP?'Fiche joueur':'Fiche de personnage'):chr?'Chroniques de la Guilde':exp?'Expéditions':wk?'Wiki de la Guilde':reg?'Registre de renommée':b?'Babillard des quêtes':'Les comptoirs de la Guilde')+'</h1><span class="sub">'+(mini?'Les petites quêtes de Pax, à Waterdeep':dms?'Le bureau secret du Maître de la Guilde':gsh?'Intendance, services, dépôt et Trésor de la Rose':comp||compE?'Le savoir partagé des aventuriers':gal?'Tous les membres inscrits au registre':mes?'Tes aventuriers sur la Sword Coast':perso?'Registre de la Guilde de la Rose des Vents':chr?'Les missions en cours et accomplies par les aventuriers':exp?'Les groupes qui se forment sur la Sword Coast':wk?'Les règles maison de la campagne':reg?'Comment la Sword Coast voit ses aventuriers':b?'Comptoir de '+esc(b.nom)+(b.siege?' · Siège de la Guilde':''):'Un comptoir dans chaque grande ville de la Sword Coast')+'</span></div>'+dmPill()+statusPill()+'</header>';
   if(pty){const pq=ptQuest();h+=pq&&pq.libre?'<a class="back" href="#dm"><span aria-hidden="true">←</span> Cartes de l\'Espace DM</a>':'<a class="back" href="#'+(pq?esc(pq.bureau):'carte')+'"><span aria-hidden="true">←</span> Retour au babillard</a>';}
   else if(mini)h+='<a class="back" href="#dm"><span aria-hidden="true">←</span> Espace DM</a>';
   else if(compE)h+='<a class="back" href="#compendium"><span aria-hidden="true">←</span> Compendium</a>';
+  else if(feuP)h+='<a class="back" href="#perso-'+esc(ui.office.slice(8))+'"><span aria-hidden="true">←</span> Fiche du personnage</a>';
   else if(perso){// Retour vers la page d'où l'on vient (aventuriers, mes personnages, un comptoir…), sinon le registre de renommée.
     const fr=ui.persoFrom||"",bo=fr&&office(fr),L={aventuriers:"Les aventuriers de la Guilde",personnages:"Mes personnages",renommee:"Registre de renommée",expeditions:"Expéditions",chroniques:"Chroniques de la Guilde",dm:"Espace DM"},lb=L[fr]||(bo?bo.nom:fr==="partie-libre"||fr.indexOf("partie-")===0?"Mode Partie":"");
     h+=lb?'<a class="back" href="#'+esc(fr)+'"><span aria-hidden="true">←</span> '+esc(lb)+'</a>':'<a class="back" href="#renommee"><span aria-hidden="true">←</span> Registre de renommée</a>';}
   else if(b||reg||wk||chr||exp||mes||gal||comp||dms||gsh)h+='<a class="back" href="#carte"><span aria-hidden="true">←</span> Retour à la carte</a>';
   if(ui.authMsg)h+='<div class="dmbar"><span class="msg">'+esc(ui.authMsg)+'</span><button class="btn board" data-a="auth-ok">OK</button>'+(user&&!user.isAnonymous&&!isAdmin?'<button class="btn board" data-a="logout">Déconnexion</button>':'')+'</div>';
   if(ui.dm&&!pty&&!mini)h+=dmPanel(b);
-  h+=pty?partyView():mini?miniView():dms?dmSpaceView():gsh?gsView():comp?compendiumView():compE?compEntryView(ui.office.slice(11)):gal?galleryView():mes?myCharsView():perso?sheetView(ui.office.slice(6)):chr?chroniclesView():exp?expeditionsView():wk?wikiView():reg?renownView():b?boardView()+boardNews(b.id)+reputationSection(b.id,b.nom):mapView();
+  h+=pty?partyView():mini?miniView():dms?dmSpaceView():gsh?gsView():comp?compendiumView():compE?compEntryView(ui.office.slice(11)):gal?galleryView():mes?myCharsView():perso?(feuP?feuView(ui.office.slice(8)):sheetView(ui.office.slice(6))):chr?chroniclesView():exp?expeditionsView():wk?wikiView():reg?renownView():b?boardView()+boardNews(b.id)+reputationSection(b.id,b.nom):mapView();
   const signed=user&&!user.isAnonymous;
   h+='<footer><span>Pour partir en mission : choisis une quête, appuie sur « Je veux y aller » et choisis ton personnage. Le DM confirme les inscriptions.</span>'+
     '<span class="who">'+(signed?'Connecté : '+esc(user.displayName||user.email||"aventurier")+' · <a href="#personnages">Mes personnages</a> · <button class="linkbtn" data-a="logout">Déconnexion</button>':'<button class="linkbtn" data-a="login">Se connecter</button>')+
@@ -3036,7 +3185,7 @@ function route(){
     if(next&&next.indexOf("perso-")===0&&!(ui.office&&ui.office.indexOf("perso-")===0))ui.persoFrom=ui.office||"";ui.office=next;if(!(next==="personnages"&&ui.sheetEdit==="new"))ui.sheetEdit=null;if(!(next==="compendium"&&ui.compEdit==="new"))ui.compEdit=null;ui.compHist=null;ui.compVer=null;ui.confirmComp=null;ui.evolve=null;ui.noteEdit=null;ui.newsEdit=null;if(!ui.pendingMan){ui.manEdit=null;}ui.pendingMan=false;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=ui.pendingEdit||null;ui.pendingEdit=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter=ui.pendingFilter||"ouverte";ui.rank="all";const focusQ=ui.pendingQuest;ui.pendingFilter=null;ui.pendingQuest=null;render();
     try{const el=focusQ&&document.getElementById("q-"+focusQ);if(el){el.scrollIntoView({block:"center"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1600);}else window.scrollTo(0,0);}catch(e){}}
 }
-window.addEventListener("hashchange",route);
+window.addEventListener("hashchange",()=>{if(feuDirty)feuSaveNow();});window.addEventListener("hashchange",route);
 document.addEventListener("toggle",e=>{const t=e.target;if(t&&t.classList&&t.classList.contains("ptaddbox"))ui.ptAddOpen=t.open;},true);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&(ui.ptSb||ui.ptClose)){ui.ptSb=null;ui.ptClose=false;render();return;}
   if(e.key==="Escape"&&(ui.signup||ui.complete||ui.confirmGroup||ui.reportWrite||ui.plan)){ui.plan=null;ui.signup=null;ui.complete=null;ui.confirmGroup=null;ui.reportWrite=null;render();}});
@@ -11722,7 +11871,9 @@ document.addEventListener("click",async e=>{
   else if(a==="adv-del"){ui.advDel=id;}
   else if(a==="adv-del-no"){ui.advDel=null;}
   else if(a==="adv-del-ok"){if(!isAdmin)return;const av=aventuriers.find(x=>x.id===id);ui.advDel=null;
-    await run("Fiche supprimée",async()=>{await deleteDoc(doc(db,"aventuriers",id));if(dossiers[id])await deleteDoc(doc(db,"dossiers",id)).catch(()=>{});});location.hash="#";return;}
+    await run("Fiche supprimée",async()=>{await deleteDoc(doc(db,"aventuriers",id));if(dossiers[id])await deleteDoc(doc(db,"dossiers",id)).catch(()=>{});await deleteDoc(doc(db,"feuilles",id)).catch(()=>{});});location.hash="#";return;}
+  else if(a==="feu-add"||a==="feu-del"){if(!ui.feu)return;feuRead();const k=b.getAttribute("data-k"),L=k==="armes"?(ui.feu.armes=ui.feu.armes||[]):(ui.feu.sorts.liste=ui.feu.sorts.liste||[]);
+    if(a==="feu-add")L.push(k==="armes"?{n:"",att:"",deg:"",notes:""}:{niv:1,n:"",prep:false,notes:""});else L.splice(+b.getAttribute("data-v"),1);feuSaveSoon();render();const ins=document.querySelectorAll('#feuform [data-f^="'+k+'."]');if(a==="feu-add"&&ins.length){const r=ins[ins.length-1].closest("tr");const f=r&&r.querySelector('input:not([type=number]):not([type=checkbox])');if(f)f.focus();}return;}
   else if(a==="sheet-edit"){ui.sheetEdit=id;ui.sheetImg=undefined;ui.tokCadre=null;ui.sheetComp=undefined;}
   else if(a==="sheet-cancel"){ui.sheetEdit=null;ui.sheetImg=undefined;ui.tokCadre=null;ui.sheetComp=undefined;}
   else if(a==="sc-add"){const L=ui.sheetComp||[];if(L.length<SC_MAX)L.push({id:ptUid(),n:"",t:"familier"});ui.sheetComp=L;sheetCompRefresh();const el=document.getElementById("sc-n-"+(L.length-1));if(el)el.focus();return;}
@@ -11915,6 +12066,7 @@ document.addEventListener("click",async e=>{
 });
 document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.matches&&d.matches("details.cart"))ui.cartOpen=d.open;if(d&&d.matches&&d.matches("details.shop")){const S=((ui.pt&&ui.pt.boutiques)||[]).find(x=>x.id===d.getAttribute("data-shopid"));if(S)S.ouvert=d.open;}},true);
 document.addEventListener("change",e=>{
+  if(e.target.closest&&e.target.closest("#feuform")){feuRead();feuCalcUpd();feuSaveSoon();if(e.target.getAttribute("data-rr"))setTimeout(render,0);return;}
   if(e.target.id==="lg-src"&&ui.lootGen){const G=ui.lootGen,v=e.target.value,P=ui.pt;if(!v)return;
     if(v[0]==="c"){const x=(P.combats||[])[+v.slice(1)];if(x){Object.keys(x.vaincus||{}).forEach(k=>{for(let i=0;i<(x.vaincus[k].n||1);i++)G.rows.push(lgRowOf(k));});G.renc=x.nom;const r=rencontres.find(y=>y.nom===x.nom);G.prevu=r&&!(x.butin||[]).length?lootParse(r.butin):[];}}
     else{const r=rencontres.find(y=>y.id===v.slice(1));if(r){(r.monstres||[]).forEach(z=>{const m=monstres.find(y=>y.id===z.id);if(m)for(let i=0;i<(z.nb||1);i++)G.rows.push({k:"m",id:m.id,nom:m.nom});});G.renc=r.nom;G.prevu=lootParse(r.butin);}}
@@ -11953,7 +12105,7 @@ document.addEventListener("change",e=>{
     file.text().then(t=>{try{ui.importPreview=previewImport(JSON.parse(t));ui.dmTab="outils";}catch(err){save={state:"error",msg:"Import impossible : "+err.message};}render();});
   }
 });
-document.addEventListener("input",e=>{if(e.target.getAttribute&&e.target.getAttribute("data-sc")==="n"){const c=(ui.sheetComp||[])[+e.target.getAttribute("data-i")];if(c)c.n=e.target.value;return;}if(e.target.id==="pt-find"){ui.ptFind=e.target.value;render();return;}if(e.target.id==="lg-find"&&ui.lootGen){ui.lootGen.find=e.target.value;render();return;}if(e.target.id==="ec-find"){ui.ecFind=e.target.value;render();return;}if(e.target.id==="pt-objq"){ui.ptObjQ=e.target.value;render();return;}if(e.target.id==="pt-cq"){ui.ptCq=e.target.value;render();return;}if(e.target.id==="man-q"){ui.manQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("man-q");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}return;}
+document.addEventListener("input",e=>{if(e.target.getAttribute&&e.target.getAttribute("data-sc")==="n"){const c=(ui.sheetComp||[])[+e.target.getAttribute("data-i")];if(c)c.n=e.target.value;return;}if(e.target.closest&&e.target.closest("#feuform")&&e.target.type!=="checkbox"&&e.target.tagName!=="SELECT"&&!e.target.getAttribute("data-rr")){feuRead();feuCalcUpd();feuSaveSoon();return;}if(e.target.id==="pt-find"){ui.ptFind=e.target.value;render();return;}if(e.target.id==="lg-find"&&ui.lootGen){ui.lootGen.find=e.target.value;render();return;}if(e.target.id==="ec-find"){ui.ecFind=e.target.value;render();return;}if(e.target.id==="pt-objq"){ui.ptObjQ=e.target.value;render();return;}if(e.target.id==="pt-cq"){ui.ptCq=e.target.value;render();return;}if(e.target.id==="man-q"){ui.manQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("man-q");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}return;}
   if(e.target.id==="pa-nb"||e.target.id==="pa-niv"){ui.party[e.target.id==="pa-nb"?"nb":"niv"]=e.target.value;if(e.target.value){const id=e.target.id;render();const el=document.getElementById(id);if(el){el.focus();}}return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-ml")!=null){syncML();return;}
   if(e.target.id==="n-search"){ui.noteQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("n-search");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}return;}if(e.target.id==="c-search"){ui.compQ=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("c-search");if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(x){}}}});
