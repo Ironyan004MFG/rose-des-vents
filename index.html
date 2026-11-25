@@ -3161,8 +3161,9 @@ function ptSave(force){if(!ui.pt)return;if(!ptActive()&&!force)return;if(ui.ptWa
   if(!(ui.pt.id!=="libre"&&!ui.ptMapOnly&&ptSepOn(ui.pt.id)))try{ecFoeSync();}catch(e){console.error(e);}
   try{ptObjSync();}catch(e){console.error(e);}
   ui.ptEditMs=Date.now();ui.pt.rev=Math.max(Date.now(),(ui.ptRev||0)+1);ui.ptRev=ui.pt.rev;ui.pt.by=PT_CLIENT;
-  clearTimeout(ptTimer);const snap=ptClone(ui.pt),qid=snap.id;
-  ptTimer=setTimeout(()=>fsThr("pt|"+qid,()=>{let st=snap;
+  // on ne copie l'état qu'au moment d'écrire (pas à chaque petit changement : c'était lourd pendant un glisser)
+  clearTimeout(ptTimer);const ref=ui.pt,qid=ref.id;
+  ptTimer=setTimeout(()=>fsThr("pt|"+qid,()=>{let st=ptClone(ref);
     // juste avant d'écrire : si un autre onglet a enregistré entre-temps, on combine d'abord avec sa version
     const fail=e=>{console.error(e);save={state:"error",msg:errText(e)};render();};
     if(ui.pt&&ui.pt.id===qid){const d=parties.find(p=>p.id===qid);if(d&&d.rev&&d.by!==PT_CLIENT&&d.rev!==ui.ptSeen){const R=Object.assign(ptBlank(qid),ptClone(d));ui.pt=ptMerge3(ui.ptBase||R,ui.pt,R);ui.ptBase=R;ui.ptSeen=d.rev;}
@@ -10266,16 +10267,23 @@ function tbState(q,st){const c=st&&st.carte;if(!c)return {qid:q.id,titre:q.titre
     .map(k=>{if(k.k!=="inv")return k;const sg=tbSignByName(q,k.ow);return sg?Object.assign({},k,{u:sg.uid}):k;});
   // joueurs autour de la table (pas virtuels) : montrés en figurine complète, que personne ne peut déplacer
   const N=v=>ptNorm(v).trim(),pres=(st.tokens||[]).filter(k=>k.k==="pj"&&!tbVirt(k.n)).map(k=>{const av=aventuriers.find(a=>!a.pnj&&N(a.nom)===N(k.n));return {u:"pres-"+k.id,a:av?av.id:"",n:k.n,x:k.x,y:k.y,c:k.c||"#d8b45e",pres:1,d:k.down?1:0};});
-  const out=Object.assign({},st,{vie:Date.now(),qid:q.id,titre:q.titre,tokens,figs:(st.figs||[]).concat(pres),vue:(ecDoc&&ecDoc.tv)?{cols:ecDoc.tv.cols,rows:ecDoc.tv.rows}:{cols:40,rows:22},ms:Date.now()});delete out.calib;delete out.tvv;return JSON.parse(JSON.stringify(out));}
+  // figurines virtuelles : les joueurs les lisent eux-mêmes (table/{quête}/figs) ; on publie seulement qui est qui (nom, image, couleur, inconscient)
+  const roster={};tbFigList(q,c).forEach(f=>{roster[f.u]={a:f.a,n:f.n,c:f.c,d:f.d||0};});
+  const out=Object.assign({},st,{vie:Date.now(),qid:q.id,titre:q.titre,tokens,figs:pres,roster,vue:(ecDoc&&ecDoc.tv)?{cols:ecDoc.tv.cols,rows:ecDoc.tv.rows}:{cols:40,rows:22},ms:Date.now()});delete out.calib;delete out.tvv;return JSON.parse(JSON.stringify(out));}
 function tbPush(){const q=tbQuest();if(!q||!isAdmin||!ptActive())return;tbListen(q.id);clearTimeout(tbPushT);tbPushT=setTimeout(()=>fsThr("tb|"+q.id,()=>{if(tbQuest()!==q)return;let st=null;try{st=ecState();}catch(e){}
   setDoc(doc(db,"table",q.id),tbState(q,st)).catch(e=>console.error(e));},1500),600);}
 // Côté DM : écoute les figurines des joueurs, pour les montrer sur sa vue, la télé et la copie publiée.
 function tbListen(qid){if(tbFigQ===qid)return;if(tbFigUnsub){try{tbFigUnsub();}catch(e){}tbFigUnsub=null;}tbFigQ=qid;tbFigs={};if(!qid||!isAdmin)return;
-  tbFigUnsub=onSnapshot(collection(db,"table",qid,"figs"),snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data();});tbFigs=o;const q=tbQuest();if(q&&q.id===qid){try{tbInvApply(q);}catch(e){console.error(e);}try{ecUpd();}catch(e){}if(ui.office&&ui.office.indexOf("partie-")===0&&ui.ptTab==="ecran"&&!document.activeElement.matches("input,textarea,select"))render();}},e=>console.error(e));}
+  tbFigUnsub=onSnapshot(collection(db,"table",qid,"figs"),snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data();});const k0=tbFigKey(tbFigs);tbFigs=o;const q=tbQuest();if(q&&q.id===qid){
+    // Les figurines sont une couche au-dessus de la carte : les joueurs les lisent directement. Ici on met seulement à jour l'affichage du DM et de la télé.
+    try{tbInvApply(q);}catch(e){console.error(e);}try{ecUpdLocal();ecPush(false,true);}catch(e){}
+    // nouvelle figurine posée ou retirée : la liste du DM et la copie publiée (noms, couleurs) changent
+    if(tbFigKey(o)!==k0){tbPush();if(ui.office&&ui.office.indexOf("partie-")===0&&ui.ptTab==="ecran"&&!document.activeElement.matches("input,textarea,select"))render();}}},e=>console.error(e));}
+function tbFigKey(F){return Object.keys(F||{}).sort().map(u=>u+":"+((F[u]||{}).carte||"")).join(",");}
 // Invocations déplacées par les joueurs à distance : chaque nouveau déplacement (son horodatage pms change) est repris sur la carte du DM.
 function tbInvApply(q){const E=ecP();let ch=false;(E.cartes||[]).forEach(c=>{(c.tokens||[]).forEach(k=>{if(k.k!=="inv")return;const sg=tbSignByName(q,k.ow),f=sg&&tbFigs[sg.uid],p=f&&f.inv&&f.inv[k.id];if(!p||+p.ms===+k.pms)return;
   k.pms=+p.ms;k.x=Math.max(0.5,Math.min(c.w-0.5,Math.floor(+p.x)+0.5));k.y=Math.max(0.5,Math.min(c.h-0.5,Math.floor(+p.y)+0.5));ch=true;if(c===ecCard())ecReveal(c);});});
-  if(ch){ptSave();ecPush(true);}}
+  if(ch){try{ecUpdLocal();}catch(e){}}}
 // Figurine : pion plein à l'image du personnage, bordé de la couleur de son anneau.
 function ecFigImg(aid){if(!aid)return null;let e=EC_FIGIMG.get(aid);if(e)return e.ok?e.im:null;const av=aventuriers.find(a=>a.id===aid);if(!av||!(av.token||av.image))return null;
   // le token du visage (cadré sur la fiche) en priorité, sinon le portrait entier
@@ -10290,12 +10298,14 @@ function tbDmLine(q){const c=ecCard();if(!c||q.libre)return "";const F=tbFigList
   return '<div class="tbdm">🌐 <strong>Table virtuelle</strong> <button class="btn gold sm" data-a="tb-copylink" data-id="'+esc(q.id)+'">'+(ui.tbCopied?'✓ Lien copié':'Copier le lien des joueurs à distance')+'</button>'+(nG?' <button class="btn sm" data-a="pt-ec-gatherall" title="Chaque anneau de joueur à distance va sur la case de sa figurine">🎯 Tout rassembler ('+nG+')</button>':'')+' : '+(q.statut==="encours"?'les inscrits à distance ouvrent cette carte depuis la quête (« Ouvrir la carte ») et y posent leur figurine virtuelle. Coche « Virtuel » pour un joueur à distance : en posant son anneau, sa figurine virtuelle est posée au même endroit ; lui seul la déplace, sans effet sur la vision. Ajuste ensuite l\'anneau dessous, comme pour une figurine sur la table.':'s\'ouvrira aux inscrits quand la quête sera en cours.')+
     (F.length?'<div class="tbfigs">Figurines posées : '+F.map(f=>'<span class="tbfig">'+esc(f.n)+' <button class="mini" data-a="tb-figdel" data-id="'+esc(f.u)+'" aria-label="Retirer la figurine de '+esc(f.n)+'">Retirer</button></span>').join(" ")+'</div>':'')+'</div>';}
 /* ----- Vue du joueur (#table-{quête}) ----- */
-let tbDoc=null,tbVit=null,tbSubQ=null,tbSubs=[],tbErr="",tbMine=null;
-function tbUnsub(){tbSubs.forEach(f=>{try{f();}catch(e){}});tbSubs=[];tbSubQ=null;tbDoc=null;tbVit=null;tbErr="";tbMine=null;}
+let tbDoc=null,tbVit=null,tbSubQ=null,tbSubs=[],tbErr="",tbMine=null,tbAll={};
+function tbUnsub(){tbSubs.forEach(f=>{try{f();}catch(e){}});tbSubs=[];tbSubQ=null;tbDoc=null;tbVit=null;tbErr="";tbMine=null;tbAll={};}
 function tbSub(qid){if(tbSubQ===qid)return;tbUnsub();tbSubQ=qid;const er=e=>{console.error(e);tbErr=e&&e.code==="permission-denied"?"Cette carte est réservée aux aventuriers inscrits à la quête.":"La carte n'a pas pu être chargée.";tbUpdate();};
   tbSubs.push(onSnapshot(doc(db,"table",qid),s=>{tbDoc=s.exists()?s.data():null;hbSaw("tb",tbDoc);tbErr="";tbUpdate();},er));
   tbSubs.push(onSnapshot(doc(db,"table",qid,"vitrine","live"),s=>{tbVit=s.exists()?s.data():null;tbUpdate();},()=>{}));
-  tbSubs.push(onSnapshot(doc(db,"table",qid,"figs",user.uid),s=>{tbMine=s.exists()?s.data():null;tbUpdate();},()=>{}));}
+  tbSubs.push(onSnapshot(doc(db,"table",qid,"figs",user.uid),s=>{tbMine=s.exists()?s.data():null;tbUpdate();},()=>{}));
+  // les figurines des autres joueurs, directement (sans attendre que le DM republie la carte)
+  tbSubs.push(onSnapshot(collection(db,"table",qid,"figs"),snap=>{const o={};snap.docs.forEach(d=>{o[d.id]=d.data();});tbAll=o;tbUpdate();},()=>{tbAll={};}));}
 // Vue transmise par le DM : le cadre de la télé, ajusté à la fenêtre du joueur.
 function tbFollow(r,st,cw,ch){const v=st.vue||{cols:40,rows:22},cam=st.cam||{x:0,y:0};return {x:cam.x+v.cols/2,y:cam.y+v.rows/2,s:Math.max(6,Math.min(cw/v.cols,ch/v.rows))};}
 function tbShell(qid){const q=questById(qid);return '<div class="ectv tbv"><canvas id="ec-pl" aria-label="Carte de la partie"></canvas><div class="ectv-met" id="pl-met"></div><div class="ectv-info" id="pl-info"></div><div class="ectv-ord" id="pl-ord"></div><div class="ectv-msg" id="pl-msg"></div><div class="ectv-fiche" id="pl-fiche"></div>'+
@@ -10311,9 +10321,12 @@ function tbUpdate(){if(!ui.office||ui.office.indexOf("table-")!==0)return;const 
   if(tbErr||!st||!st.carte||off){if(off)["pl-met","pl-info","pl-ord"].forEach(k=>{const el=document.getElementById(k);if(el)el.innerHTML="";});m.textContent=tbErr||(off?"Le Maître de la Guilde s'est déconnecté. La carte reviendra dès qu'il rouvrira la partie.":v?"":"En attente du Maître de la Guilde… La carte apparaîtra dès qu'il en ouvre une.");const r=ecBind("ec-pl","joueur");if(r)r.st=null;return;}
   m.textContent="";const r=ecBind("ec-pl","joueur");if(!r)return;r.me=user.uid;
   const S=JSON.parse(JSON.stringify(st)),mine=tbMyFig(S,r),av=sg&&sg.aventurier&&aventuriers.find(a=>a.id===sg.aventurier);
-  S.figs=(S.figs||[]).filter(x=>x.u!==user.uid);if(mine&&sg){const old=(st.figs||[]).find(x=>x.u===user.uid);S.figs.push({u:user.uid,a:av?av.id:"",n:av?av.nom:sg.nom,x:mine.x,y:mine.y,c:old?old.c:"#d8b45e"});}
+  S.figs=(S.figs||[]).filter(x=>x.u!==user.uid);
+  // figurines des autres joueurs à distance : lues directement, nommées et colorées d'après la liste publiée par le DM
+  if(S.roster){S.figs=S.figs.filter(x=>x.pres);Object.keys(tbAll).forEach(u=>{if(u===user.uid)return;const f=tbAll[u],R=S.roster[u];if(!f||!R||f.carte!==S.carte.id)return;S.figs.push({u,a:R.a,n:R.n,c:R.c,d:R.d,x:+f.x,y:+f.y});});}
+  if(mine&&sg){const R=(S.roster||{})[user.uid],old=(st.figs||[]).find(x=>x.u===user.uid)||R;S.figs.push({u:user.uid,a:av?av.id:"",n:av?av.nom:sg.nom,x:mine.x,y:mine.y,c:old?old.c:"#d8b45e",d:old&&old.d?1:0});}
   // mes invocations : la position que je viens de donner reste affichée tant que le DM ne l'a pas reprise (ou déplacée lui-même ensuite)
-  const myInv=(S.tokens||[]).filter(k=>k.k==="inv"&&k.u===user.uid);myInv.forEach(k=>{const d=r.dragInv&&r.dragInv[0]===k.id?r.dragInv:null,p=((tbMine&&tbMine.inv)||{})[k.id];if(d){k.x=d[1];k.y=d[2];}else if(p&&+p.ms!==+k.pms){k.x=+p.x;k.y=+p.y;}});
+  const myInv=(S.tokens||[]).filter(k=>k.k==="inv"&&k.u===user.uid);(S.tokens||[]).forEach(k=>{if(k.k!=="inv"||!k.u)return;const F=k.u===user.uid?tbMine:tbAll[k.u],d=r.dragInv&&r.dragInv[0]===k.id?r.dragInv:null,p=((F&&F.inv)||{})[k.id];if(d){k.x=d[1];k.y=d[2];}else if(p&&+p.ms!==+k.pms){k.x=+p.x;k.y=+p.y;}});
   ecSet(r,S);tbBind(r);
   {const M=EC_METEO[st.meteo]||EC_METEO.clair;document.getElementById("pl-met").innerHTML=(st.date?'<span class="dt">📜 '+esc(st.date)+'</span>':'')+(st.meteo&&st.meteo!=="clair"?'<strong>'+M.i+' '+esc(M.l)+'</strong>':'');}
   document.getElementById("pl-info").innerHTML=st.info?'<p>'+esc(st.info).replace(/\n/g,"<br>")+'</p>':'';
@@ -10372,8 +10385,9 @@ function ecCloseScreens(){if(!isAdmin)return;clearTimeout(ecPushT);clearTimeout(
   if(q)setDoc(doc(db,"table",q.id),{qid:q.id,titre:q.titre,carte:null,ms:Date.now()}).catch(e=>console.error(e));}
 // grille active par défaut tant que le MJ ne l'a pas décochée lui-même
 function ecGridOn(E){return E.gridSet?!!E.grid:true;}
-function ecPush(now){if(ui.ecStopped)return;if(!ptActive()&&!ui.ptMapOnly)return;if(isAdmin&&ui.pt)try{ptSave();}catch(e){console.error(e);}
-  if(ui.pt&&ui.pt.id!=="libre"&&!ui.ptMapOnly&&ptSepOn(ui.pt.id))return;if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();if(st)try{ecImgPub(st.tokens);st.jk=teleKey(false)||"";}catch(e){console.error(e);}tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);
+// lite : seulement l'affichage (télé, onglet télé) — pas d'enregistrement de la partie ni de copie publiée aux joueurs (ex. figurines des joueurs)
+function ecPush(now,lite){if(ui.ecStopped)return;if(!ptActive()&&!ui.ptMapOnly)return;if(isAdmin&&ui.pt&&!lite)try{ptSave();}catch(e){console.error(e);}
+  if(ui.pt&&ui.pt.id!=="libre"&&!ui.ptMapOnly&&ptSepOn(ui.pt.id))return;if(ui.office==="dm"&&ui.pt&&ui.pt.id==="libre"&&!ecP().tv)return;const st=ecState();if(st)try{ecImgPub(st.tokens);st.jk=teleKey(false)||"";}catch(e){console.error(e);}if(!lite)tbPush();if(!st)return;try{ecBC&&ecBC.postMessage(st);}catch(e){}clearTimeout(ecPushT);
   const wr=()=>{fsThr("ec",()=>{setDoc(doc(db,"prive","ecran"),st,{merge:true}).catch(e=>console.error(e));},1000);telePush(st);};if(now)wr();else ecPushT=setTimeout(wr,250);}
 function ecReveal(c){const E=ecP();const st=ecState();if(!st)return;const V=ecVision(st);let vu=(c.vu||"").padEnd(c.w*c.h,"0").split("");let ch=false;for(let i=0;i<V.vis.length;i++)if(V.vis[i]&&vu[i]!=="1"){vu[i]="1";ch=true;}if(ch)c.vu=vu.join("");}
 function ecTab(q){const E=ecP(),c=ecCard(),tvv=ecDoc&&ecDoc.tv,cal=(ecDoc&&ecDoc.calib)||{};
@@ -10440,9 +10454,11 @@ function ecAfter(){if(ui.office==="ecran")return;const cv=document.getElementByI
   cv.addEventListener("pointermove",e=>{if(!drag)return;const p=cell(e),cc=ecCard();
     if(drag.k){const ox=drag.k.x,oy=drag.k.y;if(drag.k.k==="inv")drag.k.ms=Date.now();drag.k.x=Math.max(0.5,Math.min(cc.w-0.5,Math.floor(p[0]+drag.dx)+0.5));drag.k.y=Math.max(0.5,Math.min(cc.h-0.5,Math.floor(p[1]+drag.dy)+0.5));
       // un personnage qu'on déplace se tourne dans le sens où on le tire (il ne glisse pas de côté)
-      if((drag.k.look||drag.k.sp)&&(drag.k.x!==ox||drag.k.y!==oy)){drag.k.a=Math.atan2(drag.k.y-oy,drag.k.x-ox);if(drag.k.look)EC_ROAMPOS.set(drag.k,[drag.k.x,drag.k.y]);}ecReveal(cc);ecUpd();}
+      if((drag.k.look||drag.k.sp)&&(drag.k.x!==ox||drag.k.y!==oy)){drag.k.a=Math.atan2(drag.k.y-oy,drag.k.x-ox);if(drag.k.look)EC_ROAMPOS.set(drag.k,[drag.k.x,drag.k.y]);}
+      // pendant qu'on glisse : on redessine tout de suite chez le DM ; le brouillard et l'envoi (télé, joueurs) suivent au plus 5 fois par seconde
+      if(drag.k.x!==ox||drag.k.y!==oy){ecUpdLocal();const now=Date.now();if(!drag.t||now-drag.t>200){drag.t=now;ecReveal(cc);ecUpdLocal();ecPush(false,true);}}}
     else if(drag.cam){ecP().follow=false;cc.cam={x:Math.round(p[0]+drag.dx),y:Math.round(p[1]+drag.dy)};ecUpd();}else if(drag.paint){paint(p);ecUpd();}});
-  const end=()=>{if(drag){const rs=drag.resel;drag=null;ptSave();ecPush(true);if(rs)render();}};cv.addEventListener("pointerup",end);cv.addEventListener("pointercancel",end);
+  const end=()=>{if(drag){const rs=drag.resel,mv=!!drag.k;drag=null;if(mv){const cc=ecCard();if(cc)ecReveal(cc);ecUpdLocal();}ptSave();ecPush(true);if(rs)render();}};cv.addEventListener("pointerup",end);cv.addEventListener("pointercancel",end);
   // double-clic à côté : on relâche ce qui était tenu par la sélection et la section se ferme
   cv.addEventListener("dblclick",e=>{if(ui.ecPv||(ui.ecTool||"move")!=="move")return;const p=cell(e),cc=ecCard();if(!cc)return;const hit=(cc.tokens||[]).some(k=>{if(k.deco)return false;const q=EC_ROAMPOS.get(k)||[k.x,k.y];return Math.hypot(q[0]-p[0],q[1]-p[1])<0.6||(!!k.look&&Math.hypot(q[0]-p[0],q[1]-0.55-p[1])<0.9);})||ecLightAt(cc,p)||ecAmbAt(p);if(hit)return;
     if(!(ui.ecSel||ui.ecLum||ui.ecAmb||ui.ecBeg))return;ecDeselect();ptSave();ecPush(true);render();});}
@@ -10502,7 +10518,8 @@ function ecCellAt(cx,cy){const cv=document.getElementById("ec-dm"),c=ecCard();if
     if(d.g){d.g.style.left=e.clientX+"px";d.g.style.top=e.clientY+"px";}});
   const end=e=>{if(!d)return;const D=d;d=null;if(D.g){D.g.remove();const p=ecCellAt(e.clientX,e.clientY);if(p)ecDrop(D.id,p);}else if(e.type==="pointerup"){ui.ecArm=ui.ecArm===D.id?null:D.id;render();}};
   document.addEventListener("pointerup",end);document.addEventListener("pointercancel",end);})();
-function ecUpd(){const r=ecRenderers["ec-dm"];const st=ecState();if(r&&st){st.tvv=ecDoc&&ecDoc.tv;r.sel=ui.ecSel;ecSet(r,st);}ecPush();}
+function ecUpdLocal(){const r=ecRenderers["ec-dm"];const st=ecState();if(r&&st){st.tvv=ecDoc&&ecDoc.tv;r.sel=ui.ecSel;ecSet(r,st);}}
+function ecUpd(){ecUpdLocal();ecPush();}
 // Faveurs des mendiants : tirage selon la générosité (cuivre, argent, or), la réputation du joueur auprès d'eux et la ville (port ou non).
 // dm = ce que le DM lit ; pj = ce que les joueurs voient à l'écran quand le DM la déclenche (sans note DM).
 const FAV_T=[
