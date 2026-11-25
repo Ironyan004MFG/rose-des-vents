@@ -10076,7 +10076,10 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),p
   x.restore();
   ecWeather(x,cw,ch,t,dt,M,r);
   // Cadre de la télé sur la vue DM
-  if(!tv&&st.tvv){const cam=st.cam||{x:0,y:0};x.strokeStyle="#d8b45e";x.lineWidth=2;x.setLineDash([8,5]);x.strokeRect(cam.x*s,cam.y*s,st.tvv.cols*s,st.tvv.rows*s);x.setLineDash([]);}
+  if(!tv&&st.tvv){const cam=st.cam||{x:0,y:0},X0=ox+cam.x*s,Y0=oy+cam.y*s;x.strokeStyle="#d8b45e";x.lineWidth=2;x.setLineDash([8,5]);x.strokeRect(X0,Y0,st.tvv.cols*s,st.tvv.rows*s);x.setLineDash([]);
+    // poignée du cadre (coin en haut à gauche) : la seule prise pour déplacer le cadre
+    if(r.mode==="dm"){const H=EC_TVH;x.fillStyle="#d8b45e";x.fillRect(X0,Y0,H,H);x.strokeStyle="#1b140c";x.lineWidth=1.5;x.strokeRect(X0+0.5,Y0+0.5,H-1,H-1);
+      x.fillStyle="#1b140c";x.font="bold "+Math.round(H*0.62)+"px sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText("✥",X0+H/2,Y0+H/2+1);}}
   if(tv&&st.calib&&st.calib.show){const p=ecPpi(st);x.fillStyle="rgba(0,0,0,.75)";x.fillRect(cw/2-p*3,ch/2-p*1.2,p*6,p*2.4);x.fillStyle="#d8b45e";x.fillRect(cw/2-p*2.5,ch/2-p*0.15,p*5,p*0.3);x.fillStyle="#f6ecd0";x.font="600 "+Math.max(14,Math.round(p*0.28))+"px sans-serif";x.textAlign="center";x.fillText("Cette barre doit mesurer 5 pouces (12,7 cm)",cw/2,ch/2-p*0.5);
     for(let i=0;i<=5;i++){x.fillRect(cw/2-p*2.5+i*p-1,ch/2-p*0.35,2,p*0.7);}}}
 // Brume : nappes blanches qui dérivent lentement
@@ -10476,7 +10479,9 @@ function ecAfter(){if(ui.office==="ecran")return;const cv=document.getElementByI
       else if(ecLightAt(cc,p)){const L=ecLightAt(cc,p);ecDeselect();ui.ecLum=L;ptSave();ecPush(true);render();return;}
       else if(ecDoorAt(cc,p)>=0){const i=ecDoorAt(cc,p),o=(cc.ouv||[]).slice(),j=o.indexOf(i);if(j>=0)o.splice(j,1);else{o.push(i);const Z=ecZones(cc);if(Z&&Z.doors[i])Z.doors[i].forEach(k=>ecZoneSet(cc,k,"1"));}cc.ouv=o;ecUpd();ptSave();ecPush(true);return;}
       else if(ecPromote(p))return;
-      else{const tv=ecDoc&&ecDoc.tv,cam=cc.cam||{x:0,y:0};if(tv&&p[0]>=cam.x&&p[1]>=cam.y&&p[0]<=cam.x+tv.cols&&p[1]<=cam.y+tv.rows)drag={cam:true,dx:cam.x-p[0],dy:cam.y-p[1]};else if((ui.ecZoom||1)>1)panStart(e);}}
+      else{const tv=ecDoc&&ecDoc.tv,cam=cc.cam||{x:0,y:0},bb=cv.getBoundingClientRect(),hs=EC_TVH/ecDmView(bb.width,bb.height,cc).s;
+        // la poignée (coin du cadre télé) déplace le cadre ; partout ailleurs, glisser déplace la carte
+        if(tv&&p[0]>=cam.x&&p[1]>=cam.y&&p[0]<=cam.x+hs&&p[1]<=cam.y+hs)drag={cam:true,dx:cam.x-p[0],dy:cam.y-p[1]};else panStart(e);}}
     else if(tool==="draw"){ui.ecTrait={c:DES_DM,p:[+p[0].toFixed(2),+p[1].toFixed(2)]};drag={draw:true};}
     else if(ecZones(cc)){const k=ecZoneAt(cc,p);if(k>=0){ecZoneSet(cc,k,tool==="hide"?"2":"1");ecUpd();ptSave();ecPush(true);}}
     else{drag={paint:true};paint(p);ecUpd();}});
@@ -10551,6 +10556,7 @@ function ecCellAt(cx,cy){const cv=document.getElementById("ec-dm"),c=ecCard();if
   const end=e=>{if(!d)return;const D=d;d=null;if(D.g){D.g.remove();const p=ecCellAt(e.clientX,e.clientY);if(p)ecDrop(D.id,p);}else if(e.type==="pointerup"){ui.ecArm=ui.ecArm===D.id?null:D.id;render();}};
   document.addEventListener("pointerup",end);document.addEventListener("pointercancel",end);})();
 // Vue de la carte du DM : zoom (ui.ecZoom ≥ 1) et centre (ui.ecVx, ui.ecVy, en cases) ; à 1, toute la carte, centrée.
+const EC_TVH=26;// taille (px) de la poignée du cadre télé
 function ecDmView(cw,ch,c){const z=Math.max(1,ui.ecZoom||1),s=Math.min(cw/c.w,ch/c.h)*z,hw=cw/2/s,hh=ch/2/s,lx=Math.min(hw,c.w/2),ly=Math.min(hh,c.h/2);
   let cx=ui.ecVx==null?c.w/2:ui.ecVx,cy=ui.ecVy==null?c.h/2:ui.ecVy;cx=Math.max(lx,Math.min(c.w-lx,cx));cy=Math.max(ly,Math.min(c.h-ly,cy));return {s,ox:cw/2-cx*s,oy:ch/2-cy*s,cx,cy};}
 // Zoom autour d'un point de l'écran (px,py dans le canevas)
