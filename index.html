@@ -2194,8 +2194,13 @@ function feuUndeliver(x){return x?lootUnsend(lootDone(x)):Promise.resolve();}
 // Équipement : le joueur choisit la case de chaque objet. Les mains : droite, gauche ou les deux ; le bouclier se tient dans la main gauche.
 const FEU_EQ=[["md","Main droite"],["mg","Main gauche"],["2m","Deux mains"],["armure","Armure"],["bouclier","Bouclier"],["tete","Tête"],["cape","Cape"],["gants","Gants"],["bottes","Bottes"],["ceinture","Ceinture"],["bijou","Bijou"],["autre","Autre"]];
 const FEU_EQL=Object.fromEntries(FEU_EQ);
-function feuEqClash(slot){return slot==="2m"?["md","mg","2m","bouclier"]:slot==="md"?["md","2m"]:slot==="mg"?["mg","2m","bouclier"]:slot==="bouclier"?["bouclier","mg","2m"]:(slot==="bijou"||slot==="autre")?[]:[slot];}
-function feuEqConf(F,i,slot){const cl=feuEqClash(slot);return F.inv.map((x,j)=>j!==i&&x.eq&&cl.indexOf(x.eq)>=0?j:-1).filter(j=>j>=0);}
+// Deux mains en tout : main droite et main gauche (1 chacune), deux mains (2), bouclier (1, dans la main libre).
+function feuEqClash(slot){return slot==="2m"?["md","mg","2m","bouclier"]:slot==="md"?["md","2m"]:slot==="mg"?["mg","2m"]:(slot==="bijou"||slot==="autre")?[]:[slot];}
+function feuEqConf(F,i,slot){const cl=feuEqClash(slot),has=k=>F.inv.some((x,j)=>j!==i&&x.eq===k);let L=F.inv.map((x,j)=>j!==i&&x.eq&&cl.indexOf(x.eq)>=0?j:-1).filter(j=>j>=0);
+  // une arme dans une main alors que le bouclier tient déjà l'autre main et que cette main est prise : le bouclier est en trop
+  if((slot==="md"&&has("mg")||slot==="mg"&&has("md"))&&has("bouclier"))L=L.concat(F.inv.map((x,j)=>j!==i&&x.eq==="bouclier"?j:-1).filter(j=>j>=0));return L;}
+// Bouclier : il faut une main libre
+function feuEqBlock(F,i,slot){if(slot!=="bouclier")return "";const has=k=>F.inv.some((x,j)=>j!==i&&x.eq===k);return has("2m")||(has("md")&&has("mg"))?"Les deux mains sont prises : libère une main avant d'équiper un bouclier.":"";}
 function feuEqSet(F,i,slot,conf){(conf||[]).forEach(j=>{F.inv[j].eq="";});F.inv[i].eq=slot;}
 function feuSil(F){const by=k=>F.inv.map((x,i)=>Object.assign({i},x)).filter(x=>x.eq===k),two=by("2m")[0];
   const box=(k,lbl)=>{let it=by(k)[0];if(!it&&two&&(k==="md"||k==="mg"))it=two;return '<div class="silbox s-'+k+(it?' on':'')+'"><span class="sll">'+lbl+'</span>'+(it?'<button type="button" class="silit" data-a="feu-uneq" data-v="'+it.i+'" title="Retirer (retourne dans le sac)">'+esc(it.n||"Objet")+(it.eq==="2m"?' <em>(deux mains)</em>':'')+' <span aria-hidden="true">✕</span></button>':'<span class="silno">—</span>')+'</div>';};
@@ -2263,7 +2268,7 @@ function feuView(id){
   // inventaire
   h+='<section class="feubox"><h3>Inventaire et bourse</h3><div class="feubourse">'+FEU_PIECES.map(p=>'<label class="feupiece p-'+p[0]+'"><span>'+p[1]+'</span>'+feuIn("bourse."+p[0],F.bourse[p[0]],' type="number" min="0" max="9999999" inputmode="numeric" aria-label="Pièces de '+p[2]+'"')+'</label>').join("")+'</div>'+
     '<div class="feueqbox"><strong>Équipement porté</strong> <span class="desc">Choisis la case d\'un objet dans la colonne « Équipé » de l\'inventaire. Touche un objet porté pour le remettre dans le sac.</span>'+
-    (ui.feuEqAsk?(()=>{const A=ui.feuEqAsk,it=F.inv[A.i];return it?'<div class="feuask" role="alert"><p>'+esc(FEU_EQL[A.slot])+' : '+A.conf.map(j=>'<strong>'+esc(F.inv[j].n||"un objet")+'</strong>').join(" et ")+' '+(A.conf.length>1?'sont':'est')+' déjà là. Remplacer par <strong>'+esc(it.n||"cet objet")+'</strong> ?</p><button class="btn gold sm" type="button" data-a="feu-eq-ok">Remplacer</button> <button class="btn ghost sm" type="button" data-a="feu-eq-no">Annuler</button></div>':'';})():'')+
+    (ui.feuEqMsg?'<div class="feuask" role="alert"><p>🛡 '+esc(ui.feuEqMsg)+'</p></div>':'')+(ui.feuEqAsk?(()=>{const A=ui.feuEqAsk,it=F.inv[A.i];return it?'<div class="feuask" role="alert"><p>'+esc(FEU_EQL[A.slot])+' : '+A.conf.map(j=>'<strong>'+esc(F.inv[j].n||"un objet")+'</strong>').join(" et ")+' '+(A.conf.length>1?'sont':'est')+' déjà là. Remplacer par <strong>'+esc(it.n||"cet objet")+'</strong> ?</p><button class="btn gold sm" type="button" data-a="feu-eq-ok">Remplacer</button> <button class="btn ghost sm" type="button" data-a="feu-eq-no">Annuler</button></div>':'';})():'')+
     feuSil(F)+'</div>'+
     '<div class="feuinvh"><strong>Inventaire</strong> <span class="desc">'+(F.inv.length?F.inv.length+' objet'+(F.inv.length>1?'s':'')+' · valeur '+esc(lootPo(F.inv.reduce((t,x)=>t+(+x.valeur||0)*(+x.qte||1),0))||"0 po"):'')+'</span></div>'+
     (F.inv.length?'<table class="feutab feuinv"><thead><tr><th scope="col">Objet</th><th scope="col">Qté</th><th scope="col">Valeur (po)</th><th scope="col">Équipé</th><th scope="col">Notes</th><th scope="col"><span class="sr">Retirer</span></th></tr></thead><tbody>'+
@@ -12005,7 +12010,7 @@ document.addEventListener("click",async e=>{
   else if(a==="adv-del-no"){ui.advDel=null;}
   else if(a==="adv-del-ok"){if(!isAdmin)return;const av=aventuriers.find(x=>x.id===id);ui.advDel=null;
     await run("Fiche supprimée",async()=>{await deleteDoc(doc(db,"aventuriers",id));if(dossiers[id])await deleteDoc(doc(db,"dossiers",id)).catch(()=>{});await deleteDoc(doc(db,"feuilles",id)).catch(()=>{});});location.hash="#";return;}
-  else if(a==="feu-uneq"){if(!ui.feu)return;feuRead();const it=ui.feu.inv[+b.getAttribute("data-v")];if(it)it.eq="";ui.feuEqAsk=null;feuSaveSoon();render();return;}
+  else if(a==="feu-uneq"){if(!ui.feu)return;ui.feuEqMsg="";feuRead();const it=ui.feu.inv[+b.getAttribute("data-v")];if(it)it.eq="";ui.feuEqAsk=null;feuSaveSoon();render();return;}
   else if(a==="feu-eq-ok"||a==="feu-eq-no"){const A=ui.feuEqAsk;ui.feuEqAsk=null;if(a==="feu-eq-ok"&&A&&ui.feu&&ui.feu.inv[A.i]){feuRead();feuEqSet(ui.feu,A.i,A.slot,A.conf);feuSaveSoon();}render();return;}
   else if(a==="feu-rest"){if(!ui.feu)return;feuRead();const F=ui.feu;Object.keys(F.sorts.empl||{}).forEach(n=>{const e=F.sorts.empl[n];if(e&&e.u)e.u=e.u.map(()=>false);});
     if(F.pv.max!==""&&F.pv.max!=null)F.pv.act=F.pv.max;F.pv.temp="";F.dv.util=0;F.mort={s:[false,false,false],e:[false,false,false]};feuSaveSoon();render();const el=document.getElementById("feusave");if(el)el.textContent="🌙 Repos long : tout est revenu";return;}
@@ -12211,6 +12216,7 @@ document.addEventListener("change",e=>{
   if(e.target.classList&&e.target.classList.contains("ql-resp")){if(!isAdmin)return;const id=e.target.getAttribute("data-id");run("Responsable du butin",()=>setDoc(doc(db,"quetes",id),{respButin:e.target.value,majLe:serverTimestamp()},{merge:true}));return;}
   if(e.target.classList&&e.target.classList.contains("feueq")&&ui.feu){feuRead();const i=+e.target.getAttribute("data-eqi"),slot=e.target.value,F=ui.feu;if(!F.inv[i])return;
     if(!slot){F.inv[i].eq="";ui.feuEqAsk=null;feuSaveSoon();setTimeout(render,0);return;}
+    const blk=feuEqBlock(F,i,slot);if(blk){ui.feuEqAsk=null;ui.feuEqMsg=blk;setTimeout(render,0);return;}ui.feuEqMsg="";
     const conf=feuEqConf(F,i,slot);if(conf.length){ui.feuEqAsk={i,slot,conf};}else{feuEqSet(F,i,slot,[]);ui.feuEqAsk=null;feuSaveSoon();}setTimeout(render,0);return;}
   if(e.target.closest&&e.target.closest("#feuform")){feuRead();feuCalcUpd();feuSaveSoon();if(e.target.getAttribute("data-rr"))setTimeout(render,0);return;}
   if(e.target.id==="lg-src"&&ui.lootGen){const G=ui.lootGen,v=e.target.value,P=ui.pt;if(!v)return;
