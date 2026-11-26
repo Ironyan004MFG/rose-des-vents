@@ -2364,6 +2364,8 @@ function myCharsView(){
   if(!mine.length)h='<p class="hint">Tu n\'as pas encore de personnage. Crée ta fiche pour pouvoir t\'inscrire aux quêtes.</p>'+h;
   return h;
 }
+// Monstres et PNJ : l'image des listes est une vignette de 480 px (~40 Ko) ; l'original vit en HD à part (prive/hd_…), lu seulement pour agrandir ou montrer aux joueurs
+const VIGN=c=>c==="monstres"||c==="pnj";
 function resizeImage(file,maxSize,q){
   return new Promise((res,rej)=>{
     const r=new FileReader();r.onerror=()=>rej(new Error("Lecture impossible"));
@@ -2827,7 +2829,7 @@ function secAtelier(){
   return h+'<div class="artgrid">'+list.map(i=>'<article class="artcard"><div class="artzone" tabindex="0" role="button" data-paste="'+esc(artColl())+'|'+esc(i.id)+'" aria-label="Coller ou déposer l\'image de '+esc(i.nom)+'">'+(i.x.image?'<img src="'+esc(i.x.image)+'" alt="">':'<span>Clique ici puis <strong>Ctrl+V</strong><br>ou glisse l\'image</span>')+'</div>'+
     '<div class="artmeta"><strong>'+esc(i.nom)+'</strong><span>'+esc(i.sub)+'</span><div class="actions"><button class="btn" data-a="art-copy" data-id="'+esc(i.id)+'">'+(ui.artCopied===i.id?'Copié ✓':'Copier le prompt')+'</button><label class="btn ghost filebtn" for="art-f-'+esc(i.id)+'">Fichier…<input id="art-f-'+esc(i.id)+'" type="file" accept="image/*" data-artfile="'+esc(artColl())+'|'+esc(i.id)+'"></label>'+(i.x.image?'<button class="btn ghost" data-a="art-clear" data-id="'+esc(i.id)+'">Retirer</button>':'')+'</div></div></article>').join("")+'</div>';}
 async function artSave(target,file){const [coll,id]=target.split("|");if(!file||!/^image\//.test(file.type)){save={state:"error",msg:"Ce n'est pas une image."};render();return;}
-  try{const url=await resizeImage(file,640);if(url.length>390000){save={state:"error",msg:"Image trop lourde."};render();return;}
+  try{const url=await (VIGN(coll)?resizeImage(file,480,0.78):resizeImage(file,640));if(url.length>390000){save={state:"error",msg:"Image trop lourde."};render();return;}
     await run("Image",()=>setDoc(doc(db,coll,id),{image:url,majLe:serverTimestamp()},{merge:true}));hdSave(coll,id,file);}catch(err){save={state:"error",msg:err.message};render();}}
 // Écran des joueurs : l'ouvrir ici (nouvel onglet) ou copier son lien pour l'ouvrir et le caster depuis un autre ordinateur.
 function ecLink(){return location.origin+location.pathname+"#ecran";}
@@ -12689,7 +12691,7 @@ document.addEventListener("submit",async e=>{
     if(!id)return;if(S.fields.some(f=>f[3]&&!String(d[f[0]]||"").trim()))return;
     if(ui.manEdit==="new"&&ui.manDraft&&ui.manDraft.image&&d.image===undefined)d.image=ui.manDraft.image;
     d.majLe=serverTimestamp();const isNew=ui.manEdit==="new";if(isNew)d.creeLe=serverTimestamp();if(type==="monstres"||type==="pnj")d.aCompleter=false;
-    const hdF=ui.manImgFile;ui.manImgFile=null;if(S.fields.some(f=>f[2]==="image")){if(d.image&&hdF)hdSave(S.coll,id,hdF);else if(d.image==="")hdDel(S.coll,id);}
+    const hdF=ui.manImgFile;ui.manImgFile=null;if(VIGN(S.coll)&&hdF&&d.image){try{d.image=await resizeImage(hdF,480,0.78);}catch(e){}}if(S.fields.some(f=>f[2]==="image")){if(d.image&&hdF)hdSave(S.coll,id,hdF);else if(d.image==="")hdDel(S.coll,id);}
     ui.manEdit=null;ui.manImg=undefined;ui.manDraft=null;if(type!=="dossiers"&&type!=="scenarios")ui.manId=id;
     await run("Manuel du DM",()=>setDoc(doc(db,S.coll,id),d,{merge:true}));return;
   }
