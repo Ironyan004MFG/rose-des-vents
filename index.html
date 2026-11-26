@@ -1150,6 +1150,8 @@ footer .who a{color:var(--gold)}
 .feuemp{border:1px solid #c9b98f;border-radius:6px;padding:4px 6px;background:#fbf6e8;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:13px}
 .feuemp input[type=number]{width:46px;text-align:center}.feudots{display:flex;gap:3px;min-height:18px}.feudots input{width:16px;height:16px}
 .feuinvh{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.feulire{margin:3px 0 0;text-transform:none;letter-spacing:0}.modal.wide.lecmodal{max-width:min(1100px,96vw)}
+.lecimg{max-height:calc(100dvh - 190px);object-fit:contain}.lecimg{width:100%;height:auto;border-radius:6px;display:block}.lectxt{margin-top:8px}.lectxt p{white-space:normal;line-height:1.5}
 .feusrc{display:block;font-size:12px;color:var(--ink-soft);margin-top:2px}
 .feuinv .feuv{width:80px}.feuinv th:nth-child(2){width:70px}.feuinv th:nth-child(3){width:100px}.feuinv tr.rq-quete td:first-child input{border-color:#b8860b;background:#fff4d6;font-weight:600}
 .feuinv tr.rq-inhabituel td:first-child input{border-color:#2f8a3f}.feuinv tr.rq-rare td:first-child input{border-color:#2a64b8}.feuinv tr.rq-epique td:first-child input{border-color:#7b3fb0}.feuinv tr.rq-legendaire td:first-child input{border-color:#d0701a}
@@ -1360,7 +1362,7 @@ header .pill{margin-left:auto}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, connectAuthEmulator, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, connectFirestoreEmulator, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, getDoc, writeBatch, serverTimestamp, FieldPath, increment, query, orderBy, limit, where, getDocs, deleteField } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, connectFirestoreEmulator, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, getDoc, writeBatch, serverTimestamp, FieldPath, increment, query, orderBy, limit, where, getDocs, deleteField, arrayUnion } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBd6DdnvzkmPxGB_aAjAgTc1P9jHAztI30",
@@ -2198,9 +2200,9 @@ function feuAbsorb(F,R){if(!F||!R)return false;let ch=false;F.inv=F.inv||[];F.ab
     if(r.use){if(had)return;F.absorbes.push(bid);ch=true;const i=F.inv.findIndex(x=>x.n===r.use&&(+x.qte||0)>0);if(i>=0){F.inv[i].qte=(+F.inv[i].qte||1)-1;if(F.inv[i].qte<=0)F.inv.splice(i,1);}return;}
     if(r.annule){if(had){F.absorbes=F.absorbes.filter(x=>x!==bid);const i=F.inv.findIndex(x=>x.bid===bid);if(i>=0)F.inv.splice(i,1);
       if(r.coins)Object.keys(r.coins).forEach(k=>{F.bourse[k]=Math.max(0,(+F.bourse[k]||0)-r.coins[k]);});ch=true;}return;}
-    if(had)return;F.absorbes.push(bid);ch=true;
+    if(had){if(r.lec){const it=F.inv.find(y=>y.bid===bid);if(it&&it.lec!==r.lec){it.lec=r.lec;ch=true;}}return;}F.absorbes.push(bid);ch=true;
     if(r.coins){Object.keys(r.coins).forEach(k=>{F.bourse[k]=(+F.bourse[k]||0)+(+r.coins[k]||0);});return;}
-    F.inv.push({n:String(r.n||"Objet"),qte:1,valeur:+r.valeur||0,notes:"",rar:r.rar||"",quete:r.quete||"",src:r.src||"",bid:bid});});
+    F.inv.push(Object.assign({n:String(r.n||"Objet"),qte:1,valeur:+r.valeur||0,notes:"",rar:r.rar||"",quete:r.quete||"",src:r.src||"",bid:bid},r.lec?{lec:r.lec}:{}));});
   return ch;}
 function feuLongRest(F){Object.keys((F.sorts||{}).empl||{}).forEach(n=>{const e=F.sorts.empl[n];if(e&&e.u)e.u=e.u.map(()=>false);});F.pv=F.pv||{};if(F.pv.max!==""&&F.pv.max!=null)F.pv.act=F.pv.max;F.pv.temp="";F.dv=F.dv||{};F.dv.util=0;F.mort={s:[false,false,false],e:[false,false,false]};}
 function feuCoins(nom){const m=String(nom||"").trim().match(/^(\d+)\s*(pc|pa|pe|po|pp)\b/i);return m?{[m[2].toLowerCase()]:+m[1]}:null;}
@@ -2213,18 +2215,27 @@ function pcCoins(n){const o={};if(n>=100)o.po=Math.floor(n/100);if(n%100>=10)o.p
 function questParts(q){if(!q)return [];const r=((q.rapport||{}).participants||[]).filter(x=>x.aventurier).map(x=>({aid:x.aventurier,nom:x.nom}));if(r.length)return r;
   return signupsFor(q.id).filter(s=>s.statut==="confirmee"&&s.aventurier).map(s=>({aid:s.aventurier,nom:s.nom}));}
 // Ce qu'un butin doit déposer dans les fiches : un personnage, ou les pièces partagées entre les participants (⚖)
-function lootPlan(x){const co=feuCoins(x.nom),it={n:String(x.nom||"").slice(0,120),valeur:+x.valeur||0,rar:x.rar||"",quete:x.quete||"",src:[x.rencontre,x.source].filter(Boolean).join(" · ").slice(0,160),ms:x.creeMs||Date.now()};if(co)it.coins=co;
+function lootPlan(x){const co=feuCoins(x.nom),it={lec:lootObj(x),n:String(x.nom||"").slice(0,120),valeur:+x.valeur||0,rar:x.rar||"",quete:x.quete||"",src:[x.rencontre,x.source].filter(Boolean).join(" · ").slice(0,160),ms:x.creeMs||Date.now()};if(co)it.coins=co;
   if(x.pour==="*"){if(!co)return [];const P=questParts(questById(x.quete)).filter(p=>aventuriers.some(a=>a.id===p.aid&&!a.pnj));if(!P.length)return [];const per=Math.floor(coinsPc(co)/P.length),sh=pcCoins(per);if(!per)return [];
     return P.map(p=>({aid:p.aid,key:x.id+"~"+p.aid,coins:sh,item:Object.assign({},it,{n:lootPo(per/100)+" (part de "+it.n+")",valeur:per/100,coins:sh})}));}
   const av=x.pour?aventuriers.find(a=>a.id===x.pour&&!a.pnj):null;return av?[{aid:av.id,key:x.id,coins:co,item:it}]:[];}
 function lootDone(x){if(x.livreK)return x.livreK;return x.livre?[{aid:x.livre,key:x.id,coins:feuCoins(x.nom)}]:[];}
 function lootSig(L){return L.map(p=>p.aid+"|"+p.key).sort().join(",");}
 async function lootUnsend(L){for(const p of L){const a=aventuriers.find(y=>y.id===p.aid)||{};await setDoc(doc(db,"feuilles",p.aid),{proprietaire:a.proprietaire||"",recus:{[p.key]:Object.assign({annule:true},p.coins?{coins:p.coins}:{})}},{merge:true});}}
-function lootDeliver(){if(!isAdmin||!loaded.a)return;butins.forEach(x=>{if(LD.has(x.id))return;const plan=lootPlan(x),done=lootDone(x);if(lootSig(plan)===lootSig(done))return;LD.add(x.id);
+// Un butin lié à un objet (lettre, carte…) : on en dépose une copie lisible (nom, texte, image ; jamais les notes ni les secrets du DM)
+const LEC=new Set();
+function lootObj(x){if(x.objet)return x.objet;const n=ptNorm(x.nom||"").trim();const o=n&&objets.find(y=>ptNorm(y.nom||"").trim()===n&&(y.image||y.texte));return o?o.id:"";}
+function lootLec(x,plan){const oid=lootObj(x);if(!oid||LEC.has(oid+"|"+plan.map(p=>p.aid).join(",")))return;const o=objets.find(y=>y.id===oid);if(!o)return;LEC.add(oid+"|"+plan.map(p=>p.aid).join(","));
+  const qui=[...new Set(plan.map(p=>(aventuriers.find(a=>a.id===p.aid)||{}).proprietaire).filter(Boolean))];if(!qui.length)return;
+  setDoc(doc(db,"lectures",oid),{nom:String(o.nom||"").slice(0,120),texte:String(o.texte||"").slice(0,6000),image:o.image||"",qui:arrayUnion(...qui)},{merge:true}).catch(e=>console.error(e));}
+function lootDeliver(){if(!isAdmin||!loaded.a)return;butins.forEach(x=>{if(LD.has(x.id))return;const plan=lootPlan(x),done=lootDone(x),oid=lootObj(x);if(oid&&plan.length)lootLec(x,plan);
+  if(lootSig(plan)===lootSig(done)){// déjà livré avant le lien de lecture : on complète l'objet rangé
+    if(oid&&done.length&&x.lecOk!==oid&&!LD.has(x.id)){LD.add(x.id);(async()=>{try{for(const p of done){const a=aventuriers.find(y=>y.id===p.aid)||{};await setDoc(doc(db,"feuilles",p.aid),{proprietaire:a.proprietaire||"",recus:{[p.key]:{lec:oid}}},{merge:true});}await setDoc(doc(db,"butins",x.id),{lecOk:oid},{merge:true});LD.delete(x.id);}catch(e){console.error(e);setTimeout(()=>LD.delete(x.id),60000);}})();}
+    return;}LD.add(x.id);
   (async()=>{try{const keep=new Set(plan.map(p=>p.aid+"|"+p.key));await lootUnsend(done.filter(p=>!keep.has(p.aid+"|"+p.key)));
     const had=new Set(done.map(p=>p.aid+"|"+p.key));
     for(const p of plan){if(had.has(p.aid+"|"+p.key))continue;const a=aventuriers.find(y=>y.id===p.aid)||{};await setDoc(doc(db,"feuilles",p.aid),{proprietaire:a.proprietaire||"",recus:{[p.key]:Object.assign({},p.item,{annule:false})}},{merge:true});}
-    await setDoc(doc(db,"butins",x.id),{livre:x.pour==="*"?"*":(plan[0]||{}).aid||"",livreK:plan.map(p=>Object.assign({aid:p.aid,key:p.key},p.coins?{coins:p.coins}:{}))},{merge:true});LD.delete(x.id);}
+    await setDoc(doc(db,"butins",x.id),{lecOk:lootObj(x),livre:x.pour==="*"?"*":(plan[0]||{}).aid||"",livreK:plan.map(p=>Object.assign({aid:p.aid,key:p.key},p.coins?{coins:p.coins}:{}))},{merge:true});LD.delete(x.id);}
     catch(e){console.error(e);setTimeout(()=>LD.delete(x.id),60000);}})();});}
 function feuUndeliver(x){return x?lootUnsend(lootDone(x)):Promise.resolve();}
 // Équipement : le joueur choisit la case de chaque objet. Les mains : droite, gauche ou les deux ; le bouclier se tient dans la main gauche.
@@ -2308,14 +2319,14 @@ function feuView(id){
     feuSil(F)+'</div>'+
     '<div class="feuinvh"><strong>Inventaire</strong> <span class="desc">'+(F.inv.length?F.inv.length+' objet'+(F.inv.length>1?'s':'')+' · valeur '+esc(lootPo(F.inv.reduce((t,x)=>t+(+x.valeur||0)*(+x.qte||1),0))||"0 po"):'')+'</span></div>'+
     (F.inv.length?'<table class="feutab feuinv"><thead><tr><th scope="col">Objet</th><th scope="col">Qté</th><th scope="col">Valeur (po)</th><th scope="col">Équipé</th><th scope="col">Notes</th><th scope="col"><span class="sr">Retirer</span></th></tr></thead><tbody>'+
-    F.inv.map((x,i)=>'<tr class="'+(x.quete||x.rar==="quete"?'rq-quete':x.rar?'rq-'+esc(x.rar):'')+'"><td>'+feuIn("inv."+i+".n",x.n,' maxlength="120" aria-label="Objet"')+(x.bid?'<span class="feusrc" title="'+esc(x.src||"")+'">🎁 Butin'+(x.rar==="quete"||x.quete&&x.rar==="quete"?' · objet de quête':x.rar&&RAR[x.rar]?' · '+esc(RAR[x.rar][1]):'')+(x.src?' · '+esc(x.src):'')+'</span>':'')+'</td><td>'+feuIn("inv."+i+".qte",x.qte,' type="number" min="0" max="999" class="feun" aria-label="Quantité"')+'</td><td>'+feuIn("inv."+i+".valeur",x.valeur||"",' type="number" min="0" step="0.01" class="feuv" aria-label="Valeur en po"')+'</td><td><select class="feueq" data-eqi="'+i+'" aria-label="Équiper '+esc(x.n||"l\'objet")+'"><option value="">Dans le sac</option>'+FEU_EQ.map(e=>'<option value="'+e[0]+'"'+(x.eq===e[0]?' selected':'')+'>'+e[1]+'</option>').join("")+'</select></td><td>'+feuIn("inv."+i+".notes",x.notes,' maxlength="160" aria-label="Notes"')+'</td><td><button class="mini" type="button" data-a="feu-del" data-k="inv" data-v="'+i+'" aria-label="Retirer '+esc(x.n||"l\'objet")+'">🗑</button></td></tr>').join("")+'</tbody></table>':'<p class="desc">Rien pour l\'instant. Le butin que le DM t\'attribue arrive ici tout seul.</p>')+
+    F.inv.map((x,i)=>'<tr class="'+(x.quete||x.rar==="quete"?'rq-quete':x.rar?'rq-'+esc(x.rar):'')+'"><td>'+feuIn("inv."+i+".n",x.n,' maxlength="120" aria-label="Objet"')+(x.lec?'<button class="btn sm feulire" type="button" data-a="feu-lire" data-v="'+esc(x.lec)+'">📜 Lire</button>':'')+(x.bid?'<span class="feusrc" title="'+esc(x.src||"")+'">🎁 Butin'+(x.rar==="quete"||x.quete&&x.rar==="quete"?' · objet de quête':x.rar&&RAR[x.rar]?' · '+esc(RAR[x.rar][1]):'')+(x.src?' · '+esc(x.src):'')+'</span>':'')+'</td><td>'+feuIn("inv."+i+".qte",x.qte,' type="number" min="0" max="999" class="feun" aria-label="Quantité"')+'</td><td>'+feuIn("inv."+i+".valeur",x.valeur||"",' type="number" min="0" step="0.01" class="feuv" aria-label="Valeur en po"')+'</td><td><select class="feueq" data-eqi="'+i+'" aria-label="Équiper '+esc(x.n||"l\'objet")+'"><option value="">Dans le sac</option>'+FEU_EQ.map(e=>'<option value="'+e[0]+'"'+(x.eq===e[0]?' selected':'')+'>'+e[1]+'</option>').join("")+'</select></td><td>'+feuIn("inv."+i+".notes",x.notes,' maxlength="160" aria-label="Notes"')+'</td><td><button class="mini" type="button" data-a="feu-del" data-k="inv" data-v="'+i+'" aria-label="Retirer '+esc(x.n||"l\'objet")+'">🗑</button></td></tr>').join("")+'</tbody></table>':'<p class="desc">Rien pour l\'instant. Le butin que le DM t\'attribue arrive ici tout seul.</p>')+
     '<button class="btn ghost sm" type="button" data-a="feu-add" data-k="inv">＋ Ajouter un objet</button>'+
     '<label>Autres notes d\'équipement'+feuTa("equip",F.equip,4,"Armure portée, ce qui est sur le cheval, ce qui est resté à l\'auberge…")+'</label></section>';
   // compagnons
   if((a.compagnons||[]).length)h+='<section class="feubox sheetcompv"><h3>Compagnons</h3><ul>'+a.compagnons.map(c=>'<li>'+(c.token?'<img src="'+esc(c.token)+'" alt="" width="48" height="48">':'<span class="sctok ph" aria-hidden="true">'+(EC_INV[c.t]||EC_INV.autre).i+'</span>')+'<span><strong>'+esc(c.n||"")+'</strong><span class="desc">'+esc((EC_INV[c.t]||EC_INV.autre).l)+'</span></span></li>').join("")+'</ul><p class="desc">Ils se gèrent dans « Modifier le profil » de la fiche publique.</p></section>';
   h+='<section class="feubox"><h3>Notes</h3>'+feuTa("notes",F.notes,6,"Ce que ton personnage veut retenir : noms, indices, dettes, promesses…")+'</section>';
   h+='<div class="actions"><a class="btn ghost" href="#perso-'+esc(a.id)+'">← Fiche publique</a></div>';
-  return h+'</form>';
+  return h+'</form>'+feuLecModal();
 }
 function feuSet(o,path,val){const p=path.split(".");let c=o;for(let i=0;i<p.length-1;i++){const k=p[i],nk=p[i+1];if(c[k]==null||typeof c[k]!=="object")c[k]=/^\d+$/.test(nk)&&k!=="empl"?[]:{};c=c[k];}c[p[p.length-1]]=val;}
 function feuRead(){const f=document.getElementById("feuform");if(!f||!ui.feu)return;f.querySelectorAll("[data-f]").forEach(el=>{const p=el.getAttribute("data-f");let v;
@@ -2329,10 +2340,12 @@ function feuClean(F){const n=(v,lo,hi)=>{if(v===""||v==null)return "";v=Math.rou
     traits:{espece:s(F.traits.espece,8000),classe:s(F.traits.classe,8000),dons:s(F.traits.dons,8000)},maitr:{armures:s(F.maitr.armures,200),armes:s(F.maitr.armes,200),outils:s(F.maitr.outils,200),langues:s(F.maitr.langues,200)},
     sorts:{car:["int","sag","cha"].indexOf(F.sorts.car)>=0?F.sorts.car:"",empl:{},liste:(F.sorts.liste||[]).slice(0,150).map(x=>{const o={niv:n(x.niv,0,9)||0,n:s(x.n,60),prep:!!x.prep,notes:s(x.notes,160)};if(FEU_JETK.indexOf(x.jet)>0)o.jet=x.jet;if(x.eff&&(x.eff==="txt"||PT_COND[x.eff]))o.eff=x.eff;if(x.eff==="txt"&&x.efx)o.efx=s(x.efx,80);const d=n(x.dur,0,999);if(d)o.dur=d;if(x.conc)o.conc=true;return o;})},
     equip:s(F.equip,8000),bourse:{},notes:s(F.notes,8000),
-    inv:(F.inv||[]).slice(0,200).map(x=>{const o={n:s(x.n,120),qte:n(x.qte,0,999),valeur:Math.max(0,Math.round((+x.valeur||0)*100)/100),notes:s(x.notes,160)};if(o.qte==="")o.qte=1;['rar','quete','src','bid'].forEach(k=>{if(x[k])o[k]=s(x[k],160);});if(x.eq&&FEU_EQL[x.eq])o.eq=x.eq;return o;}),absorbes:(F.absorbes||[]).slice(-600).map(x=>s(x,80))};
+    inv:(F.inv||[]).slice(0,200).map(x=>{const o={n:s(x.n,120),qte:n(x.qte,0,999),valeur:Math.max(0,Math.round((+x.valeur||0)*100)/100),notes:s(x.notes,160)};if(o.qte==="")o.qte=1;['rar','quete','src','bid','lec'].forEach(k=>{if(x[k])o[k]=s(x[k],160);});if(x.eq&&FEU_EQL[x.eq])o.eq=x.eq;return o;}),absorbes:(F.absorbes||[]).slice(-600).map(x=>s(x,80))};
   FEU_CAR.forEach(c=>{o.car[c[0]]=n(F.car[c[0]],1,30)||10;if(F.sauv[c[0]])o.sauv[c[0]]=true;});FEU_COMP.forEach(c=>{const lv=+F.comp[c[0]]||0;if(lv)o.comp[c[0]]=lv===2?2:1;});
   for(let i=1;i<=9;i++){const e=F.sorts.empl[i]||{},mx=n(e.max,0,4)||0;if(mx)o.sorts.empl[i]={max:mx,u:Array.from({length:mx},(_,j)=>!!(e.u||[])[j])};}
   FEU_PIECES.forEach(p=>{o.bourse[p[0]]=n(F.bourse[p[0]],0,9999999)||0;});return o;}
+async function feuLire(id){ui.feuLec={id,load:true};render();try{const sn=await getDoc(doc(db,"lectures",id));ui.feuLec=sn.exists()?Object.assign({id},sn.data()):{id,err:"Ce document n'est pas encore disponible."};}catch(e){ui.feuLec={id,err:"Lecture impossible : "+errText(e)};}render();}
+function feuLecModal(){const L=ui.feuLec;if(!L)return "";return '<div class="modal-bg" data-a="feu-lire-x"><div class="modal wide lecmodal" role="dialog" aria-modal="true" aria-labelledby="lec-t"><h2 id="lec-t">📜 '+esc(L.nom||"Document")+'</h2>'+(L.load?'<p class="hint">Ouverture…</p>':L.err?'<p class="hint">'+esc(L.err)+'</p>':(L.image?'<img class="lecimg" src="'+esc(L.image)+'" alt="'+esc(L.nom||"Document")+'">':'')+(L.texte?'<details class="lectxt"'+(L.image?'':' open')+'><summary>Lire le texte</summary><p>'+esc(L.texte).replace(/\n/g,"<br>")+'</p></details>':''))+'<div class="actions"><button class="btn" data-a="feu-lire-x">Fermer</button></div></div></div>';}
 function feuSaveSoon(){feuDirty=true;const el=document.getElementById("feusave");if(el)el.textContent="…";clearTimeout(feuT);feuT=setTimeout(feuSaveNow,1200);}
 async function feuSaveNow(){clearTimeout(feuT);const f=document.getElementById("feuform");const id=f?f.getAttribute("data-id"):feuId;const a=aventuriers.find(x=>x.id===id);if(!a||!ui.feu)return;
   const o=feuClean(ui.feu);o.proprietaire=a.proprietaire||"";o.majLe=serverTimestamp();
@@ -12251,6 +12264,8 @@ document.addEventListener("click",async e=>{
   else if(a==="dcal-x"){if(e&&e.target!==b)return;ui.calPop=null;render();return;}
   else if(a==="dcal-slotdel"){if(!isAdmin)return;calSlotDel(b.getAttribute("data-v"),b.getAttribute("data-h")||"").catch(err=>{save={state:"error",msg:errText(err)};render();});return;}
   else if(a==="dcal-recdel"){if(!isAdmin)return;calRecDel(b.getAttribute("data-v")).catch(err=>{save={state:"error",msg:errText(err)};render();});return;}
+  else if(a==="feu-lire"){feuLire(b.getAttribute("data-v"));return;}
+  else if(a==="feu-lire-x"){if(e&&e.target!==b&&b.classList.contains("modal-bg"))return;ui.feuLec=null;render();return;}
   else if(a==="feu-uneq"){if(!ui.feu)return;ui.feuEqMsg="";feuRead();const it=ui.feu.inv[+b.getAttribute("data-v")];if(it)it.eq="";ui.feuEqAsk=null;feuSaveSoon();render();return;}
   else if(a==="feu-eq-ok"||a==="feu-eq-no"){const A=ui.feuEqAsk;ui.feuEqAsk=null;if(a==="feu-eq-ok"&&A&&ui.feu&&ui.feu.inv[A.i]){feuRead();feuEqSet(ui.feu,A.i,A.slot,A.conf);feuSaveSoon();}render();return;}
   else if(a==="feu-rest"){if(!ui.feu)return;feuRead();feuLongRest(ui.feu);feuSaveSoon();render();const el=document.getElementById("feusave");if(el)el.textContent="🌙 Repos long : tout est revenu";return;}
