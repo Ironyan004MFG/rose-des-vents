@@ -1109,7 +1109,7 @@ footer .who a{color:var(--gold)}
 .calm{background:#f6efdb;color:var(--ink);border:1px solid #c9b98f;border-radius:8px;padding:8px 10px}.calm h4{margin:0 0 6px;font-family:var(--display);letter-spacing:.06em}
 .calw,.cald7{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}.calw span{font-size:12px;color:var(--ink-soft);font-weight:700}
 .cald{font:inherit;font-size:14px;border:1px solid transparent;border-radius:6px;background:#fbf6e8;color:var(--ink);min-height:32px;cursor:pointer;padding:0}
-.cald:hover:not([disabled]){border-color:#a07a22}.cald.on{background:#d8b45e;color:#1b140c;font-weight:700;border-color:#a07a22}.cald.today{outline:2px solid #2f6d43;outline-offset:-2px}.cald[disabled]{opacity:.35;cursor:default}
+.cald:hover:not([disabled]){border-color:#a07a22}.cald.on{background:#d8b45e;color:#1b140c;font-weight:700;border-color:#a07a22}.cald.bk{background:#9c6b2a;color:#fff7e6}.cald.bk::after{content:"🔒";position:absolute;bottom:0;right:2px;font-size:8px}.cald.today{outline:2px solid #2f6d43;outline-offset:-2px}.cald[disabled]{opacity:.35;cursor:default}
 .feulink{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:4px 0}
 .feu{background:var(--parch);color:var(--ink);border-radius:4px;padding:20px clamp(14px,3vw,30px);box-shadow:0 10px 24px rgba(0,0,0,.45);max-width:1040px;display:flex;flex-direction:column;gap:12px}
 .feu{color-scheme:light;accent-color:#8a5b12}.feu2 .feumaitr{flex:none}
@@ -1771,7 +1771,7 @@ function planModal(q){
     h+=rows.slice().sort((x,y)=>(y.uid===me)-(x.uid===me)).map(r=>'<tr'+(r.uid===me?' class="merow"':'')+'><th scope="row">'+esc(r.nom)+(r.uid===me?' <em>(toi)</em>':'')+'</th>'+ds.map(p=>cell(p,r.uid,false)).join("")+'</tr>').join("");
     h+='<tr class="tot"><th scope="row">Total</th>'+ds.map(p=>{const y=rows.filter(r=>(p.dispo||{})[r.uid]==="oui").length,m=rows.filter(r=>(p.dispo||{})[r.uid]==="peut").length;return '<td>'+y+' ✓'+(m?' · '+m+' ?':'')+'</td>';}).join("")+'</tr></tbody></table></div>';
   }
-  if(open&&ds.length<6&&!ui.dm){const L=[];calFree().forEach(k=>calSlots(k).forEach(x=>{const ht=calHtxt(x.h);if(!ds.some(p=>p.date===k&&(p.heure||"")===ht))L.push({k,h:ht});}));h+=L.length?'<form class="inline planadd" id="planform"><label for="pl-date">Proposer une date (disponibilités du DM)<select id="pl-date" required data-plh="1"><option value="">Choisir…</option>'+L.map(x=>'<option value="'+x.k+'" data-h="'+esc(x.h)+'">'+esc(fmtPlan({date:x.k}))+(x.h?' · '+esc(x.h):'')+'</option>').join("")+'</select></label><label for="pl-heure">Heure (facultatif)<input id="pl-heure" maxlength="30" placeholder="ex. 19 h"></label><button class="btn" type="submit">Proposer</button></form>':'<p class="hint">📅 Le DM n\'a pas encore indiqué d\'autres disponibilités. Les dates qu\'il ouvre dans son calendrier apparaîtront ici.</p>';}
+  if(open&&ds.length<6&&!ui.dm){const L=[];calFree().forEach(k=>calSlots(k).forEach(x=>{const ht=calHtxt(x.h);if(!ds.some(p=>p.date===k&&(p.heure||"")===ht)&&!calTaken(k,x.h,q.id))L.push({k,h:ht,raw:x.h});}));h+=L.length?'<form class="inline planadd" id="planform"><label for="pl-date">Proposer une date (disponibilités du DM)<select id="pl-date" required data-plh="1"><option value="">Choisir…</option>'+L.map(x=>'<option value="'+x.k+'|'+esc(x.raw||"")+'">'+esc(fmtPlan({date:x.k}))+(x.h?' · '+esc(x.h):'')+'</option>').join("")+'</select></label><button class="btn" type="submit">Proposer</button><span class="desc">Le créneau choisi est réservé pour cette quête : les autres groupes ne pourront plus le prendre.</span></form>':'<p class="hint">📅 Le DM n\'a pas encore indiqué d\'autres disponibilités. Les dates qu\'il ouvre dans son calendrier apparaîtront ici.</p>';}
   else if(open&&ds.length<6)h+='<form class="inline planadd" id="planform"><label for="pl-date">Proposer une date<input id="pl-date" type="date" required min="'+todayIso()+'"></label><label for="pl-heure">Heure (facultatif)<input id="pl-heure" maxlength="30" placeholder="ex. 19 h"></label><button class="btn" type="submit">Proposer</button></form>';
   else if(!open)h+='<p class="hint">'+(user&&!user.isAnonymous?'Inscris-toi à la quête pour proposer des dates et répondre.':'Connecte-toi et inscris-toi à la quête pour participer.')+'</p>';
   return h+'<div class="actions"><button class="btn ghost" type="button" data-a="plan-close">Fermer</button></div></div></div>';
@@ -2971,6 +2971,9 @@ function calFree(){const t=todayIso();return Object.keys(calDM).filter(k=>calDM[
 // Plusieurs créneaux par jour : jours[date] = {c:[{h:"13:00",r:id},…]} (l'ancien format {h,r} compte pour un créneau)
 function calSlots(k){const v=calDM[k];if(!v)return [];if(v.c)return v.c.slice().sort((a,b)=>String(a.h).localeCompare(String(b.h)));return [{h:v.h||"",r:v.r||""}];}
 function calH(k){const S=calSlots(k);return S.length?S[0].h:"";}
+// Un créneau du DM proposé dans une quête est réservé : les autres quêtes ne peuvent plus le prendre
+function calSlotId(k,h){return "c_"+k+"_"+String(h||"").replace(/[^0-9]/g,"");}
+function calTaken(k,h,exceptQ){const id=calSlotId(k,h),ht=calHtxt(h);return planifs.find(p=>p.quete!==exceptQ&&(p.id===id||(p.date===k&&(p.heure||"")===ht)))||null;}
 function calHshort(h){return String(h||"").replace(/^0/,"").replace(/:00$/,"h").replace(":","h");}
 function calHtxt(h){if(!h)return "";const m=String(h).match(/^(\d{1,2}):(\d{2})$/);return m?"vers "+(+m[1])+" h"+(m[2]!=="00"?" "+m[2]:""):h;}
 function calRecTxt(r){if(!r)return "";const d=new Date(r.debut+"T12:00:00"),jw=JOURS[d.getDay()],n=Math.ceil(d.getDate()/7),ord=n===1?"1er":n+"e";
@@ -2986,14 +2989,14 @@ function dmCalendar(){const Y=ui.calY||2026,t=todayIso(),n=calFree().length,R=Ob
   h+='<div class="calbar"><div class="chips">'+[2026,2027].map(y=>'<button class="chip" data-a="dcal-y" data-v="'+y+'" aria-pressed="'+(Y===y)+'">'+y+'</button>').join("")+'</div><span class="desc">'+n+' jour'+(n>1?'s':'')+' disponible'+(n>1?'s':'')+' à venir</span></div>';
   if(R.length)h+='<ul class="calrecs">'+R.map(r=>'<li>↻ '+esc(calRecTxt(r))+' <button class="mini" data-a="dcal-recdel" data-v="'+esc(r.id)+'">Retirer</button></li>').join("")+'</ul>';
   h+='<div class="calgrid">'+MOIS.map((mn,m)=>{const first=new Date(Y,m,1).getDay(),nd=new Date(Y,m+1,0).getDate(),cells=[];for(let i=0;i<first;i++)cells.push('<span class="calx"></span>');
-    for(let d=1;d<=nd;d++){const k=isoOf(Y,m,d),v=calDM[k],on=!!v,past=k<t,S=calSlots(k),hh=S.map(x=>x.h).filter(Boolean),rc=S.some(x=>x.r);cells.push('<button class="cald'+(on?' on':'')+(k===t?' today':'')+'" data-a="dcal-d" data-v="'+k+'"'+(past?' disabled':'')+' aria-pressed="'+on+'" aria-label="'+d+' '+mn+' '+Y+(on?', disponible '+hh.map(calHtxt).join(" ou "):'')+'" title="'+(on?esc(hh.map(calHtxt).join(" ou ")||"Disponible")+(rc?" · récurrent":""):'')+'">'+d+(on&&hh.length?'<small>'+esc(hh.map(calHshort).join("·"))+'</small>':'')+(rc?'<i aria-hidden="true">↻</i>':'')+'</button>');}
+    for(let d=1;d<=nd;d++){const k=isoOf(Y,m,d),v=calDM[k],on=!!v,past=k<t,S=calSlots(k),hh=S.map(x=>x.h).filter(Boolean),rc=S.some(x=>x.r),bk=S.some(x=>calTaken(k,x.h,null));cells.push('<button class="cald'+(on?' on':'')+(bk?' bk':'')+(k===t?' today':'')+'" data-a="dcal-d" data-v="'+k+'"'+(past?' disabled':'')+' aria-pressed="'+on+'" aria-label="'+d+' '+mn+' '+Y+(on?', disponible '+hh.map(calHtxt).join(" ou "):'')+'" title="'+(on?esc(hh.map(calHtxt).join(" ou ")||"Disponible")+(rc?" · récurrent":""):'')+'">'+d+(on&&hh.length?'<small>'+esc(hh.map(calHshort).join("·"))+'</small>':'')+(rc?'<i aria-hidden="true">↻</i>':'')+'</button>');}
     const cnt=Object.keys(calDM).filter(k=>calDM[k]&&k.indexOf(isoOf(Y,m,1).slice(0,7))===0).length;
     return '<section class="calm"><h4>'+mn.charAt(0).toUpperCase()+mn.slice(1)+(cnt?' <span class="desc">· '+cnt+'</span>':'')+'</h4><div class="calw">'+["D","L","M","M","J","V","S"].map(x=>'<span>'+x+'</span>').join("")+'</div><div class="cald7">'+cells.join("")+'</div></section>';}).join("")+'</div>';
   if(ui.calPop)h+=calPop(ui.calPop);
   return h;}
 function calPop(k){const S=calSlots(k),d=new Date(k+"T12:00:00"),n=Math.ceil(d.getDate()/7),ord=n===1?"1er":n+"e",jw=JOURS[d.getDay()];
   let h='<div class="modal-bg" data-a="dcal-x"><form class="modal calpop" id="dcalform" data-v="'+k+'" role="dialog" aria-modal="true" aria-labelledby="calp-t"><h2 id="calp-t">'+esc(d.toLocaleDateString("fr-CA",{weekday:"long",day:"numeric",month:"long",year:"numeric"}))+'</h2>';
-  h+=S.length?'<ul class="calslots">'+S.map(x=>{const rc=x.r&&calRec[x.r];return '<li><strong>'+esc(calHtxt(x.h)||"Disponible")+'</strong>'+(rc?' <span class="desc">↻ '+esc(calRecTxt(Object.assign({},rc)))+'</span>':'')+'<span class="calsb"><button class="mini" type="button" data-a="dcal-slotdel" data-v="'+k+'" data-h="'+esc(x.h)+'">Retirer ce jour</button>'+(rc?'<button class="mini" type="button" data-a="dcal-recdel" data-v="'+esc(x.r)+'">Retirer toute la récurrence</button>':'')+'</span></li>';}).join("")+'</ul>':'<p class="desc">Pas encore disponible ce jour-là.</p>';
+  h+=S.length?'<ul class="calslots">'+S.map(x=>{const rc=x.r&&calRec[x.r];const tk=calTaken(k,x.h,null),tq=tk&&questById(tk.quete);return '<li><strong>'+esc(calHtxt(x.h)||"Disponible")+'</strong>'+(tk?' <span class="ccat">🔒 Réservé : '+esc(tq?tq.titre:"une quête")+'</span>':'')+(rc?' <span class="desc">↻ '+esc(calRecTxt(Object.assign({},rc)))+'</span>':'')+'<span class="calsb"><button class="mini" type="button" data-a="dcal-slotdel" data-v="'+k+'" data-h="'+esc(x.h)+'">Retirer ce jour</button>'+(rc?'<button class="mini" type="button" data-a="dcal-recdel" data-v="'+esc(x.r)+'">Retirer toute la récurrence</button>':'')+'</span></li>';}).join("")+'</ul>':'<p class="desc">Pas encore disponible ce jour-là.</p>';
   h+='<fieldset class="caladd"><legend>'+(S.length?'Ajouter une autre heure':'Me rendre disponible')+'</legend>';
   h+='<label for="dcal-h">Vers quelle heure (environ)<input type="time" id="dcal-h" step="900" value="'+(S.length?(S.some(x=>x.h==="20:00")?"13:00":"20:00"):"19:00")+'"></label>';
   h+='<label for="dcal-f">Récurrence<select id="dcal-f">'+CAL_FREQ.map(f=>'<option value="'+f[0]+'">'+esc(f[0]==="mj"?"Chaque mois, le "+d.getDate():f[0]==="mw"?"Chaque mois, le "+ord+" "+jw:f[0]==="s1"?"Chaque "+jw:f[0]==="s2"?"Un "+jw+" sur deux":f[1])+'</option>').join("")+'</select></label><label for="dcal-fin">Jusqu\'au (facultatif)<input type="date" id="dcal-fin" min="'+k+'" max="'+CAL_FIN+'"></label></fieldset>';
@@ -12697,15 +12700,16 @@ document.addEventListener("submit",async e=>{
     ui.pt.bg={vu:true,on:on};ui.ptBg=false;ptLog(on.length?"Éléments de background retenus : "+on.length+".":"Aucun élément de background retenu.");ptSave();render();return;}
   if(e.target.id==="dcalform"){if(!isAdmin)return;calSave(e.target.getAttribute("data-v")).catch(err=>{save={state:"error",msg:errText(err)};render();});return;}
   if(e.target.id==="planform"){
-    const q=questById(ui.plan);if(!q)return;const date=v("pl-date"),heure=v("pl-heure").slice(0,30);
+    const q=questById(ui.plan);if(!q)return;const pv=v("pl-date"),slot=!ui.dm?pv.split("|"):null,date=slot?slot[0]:pv,heure=slot?calHtxt(slot[1]||""):v("pl-heure").slice(0,30);
     if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date<todayIso())return;
     if(!ui.dm&&!calDM[date]){save={state:"error",msg:"Choisis une date où le DM est disponible."};render();return;}
+    if(!ui.dm){const tk=calTaken(date,slot[1]||"",q.id);if(tk){const oq=questById(tk.quete);save={state:"error",msg:"Ce créneau vient d'être réservé"+(oq?" pour « "+oq.titre+" »":"")+". Choisis-en un autre."};render();return;}}
     if(planDates(q.id).some(p=>p.date===date&&(p.heure||"")===heure)){save={state:"error",msg:"Cette date est déjà proposée."};render();return;}
     const by={uid:user.uid,nom:String(ui.dm?"Le DM":((signupsFor(q.id).find(x=>x.uid===user.uid)||{}).nom||user.displayName||"Aventurier")).slice(0,60)};
-    const ref=doc(collection(db,"planif"));const d={quete:q.id,date,heure,par:by,dispo:{},creeLe:serverTimestamp()};
+    const ref=ui.dm?doc(collection(db,"planif")):doc(db,"planif",calSlotId(date,slot[1]||""));const d={quete:q.id,date,heure,par:by,dispo:{},creeLe:serverTimestamp()};
     if(ui.dm)d.dm="oui";else d.dispo[user.uid]="oui";
     const f1=document.getElementById("pl-date");if(f1)f1.value="";const f2=document.getElementById("pl-heure");if(f2)f2.value="";
-    await run("Date proposée",()=>setDoc(ref,d));return;
+    await run("Date proposée",()=>setDoc(ref,d).catch(err=>{if(String(err&&err.code||err).indexOf("permission")>=0)throw new Error("Ce créneau vient d'être réservé par un autre groupe. Choisis-en un autre.");throw err;}));return;
   }
   if(e.target.id==="groupform"){
     const q=questById(ui.confirmGroup);if(!q)return;

@@ -258,7 +258,9 @@ service cloud.firestore {
         && byMe(request.resource.data.par) && !('dm' in request.resource.data)
         && request.resource.data.dispo.keys().hasOnly([request.auth.uid]) && myDispoOk(request.resource.data)
         // un joueur ne propose que les jours où le DM s'est rendu disponible (Calendrier du DM)
-        && request.resource.data.date in get(/databases/$(database)/documents/calendrier/dm).data.jours;
+        && request.resource.data.date in get(/databases/$(database)/documents/calendrier/dm).data.jours
+        // l'identifiant est le créneau (date + heure du DM) : un créneau déjà pris par une autre quête ne peut pas être repris
+        && id.matches('^c_' + request.resource.data.date + '_[0-9]{0,4}$');
       allow update: if validPlan(request.resource.data) && planner(resource.data.quete)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['dispo'])
         && request.resource.data.dispo.diff(resource.data.dispo).affectedKeys().hasOnly([request.auth.uid])
