@@ -2114,7 +2114,7 @@ setInterval(()=>{const cv=document.getElementById("tok-cv");if(cv&&cv._v!==tokVe
 function sheetForm(a){
   a=a||{nom:"",classe:"",espece:"",description:"",background:"",image:""};
   const img=ui.sheetImg!==undefined?ui.sheetImg:(a.image||"");
-  return '<form class="form sheetform" id="sheetform"><h2>'+(ui.sheetEdit==="new"?"Créer ma fiche de personnage":"Modifier la fiche")+'</h2>'+
+  return '<form class="form sheetform" id="sheetform"><h2>'+(ui.sheetEdit==="new"?"Créer ma fiche de personnage":"Modifier le profil")+'</h2>'+
     '<div class="wide imgrow">'+(img?'<img class="portrait sm" src="'+esc(img)+'" alt="Portrait actuel">':'<span class="portrait sm ph" aria-hidden="true">?</span>')+
     '<label for="p-img">Image du personnage<input id="p-img" type="file" accept="image/*"></label>'+(img?'<button class="btn ghost" type="button" data-a="img-clear">Retirer l\'image</button>':'')+'</div>'+
     (img?'<div class="wide tokrow"><canvas id="tok-cv" width="240" height="240" aria-label="Cadrage du token : glisse pour déplacer, molette ou curseur pour zoomer"></canvas><div><strong>Token (jeu virtuel)</strong><p class="desc">Le visage de ton personnage dans un cercle, pour les parties en ligne (Roll20, Discord…). Glisse l\'image pour cadrer le visage ; zoome avec le curseur ou la molette.</p><label for="tok-z">Zoom<input id="tok-z" type="range" min="1" max="5" step="0.01" value="'+tokCad(a).z+'"></label><button class="btn ghost" type="button" data-a="tok-reset">Recentrer</button></div></div>':'')+
@@ -2171,7 +2171,7 @@ function sheetView(id){
   const qs=questsOf(a);
   h+='<h3>Quêtes accomplies</h3>'+(qs.length?'<ul class="sheetq">'+qs.map(q=>'<li>'+rankSeal(q.rang)+' <a href="#chroniques">'+esc(q.titre)+'</a>'+(office(q.bureau)?' <em>('+esc(office(q.bureau).nom)+')</em>':'')+'</li>').join("")+'</ul>':'<p class="desc">Aucune pour le moment.</p>');
   h+=sheetNews(a.id);
-  if(mine||ui.dm)h+='<div class="actions"><button class="btn ghost" data-a="sheet-edit" data-id="'+esc(a.id)+'">Modifier la fiche</button>'+(ui.dm&&isAdmin?'<button class="btn gold" data-a="man-open" data-sec="perso" data-id="'+esc(a.id)+'">Dossier DM</button>'+(ui.advDel===a.id?'':'<button class="btn ghost danger" data-a="adv-del" data-id="'+esc(a.id)+'">🗑 Supprimer la fiche</button>'):'')+'</div>'
+  if(mine||ui.dm)h+='<div class="actions"><button class="btn ghost" data-a="sheet-edit" data-id="'+esc(a.id)+'">Modifier le profil</button>'+(ui.dm&&isAdmin?'<button class="btn gold" data-a="man-open" data-sec="perso" data-id="'+esc(a.id)+'">Dossier DM</button>'+(ui.advDel===a.id?'':'<button class="btn ghost danger" data-a="adv-del" data-id="'+esc(a.id)+'">🗑 Supprimer la fiche</button>'):'')+'</div>'
     // suppression d'une fiche créée par erreur (DM seulement), en deux temps
     +(ui.dm&&isAdmin&&ui.advDel===a.id?'<div class="advdel" role="alert"><p><strong>Supprimer définitivement la fiche de '+esc(a.nom)+' ?</strong> Son dossier DM est supprimé aussi. Ses inscriptions et l\'historique des quêtes gardent seulement son nom. On ne peut pas revenir en arrière.</p><button class="btn danger" data-a="adv-del-ok" data-id="'+esc(a.id)+'">Oui, supprimer</button> <button class="btn ghost" data-a="adv-del-no">Annuler</button></div>':'');
   return h+'</article>';
@@ -2312,7 +2312,7 @@ function feuView(id){
     '<button class="btn ghost sm" type="button" data-a="feu-add" data-k="inv">＋ Ajouter un objet</button>'+
     '<label>Autres notes d\'équipement'+feuTa("equip",F.equip,4,"Armure portée, ce qui est sur le cheval, ce qui est resté à l\'auberge…")+'</label></section>';
   // compagnons
-  if((a.compagnons||[]).length)h+='<section class="feubox sheetcompv"><h3>Compagnons</h3><ul>'+a.compagnons.map(c=>'<li>'+(c.token?'<img src="'+esc(c.token)+'" alt="" width="48" height="48">':'<span class="sctok ph" aria-hidden="true">'+(EC_INV[c.t]||EC_INV.autre).i+'</span>')+'<span><strong>'+esc(c.n||"")+'</strong><span class="desc">'+esc((EC_INV[c.t]||EC_INV.autre).l)+'</span></span></li>').join("")+'</ul><p class="desc">Ils se gèrent dans « Modifier la fiche » de la fiche publique.</p></section>';
+  if((a.compagnons||[]).length)h+='<section class="feubox sheetcompv"><h3>Compagnons</h3><ul>'+a.compagnons.map(c=>'<li>'+(c.token?'<img src="'+esc(c.token)+'" alt="" width="48" height="48">':'<span class="sctok ph" aria-hidden="true">'+(EC_INV[c.t]||EC_INV.autre).i+'</span>')+'<span><strong>'+esc(c.n||"")+'</strong><span class="desc">'+esc((EC_INV[c.t]||EC_INV.autre).l)+'</span></span></li>').join("")+'</ul><p class="desc">Ils se gèrent dans « Modifier le profil » de la fiche publique.</p></section>';
   h+='<section class="feubox"><h3>Notes</h3>'+feuTa("notes",F.notes,6,"Ce que ton personnage veut retenir : noms, indices, dettes, promesses…")+'</section>';
   h+='<div class="actions"><a class="btn ghost" href="#perso-'+esc(a.id)+'">← Fiche publique</a></div>';
   return h+'</form>';
