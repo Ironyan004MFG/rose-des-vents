@@ -287,7 +287,7 @@ footer{color:var(--on-board-muted);font-size:14px;display:flex;justify-content:s
 .linkbtn:hover{color:var(--on-board)}
 @media (max-width:520px){.note{transform:none!important}.facts{grid-template-columns:1fr}.facts dt{padding-top:6px}}
 .names{display:flex;flex-wrap:wrap;gap:4px 10px}
-.name{display:inline-flex;align-items:center;gap:4px}
+.name{display:inline-flex;align-items:center;flex-wrap:wrap;gap:4px 6px;max-width:100%}.name>em,.name>.mini,.name>.gchip{white-space:nowrap;flex:0 0 auto}.name>.mini{margin-left:0}
 .name em{color:var(--ink-soft);font-size:14px}
 .rm{border:1px solid #b9a982;background:transparent;color:var(--danger);border-radius:50%;width:26px;height:26px;line-height:1;font-size:16px;cursor:pointer;padding:0}
 .rm:hover{background:rgba(155,44,34,.1)}
