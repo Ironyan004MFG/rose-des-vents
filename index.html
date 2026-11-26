@@ -2171,9 +2171,9 @@ function sheetView(id){
   const qs=questsOf(a);
   h+='<h3>Quêtes accomplies</h3>'+(qs.length?'<ul class="sheetq">'+qs.map(q=>'<li>'+rankSeal(q.rang)+' <a href="#chroniques">'+esc(q.titre)+'</a>'+(office(q.bureau)?' <em>('+esc(office(q.bureau).nom)+')</em>':'')+'</li>').join("")+'</ul>':'<p class="desc">Aucune pour le moment.</p>');
   h+=sheetNews(a.id);
-  if(mine||ui.dm)h+='<div class="actions"><button class="btn ghost" data-a="sheet-edit" data-id="'+esc(a.id)+'">Modifier le profil</button>'+(ui.dm&&isAdmin?'<button class="btn gold" data-a="man-open" data-sec="perso" data-id="'+esc(a.id)+'">Dossier DM</button>'+(ui.advDel===a.id?'':'<button class="btn ghost danger" data-a="adv-del" data-id="'+esc(a.id)+'">🗑 Supprimer la fiche</button>'):'')+'</div>'
+  if(mine||ui.dm)h+='<div class="actions"><button class="btn ghost" data-a="sheet-edit" data-id="'+esc(a.id)+'">Modifier le profil</button>'+(ui.dm&&isAdmin?'<button class="btn gold" data-a="man-open" data-sec="perso" data-id="'+esc(a.id)+'">Dossier DM</button>'+(ui.advDel===a.id?'':'<button class="btn ghost danger" data-a="adv-del" data-id="'+esc(a.id)+'">🗑 Supprimer Personnage</button>'):'')+'</div>'
     // suppression d'une fiche créée par erreur (DM seulement), en deux temps
-    +(ui.dm&&isAdmin&&ui.advDel===a.id?'<div class="advdel" role="alert"><p><strong>Supprimer définitivement la fiche de '+esc(a.nom)+' ?</strong> Son dossier DM est supprimé aussi. Ses inscriptions et l\'historique des quêtes gardent seulement son nom. On ne peut pas revenir en arrière.</p><button class="btn danger" data-a="adv-del-ok" data-id="'+esc(a.id)+'">Oui, supprimer</button> <button class="btn ghost" data-a="adv-del-no">Annuler</button></div>':'');
+    +(ui.dm&&isAdmin&&ui.advDel===a.id?'<div class="advdel" role="alert"><p><strong>Supprimer définitivement le personnage '+esc(a.nom)+' ?</strong> Son dossier DM et sa fiche joueur sont supprimés aussi. Ses inscriptions et l\'historique des quêtes gardent seulement son nom. On ne peut pas revenir en arrière.</p><button class="btn danger" data-a="adv-del-ok" data-id="'+esc(a.id)+'">Oui, supprimer</button> <button class="btn ghost" data-a="adv-del-no">Annuler</button></div>':'');
   return h+'</article>';
 }
 /* ---------- Fiche joueur (privée : le joueur propriétaire et le DM) ---------- */
@@ -12245,7 +12245,7 @@ document.addEventListener("click",async e=>{
   else if(a==="adv-del"){ui.advDel=id;}
   else if(a==="adv-del-no"){ui.advDel=null;}
   else if(a==="adv-del-ok"){if(!isAdmin)return;const av=aventuriers.find(x=>x.id===id);ui.advDel=null;
-    await run("Fiche supprimée",async()=>{await deleteDoc(doc(db,"aventuriers",id));if(dossiers[id])await deleteDoc(doc(db,"dossiers",id)).catch(()=>{});await deleteDoc(doc(db,"feuilles",id)).catch(()=>{});});location.hash="#";return;}
+    await run("Personnage supprimé",async()=>{await deleteDoc(doc(db,"aventuriers",id));if(dossiers[id])await deleteDoc(doc(db,"dossiers",id)).catch(()=>{});await deleteDoc(doc(db,"feuilles",id)).catch(()=>{});});location.hash="#";return;}
   else if(a==="dcal-y"){ui.calY=+b.getAttribute("data-v")||2026;render();return;}
   else if(a==="dcal-d"){if(!isAdmin)return;const k=b.getAttribute("data-v");if(!/^\d{4}-\d{2}-\d{2}$/.test(k))return;ui.calPop=k;render();const h=document.getElementById("dcal-h");if(h)h.focus();return;}
   else if(a==="dcal-x"){if(e&&e.target!==b)return;ui.calPop=null;render();return;}
