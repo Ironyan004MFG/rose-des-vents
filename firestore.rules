@@ -88,7 +88,7 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rapportBrouillon', 'majLe'])
         && request.resource.data.rapportBrouillon is map
         && request.resource.data.rapportBrouillon.resume is string
-        && request.resource.data.rapportBrouillon.resume.size() <= 4000;
+        && request.resource.data.rapportBrouillon.resume.size() <= 10000;
       // Un membre confirmé du groupe peut désigner le rédacteur du rapport parmi les membres confirmés.
       allow update: if realAccount()
         && resource.data.statut in ['encours', 'terminee']

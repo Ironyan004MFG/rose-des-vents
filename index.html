@@ -3319,7 +3319,7 @@ function render(){
   if(ui.reportWrite){const rq=questById(ui.reportWrite);
     if(rq)h+='<div class="modal-bg" data-a="report-cancel"><form class="modal wide" id="reportform" role="dialog" aria-modal="true" aria-labelledby="rp-t"><h2 id="rp-t">Rapport de mission : « '+esc(rq.titre)+' »</h2>'+
       '<p>Raconte ce que le groupe a vécu. Le DM le relira avant de le publier dans les Chroniques de la Guilde.</p>'+
-      '<label for="r-texte">Rapport<textarea id="r-texte" maxlength="4000" rows="10" placeholder="Quel était l&#39;objectif ? Qu&#39;est-ce qui s&#39;est passé ? Qu&#39;avez-vous découvert ? Qui avez-vous rencontré ? Qu&#39;avez-vous rapporté (butin, indices) ? Comment ça s&#39;est terminé ?">'+esc(rq.rapportBrouillon&&rq.rapportBrouillon.resume||"")+'</textarea></label>'+
+      '<label for="r-texte">Rapport<textarea id="r-texte" maxlength="10000" rows="10" placeholder="Quel était l&#39;objectif ? Qu&#39;est-ce qui s&#39;est passé ? Qu&#39;avez-vous découvert ? Qui avez-vous rencontré ? Qu&#39;avez-vous rapporté (butin, indices) ? Comment ça s&#39;est terminé ?">'+esc(rq.rapportBrouillon&&rq.rapportBrouillon.resume||"")+'</textarea></label>'+
       '<div class="actions"><button class="btn" type="submit">Envoyer au DM</button><button class="btn ghost" type="button" data-a="report-cancel">Annuler</button></div></form></div>';}
   if(ui.complete&&ui.dm){const C=ui.complete,cq=questById(C.id);
     if(cq){const bo=office(cq.bureau),mp=mefaitPts();
@@ -12456,7 +12456,7 @@ document.addEventListener("click",async e=>{
     await run("Disponibilité",()=>updateDoc(doc(db,"planif",id),{[key]:nx?nx:deleteField()}));return;}
   else if(a==="plan-del"){await run("Date retirée",()=>deleteDoc(doc(db,"planif",id)));return;}
   else if(a==="report-write"){ui.reportWrite=id;}
-  else if(a==="report-publish"){const q=questById(id);if(!q||!q.rapportBrouillon)return;await run("Rapport publié",()=>updateDoc(doc(db,"quetes",id),new FieldPath("rapport","resume"),String(q.rapportBrouillon.resume).slice(0,4000),"majLe",serverTimestamp()));return;}
+  else if(a==="report-publish"){const q=questById(id);if(!q||!q.rapportBrouillon)return;await run("Rapport publié",()=>updateDoc(doc(db,"quetes",id),new FieldPath("rapport","resume"),String(q.rapportBrouillon.resume).slice(0,10000),"majLe",serverTimestamp()));return;}
   else if(a==="rel-new"){ui.relEdit="new";}
   else if(a==="rel-newfor"){ui.manSec="relations";ui.manId=null;ui.relF=id;ui.relEdit="new";location.hash="#man/relations";}
   else if(a==="rel-edit"){ui.relEdit=id;}
@@ -12762,7 +12762,7 @@ document.addEventListener("submit",async e=>{
   }
   if(e.target.id==="reportform"){
     const q=questById(ui.reportWrite);if(!q)return;
-    const texte=((document.getElementById("r-texte")||{}).value||"").trim().slice(0,4000);if(!texte)return;
+    const texte=((document.getElementById("r-texte")||{}).value||"").trim().slice(0,10000);if(!texte)return;
     const auteur=(signupsFor(q.id).find(x=>x.uid===user.uid)||{}).nom||user.displayName||"un joueur";
     ui.reportWrite=null;
     await run("Rapport",()=>setDoc(doc(db,"quetes",q.id),{rapportBrouillon:{resume:texte,auteur:String(auteur).slice(0,60),majLe:serverTimestamp()},majLe:serverTimestamp()},{merge:true}));
