@@ -2276,7 +2276,7 @@ function feuView(id){
   let h='<form class="feu" id="feuform" data-id="'+esc(a.id)+'" autocomplete="off" onsubmit="return false">';
   h+='<div class="feuhead">'+(a.token?'<img class="feutok" src="'+esc(a.token)+'" alt="" width="72" height="72">':a.image?'<img class="feutok" src="'+esc(a.image)+'" alt="" width="72" height="72">':'')+
     '<div class="feuid"><h2>'+esc(a.nom)+'</h2><p class="sheet-sub">'+esc([a.espece,a.classe].filter(Boolean).join(" · ")||"Espèce et classe : sur la fiche publique")+'</p>'+
-    '<div class="feurow"><label>Sous-classe'+feuIn("sousclasse",F.sousclasse,' maxlength="60"')+'</label><label>Historique'+feuIn("historique",F.historique,' maxlength="60"')+'</label></div></div>'+
+    '<div class="feurow"><label>Sous-classe'+feuIn("sousclasse",F.sousclasse,' maxlength="60"')+'</label><label>Origine'+feuIn("historique",F.historique,' maxlength="60"')+'</label></div></div>'+
     '<dl class="feubadges"><div><dt>Niveau</dt><dd>'+lvl+'</dd></div><div><dt>XP</dt><dd>'+esc(charXp(a))+'</dd></div><div><dt>Maîtrise</dt><dd data-calc="pb">'+feuSg(R.pb)+'</dd></div></dl>'+
     '<span class="feusave" id="feusave" aria-live="polite">'+(ui.feuErr?'⚠ '+esc(ui.feuErr):'')+'</span></div>';
   h+='<p class="desc feupriv">🔒 Privée : visible seulement par toi'+(dm&&!mine?' (DM) et par le joueur':' et le DM')+'. Les modificateurs se calculent tout seuls ; tout s\'enregistre automatiquement.</p>';
