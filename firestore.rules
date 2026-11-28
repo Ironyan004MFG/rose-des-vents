@@ -472,6 +472,15 @@ service cloud.firestore {
         && request.resource.data.section in ['intendance', 'services', 'depot', 'tresor']
         && str(request.resource.data.nom, 1, 100)
         && request.resource.data.prix is number && request.resource.data.prix >= 0;
+      // un joueur qui vend un objet à la Guilde le dépose lui-même au Dépôt (rien d'autre : pas de modification ni de suppression)
+      allow create: if realAccount()
+        && request.resource.data.keys().hasOnly(['section', 'nom', 'prix', 'desc', 'rar', 'vendeur', 'ordre', 'creeLe'])
+        && request.resource.data.section == 'depot'
+        && str(request.resource.data.nom, 1, 100)
+        && request.resource.data.prix is number && request.resource.data.prix >= 0 && request.resource.data.prix <= 1000000
+        && (!('desc' in request.resource.data) || str(request.resource.data.desc, 0, 300))
+        && (!('rar' in request.resource.data) || request.resource.data.rar in ['', 'inhabituel', 'rare', 'epique', 'legendaire'])
+        && (!('vendeur' in request.resource.data) || str(request.resource.data.vendeur, 0, 60));
       allow delete: if isAdmin();
     }
     // ---------- Table virtuelle : l'écran de table, pour les inscrits qui jouent à distance ----------
