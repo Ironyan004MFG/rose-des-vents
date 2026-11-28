@@ -3938,11 +3938,12 @@ function cartSave(){try{localStorage.setItem("rdv-panier",JSON.stringify(gsCart|
 function cartLines(){return cartLoad().map(c=>{const x=gsAll.find(y=>y.id===c.id);return x&&x.section!=="tresor"?{x,q:c.q}:null;}).filter(Boolean);}
 function cartBuyers(){return ui.dm&&isAdmin?aventuriers.filter(a=>!a.pnj&&a.proprietaire).sort((a,b)=>String(a.nom).localeCompare(String(b.nom),"fr")):myChars();}
 function cartWho(){const B=cartBuyers();return B.find(a=>a.id===ui.cartWho)||B[0]||null;}
-function cartRank(){const w=cartWho();if(w)return grank(w);const mine=myChars();if(GRANKS.indexOf(ui.cartRank)>=0)return ui.cartRank;return mine.length?grank(mine[0]):"bois";}
+// Le rabais suit toujours le rang du personnage qui achète (on ne peut pas le choisir) ; sans personnage : aucun rabais
+function cartRank(){const w=cartWho();return w?grank(w):"bois";}
 function cartBox(){const L=cartLines(),r=cartRank(),pc=GS_DISC[r]||0,W=cartWho();if(!L.length)return '<div class="cart empty"><span>🛒 Panier vide</span><span class="desc">Ajoute des articles à acheter avec la bourse de ton personnage.</span></div>'+(ui.cartMsg?'<p class="toast" role="status">'+ui.cartMsg+'</p>':'');
   let sub=0,int=0;L.forEach(l=>{const t=gsPo(l.x.prix)*l.q;sub+=t;if(l.x.section==="intendance")int+=t;});const disc=Math.floor(int*pc/100),tot=Math.max(0,sub-disc),n=L.reduce((a,l)=>a+l.q,0);
   return '<details class="cart"'+(ui.cartOpen?' open':'')+'><summary>🛒 Panier ('+n+') · <strong>'+gsFmt(tot)+'</strong></summary><ul class="cartl">'+L.map(l=>'<li><span class="cn">'+esc(l.x.nom)+'</span>'+(l.x.section==="depot"?'<span class="cq">×1</span>':'<span class="cq"><button class="mini" data-a="cart-dec" data-id="'+esc(l.x.id)+'" aria-label="Retirer un '+esc(l.x.nom)+'">−</button> '+l.q+' <button class="mini" data-a="cart-inc" data-id="'+esc(l.x.id)+'" aria-label="Ajouter un '+esc(l.x.nom)+'">+</button></span>')+'<span class="cp">'+gsFmt(gsPo(l.x.prix)*l.q)+'</span><button class="mini" data-a="cart-del" data-id="'+esc(l.x.id)+'" aria-label="Enlever '+esc(l.x.nom)+' du panier">✕</button></li>').join("")+'</ul>'+
-    '<p class="cartsum">Sous-total : '+gsFmt(sub)+'</p>'+(W?'<p class="cartsum">Rabais de rang (Intendance) : '+esc(GRANK_LBL[r])+' '+(pc?'−'+pc+' %':'0 %')+(disc?' <span>−'+gsFmt(disc)+'</span>':'')+'</p>':'<p class="cartsum"><label for="cart-r">Rabais de rang (Intendance)<select id="cart-r" data-cart="rank">'+GRANKS.filter(k=>k!=="rose").map(k=>'<option value="'+k+'"'+(k===r?' selected':'')+'>'+esc(GRANK_LBL[k])+' '+(GS_DISC[k]?'−'+GS_DISC[k]+' %':'0 %')+'</option>').join("")+'</select></label>'+(disc?' <span>−'+gsFmt(disc)+'</span>':'')+'</p>')+
+    '<p class="cartsum">Sous-total : '+gsFmt(sub)+'</p>'+(W?'<p class="cartsum">Rabais de rang (Intendance) : '+esc(GRANK_LBL[r])+' '+(pc?'−'+pc+' %':'0 %')+(disc?' <span>−'+gsFmt(disc)+'</span>':'')+'</p>':'<p class="cartsum desc">Rabais de rang (Intendance) : selon le rang de ton personnage, une fois connecté.</p>')+
     '<p class="carttot">Total à payer : <strong>'+gsFmt(tot)+'</strong></p>'+cartBuyBox(L,tot,W)+'<button class="linkbtn" data-a="cart-clear">Vider le panier</button></details>';}
 // Achat : l'argent sort de la bourse de la fiche joueur et les articles entrent dans son inventaire. Le Dépôt (objets uniques) passe par le DM.
 function cartBuyBox(L,tot,W){const B=cartBuyers(),dm=ui.dm&&isAdmin,dep=L.some(l=>l.x.section==="depot")&&!dm,m=ui.cartMsg;
@@ -12614,7 +12615,6 @@ document.addEventListener("change",e=>{
     render();return;}
   if(e.target.id==="ec-t"){const m=document.getElementById("ec-menv");if(m)m.hidden=e.target.value!=="maison";return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-ec")){ecChange(e.target);return;}
-  if(e.target.getAttribute&&e.target.getAttribute("data-cart")==="rank"){ui.cartRank=e.target.value;ui.cartOpen=true;render();return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-cart")==="who"){ui.cartWho=e.target.value;ui.cartMsg="";ui.cartOpen=true;render();return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-shop")==="lieu"){ui.shopLieu=e.target.value;render();return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-shop")==="type"){ui.shopType=e.target.value;render();return;}
