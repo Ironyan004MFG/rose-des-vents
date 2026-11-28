@@ -1100,7 +1100,7 @@ footer .who a{color:var(--gold)}
 .portrait.sm{width:72px;height:72px;font-size:26px;border-width:2px}
 .sheet{background:var(--parch);color:var(--ink);border-radius:4px;padding:24px clamp(18px,4vw,36px);box-shadow:0 10px 24px rgba(0,0,0,.45);max-width:820px;display:flex;flex-direction:column;gap:10px}
 .tokrow{display:flex;gap:1em;align-items:center;flex-wrap:wrap}#tok-cv{width:180px;height:180px;border-radius:12px;background:rgba(0,0,0,.25);cursor:grab;touch-action:none}#tok-cv:active{cursor:grabbing}.sheettok{display:flex;gap:1em;align-items:center;margin:1em 0}.sheettok img{border-radius:50%}
-.sheetdon{border:1px solid rgba(201,162,74,.5);border-radius:10px;padding:.6em .9em;margin:1em 0;background:rgba(201,162,74,.08)}.sheetdon h3{margin-top:.2em}
+.sheetdon{border:1px solid rgba(201,162,74,.5);border-radius:10px;padding:.6em .9em;margin:1em 0;background:rgba(201,162,74,.08)}.sheetsec ul{list-style:none;padding:0;margin:.3em 0}.sheetsec li{border-left:3px solid #b8862f;padding:.1em 0 .1em .7em;margin:.5em 0}.sheetsec li p{margin:0 0 .15em}.sheetsec h4{margin:.8em 0 .2em;font-size:.95em;letter-spacing:.04em}.sheetdon h3{margin-top:.2em}
 .sheet-top{display:flex;flex-wrap:wrap;gap:20px;align-items:center}
 .cald{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;position:relative}.cald small{font-size:9.5px;font-weight:600}.cald i{position:absolute;top:1px;right:3px;font-size:9px;font-style:normal;opacity:.75}
 .calrecs{list-style:none;padding:0;margin:4px 0 10px;display:flex;flex-direction:column;gap:4px}.calrecs li{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -1648,9 +1648,12 @@ let donsMine={},donsUnsub=null,donsAll={};
 function listenDons(u){if(donsUnsub){try{donsUnsub();}catch(e){}donsUnsub=null;}donsMine={};if(!u||u.isAnonymous)return;
   donsUnsub=onSnapshot(query(collection(db,"dons"),where("proprietaire","==",u.uid)),snap=>{donsMine={};snap.docs.forEach(d=>{donsMine[d.id]=d.data();});render();},e=>console.error(e));}
 let donsSyncT=null;
+// Secrets de la quête personnelle déjà découverts : copiés (texte du secret seulement) dans la même copie lisible par le joueur, dans l'ordre des chapitres
+function qpSecretsVus(aid){const Q=qpOf(aid);return Q.S.filter(x=>Q.T[x.code]).map(x=>{const t=Q.T[x.code]||{},qu=t.q?questById(t.q):null;return {code:x.code,txt:String(x.txt).slice(0,1500),chap:String(Q.C.find(c=>c.S.indexOf(x)>=0)?Q.C.find(c=>c.S.indexOf(x)>=0).titre:"").slice(0,120),quete:qu?String(qu.titre||"").slice(0,120):"",ms:+t.ms||0};});}
 function syncDons(){if(!isAdmin)return;clearTimeout(donsSyncT);donsSyncT=setTimeout(()=>{if(!loaded.a)return;
-  aventuriers.forEach(a=>{if(a.pnj||!a.proprietaire)return;const d=dossiers[a.id]||{},cur=donsAll[a.id],want=d.donNom&&d.outerworlder!=="non"?{nom:String(d.donNom).slice(0,100),desc:String(d.donDesc||"").slice(0,8000),proprietaire:a.proprietaire}:null;
-    if(want&&(!cur||cur.nom!==want.nom||cur.desc!==want.desc||cur.proprietaire!==want.proprietaire))setDoc(doc(db,"dons",a.id),want).catch(e=>console.error(e));
+  aventuriers.forEach(a=>{if(a.pnj||!a.proprietaire)return;const d=dossiers[a.id]||{},cur=donsAll[a.id],don=d.donNom&&d.outerworlder!=="non",sec=qpSecretsVus(a.id),
+      want=don||sec.length?{nom:don?String(d.donNom).slice(0,100):"",desc:don?String(d.donDesc||"").slice(0,8000):"",secrets:sec,proprietaire:a.proprietaire}:null;
+    if(want&&(!cur||cur.nom!==want.nom||cur.desc!==want.desc||cur.proprietaire!==want.proprietaire||JSON.stringify(cur.secrets||[])!==JSON.stringify(want.secrets)))setDoc(doc(db,"dons",a.id),want).catch(e=>console.error(e));
     else if(!want&&cur)deleteDoc(doc(db,"dons",a.id)).catch(e=>console.error(e));});},1500);}
 onAuthStateChanged(auth, async u=>{
   user=u;isAdmin=false;adminChecked=false;listenDons(u);
@@ -2195,7 +2198,10 @@ function sheetView(id){
     h+='<p class="gmerit">Mérite '+merit(a)+(cap?' / '+cap:'')+' · niveau '+charLevel(a)+(gNext(grank(a))&&promoCfg()[gNext(grank(a))]?' / '+promoCfg()[gNext(grank(a))].niv:'')+(nx?' · <strong>éligible à l\'examen '+esc(GRANK_LBL[nx])+'</strong>':'')+' <em>(DM)</em></p>'+
       '<form class="grankform" id="grankform" data-id="'+esc(a.id)+'"><label for="g-rank">Rang de Guilde<select id="g-rank">'+GRANKS.map(k=>'<option value="'+k+'"'+(k===grank(a)?' selected':'')+'>'+esc(GRANK_LBL[k])+'</option>').join("")+'</select></label><label for="g-st">Étoiles<input id="g-st" type="number" min="0" max="'+STAR_MAX+'" value="'+stars(a)+'"></label><label for="g-xp">XP<input id="g-xp" type="number" min="0" max="999999" value="'+charXp(a)+'"></label><button class="mini" type="submit">Changer</button></form>';}
   {const dn=mine&&donsMine[a.id]?donsMine[a.id]:(ui.dm&&isAdmin&&dossiers[a.id]&&dossiers[a.id].donNom&&dossiers[a.id].outerworlder!=="non"?{nom:dossiers[a.id].donNom,desc:dossiers[a.id].donDesc}:null);
-    if(dn)h+='<section class="sheetdon"><h3>Don du Weave : '+esc(dn.nom)+'</h3>'+(dn.desc?'<div class="wikibody">'+md(dn.desc)+'</div>':'')+(ui.dm&&!mine?'<p class="desc"><em>Visible par le joueur sur sa fiche.</em></p>':'')+'</section>';}
+    if(dn&&dn.nom)h+='<section class="sheetdon"><h3>Don du Weave : '+esc(dn.nom)+'</h3>'+(dn.desc?'<div class="wikibody">'+md(dn.desc)+'</div>':'')+(ui.dm&&!mine?'<p class="desc"><em>Visible par le joueur sur sa fiche.</em></p>':'')+'</section>';
+    // Secrets découverts : seulement le joueur propriétaire (copie « dons ») et le DM
+    const SV=mine&&donsMine[a.id]?(donsMine[a.id].secrets||[]):(ui.dm&&isAdmin?qpSecretsVus(a.id):[]);
+    if(SV.length){let ch=null;h+='<section class="sheetdon sheetsec"><h3>🔎 Secrets découverts</h3><ul>'+SV.map(x=>{const hd=x.chap&&x.chap!==ch?'</ul><h4>'+esc(x.chap)+'</h4><ul>':'';ch=x.chap;return hd+'<li><p>'+esc(x.txt)+'</p>'+(x.quete?'<span class="desc">Découvert pendant « '+esc(x.quete)+' »</span>':'')+'</li>';}).join("")+'</ul>'+(ui.dm&&!mine?'<p class="desc"><em>Visible par le joueur sur sa fiche, dès qu\'un secret est coché comme découvert.</em></p>':'')+'</section>';}}
   if(a.description)h+='<h3>Description</h3><p class="desc">'+esc(a.description)+'</p>';
   if(a.background)h+='<h3>Background</h3><p class="desc">'+esc(a.background)+'</p>';
   const known=bureaux.filter(b=>renown(a,b.id)!==51);
