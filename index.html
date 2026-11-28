@@ -3988,12 +3988,31 @@ function gsView(){
   if(sec==="depot"&&dm)h+=gsSellForm();
   else if(dm&&sec!=="depot")h+='<details class="gsadd"><summary>Ajouter au menu</summary><form class="inline" id="gsaddform" data-sec="'+sec+'"><label for="gs-n">Nom<input id="gs-n" maxlength="100" required></label>'+(sec==="tresor"?'':'<label for="gs-p">Prix (po)<input id="gs-p" type="number" min="0" step="1" required></label>')+'<label for="gs-d">Description (facultatif)<input id="gs-d" maxlength="300"></label><button class="btn" type="submit">Ajouter</button></form></details>';
   return h+'</section>';}
-function gsSellForm(){const m=ui.gsMsg;
-  return '<form class="gssell" id="gssellform"><h3>Vendre des objets à la Guilde</h3><p class="desc">La Guilde paie 50 % de la valeur totale et revend l\'objet au Dépôt à 75 %.</p>'+
-    '<label for="gs-sv">Vendeur (facultatif)<select id="gs-sv"><option value="">—</option>'+ranked().map(a=>'<option value="'+esc(a.nom)+'">'+esc(a.nom)+'</option>').join("")+'</select></label>'+
-    '<label for="gs-sn">Objet(s)<input id="gs-sn" maxlength="100" required placeholder="Ex. Épée longue +1"></label><label for="gs-sp">Valeur totale (po)<input id="gs-sp" type="number" min="0" step="1" required></label>'+
-    '<label for="gs-sr">Rareté<select id="gs-sr"><option value="">Non magique</option>'+RARES.filter(r=>r[0]!=="mediocre").map(r=>'<option value="'+r[0]+'">'+esc(r[1])+'</option>').join("")+'</select></label>'+
-    '<button class="btn gold" type="submit">Vendre à la Guilde</button>'+(m?'<p class="toast" role="status">'+m+'</p>':'')+'</form>';}
+// Vente à la Guilde (DM) : on choisit le vendeur, puis un objet de SON inventaire ; la moitié de la valeur va dans sa bourse, l'objet quitte son inventaire et entre au Dépôt (75 %).
+function gsSellLoad(aid){ui.gsSellF=null;ui.gsSellI="";ui.gsSellQ=1;if(!aid){render();return;}ui.gsSellF={aid,load:true};render();
+  getDoc(doc(db,"feuilles",aid)).then(sn=>{if(!ui.gsSellF||ui.gsSellF.aid!==aid)return;const F=sn.exists()?sn.data():{};ui.gsSellF={aid,inv:(F.inv||[]).map((x,i)=>Object.assign({i},x)).filter(x=>String(x.n||"").trim())};render();}).catch(e=>{console.error(e);ui.gsSellF={aid,inv:[],err:errText(e)};render();});}
+function gsSellForm(){const m=ui.gsMsg,S=ui.gsSellF,aid=S?S.aid:"",inv=(S&&S.inv)||[],it=ui.gsSellI!==""&&ui.gsSellI!=null&&ui.gsSellI!=="autre"?inv.find(x=>String(x.i)===String(ui.gsSellI)):null,autre=ui.gsSellI==="autre"||!aid;
+  const qmax=it?Math.max(1,Math.floor(+it.qte||1)):1,q=Math.max(1,Math.min(qmax,+ui.gsSellQ||1)),val=it?Math.round((+it.valeur||0)*q*100)/100:"";
+  return '<form class="gssell" id="gssellform"><h3>Vendre des objets à la Guilde</h3><p class="desc">La Guilde paie 50 % de la valeur totale : l\'argent va dans la bourse du vendeur et l\'objet quitte son inventaire. Elle le revend au Dépôt à 75 %.</p>'+
+    '<label for="gs-sv">Vendeur<select id="gs-sv" data-gs="sv"><option value="">— Aucun (objet hors fiche) —</option>'+ranked().filter(a=>a.proprietaire).sort((a,b)=>String(a.nom).localeCompare(String(b.nom),"fr")).map(a=>'<option value="'+esc(a.id)+'"'+(a.id===aid?' selected':'')+'>'+esc(a.nom)+'</option>').join("")+'</select></label>'+
+    (aid?(S.load?'<p class="desc">Lecture de l\'inventaire…</p>':'<label for="gs-si">Objet de son inventaire<select id="gs-si" data-gs="si"><option value="">— Choisir —</option>'+inv.map(x=>'<option value="'+x.i+'"'+(String(x.i)===String(ui.gsSellI)?' selected':'')+'>'+esc(x.n)+((+x.qte||1)>1?' ×'+(+x.qte):'')+(+x.valeur?' ('+(+x.valeur).toLocaleString("fr-CA")+' po)':'')+'</option>').join("")+'<option value="autre"'+(ui.gsSellI==="autre"?' selected':'')+'>Autre objet (pas dans l\'inventaire)…</option></select></label>'):'')+
+    (it&&qmax>1?'<label for="gs-sq">Quantité<input id="gs-sq" data-gs="sq" type="number" min="1" max="'+qmax+'" value="'+q+'"></label>':'')+
+    (autre?'<label for="gs-sn">Objet(s)<input id="gs-sn" maxlength="100" required placeholder="Ex. Épée longue +1"></label>':'')+
+    (it||autre?'<label for="gs-sp">Valeur totale (po)<input id="gs-sp" type="number" min="0" step="0.01" required value="'+(val===""?"":val)+'"></label>'+
+    '<label for="gs-sr">Rareté<select id="gs-sr"><option value="">Non magique</option>'+RARES.filter(r=>r[0]!=="mediocre").map(r=>'<option value="'+r[0]+'"'+(it&&it.rar===r[0]?' selected':'')+'>'+esc(r[1])+'</option>').join("")+'</select></label>'+
+    '<button class="btn gold" type="submit">Vendre à la Guilde</button>':'')+(S&&S.err?'<p class="toast" role="status">'+esc(S.err)+'</p>':'')+(m?'<p class="toast" role="status">'+m+'</p>':'')+'</form>';}
+// Ajoute « cp » pièces de cuivre à une bourse (en po, pa et pc)
+function bourseCredit(B,cp){const b=Object.assign({pc:0,pa:0,pe:0,po:0,pp:0},B||{});Object.keys(COIN_V).forEach(k=>{b[k]=Math.max(0,Math.floor(+b[k]||0));});cp=Math.max(0,Math.round(cp));b.po+=Math.floor(cp/100);b.pa+=Math.floor(cp%100/10);b.pc+=cp%10;return b;}
+async function gsSellSubmit(){const g=k=>(document.getElementById(k)||{}).value||"",S=ui.gsSellF,aid=S&&S.aid,a=aid&&aventuriers.find(x=>x.id===aid);
+  const it=aid&&ui.gsSellI!=="autre"?((S.inv||[]).find(x=>String(x.i)===String(ui.gsSellI))):null,q=it?Math.max(1,Math.min(Math.floor(+it.qte||1),+ui.gsSellQ||1)):1;
+  const nom=(it?(String(it.n)+(q>1?" ×"+q:"")):g("gs-sn")).slice(0,100),val=Math.max(0,+g("gs-sp")||0),rar=g("gs-sr");if(!nom||!val||!isAdmin)return;if(aid&&!it&&ui.gsSellI!=="autre")return;
+  const ok=await run("Dépôt",async()=>{
+    if(a){const sn=await getDoc(doc(db,"feuilles",aid)),F=sn.exists()?sn.data():{},inv=(F.inv||[]).slice();
+      if(it){let j=inv.findIndex((x,k)=>k===it.i&&String(x.n)===String(it.n));if(j<0)j=inv.findIndex(x=>String(x.n)===String(it.n));if(j<0)throw new Error("« "+it.n+" » n'est plus dans l'inventaire de "+a.nom+".");
+        const left=Math.floor(+inv[j].qte||1)-q;if(left>0)inv[j]=Object.assign({},inv[j],{qte:left});else inv.splice(j,1);}
+      await setDoc(doc(db,"feuilles",aid),{proprietaire:a.proprietaire||"",inv,bourse:bourseCredit(F.bourse,val*50),majLe:serverTimestamp()},{merge:true});}
+    await setDoc(doc(collection(db,"boutique")),{section:"depot",nom,prix:gsPo(val*0.75),rar,vendeur:a?String(a.nom).slice(0,60):"",desc:"",ordre:Date.now(),creeLe:serverTimestamp()});});
+  if(ok){ui.gsMsg='La Guilde paie <strong>'+(Math.round(val*50)/100).toLocaleString("fr-CA")+' po</strong>'+(a?' à '+esc(a.nom)+' (ajouté à sa bourse)':'')+' pour « '+esc(nom)+' ». L\'objet est au Dépôt à '+gsFmt(val*0.75)+' (75 %).';if(aid)gsSellLoad(aid);else render();}}
 function gsGrantForm(x){const el=ranked().filter(a=>grank(a)==="mithral"||grank(a)==="rose").filter(a=>stars(a)-(remisesMap[a.id]||0)>0);
   return el.length?'<label for="gs-g">Accorder « '+esc(x.nom)+' » à<select id="gs-g">'+el.map(a=>'<option value="'+esc(a.id)+'">'+esc(a.nom)+' ('+(stars(a)-(remisesMap[a.id]||0))+' étoile'+(stars(a)-(remisesMap[a.id]||0)>1?'s':'')+' disponible'+(stars(a)-(remisesMap[a.id]||0)>1?'s':'')+')</option>').join("")+'</select></label><button class="mini gold" data-a="gs-grantyes" data-id="'+esc(x.id)+'">Accorder (1 étoile)</button><button class="mini" data-a="gs-no">Annuler</button>'
     :'<span>Aucun Mithril n\'a d\'étoile disponible.</span><button class="mini" data-a="gs-no">OK</button>';}
@@ -12621,6 +12640,9 @@ document.addEventListener("change",e=>{
     render();return;}
   if(e.target.id==="ec-t"){const m=document.getElementById("ec-menv");if(m)m.hidden=e.target.value!=="maison";return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-ec")){ecChange(e.target);return;}
+  if(e.target.getAttribute&&e.target.getAttribute("data-gs")==="sv"){ui.gsMsg="";gsSellLoad(e.target.value);return;}
+  if(e.target.getAttribute&&e.target.getAttribute("data-gs")==="si"){ui.gsSellI=e.target.value;ui.gsSellQ=1;ui.gsMsg="";render();return;}
+  if(e.target.getAttribute&&e.target.getAttribute("data-gs")==="sq"){ui.gsSellQ=+e.target.value||1;render();return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-cart")==="who"){ui.cartWho=e.target.value;ui.cartMsg="";ui.cartOpen=true;render();return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-shop")==="lieu"){ui.shopLieu=e.target.value;render();return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-shop")==="type"){ui.shopType=e.target.value;render();return;}
@@ -12728,9 +12750,7 @@ document.addEventListener("submit",async e=>{
     await run("Calendrier",()=>setDoc(doc(db,"config","calendrier"),{an,j,mult,majLe:serverTimestamp()},{merge:true}));return;}
   if(e.target.id==="gsaddform"){const sec=e.target.getAttribute("data-sec"),nom=v("gs-n").slice(0,100);if(!nom||!isAdmin)return;const prix=sec==="tresor"?1:gsPo(v("gs-p"));
     await run("Boutique",()=>setDoc(doc(collection(db,"boutique")),{section:sec,nom,prix,desc:v("gs-d").slice(0,300),ordre:Date.now(),creeLe:serverTimestamp()}));return;}
-  if(e.target.id==="gssellform"){const nom=v("gs-sn").slice(0,100),val=Math.max(0,+v("gs-sp")||0),rar=v("gs-sr"),vend=v("gs-sv").slice(0,60);if(!nom||!val||!isAdmin)return;
-    const ok=await run("Dépôt",()=>setDoc(doc(collection(db,"boutique")),{section:"depot",nom,prix:gsPo(val*0.75),rar,vendeur:vend,desc:"",ordre:Date.now(),creeLe:serverTimestamp()}));
-    if(ok){ui.gsMsg='La Guilde paie <strong>'+gsFmt(val/2)+'</strong>'+(vend?' à '+esc(vend):'')+' pour « '+esc(nom)+' ». L\'objet est au Dépôt à '+gsFmt(val*0.75)+' (75 %).';render();}return;}
+  if(e.target.id==="gssellform"){await gsSellSubmit();return;}
   if(e.target.id==="sheetform"){
     const isNew=ui.sheetEdit==="new",cur=isNew?null:aventuriers.find(a=>a.id===ui.sheetEdit);
     const nom=v("p-nom").slice(0,60);if(!nom)return;
