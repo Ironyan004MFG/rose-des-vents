@@ -4044,7 +4044,7 @@ const INV_RE={arme:/(?<![a-zà-ÿ])(épée|epee|dague|poignard|arc|arbalète|arb
 const GS_MAGIC=["inhabituel","rare","epique","legendaire"];
 // gen : objet tiré par le générateur de butin (par défaut du loot) ; sinon un objet sans type reconnu est « autre » (gardé)
 function invType(it,gen){if(!it)return "autre";if(it.type&&INV_TYPES.some(t=>t[0]===it.type))return it.type;if(it.rar==="quete")return "quete";if(GS_MAGIC.indexOf(it.rar)>=0)return "magique";
-  const n=String(it.n||it.nom||"");for(const k of ["conso","arme","armure","outil"])if(INV_RE[k].test(n))return k;return it.rar==="mediocre"||gen?"loot":"autre";}
+  const n=String(it.n||it.nom||"");if(/\((brisée|brisé|en lambeaux|cassée|cassé)\)/i.test(n))return "loot";for(const k of ["conso","arme","armure","outil"])if(INV_RE[k].test(n))return k;return it.rar==="mediocre"||gen?"loot":"autre";}
 function gsKeep(it){return invType(it)!=="loot";}
 function gsQuestItem(it){return invType(it)==="quete";}
 function gsSellLoad(aid){ui.gsSellF=null;ui.gsSel={};ui.gsVal={};if(!aid){render();return;}ui.gsSellF={aid,load:true};render();
@@ -12007,8 +12007,19 @@ function ltRoll(rec,fp,src,coll,cr){const ql=ltQuestLines(rec,cr),t=ltParse(rec&
     if(e.qsrc||e.max>1){ltBump(e);out.push({nom:e.nom,valeur:e.valeur,source:src,rar:e.qsrc?"quete":e.rar,quete:e.qsrc?1:0});continue;}if(e.k==="coins"){const c=lootCoins(fp);out.push({nom:c.txt,valeur:c.v,coins:1,source:src});continue;}
     const same=out.find(o=>o.nom===e.nom&&!o.coins);if(same){same.n=(same.n||1)+1;same.valeur+=e.valeur;continue;}out.push({nom:e.nom,valeur:e.valeur,source:src,rar:e.rar});}
   return out.map(o=>o.n?Object.assign(o,{nom:o.nom+" ×"+o.n}):o);}
+// Armes et armures portées : un ennemi armé laisse ses armes (lues dans ses actions) et son armure ; parfois brisées, elles ne valent presque rien.
+const LOOT_WPN=[["arbalète de poing",75],["arbalète légère",25],["arbalète lourde",50],["arc court",25],["arc long",50],["épée courte",10],["épée longue",15],["épée à deux mains",50],["cimeterre",25],["rapière",25],["dague",2],["masse d'armes",5],["marteau de guerre",15],["marteau léger",2],["hache d'armes",10],["grande hache",30],["hachette",5],["hallebarde",20],["pique",5],["coutille",20],["fléau",10],["morgenstern",15],["lance",1],["petite lance",1],["javeline",0.5],["trident",5],["fouet",2],["faucille",1],["fronde",0.1],["massue",0.2],["gourdin",0.1],["bâton",0.2],["pistolet",250],["mousquet",500],["filet",1]];
+const LOOT_ARM={"bandit":["Armure de cuir"],"capitaine bandit":["Armure de cuir clouté"],"garde":["Chemise de mailles","Bouclier"],"éclaireur":["Armure de cuir"],"espion":["Armure de cuir"],"assassin":["Armure de cuir clouté"],"gobelin guerrier":["Armure de cuir","Bouclier"],"chef gobelin":["Chemise de mailles","Bouclier"],"chef de brutes":["Cuirasse"],"cultiste":["Armure de cuir"],"cultiste fanatique":["Armure de cuir"],"chevalier":["Harnois","Bouclier"],"vétéran":["Clibanion"],"soldat":["Chemise de mailles","Bouclier"]};
+const LOOT_ARMV={"Armure de cuir":10,"Armure de cuir clouté":45,"Chemise de mailles":50,"Bouclier":10,"Cuirasse":400,"Harnois":1500,"Clibanion":200,"Armure de peau":10};
+function lootGear(m){if(!m)return [];const out=[],seen=new Set(),norm=x=>String(x||"").toLowerCase().trim();
+  const broke=(nom,v,arm)=>Math.random()<(arm?0.4:0.3)?{nom:nom+(arm?" (en lambeaux)":" (brisée)"),valeur:Math.max(0.01,Math.round(v*0.05*100)/100),type:"loot"}:{nom,valeur:v,type:arm?"armure":"arme"};
+  (String(m.actions||"").match(/\*\*([^*]+?)\.\*\*/g)||[]).forEach(t=>{const n=norm(t.replace(/\*\*|\.\*\*$/g,"").replace(/\.$/,""));
+    const w=LOOT_WPN.slice().sort((a,b)=>b[0].length-a[0].length).find(w=>n===w[0]||n.indexOf(w[0]+" ")===0);if(!w||seen.has(w[0]))return;seen.add(w[0]);
+    const nom=t.replace(/\*\*/g,"").replace(/\.$/,"").trim();out.push(broke(nom.charAt(0).toUpperCase()+nom.slice(1),w[1],false));});
+  (LOOT_ARM[norm(m.nom)]||[]).forEach(a=>out.push(broke(a,LOOT_ARMV[a]||10,true)));
+  return out.map(x=>Object.assign(x,{source:m.nom}));}
 function lootFor(m,cr){
-  const tb=ltRoll(m,fpNum(m.fp),m.nom,"monstres",cr);if(tb)return tb;
+  const tb=ltRoll(m,fpNum(m.fp),m.nom,"monstres",cr);if(tb){const have=new Set(tb.map(x=>String(x.nom||"").toLowerCase()));return tb.concat(lootGear(m).filter(g=>!have.has(String(g.nom).toLowerCase().replace(/ \((brisée|en lambeaux)\)$/,""))));}
   const fp=fpNum(m.fp),k=lootKind(m),out=[],pick=a=>a[Math.floor(Math.random()*a.length)],rnd=Math.random;
   const carries=k==="humain"||k==="fee"||k==="geant"||k==="fielon"||(k==="mort"&&rnd()<0.5);
   if(carries){const c=lootCoins(fp);if(c.v||c.txt)out.push({nom:c.txt,valeur:c.v,coins:1});}
@@ -12019,7 +12030,7 @@ function lootFor(m,cr){
   if(rnd()<pG){const g=LOOT_GEMS[Math.min(tier+(rnd()<0.2?1:0),4)];out.push({nom:pick(g[1])+" ("+g[0]+" po)",valeur:g[0]});}
   const pM=k==="bete"||k==="vase"?0:fp<1?0.02:fp<=4?0.06:fp<=10?0.12:0.2;
   if(rnd()<pM){const it=fp<=4?pick(LOOT_MAGIC.slice(0,3)):pick(LOOT_MAGIC);out.push({nom:it[0],valeur:it[1]});}
-  return out.map(x=>Object.assign(x,{source:m.nom}));
+  return out.concat(lootGear(m)).map(x=>Object.assign(x,{source:m.nom}));
 }
 function lootParse(txt){return String(txt||"").split(/\n+/).map(l=>l.replace(/^[-*•]\s*/,"").trim()).filter(Boolean).map(l=>{const m=l.match(/(\d+(?:[.,]\d+)?)\s*(po|pa|pc|pp)\b/i);let v=0;if(m){const n=+m[1].replace(",",".");v=m[2].toLowerCase()==="pa"?n/10:m[2].toLowerCase()==="pc"?n/100:m[2].toLowerCase()==="pp"?n*10:n;}return {nom:l.slice(0,120),valeur:v,prevu:1};});}
 function lootPo(v){v=+v||0;if(!v)return "";return v>=1?(Math.round(v*10)/10)+" po":v>=0.1?Math.round(v*10)+" pa":Math.round(v*100)+" pc";}
@@ -12029,7 +12040,7 @@ function lootChecklist(items,pfx){
 }
 function lootCollect(items,pfx,ctx){const pcs=(ui.pt.liste||[]).filter(c=>c.kind==="pj"),out=[];
   items.forEach((x,i)=>{const c=document.getElementById(pfx+"-c"+i),s=document.getElementById(pfx+"-p"+i);if(!c||!c.checked)return;const pr=s?s.value:"",pc=pcs.find(y=>y.ref===pr);
-    out.push(Object.assign({nom:x.nom,valeur:+x.valeur||0,source:x.source||"",rar:x.quete?"quete":(x.rar||""),pour:pr,pourNom:pc?pc.nom:""},ctx,x.uniq?{uniq:x.uniq}:{}));});return out;}
+    out.push(Object.assign({nom:x.nom,valeur:+x.valeur||0,source:x.source||"",rar:x.quete?"quete":(x.rar||""),pour:pr,pourNom:pc?pc.nom:""},x.type?{type:x.type}:{},ctx,x.uniq?{uniq:x.uniq}:{}));});return out;}
 async function lootSave(list){if(!list.length)return;const now=Date.now(),U={};
   list.forEach(x=>{if(x.uniq&&x.uniq.coll&&x.uniq.id){const k=x.uniq.coll+"/"+x.uniq.id;(U[k]=U[k]||{coll:x.uniq.coll,id:x.uniq.id,noms:[]}).noms.push(x.uniq.nom);}});
   await Promise.all(Object.values(U).map(u=>{const rec=(u.coll==="scenarios"?scenarios[u.id]:(u.coll==="pnj"?pnjs:monstres).find(r=>r.id===u.id))||{};const all=[...new Set((rec.butinPris||[]).concat(u.noms))];return setDoc(doc(db,u.coll,u.id),{butinPris:all},{merge:true});}));
