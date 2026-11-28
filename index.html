@@ -3625,7 +3625,8 @@ function ecSelCid(cid,remote){const c=ecCard();if(!c)return false;const k=(c.tok
 function ptSelShare(cid,from){if(!ui.pt)return;try{ptSelBC&&ptSelBC.postMessage({qid:ui.pt.id,cid,from});}catch(e){}}
 function ptSave(force){if(!ui.pt)return;try{ptPvPush();}catch(e){}if(!ptActive()&&!force)return;if(ui.ptWait){ui.ptDirty=true;return;}
   // écrans séparés : c'est l'onglet de la carte qui gère les jetons du combat (pas de doublons)
-  if(!ui.ptInfoOnly)try{ecFoeSync();}catch(e){console.error(e);}
+  // un ennemi qui tombe (ou se relève) change son jeton : on l'envoie tout de suite à la télé et aux joueurs (avant : il attendait le prochain envoi, jusqu'à 30 s)
+  if(!ui.ptInfoOnly)try{const b0=ptStab(ecP());ecFoeSync();if(ptStab(ecP())!==b0)setTimeout(()=>{try{ecPush(true);}catch(e){console.error(e);}},0);}catch(e){console.error(e);}
   try{ptObjSync();}catch(e){console.error(e);}
   ui.ptEditMs=Date.now();ui.pt.rev=Math.max(Date.now(),(ui.ptRev||0)+1);ui.ptRev=ui.pt.rev;ui.pt.by=PT_CLIENT;
   // on ne copie l'état qu'au moment d'écrire (pas à chaque petit changement : c'était lourd pendant un glisser)
@@ -11121,8 +11122,9 @@ function ecAfter(){if(ui.office==="ecran")return;const cv=document.getElementByI
     if(drag.k){const ox=drag.k.x,oy=drag.k.y;if(drag.k.k==="inv")drag.k.ms=Date.now();drag.k.x=Math.max(0.5,Math.min(cc.w-0.5,Math.floor(p[0]+drag.dx)+0.5));drag.k.y=Math.max(0.5,Math.min(cc.h-0.5,Math.floor(p[1]+drag.dy)+0.5));
       // un personnage qu'on déplace se tourne dans le sens où on le tire (il ne glisse pas de côté)
       if((drag.k.look||drag.k.sp)&&(drag.k.x!==ox||drag.k.y!==oy)){drag.k.a=Math.atan2(drag.k.y-oy,drag.k.x-ox);if(drag.k.look)EC_ROAMPOS.set(drag.k,[drag.k.x,drag.k.y]);}
-      // pendant qu'on glisse : on redessine tout de suite chez le DM ; le brouillard et l'envoi (télé, joueurs) suivent au plus 5 fois par seconde
-      if(drag.k.x!==ox||drag.k.y!==oy){ecUpdLocal();const now=Date.now();if(!drag.t||now-drag.t>200){drag.t=now;ecReveal(cc);ecUpdLocal();ecPush(false,true);}}}
+      // pendant qu'on glisse : on redessine tout de suite chez le DM ; pour un jeton de joueur, le brouillard et l'envoi (télé, joueurs) suivent au plus 5 fois par seconde.
+      // Ennemis, PNJ et autres jetons : seulement le départ et l'arrivée (envoyés au lâcher), pour ne pas les voir sautiller le long du chemin
+      if(drag.k.x!==ox||drag.k.y!==oy){ecUpdLocal();const now=Date.now();if(drag.k.k==="pj"&&(!drag.t||now-drag.t>200)){drag.t=now;ecReveal(cc);ecUpdLocal();ecPush(false,true);}}}
     else if(drag.ruler&&ui.ecRuler){ui.ecRuler.b=ecRulerSnap(p,cc);}
     else if(drag.pan){ui.ecVx=drag.cx-(e.clientX-drag.x0)/drag.s;ui.ecVy=drag.cy-(e.clientY-drag.y0)/drag.s;}
     else if(drag.draw&&ui.ecTrait){const t=ui.ecTrait.p,lx=t[t.length-2],ly=t[t.length-1];if(Math.hypot(p[0]-lx,p[1]-ly)>=0.15&&t.length<DES_PTS*2){t.push(+p[0].toFixed(2),+p[1].toFixed(2));ecUpdLocal();}}
