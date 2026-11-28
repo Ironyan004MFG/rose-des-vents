@@ -312,6 +312,10 @@ service cloud.firestore {
     }
     // Dons entre joueurs : le donneur (propriétaire du personnage « de ») dépose l'objet pour le personnage « a » ;
     // seuls le donneur, le receveur et le DM le lisent ; le receveur (ou le DM) le retire une fois l'objet rangé.
+    match /statsQuetes/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     match /transferts/{id} {
       allow read: if isAdmin() || (realAccount() && (resource.data.deUid == request.auth.uid || resource.data.aUid == request.auth.uid));
       allow create: if (isAdmin() || (realAccount() && request.resource.data.deUid == request.auth.uid
