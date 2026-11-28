@@ -231,6 +231,7 @@ img.zoomable{cursor:zoom-in}img.zoomable:focus-visible{outline:3px solid #2a6fb0
 .ecdm .eccanvas.big{position:fixed;inset:2vh 2vw;z-index:80;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;box-shadow:0 0 0 100vmax rgba(0,0,0,.7)}.ecdm .eccanvas.big .ecdmwrap{flex:1;width:100%;min-height:0}.ecdm .eccanvas.big canvas#ec-dm{max-height:none;width:100%;height:100%}.ecbigbar{display:flex;gap:6px;flex-wrap:wrap;line-height:1.2;margin-bottom:6px}.ecbigbar .chip{color:#f6ecd0;border-color:rgba(246,236,208,.5)}.ecbigp{margin:4px 0}
 .ecdm .eccards{margin:8px 0;display:flex;flex-wrap:wrap;gap:6px;align-items:center}.ecdm .eccal{margin:8px 0;font-size:14px}.ecdm .eccal[open]{display:block}.ecdm .eccal label{display:inline-flex;margin:6px 10px 6px 0}.ecdm .ecfine{margin-right:10px}.ecdm .ectext textarea{min-width:260px}.ecdm .chip.on{background:var(--ink,#2a2118);color:#f6ecd0}
 .cart{margin:8px 0 6px;padding:10px 14px;border:1px solid rgba(216,180,94,.5);border-radius:8px;background:rgba(216,180,94,.08);max-width:760px}.cart>summary{cursor:pointer;font-size:16px}.cart.empty{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:14.5px}.cart .desc{color:var(--on-board-muted)}
+.cartbuy{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:8px 0 4px}.cartbuy select{margin-left:6px}
 .cartl{list-style:none;margin:8px 0;padding:0}.cartl li{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(246,236,208,.15);font-size:14.5px}.cartl .cn{flex:1;min-width:0}.cartl .cq{white-space:nowrap}.cartl .cp{white-space:nowrap;font-variant-numeric:tabular-nums;min-width:70px;text-align:right}
 .cart .mini,.gs .cartadd{color:#f6ecd0;border-color:rgba(246,236,208,.45);background:transparent}.gs .cartadd[disabled]{opacity:.6}.cartsum{margin:4px 0;font-size:14.5px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}.cartsum label{display:flex;gap:6px;align-items:center}.carttot{font-size:17px;margin:8px 0 2px}
 .gstabs{margin:6px 0 4px}.gs h2{margin-top:10px}.gsdisc{font-size:14.5px;margin:6px 0}
@@ -3935,12 +3936,40 @@ function gsFmt(p){return gsPo(p).toLocaleString("fr-CA")+" po";}
 function cartLoad(){if(gsCart)return gsCart;try{gsCart=JSON.parse(localStorage.getItem("rdv-panier")||"[]");if(!Array.isArray(gsCart))gsCart=[];}catch(e){gsCart=[];}return gsCart;}
 function cartSave(){try{localStorage.setItem("rdv-panier",JSON.stringify(gsCart||[]));}catch(e){}}
 function cartLines(){return cartLoad().map(c=>{const x=gsAll.find(y=>y.id===c.id);return x&&x.section!=="tresor"?{x,q:c.q}:null;}).filter(Boolean);}
-function cartRank(){const mine=myChars();if(GRANKS.indexOf(ui.cartRank)>=0)return ui.cartRank;return mine.length?grank(mine[0]):"bois";}
-function cartBox(){const L=cartLines(),r=cartRank(),pc=GS_DISC[r]||0;if(!L.length)return '<div class="cart empty"><span>🛒 Panier vide</span><span class="desc">Ajoute des articles pour calculer ce que tu devras payer.</span></div>';
+function cartBuyers(){return ui.dm&&isAdmin?aventuriers.filter(a=>!a.pnj&&a.proprietaire).sort((a,b)=>String(a.nom).localeCompare(String(b.nom),"fr")):myChars();}
+function cartWho(){const B=cartBuyers();return B.find(a=>a.id===ui.cartWho)||B[0]||null;}
+// Le rabais suit toujours le rang du personnage qui achète (on ne peut pas le choisir) ; sans personnage : aucun rabais
+function cartRank(){const w=cartWho();return w?grank(w):"bois";}
+function cartBox(){const L=cartLines(),r=cartRank(),pc=GS_DISC[r]||0,W=cartWho();if(!L.length)return '<div class="cart empty"><span>🛒 Panier vide</span><span class="desc">Ajoute des articles à acheter avec la bourse de ton personnage.</span></div>'+(ui.cartMsg?'<p class="toast" role="status">'+ui.cartMsg+'</p>':'');
   let sub=0,int=0;L.forEach(l=>{const t=gsPo(l.x.prix)*l.q;sub+=t;if(l.x.section==="intendance")int+=t;});const disc=Math.floor(int*pc/100),tot=Math.max(0,sub-disc),n=L.reduce((a,l)=>a+l.q,0);
   return '<details class="cart"'+(ui.cartOpen?' open':'')+'><summary>🛒 Panier ('+n+') · <strong>'+gsFmt(tot)+'</strong></summary><ul class="cartl">'+L.map(l=>'<li><span class="cn">'+esc(l.x.nom)+'</span>'+(l.x.section==="depot"?'<span class="cq">×1</span>':'<span class="cq"><button class="mini" data-a="cart-dec" data-id="'+esc(l.x.id)+'" aria-label="Retirer un '+esc(l.x.nom)+'">−</button> '+l.q+' <button class="mini" data-a="cart-inc" data-id="'+esc(l.x.id)+'" aria-label="Ajouter un '+esc(l.x.nom)+'">+</button></span>')+'<span class="cp">'+gsFmt(gsPo(l.x.prix)*l.q)+'</span><button class="mini" data-a="cart-del" data-id="'+esc(l.x.id)+'" aria-label="Enlever '+esc(l.x.nom)+' du panier">✕</button></li>').join("")+'</ul>'+
-    '<p class="cartsum">Sous-total : '+gsFmt(sub)+'</p><p class="cartsum"><label for="cart-r">Rabais de rang (Intendance)<select id="cart-r" data-cart="rank">'+GRANKS.filter(k=>k!=="rose").map(k=>'<option value="'+k+'"'+(k===r?' selected':'')+'>'+esc(GRANK_LBL[k])+' '+(GS_DISC[k]?'−'+GS_DISC[k]+' %':'0 %')+'</option>').join("")+'</select></label>'+(disc?' <span>−'+gsFmt(disc)+'</span>':'')+'</p>'+
-    '<p class="carttot">Total à payer : <strong>'+gsFmt(tot)+'</strong></p><p class="desc">Montre ce total au Maître de la Guilde : c\'est lui qui fait la vente.</p><button class="linkbtn" data-a="cart-clear">Vider le panier</button></details>';}
+    '<p class="cartsum">Sous-total : '+gsFmt(sub)+'</p>'+(W?'<p class="cartsum">Rabais de rang (Intendance) : '+esc(GRANK_LBL[r])+' '+(pc?'−'+pc+' %':'0 %')+(disc?' <span>−'+gsFmt(disc)+'</span>':'')+'</p>':'<p class="cartsum desc">Rabais de rang (Intendance) : selon le rang de ton personnage, une fois connecté.</p>')+
+    '<p class="carttot">Total à payer : <strong>'+gsFmt(tot)+'</strong></p>'+cartBuyBox(L,tot,W)+'<button class="linkbtn" data-a="cart-clear">Vider le panier</button></details>';}
+// Achat : l'argent sort de la bourse de la fiche joueur et les articles entrent dans son inventaire. Le Dépôt (objets uniques) passe par le DM.
+function cartBuyBox(L,tot,W){const B=cartBuyers(),dm=ui.dm&&isAdmin,dep=L.some(l=>l.x.section==="depot")&&!dm,m=ui.cartMsg;
+  if(!B.length)return '<p class="desc">'+(user&&!user.isAnonymous?'Crée d\'abord ton personnage pour pouvoir acheter.':'Connecte-toi pour acheter avec la bourse de ton personnage.')+'</p>'+(m?'<p class="toast" role="status">'+m+'</p>':'');
+  return '<div class="cartbuy">'+(B.length>1?'<label for="cart-w">Acheter pour<select id="cart-w" data-cart="who">'+B.map(a=>'<option value="'+esc(a.id)+'"'+(W&&a.id===W.id?' selected':'')+'>'+esc(a.nom)+'</option>').join("")+'</select></label>':'<span>Pour <strong>'+esc(W.nom)+'</strong></span>')+
+    '<button class="btn gold sm" data-a="cart-buy"'+(dep||ui.cartBusy?' disabled':'')+'>'+(ui.cartBusy?'Achat…':'Acheter ('+gsFmt(tot)+')')+'</button></div>'+
+    (dep?'<p class="desc">Les objets du Dépôt sont uniques : le Maître de la Guilde confirme leur vente. Retire-les du panier pour acheter le reste.</p>':'<p class="desc">L\'argent sort de la bourse de sa fiche joueur et les articles vont dans son inventaire.</p>')+(m?'<p class="toast" role="status">'+m+'</p>':'');}
+const COIN_V={pp:1000,po:100,pe:50,pa:10,pc:1};
+// Paie « cp » pièces de cuivre avec la bourse : les plus grosses pièces d'abord, et la monnaie rendue si on doit casser une pièce. null = pas assez.
+function bourseDebit(B,cp){const b=Object.assign({pc:0,pa:0,pe:0,po:0,pp:0},B||{});Object.keys(COIN_V).forEach(k=>{b[k]=Math.max(0,Math.floor(+b[k]||0));});
+  const have=Object.keys(COIN_V).reduce((t,k)=>t+b[k]*COIN_V[k],0);if(have<cp)return null;let R=cp;
+  ["pp","po","pe","pa","pc"].forEach(k=>{const n=Math.min(b[k],Math.floor(R/COIN_V[k]));b[k]-=n;R-=n*COIN_V[k];});
+  if(R>0){const k=["pc","pa","pe","po","pp"].find(k=>b[k]>0&&COIN_V[k]>R);b[k]--;let ch=COIN_V[k]-R;["po","pa","pc"].forEach(j=>{if(COIN_V[j]>=COIN_V[k])return;const n=Math.floor(ch/COIN_V[j]);b[j]+=n;ch-=n*COIN_V[j];});}
+  return b;}
+async function cartBuy(){const L=cartLines(),W=cartWho();if(!L.length||!W||ui.cartBusy)return;const dm=ui.dm&&isAdmin;if(!dm&&L.some(l=>l.x.section==="depot"))return;
+  let sub=0,int=0;L.forEach(l=>{const t=gsPo(l.x.prix)*l.q;sub+=t;if(l.x.section==="intendance")int+=t;});const tot=Math.max(0,sub-Math.floor(int*(GS_DISC[grank(W)]||0)/100));
+  ui.cartBusy=true;ui.cartMsg="";render();
+  try{const sn=await getDoc(doc(db,"feuilles",W.id)),F=sn.exists()?sn.data():{},b=bourseDebit(F.bourse,tot*100);
+    if(!b){const have=Object.keys(COIN_V).reduce((t,k)=>t+Math.max(0,+((F.bourse||{})[k])||0)*COIN_V[k],0);ui.cartMsg="Pas assez d'argent : la bourse de "+esc(W.nom)+" contient "+(have/100).toLocaleString("fr-CA")+" po, il en faut "+tot.toLocaleString("fr-CA")+".";return;}
+    const inv=(F.inv||[]).slice();L.forEach(l=>{const it=inv.find(i=>String(i.n||"").trim()===String(l.x.nom).trim());if(it&&l.x.section!=="depot")it.qte=(+it.qte||1)+l.q;else inv.push({n:String(l.x.nom).slice(0,120),qte:l.q,valeur:gsPo(l.x.prix),notes:"Acheté à la Boutique de la Guilde"});});
+    if(inv.length>200){ui.cartMsg="L'inventaire de "+esc(W.nom)+" est plein (200 lignes).";return;}
+    await setDoc(doc(db,"feuilles",W.id),{proprietaire:W.proprietaire,inv,bourse:b,majLe:serverTimestamp()},{merge:true});
+    if(dm)for(const l of L)if(l.x.section==="depot")await deleteDoc(doc(db,"boutique",l.x.id)).catch(e=>console.error(e));
+    cartLoad().length=0;cartSave();ui.cartMsg="✓ Acheté ! "+tot.toLocaleString("fr-CA")+" po retirées de la bourse de "+esc(W.nom)+" ; les articles sont dans son inventaire.";}
+  catch(e){console.error(e);ui.cartMsg="L'achat n'a pas pu se faire : "+esc(errText(e));}
+  finally{ui.cartBusy=false;ui.cartOpen=true;render();}}
 function cartAct(a,id){const C=cartLoad(),c=C.find(x=>x.id===id),x=gsAll.find(y=>y.id===id);
   if(a==="cart-add"){if(!x||x.section==="tresor")return;if(c){if(x.section!=="depot")c.q++;}else C.push({id,q:1});ui.cartOpen=true;}
   else if(a==="cart-inc"&&c)c.q=Math.min(99,c.q+1);else if(a==="cart-dec"&&c){c.q--;if(c.q<1)C.splice(C.indexOf(c),1);}
@@ -3948,7 +3977,7 @@ function cartAct(a,id){const C=cartLoad(),c=C.find(x=>x.id===id),x=gsAll.find(y=
 function gsView(){
   const sec=GS_SECS.some(s=>s[0]===ui.gsSec)?ui.gsSec:"intendance",S=GS_SECS.find(s=>s[0]===sec),dm=ui.dm&&isAdmin,L=gsItems(sec);
   let h=cartBox()+'<div class="chips gstabs" role="tablist" aria-label="Comptoirs de la boutique">'+GS_SECS.map(s=>'<button class="chip" role="tab" data-a="gs-sec" data-v="'+s[0]+'" aria-selected="'+(s[0]===sec)+'" aria-pressed="'+(s[0]===sec)+'">'+s[1]+'</button>').join("")+'</div>';
-  h+='<section class="gs"><h2>'+esc(S[1])+'</h2><p class="hint">'+esc(S[2])+' Pour acheter, adresse-toi au Maître de la Guilde.</p>';
+  h+='<section class="gs"><h2>'+esc(S[1])+'</h2><p class="hint">'+esc(S[2])+' Ajoute des articles au panier, puis achète avec la bourse de ton personnage.</p>';
   if(sec==="intendance"){const mine=myChars();h+='<p class="gsdisc"><strong>Rabais membre selon le rang :</strong> '+GRANKS.filter(k=>k!=="rose").map(k=>esc(GRANK_LBL[k])+' '+(GS_DISC[k]?'−'+GS_DISC[k]+' %':'0 %')).join(" · ")+'</p>'+
     (mine.length?'<p class="gsdisc">'+mine.map(a=>esc(a.nom)+' ('+esc(GRANK_LBL[grank(a)])+') : <strong>'+(GS_DISC[grank(a)]?'−'+GS_DISC[grank(a)]+' %':'pas de rabais')+'</strong>').join(" · ")+'</p>':'');}
   if(sec==="tresor")h+='<p class="gsdisc">Chaque étoile de Mithril donne droit à <strong>une</strong> récompense. Après trois étoiles, un acte héroïque peut ouvrir le <strong>Conseil de la Rose</strong> : ses membres siègent aux côtés de Pax, choisissent quelle crise régionale la Guilde traite en priorité et peuvent fonder un nouveau comptoir.</p>';
@@ -12336,7 +12365,8 @@ document.addEventListener("click",async e=>{
   if(a==="vit-show"){const k=b.getAttribute("data-k"),x=(k==="mini"?miniDocs:k==="compendium"?compAll:k==="wiki"?(wikiPages||[]):k==="objets"?objets:k==="monstres"?monstres:k==="pnj"?pnjs:k==="factions"?factions:aventuriers).find(y=>y.id===id);if(!x||!(x.image||(k==="objets"&&x.texte)))return;
     b.disabled=true;const hd=x.image&&k!=="mini"&&k!=="wiki"?await hdGet(k,id):"";await vitShow(b.getAttribute("data-n")||x.nom||x.titre,hd||x.image||"",k==="objets"?x.texte:"");b.disabled=false;return;}
   if(a.indexOf("pt-")===0){await partyAction(a,id,b,e);return;}
-  if(a.indexOf("cart-")===0){cartAct(a,id);render();return;}
+  if(a==="cart-buy"){cartBuy();return;}
+  if(a.indexOf("cart-")===0){ui.cartMsg="";cartAct(a,id);render();return;}
   if(a.indexOf("gs-")===0){if(a==="gs-sec"){ui.gsSec=b.getAttribute("data-v");ui.gsConfirm=null;ui.gsMsg="";}else await gsAction(a,id);render();return;}
   if(a==="filter"){ui.filter=b.getAttribute("data-v");}
   else if(a==="dm"){
@@ -12585,7 +12615,7 @@ document.addEventListener("change",e=>{
     render();return;}
   if(e.target.id==="ec-t"){const m=document.getElementById("ec-menv");if(m)m.hidden=e.target.value!=="maison";return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-ec")){ecChange(e.target);return;}
-  if(e.target.getAttribute&&e.target.getAttribute("data-cart")==="rank"){ui.cartRank=e.target.value;ui.cartOpen=true;render();return;}
+  if(e.target.getAttribute&&e.target.getAttribute("data-cart")==="who"){ui.cartWho=e.target.value;ui.cartMsg="";ui.cartOpen=true;render();return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-shop")==="lieu"){ui.shopLieu=e.target.value;render();return;}
   if(e.target.getAttribute&&e.target.getAttribute("data-shop")==="type"){ui.shopType=e.target.value;render();return;}
   if(e.target.id==="loot-f"){ui.lootF=e.target.value;render();return;}
