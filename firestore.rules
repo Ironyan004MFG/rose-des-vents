@@ -309,6 +309,20 @@ service cloud.firestore {
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['recus']));
       allow delete: if isAdmin();
     }
+    // Dons entre joueurs : le donneur (propriétaire du personnage « de ») dépose l'objet pour le personnage « a » ;
+    // seuls le donneur, le receveur et le DM le lisent ; le receveur (ou le DM) le retire une fois l'objet rangé.
+    match /transferts/{id} {
+      allow read: if isAdmin() || (realAccount() && (resource.data.deUid == request.auth.uid || resource.data.aUid == request.auth.uid));
+      allow create: if (isAdmin() || (realAccount() && request.resource.data.deUid == request.auth.uid
+          && get(/databases/$(database)/documents/aventuriers/$(request.resource.data.de)).data.proprietaire == request.auth.uid))
+        && request.resource.data.keys().hasOnly(['de', 'deNom', 'a', 'aNom', 'deUid', 'aUid', 'item', 'ms'])
+        && request.resource.data.de is string && request.resource.data.a is string && request.resource.data.de != request.resource.data.a
+        && request.resource.data.aUid == get(/databases/$(database)/documents/aventuriers/$(request.resource.data.a)).data.proprietaire
+        && str(request.resource.data.deNom, 0, 80) && str(request.resource.data.aNom, 0, 80)
+        && request.resource.data.item is map && request.resource.data.item.size() <= 10
+        && request.resource.data.ms is int;
+      allow delete: if isAdmin() || (realAccount() && (resource.data.aUid == request.auth.uid || resource.data.deUid == request.auth.uid));
+    }
     match /dons/{id} {
       allow read: if isAdmin() || (request.auth != null && resource.data.proprietaire == request.auth.uid);
       allow write: if isAdmin();
