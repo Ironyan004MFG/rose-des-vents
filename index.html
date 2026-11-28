@@ -31,7 +31,7 @@ h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,5vw,44px);lin
 .sub{font-style:italic;color:var(--on-board-muted);font-size:18px}
 .crumbs{align-self:flex-start;display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-family:var(--display);font-size:13px;letter-spacing:.08em;color:var(--ink-soft,#c9bfa6)}.crumbs a{color:var(--gold)}.crumbs [aria-current]{color:#f3e9d0}
 .rapport{background:#ecdfc2;color:var(--ink);border-radius:10px;padding:26px 30px;max-width:820px;width:100%;box-sizing:border-box;margin:0 auto;box-shadow:0 10px 30px rgba(0,0,0,.35)}.rapport h2{margin:8px 0 14px}.rapport .chr-top{display:flex;align-items:center;gap:10px;justify-content:space-between}.rapcorps{margin-top:18px;border-top:1px dashed #b39d74;padding-top:16px;font-size:17px;line-height:1.55}.rapcorps p{margin:0 0 .8em}.rapcorps h1,.rapcorps h2,.rapcorps h3{font-size:1.1em;margin:1.1em 0 .4em}
-.raplink{font-weight:600}
+.raplink{font-weight:600}.chr-links a{color:#7a3e12}.chr-links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;padding-top:10px;border-top:1px dashed #c9b98f}
 .butinpage{max-width:1100px}.qltab{width:100%;border-collapse:collapse}.qltab th,.qltab td{text-align:left;padding:6px 8px;border-top:1px dashed #b39d74;vertical-align:middle}.qltab thead th{font-size:12px;color:#6b5a44;border-top:0}.qltab tbody th{font-weight:600}.qltab tr.chg{background:rgba(216,180,94,.22)}.qltab select{min-width:170px}.qlwrap{overflow-x:auto}.qltab td[data-l="Valeur"]{white-space:nowrap}.qltab td,.qltab tbody th{color:var(--ink)}
 @media (max-width:700px){.qltab thead{display:none}.qltab tr{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;border-top:1px dashed #b39d74;padding:8px 0}.qltab th,.qltab td{border:0;padding:2px 0}.qltab tbody th{grid-column:1/-1}.qltab td[data-l]::before{content:attr(data-l);display:block;font-size:11px;color:#6b5a44}.qltab td[data-l="Pour qui"],.qltab td[data-l="Provenance"]{grid-column:1/-1}.qltab select{width:100%;min-width:0}}.qlbulk{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}.qlmini h4{margin-bottom:2px}.qsaw{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin:14px 0}.qsa{background:#f6efdb;border:1px solid #c9b98f;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:2px;text-align:center}.qsi{font-size:26px}.qst{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#6b5a44}.qstab td{text-align:center}.qstab td[data-l]{white-space:nowrap}
 .back{align-self:flex-start;font-family:var(--display);font-size:13px;letter-spacing:.1em;color:var(--gold);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:9px 16px;min-height:40px;box-sizing:border-box;display:inline-flex;align-items:center;gap:8px}
@@ -1488,6 +1488,10 @@ function qlSync(){if(isAdmin||!user||user.isAnonymous){Object.keys(qlSubs).forEa
 function qlList(q){return (isAdmin?butins.filter(x=>x.quete===q.id):(qlData[q.id]||[])).slice().sort((a,b)=>(a.creeMs||0)-(b.creeMs||0));}
 function qlCanEdit(q){return (ui.dm&&isAdmin)||(!!user&&!user.isAnonymous&&q.respButin===user.uid);}
 // Butin de la quête : un résumé sur la carte de la quête, la gestion sur une page à part (#butin-<quête>), en tableau
+function chrLinks(q){const a=[['rapport','📜','Rapport de quête']];
+  if(((ui.dm&&isAdmin)||myConfirmed(q))&&qlList(q).length)a.push(['butin','💰','Butin']);
+  if(qsAll[q.id])a.push(['stats','📊','Statistiques et prix']);
+  return '<p class="chr-links">'+a.map(x=>'<a class="raplink" href="#'+x[0]+'-'+esc(q.id)+'">'+x[1]+' '+x[2]+' <span aria-hidden="true">→</span></a>').join("")+'</p>';}
 function qlBox(q){if(q.statut!=="encours"&&q.statut!=="terminee")return "";if(!((ui.dm&&isAdmin)||myConfirmed(q)))return "";
   const L=qlList(q),grp=signupsFor(q.id).filter(s=>s.statut==="confirmee"&&s.uid&&s.uid!=="dm"),rs=grp.find(s=>s.uid===q.respButin);if(!L.length&&!(ui.dm&&isAdmin))return "";
   const att=L.filter(x=>x.pour).length,mine=user?L.filter(x=>{const P=questParts(q).find(p=>p.aid===x.pour);return P&&aventuriers.some(a=>a.id===x.pour&&a.proprietaire===user.uid);}).length:0;
@@ -3325,7 +3329,7 @@ function chroniclesView(){
   return top+'<div class="chron">'+done.map(q=>{const r=q.rapport,b=office(q.bureau);
     return '<article class="chr"><div class="chr-top">'+rankSeal(q.rang)+'<span class="kind">'+esc(b?b.nom:"")+(r.date?' · '+esc(r.date):'')+'</span><span class="stamp res-'+esc(r.resultat)+'">'+esc(RESULTS[r.resultat]||"")+'</span></div>'+
       '<h2>'+esc(q.titre)+'</h2>'+(r.resume?'<p class="desc">'+esc(rapExtrait(r.resume))+'</p>':'')+
-      ((r.participants||[]).length?'<p class="chr-parts"><strong>Participants :</strong> '+r.participants.map(x=>esc(x.nom)).join(", ")+'</p>':'')+(r.resume?'<p><a class="raplink" href="#rapport-'+esc(q.id)+'">📜 Lire le rapport de quête <span aria-hidden="true">→</span></a></p>':'')+(qsAll[q.id]?'<p><a class="raplink" href="#stats-'+esc(q.id)+'">📊 Statistiques et prix de la quête <span aria-hidden="true">→</span></a></p>':'')+'</article>';}).join("")+'</div>';
+      ((r.participants||[]).length?'<p class="chr-parts"><strong>Participants :</strong> '+r.participants.map(x=>esc(x.nom)).join(", ")+'</p>':'')+chrLinks(q)+'</article>';}).join("")+'</div>';
 }
 
 /* ---------- rapport de quête (page à part) ---------- */
