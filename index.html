@@ -12938,7 +12938,7 @@ document.addEventListener("submit",async e=>{
     readStep();
     if(C.step<3){C.step++;render();return;}
     const mp=mefaitPts();
-    const rapport={date:C.rapport.date,resultat:C.rapport.resultat,resume:C.rapport.resume,participants:C.parts.map(x=>({nom:x.nom,aventurier:x.aventurier||null})),termineLe:serverTimestamp()};
+    const rapport={date:C.rapport.date,resultat:C.rapport.resultat,resume:C.rapport.resume,participants:C.parts.map(x=>{const o={nom:x.nom,aventurier:x.aventurier||null};Object.keys(DEFAULT_MEFAITS).concat(BIENFAITS).forEach(k=>{if(x[k]>0)o[k]=+x[k];});return o;}),termineLe:serverTimestamp()};
     ui.complete=null;
     await run("Fin de quête",async()=>{
       const bt=writeBatch(db);
