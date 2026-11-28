@@ -2355,7 +2355,7 @@ function feuIn(f,v,attrs){return '<input data-f="'+f+'" value="'+esc(v==null?"":
 // Notes d'un sort : zone de texte qui grandit avec le contenu (portée, dégâts, effets à plus haut niveau…)
 function feuNoteSort(f,v){v=String(v||"");const r=Math.min(12,Math.max(1,v.split("\n").reduce((a,l)=>a+Math.max(1,Math.ceil(l.length/42)),0)));return '<textarea class="fsnote" data-f="'+f+'" rows="'+r+'" maxlength="4000" aria-label="Notes" placeholder="Portée, dégâts, à plus haut niveau…">'+esc(v)+'</textarea>';}
 function feuTa(f,v,rows,ph){return '<textarea data-f="'+f+'" rows="'+(rows||4)+'" maxlength="8000"'+(ph?' placeholder="'+esc(ph)+'"':'')+'>'+esc(v||"")+'</textarea>';}
-// CA : une base, plus « Armure » et « Armure magique » (ex. Armure du mage) qu'on coche pour les ajouter ; la CA totale est celle qu'utilise le reste de l'appli
+// CA : une base, plus « Armure » et « Bouclier » qu'on coche pour les ajouter (champ interne « mag » = bouclier) ; la CA totale est celle qu'utilise le reste de l'appli
 function feuCaMods(F){const m=F.caMods||{};return {base:m.base===""||m.base==null?(F.ca===""||F.ca==null?"":+F.ca):+m.base,arm:+m.arm||0,armOn:!!m.armOn,mag:+m.mag||0,magOn:!!m.magOn};}
 function feuCaTot(m){return m.base===""?"":Math.max(0,Math.min(40,(+m.base||0)+(m.armOn?m.arm:0)+(m.magOn?m.mag:0)));}
 function feuCaSync(F){if(!F||!F.caMods)return;const m=feuCaMods(F);F.caMods=m;F.ca=feuCaTot(m);}
@@ -2363,7 +2363,7 @@ function feuCaBox(F){const m=feuCaMods(F),t=feuCaTot(m);
   return '<div class="feustat big feuca"><span>CA</span><strong id="feu-ca-tot">'+(t===""?"—":t)+'</strong><div class="feucamods">'+
     '<label>Base'+feuIn("caMods.base",m.base,' type="number" min="0" max="40" inputmode="numeric" class="feun"')+'</label>'+
     '<label class="feucam">'+feuChk("caMods.armOn",m.armOn,"Ajouter l'armure")+' Armure +'+feuIn("caMods.arm",m.arm||"",' type="number" min="-10" max="20" inputmode="numeric" class="feun" aria-label="Bonus d\'armure"')+'</label>'+
-    '<label class="feucam">'+feuChk("caMods.magOn",m.magOn,"Ajouter l'armure magique")+' Magique +'+feuIn("caMods.mag",m.mag||"",' type="number" min="-10" max="20" inputmode="numeric" class="feun" aria-label="Bonus d\'armure magique (ex. Armure du mage)"')+'</label></div></div>';}
+    '<label class="feucam">'+feuChk("caMods.magOn",m.magOn,"Ajouter le bouclier")+' Bouclier +'+feuIn("caMods.mag",m.mag||"",' type="number" min="-10" max="20" inputmode="numeric" class="feun" aria-label="Bonus de bouclier"')+'</label></div></div>';}
 function feuChk(f,on,lbl){return '<input type="checkbox" data-f="'+f+'"'+(on?' checked':'')+(lbl?' aria-label="'+esc(lbl)+'"':'')+'>';}
 function feuView(id){
   const a=aventuriers.find(x=>x.id===id);
