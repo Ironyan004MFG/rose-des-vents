@@ -22,8 +22,9 @@ service cloud.firestore {
     function validFeuille(d) {
       return d.keys().hasOnly(['proprietaire', 'sousclasse', 'historique', 'car', 'sauv', 'comp', 'pv', 'dv', 'mort', 'ca', 'vitesse',
                                'taille', 'inspi', 'armes', 'traits', 'maitr', 'sorts', 'equip', 'bourse', 'notes', 'majLe',
-                               'inv', 'absorbes', 'recus'])
+                               'inv', 'absorbes', 'recus', 'caMods'])
         && d.proprietaire is string
+        && (!('caMods' in d) || (d.caMods is map && d.caMods.size() <= 6))
         && (!('armes' in d) || (d.armes is list && d.armes.size() <= 30))
         && (!('sorts' in d) || (d.sorts is map && (!('liste' in d.sorts) || (d.sorts.liste is list && d.sorts.liste.size() <= 150))))
         && (!('inv' in d) || (d.inv is list && d.inv.size() <= 200))

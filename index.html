@@ -1159,6 +1159,8 @@ footer .who a{color:var(--gold)}
 .feuempl{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}
 .feuemp{border:1px solid #c9b98f;border-radius:6px;padding:4px 6px;background:#fbf6e8;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:13px}
 .feuemp input[type=number]{width:46px;text-align:center}.feudots{display:flex;gap:3px;min-height:18px}.feudots input{width:16px;height:16px}
+.feustats .feuca{grid-column:span 2;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:14px}.feuca>span{align-self:center}.feuca>strong{font-size:2.2em;min-width:1.6em;text-align:center}.feuca .feucamods{display:flex;flex-direction:column;gap:4px}.feuca .feucamods label{display:flex!important;flex-direction:row;align-items:center;gap:6px;white-space:nowrap;text-transform:none;letter-spacing:0;font-size:13px;margin:0}.feuca .feucamods input.feun{width:58px!important;margin:0;padding:3px 6px;font-size:15px}.feuca .feucamods input[type=checkbox]{width:18px;height:18px;margin:0}
+@media (max-width:600px){.feustats .feuca{grid-column:1/-1}}
 .feuinvh{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
 .feulire{margin:3px 0 0;text-transform:none;letter-spacing:0}.modal.wide.lecmodal{max-width:min(1100px,96vw)}
 .lecimg{max-height:calc(100dvh - 190px);object-fit:contain}.lecimg{width:100%;height:auto;border-radius:6px;display:block}.lectxt{margin-top:8px}.lectxt p{white-space:normal;line-height:1.5}
@@ -2282,7 +2284,7 @@ function feuListen(id){if(feuId===id)return;if(feuUnsub){try{feuUnsub();}catch(e
 // Butin attribué par le DM (recus) : déposé directement dans l'inventaire ; les pièces vont dans la bourse.
 function feuAbsorb(F,R){if(!F||!R)return false;let ch=false;F.inv=F.inv||[];F.absorbes=F.absorbes||[];F.bourse=F.bourse||{};
   if(R.pv&&R.pv.ms){const tk="pv@"+R.pv.ms;if(F.absorbes.indexOf(tk)<0){F.absorbes=F.absorbes.filter(x=>String(x).indexOf("pv@")!==0);F.absorbes.push(tk);F.pv=F.pv||{};const g=R.pv;
-    if("pv" in g)F.pv.act=g.pv;if("max" in g&&g.max!=="")F.pv.max=g.max;if("temp" in g)F.pv.temp=g.temp===0?"":g.temp;if("ca" in g&&g.ca!=="")F.ca=g.ca;ch=true;}}
+    if("pv" in g)F.pv.act=g.pv;if("max" in g&&g.max!=="")F.pv.max=g.max;if("temp" in g)F.pv.temp=g.temp===0?"":g.temp;if("ca" in g&&g.ca!==""){F.ca=g.ca;if(F.caMods){const m=feuCaMods(F);F.caMods=Object.assign(m,{base:Math.max(0,(+g.ca||0)-(m.armOn?m.arm:0)-(m.magOn?m.mag:0))});}}ch=true;}}
   Object.keys(R).forEach(bid=>{if(bid==="pv")return;const r=R[bid]||{},had=F.absorbes.indexOf(bid)>=0;
     if(r.repos){if(had)return;F.absorbes.push(bid);ch=true;feuLongRest(F);return;}
     if(r.use){if(had)return;F.absorbes.push(bid);ch=true;const i=F.inv.findIndex(x=>x.n===r.use&&(+x.qte||0)>0);if(i>=0){F.inv[i].qte=(+F.inv[i].qte||1)-1;if(F.inv[i].qte<=0)F.inv.splice(i,1);}return;}
@@ -2353,6 +2355,15 @@ function feuIn(f,v,attrs){return '<input data-f="'+f+'" value="'+esc(v==null?"":
 // Notes d'un sort : zone de texte qui grandit avec le contenu (portée, dégâts, effets à plus haut niveau…)
 function feuNoteSort(f,v){v=String(v||"");const r=Math.min(12,Math.max(1,v.split("\n").reduce((a,l)=>a+Math.max(1,Math.ceil(l.length/42)),0)));return '<textarea class="fsnote" data-f="'+f+'" rows="'+r+'" maxlength="4000" aria-label="Notes" placeholder="Portée, dégâts, à plus haut niveau…">'+esc(v)+'</textarea>';}
 function feuTa(f,v,rows,ph){return '<textarea data-f="'+f+'" rows="'+(rows||4)+'" maxlength="8000"'+(ph?' placeholder="'+esc(ph)+'"':'')+'>'+esc(v||"")+'</textarea>';}
+// CA : une base, plus « Armure » et « Armure magique » (ex. Armure du mage) qu'on coche pour les ajouter ; la CA totale est celle qu'utilise le reste de l'appli
+function feuCaMods(F){const m=F.caMods||{};return {base:m.base===""||m.base==null?(F.ca===""||F.ca==null?"":+F.ca):+m.base,arm:+m.arm||0,armOn:!!m.armOn,mag:+m.mag||0,magOn:!!m.magOn};}
+function feuCaTot(m){return m.base===""?"":Math.max(0,Math.min(40,(+m.base||0)+(m.armOn?m.arm:0)+(m.magOn?m.mag:0)));}
+function feuCaSync(F){if(!F||!F.caMods)return;const m=feuCaMods(F);F.caMods=m;F.ca=feuCaTot(m);}
+function feuCaBox(F){const m=feuCaMods(F),t=feuCaTot(m);
+  return '<div class="feustat big feuca"><span>CA</span><strong id="feu-ca-tot">'+(t===""?"—":t)+'</strong><div class="feucamods">'+
+    '<label>Base'+feuIn("caMods.base",m.base,' type="number" min="0" max="40" inputmode="numeric" class="feun"')+'</label>'+
+    '<label class="feucam">'+feuChk("caMods.armOn",m.armOn,"Ajouter l'armure")+' Armure +'+feuIn("caMods.arm",m.arm||"",' type="number" min="-10" max="20" inputmode="numeric" class="feun" aria-label="Bonus d\'armure"')+'</label>'+
+    '<label class="feucam">'+feuChk("caMods.magOn",m.magOn,"Ajouter l'armure magique")+' Magique +'+feuIn("caMods.mag",m.mag||"",' type="number" min="-10" max="20" inputmode="numeric" class="feun" aria-label="Bonus d\'armure magique (ex. Armure du mage)"')+'</label></div></div>';}
 function feuChk(f,on,lbl){return '<input type="checkbox" data-f="'+f+'"'+(on?' checked':'')+(lbl?' aria-label="'+esc(lbl)+'"':'')+'>';}
 function feuView(id){
   const a=aventuriers.find(x=>x.id===id);
@@ -2372,7 +2383,7 @@ function feuView(id){
   h+='<p class="desc feupriv">🔒 Privée : visible seulement par toi'+(dm&&!mine?' (DM) et par le joueur':' et le DM')+'. Les modificateurs se calculent tout seuls ; tout s\'enregistre automatiquement.</p>';
   // combat
   h+='<section class="feubox feucombat"><h3>Combat</h3><div class="feustats">'+
-    '<label class="feustat big">CA'+feuIn("ca",F.ca,' type="number" min="0" max="40" inputmode="numeric"')+'</label>'+
+    feuCaBox(F)+
     '<div class="feustat big"><span>Initiative</span><strong data-calc="init">'+feuSg(R.init)+'</strong></div>'+
     '<label class="feustat">Vitesse'+feuIn("vitesse",F.vitesse,' maxlength="20"')+'</label>'+
     '<label class="feustat">Taille'+feuIn("taille",F.taille,' maxlength="20"')+'</label>'+
@@ -2420,17 +2431,17 @@ function feuView(id){
 }
 function feuSet(o,path,val){const p=path.split(".");let c=o;for(let i=0;i<p.length-1;i++){const k=p[i],nk=p[i+1];if(c[k]==null||typeof c[k]!=="object")c[k]=/^\d+$/.test(nk)&&k!=="empl"?[]:{};c=c[k];}c[p[p.length-1]]=val;}
 function feuRead(){const f=document.getElementById("feuform");if(!f||!ui.feu)return;f.querySelectorAll("[data-f]").forEach(el=>{const p=el.getAttribute("data-f");let v;
-  if(el.type==="checkbox")v=el.checked;else if(el.type==="number"){v=el.value===""?"":/\.valeur$/.test(p)?+el.value:Math.round(+el.value);if(v!==""&&isNaN(v))v="";}else if(el.tagName==="SELECT"&&p.indexOf("comp.")===0)v=+el.value||0;else v=el.value;feuSet(ui.feu,p,v);});}
-function feuCalcUpd(){const f=document.getElementById("feuform"),a=aventuriers.find(x=>x.id===(f&&f.getAttribute("data-id")));if(!f||!a)return;const R=feuCalcs(a,ui.feu);
+  if(el.type==="checkbox")v=el.checked;else if(el.type==="number"){v=el.value===""?"":/\.valeur$/.test(p)?+el.value:Math.round(+el.value);if(v!==""&&isNaN(v))v="";}else if(el.tagName==="SELECT"&&p.indexOf("comp.")===0)v=+el.value||0;else v=el.value;feuSet(ui.feu,p,v);});if(ui.feu.caMods)feuCaSync(ui.feu);}
+function feuCalcUpd(){const f=document.getElementById("feuform"),a=aventuriers.find(x=>x.id===(f&&f.getAttribute("data-id")));if(!f||!a)return;{const ct=document.getElementById("feu-ca-tot");if(ct&&ui.feu)ct.textContent=ui.feu.ca===""||ui.feu.ca==null?"—":ui.feu.ca;}const R=feuCalcs(a,ui.feu);
   f.querySelectorAll("[data-calc]").forEach(el=>{const k=el.getAttribute("data-calc");let v;if(k==="pp")v=R.pp;else if(k==="dd")v=R.dd==null?"—":R.dd;else if(k==="att")v=R.att==null?"—":feuSg(R.att);else{const p=k.split(".");v=p.length>1?R[p[0]][p[1]]:R[k];v=feuSg(v);}el.textContent=v;});}
 function feuClean(F){const n=(v,lo,hi)=>{if(v===""||v==null)return "";v=Math.round(+v);return isNaN(v)?"":Math.max(lo,Math.min(hi,v));},s=(v,m)=>String(v==null?"":v).slice(0,m);
   const o={sousclasse:s(F.sousclasse,60),historique:s(F.historique,60),car:{},sauv:{},comp:{},pv:{act:n(F.pv.act,-99,999),max:n(F.pv.max,0,999),temp:n(F.pv.temp,0,999)},dv:{total:s(F.dv.total,20),util:n(F.dv.util,0,40)||0},
-    mort:{s:[0,1,2].map(i=>!!F.mort.s[i]),e:[0,1,2].map(i=>!!F.mort.e[i])},ca:n(F.ca,0,40),vitesse:s(F.vitesse,20),taille:s(F.taille,20),inspi:!!F.inspi,
+    mort:{s:[0,1,2].map(i=>!!F.mort.s[i]),e:[0,1,2].map(i=>!!F.mort.e[i])},ca:n(F.ca,0,40),...(F.caMods?{caMods:(()=>{const m=feuCaMods(F);return {base:n(m.base,0,40),arm:n(m.arm,-10,20)||0,armOn:!!m.armOn,mag:n(m.mag,-10,20)||0,magOn:!!m.magOn};})()}:{}),vitesse:s(F.vitesse,20),taille:s(F.taille,20),inspi:!!F.inspi,
     armes:(F.armes||[]).slice(0,30).map(w=>({n:s(w.n,60),att:s(w.att,20),deg:s(w.deg,40),notes:s(w.notes,120)})),
     traits:{espece:s(F.traits.espece,8000),classe:s(F.traits.classe,8000),dons:s(F.traits.dons,8000)},maitr:{armures:s(F.maitr.armures,200),armes:s(F.maitr.armes,200),outils:s(F.maitr.outils,200),langues:s(F.maitr.langues,200)},
     sorts:{car:["int","sag","cha"].indexOf(F.sorts.car)>=0?F.sorts.car:"",empl:{},liste:(F.sorts.liste||[]).slice(0,150).map(x=>{const o={niv:n(x.niv,0,9)||0,n:s(x.n,60),prep:!!x.prep,notes:s(x.notes,160)};if(FEU_JETK.indexOf(x.jet)>0)o.jet=x.jet;if(x.eff&&(x.eff==="txt"||PT_COND[x.eff]))o.eff=x.eff;if(x.eff==="txt"&&x.efx)o.efx=s(x.efx,80);const d=n(x.dur,0,999);if(d)o.dur=d;if(x.conc)o.conc=true;return o;})},
     equip:s(F.equip,8000),bourse:{},notes:s(F.notes,8000),
-    inv:(F.inv||[]).slice(0,200).map(x=>{const o={n:s(x.n,120),qte:n(x.qte,0,999),valeur:Math.max(0,Math.round((+x.valeur||0)*100)/100),notes:s(x.notes,160)};if(o.qte==="")o.qte=1;['rar','quete','src','bid','lec'].forEach(k=>{if(x[k])o[k]=s(x[k],160);});if(x.eq&&FEU_EQL[x.eq])o.eq=x.eq;return o;}),absorbes:(F.absorbes||[]).slice(-600).map(x=>s(x,80))};
+    inv:(F.inv||[]).slice(0,200).map(x=>{const o={n:s(x.n,120),qte:n(x.qte,0,999),valeur:Math.max(0,Math.round((+x.valeur||0)*100)/100),notes:s(x.notes,160)};if(o.qte==="")o.qte=1;['rar','quete','src','bid','lec'].forEach(k=>{if(x[k])o[k]=s(x[k],160);});if(x.type&&INV_TYPES.some(t=>t[0]===x.type))o.type=x.type;if(x.eq&&FEU_EQL[x.eq])o.eq=x.eq;return o;}),absorbes:(F.absorbes||[]).slice(-600).map(x=>s(x,80))};
   FEU_CAR.forEach(c=>{o.car[c[0]]=n(F.car[c[0]],1,30)||10;if(F.sauv[c[0]])o.sauv[c[0]]=true;});FEU_COMP.forEach(c=>{const lv=+F.comp[c[0]]||0;if(lv)o.comp[c[0]]=lv===2?2:1;});
   for(let i=1;i<=9;i++){const e=F.sorts.empl[i]||{},mx=n(e.max,0,4)||0;if(mx)o.sorts.empl[i]={max:mx,u:Array.from({length:mx},(_,j)=>!!(e.u||[])[j])};}
   FEU_PIECES.forEach(p=>{o.bourse[p[0]]=n(F.bourse[p[0]],0,9999999)||0;});return o;}
@@ -3529,7 +3540,7 @@ function route(){
      const sepHere=!!ui.ptInfoOnly;
      if(!sepHere&&((wasPt&&!isPt)||(isAdmin&&disp(ui.office)&&!disp(next)&&(vitOn()||(ecDoc&&ecDoc.carte)))))ecCloseScreens();}
     if(isPt&&!wasPt)setTimeout(()=>{if(ui.pt&&ui.office==="partie-"+ui.pt.id&&ui.pt.id!=="libre")ecPush(true);},400);
-    if(next&&next.indexOf("perso-")===0&&!(ui.office&&ui.office.indexOf("perso-")===0))ui.persoFrom=ui.office||"";if(next&&(next.indexOf("rapport-")===0||next.indexOf("butin-")===0)&&!(ui.office&&(ui.office.indexOf("rapport-")===0||ui.office.indexOf("butin-")===0)))ui.rapFrom=ui.office||"";ui.office=next;if(!(next==="personnages"&&ui.sheetEdit==="new"))ui.sheetEdit=null;if(!(next==="compendium"&&ui.compEdit==="new"))ui.compEdit=null;ui.compHist=null;ui.compVer=null;ui.confirmComp=null;ui.evolve=null;ui.noteEdit=null;ui.newsEdit=null;if(!ui.pendingMan){ui.manEdit=null;}ui.pendingMan=false;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=ui.pendingEdit||null;ui.pendingEdit=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter=ui.pendingFilter||"ouverte";ui.rank="all";const focusQ=ui.pendingQuest;ui.pendingFilter=null;ui.pendingQuest=null;render();
+    if(next&&next.indexOf("perso-")===0&&!(ui.office&&(ui.office.indexOf("perso-")===0||ui.office.indexOf("feuille-")===0)))ui.persoFrom=ui.office||"";if(next&&(next.indexOf("rapport-")===0||next.indexOf("butin-")===0)&&!(ui.office&&(ui.office.indexOf("rapport-")===0||ui.office.indexOf("butin-")===0)))ui.rapFrom=ui.office||"";ui.office=next;if(!(next==="personnages"&&ui.sheetEdit==="new"))ui.sheetEdit=null;if(!(next==="compendium"&&ui.compEdit==="new"))ui.compEdit=null;ui.compHist=null;ui.compVer=null;ui.confirmComp=null;ui.evolve=null;ui.noteEdit=null;ui.newsEdit=null;if(!ui.pendingMan){ui.manEdit=null;}ui.pendingMan=false;ui.wikiEdit=null;ui.confirmWiki=null;ui.editing=ui.pendingEdit||null;ui.pendingEdit=null;ui.confirmDel=null;ui.addName=null;ui.signupMsg=null;ui.filter=ui.pendingFilter||"ouverte";ui.rank="all";const focusQ=ui.pendingQuest;ui.pendingFilter=null;ui.pendingQuest=null;render();
     try{const el=focusQ&&document.getElementById("q-"+focusQ);if(el){el.scrollIntoView({block:"center"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1600);}else window.scrollTo(0,0);}catch(e){}}
 }
 window.addEventListener("hashchange",()=>{if(feuDirty)feuSaveNow();});window.addEventListener("hashchange",route);
