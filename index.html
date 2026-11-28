@@ -3712,6 +3712,11 @@ function ptOrder(){return (ui.pt.liste||[]).slice().sort((a,b)=>((+b.init||0)-(+
 function ptC(cid){return (ui.pt.liste||[]).find(c=>c.cid===cid);}
 function ptUid(){return Math.random().toString(36).slice(2,9);}
 function ptPvAvg(s){const m=String(s||"").match(/\d+/);return m?+m[0]:1;}
+// PV des monstres : moyenne (×1), dés au maximum, ou moyenne multipliée. L'XP ne change pas : seul l'endurance du monstre augmente.
+const PT_PVM=[["1","Normaux (moyenne)"],["max","Au maximum (dés au max)"],["1.5","× 1,5"],["2","× 2"]];
+function ptPvMax(s){const t=String(s||""),d=t.match(/(\d+)\s*d\s*(\d+)\s*(?:([+−-])\s*(\d+))?/i);if(!d)return ptPvAvg(s);return Math.max(1,(+d[1])*(+d[2])+(d[3]?(d[3]==="+"?1:-1)*(+d[4]):0));}
+function ptPvFor(m,mult){const a=ptPvAvg(m.pv);if(mult==="max")return Math.max(a,ptPvMax(m.pv));const k=+mult;return k>1?Math.round(a*k):a;}
+function ptPvMult(){const P=ui.pt;if(P&&P.pvMult)return P.pvMult;try{return localStorage.getItem("rdv-pvmult")||"1";}catch(e){return "1";}}
 function ptDexMod(n){return n==null||n===""?0:Math.floor((+n-10)/2);}
 function ptD(n){return 1+Math.floor(Math.random()*n);}
 function ptSignups(q){if(q&&q.mini)return (q.presents||[]).map(id=>({mini:id,aventurier:id,nom:(miniDocs.find(x=>x.id===id)||{}).nom||"",statut:"confirmee"}));const s=signupsFor(q.id).filter(x=>x.statut!=="refusee"),c=s.filter(x=>x.statut==="confirmee");return c.length?c:s;}
@@ -3723,7 +3728,7 @@ function ptAddPC(s){
   ui.pt.liste.push({cid:ptUid(),kind:"pj",ref:s.aventurier||"",nom:a.nom||s.nom||"Aventurier",ca:d.ca==null?"":+d.ca,pvMax:d.pv==null?0:+d.pv,pv:d.pv==null?0:+d.pv,tmp:0,init:"",dex:0,pp:d.percPassive==null?"":+d.percPassive,conds:[],conc:false,ds:{s:0,f:0}});return true;
 }
 function ptAddMonster(m,label){
-  const same=ui.pt.liste.filter(c=>c.ref===m.id).length;const pv=ptPvAvg(m.pv);
+  const same=ui.pt.liste.filter(c=>c.ref===m.id).length;const pv=ptPvFor(m,ptPvMult());
   ui.pt.liste.push({cid:ptUid(),kind:"monstre",ref:m.id,nom:label||(m.nom+" "+(same+1)),ca:m.ca==null?"":+m.ca,pvMax:pv,pv:pv,tmp:0,init:"",dex:ptDexMod(m.dex),xp:crXp(m.fp),conds:[],conc:false});
 }
 function ptRollInit(all){(ui.pt.liste||[]).forEach(c=>{if(c.kind!=="pj"&&(all||c.init===""||c.init==null)){c.init=ptD(20)+(+c.dex||0);}});}
@@ -11853,7 +11858,7 @@ function ptStartBox(q){
   const encs=ptEncounters(q),sg=ptSignups(q);
   let h='<div class="ptstart"><h3>⚔ Commencer une rencontre</h3><form id="pt-encform" class="ptencf"><label for="pt-enc-sel">Rencontre<select id="pt-enc-sel"><option value="">Rencontre libre (sans monstres préchargés)</option>'+encs.map(r=>'<option value="'+esc(r.id)+'">'+esc(r.nom)+' ('+(r.monstres||[]).reduce((t,x)=>t+(x.nb||1),0)+' créatures)</option>').join("")+'</select></label>'+
     '<label for="pt-enc-nom">Nom (si rencontre libre)<input id="pt-enc-nom" maxlength="80" placeholder="Ex. Bagarre à la taverne"></label>'+
-    '<label class="ptchk" for="pt-enc-grp"><input type="checkbox" id="pt-enc-grp" checked><span>Inclure le groupe ('+sg.length+')</span></label><button class="btn gold">Préparer la rencontre</button></form>'+
+    '<label for="pt-enc-pv">PV des monstres<select id="pt-enc-pv">'+PT_PVM.map(o=>'<option value="'+o[0]+'"'+(ptPvMult()===o[0]?' selected':'')+'>'+o[1]+'</option>').join("")+'</select></label><label class="ptchk" for="pt-enc-grp"><input type="checkbox" id="pt-enc-grp" checked><span>Inclure le groupe ('+sg.length+')</span></label><button class="btn gold">Préparer la rencontre</button></form>'+
     '<p class="desc">Les monstres de la rencontre sont ajoutés, puis tu inscris l\'initiative de chacun avant de lancer le combat.</p></div>';
   return h;
 }
@@ -12306,7 +12311,7 @@ async function partyAction(a,id,b,e){
 }
 function partySubmit(e){
   const f=e.target;if(!ui.pt||!f.id||f.id.indexOf("pt-")!==0)return false;e.preventDefault();const P=ui.pt,q=ptQuest;
-  if(f.id==="pt-encform"){ptStartEnc(q(),document.getElementById("pt-enc-sel").value,document.getElementById("pt-enc-nom").value.trim(),document.getElementById("pt-enc-grp").checked);ptSave();render();window.scrollTo({top:0,behavior:"smooth"});return true;}
+  if(f.id==="pt-encform"){{const pm=(document.getElementById("pt-enc-pv")||{}).value||"1";ui.pt.pvMult=pm;try{localStorage.setItem("rdv-pvmult",pm);}catch(x){}}ptStartEnc(q(),document.getElementById("pt-enc-sel").value,document.getElementById("pt-enc-nom").value.trim(),document.getElementById("pt-enc-grp").checked);ptSave();render();window.scrollTo({top:0,behavior:"smooth"});return true;}
   if(f.id==="pt-pnjf"){const pn=pnjs.find(x=>x.id===document.getElementById("pt-pnj-sel").value);if(!pn)return true;const bf=ptIds();ptAddPnj(pn);ptLog(pn.nom+" accompagne le groupe.");ptJoin(bf);ui.ptAddOpen=true;ptSave();render();return true;}
   if(f.id==="pt-closeform"){const C=P.combat;if(!C)return true;ui.ptAddOpen=false;
     const got=lootCollect(ui.ptLootItems||[],"lt",{quete:q().id,rencontre:C.nom});ui.ptLootItems=[];
