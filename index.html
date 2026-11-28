@@ -1538,9 +1538,10 @@ function expeditionsView(){
 // Calendrier des expéditions (consultation) : les dates réservées par les quêtes, et un clic ouvre la quête
 const EXPC_COL=["#9c6b2a","#2f6d43","#7a2a1d","#2d5a7b","#6b4a8a","#8a6d1e"];
 function expeCalendar(){const t=todayIso(),Y0=+t.slice(0,4),M0=+t.slice(5,7)-1,byD={},qs=[];
-  planifs.forEach(p=>{const q=quetes.find(x=>x.id===p.quete);if(!q||!/^\d{4}-\d{2}-\d{2}$/.test(p.date||""))return;if(qs.indexOf(q)<0)qs.push(q);(byD[p.date]=byD[p.date]||[]).push({q,h:p.heure||""});});
+  // Seulement les quêtes encore à jouer (ouverte ou en cours) et les dates à venir : une quête terminée ne réserve plus rien
+  planifs.forEach(p=>{const q=quetes.find(x=>x.id===p.quete);if(!q||(q.statut!=="ouverte"&&q.statut!=="encours")||!/^\d{4}-\d{2}-\d{2}$/.test(p.date||"")||p.date<t)return;if(qs.indexOf(q)<0)qs.push(q);(byD[p.date]=byD[p.date]||[]).push({q,h:p.heure||""});});
   qs.sort((a,b)=>String(a.titre).localeCompare(String(b.titre),"fr"));const col=q=>EXPC_COL[qs.indexOf(q)%EXPC_COL.length];
-  let h='<h2 class="exph" id="expe-cal">📅 Calendrier des expéditions</h2><p class="hint" style="margin:0 0 10px">Les dates déjà réservées et la quête prévue ce jour-là. Touche une date réservée pour ouvrir sa quête.</p>';
+  let h='<h2 class="exph" id="expe-cal">📅 Calendrier des expéditions</h2><p class="hint" style="margin:0 0 10px">Les dates proposées pour les quêtes à venir et la quête prévue ce jour-là. Touche une date réservée pour ouvrir sa quête.</p>';
   h+='<div class="calbar"><span class="desc"><span class="ecleg on"></span> DM disponible · <span class="ecleg bk"></span> Réservé pour une quête</span></div>';
   // Douze mois à partir du mois courant
   h+='<div class="calgrid expcal">'+Array.from({length:12},(_,i)=>{const Y=Y0+Math.floor((M0+i)/12),m=(M0+i)%12,mn=MOIS[m],first=new Date(Y,m,1).getDay(),nd=new Date(Y,m+1,0).getDate(),cells=[],leg=[];for(let i=0;i<first;i++)cells.push('<span class="calx"></span>');
