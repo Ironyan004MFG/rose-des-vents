@@ -10461,8 +10461,6 @@ function ecFogCanvas(st,V,forDm){const c=st.carte,W=c.w,H=c.h,cv=document.create
 function ecBind(id,mode){sprGo();const cv=document.getElementById(id);if(!cv){delete ecRenderers[id];return null;}let r=ecRenderers[id];if(!r||r.cv!==cv){r=ecRenderers[id]={cv,mode,key:"",A:null,st:null,stat:null,img:null,fog:null,fogKey:""};}if(!ecRaf)ecRaf=requestAnimationFrame(ecLoop);return r;}
 function ecSet(r,st){r.st=st;}
 let ecLast=0;
-// Décor fixe des dernières cartes affichées (télé, DM) : revenir à une carte déjà vue est immédiat. Trois au plus, pour la mémoire.
-const EC_STATC=new Map();function ecStatKeep(k,cv){if(!cv||cv.width*cv.height>12e6)return;EC_STATC.delete(k);EC_STATC.set(k,cv);while(EC_STATC.size>3)EC_STATC.delete(EC_STATC.keys().next().value);}
 function ecLoop(ts){ecRaf=requestAnimationFrame(ecLoop);SPT_B.used=0;SPT_B.on=true;try{ecLoopBody(ts);}finally{SPT_B.on=false;}}
 function ecLoopBody(ts){const dt=Math.min(0.1,(ts-ecLast)/1000||0.016);ecLast=ts;const t=ts/1000;
   Object.keys(ecRenderers).forEach(id=>{const r=ecRenderers[id];if(!document.body.contains(r.cv)){delete ecRenderers[id];return;}if(r.st&&r.st.carte){r.blank=false;try{ecDraw(r,t,dt);}catch(e){console.error(e);}}else if(!r.blank){r.blank=true;try{const x=r.cv.getContext("2d");x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,r.cv.width,r.cv.height);}catch(e){}}});
@@ -10478,7 +10476,7 @@ function ecDraw(r,t,dt){const st=r.st,c=st.carte,cv=r.cv,x=cv.getContext("2d"),p
   // Le décor fixe est préparé à une échelle arrondie (le zoom libre du joueur ne le redessine pas à chaque cran), sans dépasser la taille d'un canevas.
   const sq=pl||(r.mode==="tv"&&r.free)||(r.mode==="dm"&&(ui.ecZoom||1)>1)?Math.min(Math.pow(2,Math.round(Math.log2(Math.max(1,s))*3)/3),3800/(Math.max(c.w,c.h)*dpr)):s;
   const key=c.type+"|"+c.seed+"|"+c.w+"x"+c.h+"|"+(c.url||"")+"|"+Math.round(sq*dpr*10)+"|"+ecSaison()+"|"+(c.bureau||"")+"|"+(+c.etage||0)+"|"+(c.niv?c.niv.min+":"+c.niv.max:"")+maisonEnvK(c)+"|off"+JSON.stringify(c.off||[]);
-  if(r.key!==key){r.key=key;r.A=EC_GEN[c.type]?{}:c.type==="image"?null:ecAnimInit(c);r.stat=null;r.img=null;if(c.type==="image"&&c.url){const im=new Image();im.crossOrigin="anonymous";im.onload=()=>{r.img=im;};im.src=c.url;}else{const hit=r.mode!=="joueur"&&EC_STATC.get(key);if(hit){r.stat=hit;}else{const was=SPT_B.on;SPT_B.on=false;try{r.stat=EC_GEN[c.type]?ecStaticGen(c,sq*dpr):ecStatic(c,sq*dpr);}finally{SPT_B.on=was;}if(r.mode!=="joueur")ecStatKeep(key,r.stat);}}}
+  if(r.key!==key){r.key=key;r.A=EC_GEN[c.type]?{}:c.type==="image"?null:ecAnimInit(c);r.stat=null;r.img=null;if(c.type==="image"&&c.url){const im=new Image();im.crossOrigin="anonymous";im.onload=()=>{r.img=im;};im.src=c.url;}else{const was=SPT_B.on;SPT_B.on=false;try{r.stat=EC_GEN[c.type]?ecStaticGen(c,sq*dpr):ecStatic(c,sq*dpr);}finally{SPT_B.on=was;}}}
   x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle="#000";x.fillRect(0,0,cw,ch);x.save();x.translate(ox,oy);x.beginPath();x.rect(0,0,c.w*s,c.h*s);x.clip();
   if(c.type==="image"){if(r.img)x.drawImage(r.img,0,0,c.w*s,c.h*s);}else if(r.stat){x.drawImage(r.stat,0,0,c.w*s,c.h*s);x.save();ecLumNow=(st&&st.lum)||"";if(EC_GEN[c.type]){ecOpenDoors(x,c,s);ecGenGeo(c)._off=c.off||null;EC_GEN[c.type].dyn(x,ecGenGeo(c),s,t,dt,r.A,c,st);}else ecDynamic(x,c,s,t,dt,r.A,st);x.restore();}
   const M=EC_METEO[st.meteo]||EC_METEO.clair;if(r.A){r.A.wind=!!M.wind;r.A.cloudy=st.meteo==="nuageux"||!!M.rain;}
